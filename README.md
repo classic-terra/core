@@ -2,9 +2,8 @@
 
 **[Terra](https://terra.money)** is a public, open-source blockchain protocol that provides fundamental infrastructure for a decentralized economy and enables open participation in the creation of new financial primitives to power the innovation of money.
 
-The Terra blockchain is secured by distributed consensus on staked asset Luna and natively supports the issuance of [price-tracking stablecoins](https://docs.terra.money/docs/learn/glossary.html#algorithmic-stablecoin) that are algorithmically pegged to major world currencies, such as UST, KRT, and SDT. Smart contracts on Terra run on WebAssembly and take advantage of core modules, such as on-chain swaps, price oracle, and staking rewards, to power modern [DeFi](https://docs.terra.money/docs/learn/glossary.html#defi) apps. Through dynamic fiscal policy managed by community governance, Terra is an evolving, democratized economy directed by its users.
 
-**Terra Core** is the reference implementation of the Terra protocol, written in Golang. Terra Core is built atop [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) and uses [Tendermint](https://github.com/tendermint/tendermint) BFT consensus. If you intend to work on Terra Core source, it is recommended that you familiarize yourself with the concepts in those projects.
+**Classic** is the reference implementation of the Terra protocol, written in Golang. Terra Core is built atop [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) and uses [Tendermint](https://github.com/tendermint/tendermint) BFT consensus. If you intend to work on Terra Core source, it is recommended that you familiarize yourself with the concepts in those projects.
 
 Upon the implosion of Terra, a group of rebels seized control of the blockchain.  Terra's future is uncertain, but the rebels are now firmly in control. 
 

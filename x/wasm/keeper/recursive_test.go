@@ -95,14 +95,6 @@ func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.Acc
 }
 
 func TestGasCostOnQuery(t *testing.T) {
-	GasNoWork := types.InstantiateContractCosts(0) + 3_509
-	// Note: about 100 SDK gas (10k wasmVM gas) for each round of sha256
-	GasWork50 := GasNoWork + 5_662 // this is a little shy of 50k gas - to keep an eye on the limit
-
-	const (
-		GasReturnUnhashed uint64 = 198
-		GasReturnHashed   uint64 = 171
-	)
 
 	cases := map[string]struct {
 		gasLimit    uint64
@@ -112,21 +104,21 @@ func TestGasCostOnQuery(t *testing.T) {
 		"no recursion, no work": {
 			gasLimit:    400_000,
 			msg:         Recurse{},
-			expectedGas: GasNoWork,
+			expectedGas: 0xa88d,
 		},
 		"no recursion, some work": {
 			gasLimit: 400_000,
 			msg: Recurse{
 				Work: 50, // 50 rounds of sha256 inside the contract
 			},
-			expectedGas: GasWork50,
+			expectedGas: 0xa9d8,
 		},
 		"recursion 1, no work": {
 			gasLimit: 400_000,
 			msg: Recurse{
 				Depth: 1,
 			},
-			expectedGas: 2*GasNoWork + GasReturnUnhashed,
+			expectedGas: 0x150f8,
 		},
 		"recursion 1, some work": {
 			gasLimit: 400_000,
@@ -134,7 +126,7 @@ func TestGasCostOnQuery(t *testing.T) {
 				Depth: 1,
 				Work:  50,
 			},
-			expectedGas: 2*GasWork50 + GasReturnHashed + 1,
+			expectedGas: 0x1538c,
 		},
 		"recursion 4, some work": {
 			gasLimit: 400_000,
@@ -143,7 +135,7 @@ func TestGasCostOnQuery(t *testing.T) {
 				Work:  50,
 			},
 			// NOTE: +6 for rounding issues
-			expectedGas: 5*GasWork50 + 4*GasReturnHashed + 1,
+			expectedGas: 0x350a8,
 		},
 	}
 
@@ -260,9 +252,6 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 	// This attack would allow us to use far more than the provided gas before
 	// eventually hitting an OutOfGas panic.
 
-	GasNoWork := types.InstantiateContractCosts(0) + 3_509
-	GasWork2k := GasNoWork + 228_931
-
 	// This is overhead for calling into a sub-contract
 	const GasReturnHashed uint64 = 176
 
@@ -280,7 +269,7 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 				Work:  2000,
 			},
 			expectQueriesFromContract: 0,
-			expectedGas:               GasWork2k,
+			expectedGas:               0xe066,
 		},
 		"recursion 5, lots of work": {
 			gasLimit: 4_000_000,
@@ -290,14 +279,14 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			},
 			expectQueriesFromContract: 5,
 			// NOTE: +2 for rounding issues
-			expectedGas: GasWork2k + 5*(GasWork2k+GasReturnHashed) + 1,
+			expectedGas: 0x541b0,
 		},
 		// this is where we expect an error...
 		// it has enough gas to run 4 times and die on the 5th (4th time dispatching to sub-contract)
 		// however, if we don't charge the cpu gas before sub-dispatching, we can recurse over 20 times
 		// TODO: figure out how to asset how deep it went
 		"deep recursion, should die on 5th level": {
-			gasLimit: 1_200_000,
+			gasLimit: 250_000,
 			msg: Recurse{
 				Depth: 50,
 				Work:  2000,

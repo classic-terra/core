@@ -184,7 +184,11 @@ genesis-add-validator:
 
 genesis-remove-validator:
 
-.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator
+genesis-increase-validator:
+
+genesis-decrease-validator:
+
+.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator genesis-increase-validator genesis-decrease-validator
 
 ###############################################################################
 ###                           Tests & Simulation                            ###

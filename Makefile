@@ -180,6 +180,8 @@ genesis-tools:
 genesis-fetch:
 	curl $(GENESIS_SOURCE) -H "Accept: application/json"  
 
+genesis-list-validators:
+
 genesis-add-validator:
 
 genesis-remove-validator:

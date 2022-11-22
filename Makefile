@@ -10,6 +10,8 @@ SIMAPP = ./app
 HTTPS_GIT := https://github.com/terra-rebels/classic.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+GENESIS_SOURCE ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
+
 
 ifneq ($(OS),Windows_NT)
   UNAME_S = $(shell uname -s)
@@ -169,6 +171,22 @@ clean:
 .PHONY: distclean clean
 
 ###############################################################################
+###                           Genesis                                       ###
+###############################################################################
+
+genesis-tools:
+	sudo apt install jq
+
+genesis-fetch:
+	curl $(GENESIS_SOURCE) -H "Accept: application/json"  
+
+genesis-add-validator:
+
+genesis-remove-validator:
+
+.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator
+
+###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
@@ -197,10 +215,10 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run --out-format=tab
+	/home/zaradar/go/bin/golangci-lint run --out-format=tab
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	/home/zaradar/go/bin/golangci-lint run --fix --out-format=tab --issues-exit-code=0
 .PHONY: lint lint-fix
 
 format:

@@ -169,7 +169,7 @@ clean:
 .PHONY: distclean clean
 
 ###############################################################################
-###                           Genesis                                       ###
+###                           Genesis tooling                               ###
 ###############################################################################
 GENESIS_REMOTE_PATH ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
 GENESIS_LOCAL_PATH ?= $(PWD)/genesis.json

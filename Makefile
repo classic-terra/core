@@ -192,16 +192,9 @@ genesis-add-validator:
 genesis-remove-validator:
 	jq 'del(.validators[] | select(.address == "$(GENESIS_VALIDATOR_ADDRESS)"))' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
 	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
-	rm $(GENESIS_COPY_PATH) 
+	rm $(GENESIS_COPY_PATH)
 
-genesis-increase-validator:
-	targetValidator=$(jq --arg address "$(GENESIS_VALIDATOR_ADDRESS)" '.validators | select(.address == $(address)' $(GENESIS_LOCAL_PATH))
-	totalPower=$(jq '.validators | power' $(GENESIS_LOCAL_PATH))
-### TODO: Finish increase/decrease logic
-
-genesis-decrease-validator:
-
-.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator genesis-increase-validator genesis-decrease-validator
+.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator
 
 ###############################################################################
 ###                           Tests & Simulation                            ###

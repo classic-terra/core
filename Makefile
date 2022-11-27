@@ -10,8 +10,6 @@ SIMAPP = ./app
 HTTPS_GIT := https://github.com/terra-rebels/classic.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
-GENESIS_REMOTE_PATH ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
-GENESIS_LOCAL_PATH ?= $(PWD)/genesis.json
 
 ifneq ($(OS),Windows_NT)
   UNAME_S = $(shell uname -s)
@@ -173,6 +171,9 @@ clean:
 ###############################################################################
 ###                           Genesis                                       ###
 ###############################################################################
+GENESIS_REMOTE_PATH ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
+GENESIS_LOCAL_PATH ?= $(PWD)/genesis.json
+GENESIS_COPY_PATH ?= $(PWD)/genesis_copy.json
 
 genesis-tools:
 	sudo apt install jq curl
@@ -184,10 +185,14 @@ genesis-list-validators:
 	jq '.validators | .[]' $(GENESIS_LOCAL_PATH)
 
 genesis-add-validator:
-	jq --arg json "$(GENESIS_VALIDATOR_JSON)" '.validators += [$(json)]' $(GENESIS_LOCAL_PATH)
+	jq '.validators += [$(GENESIS_VALIDATOR_JSON)]' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH) 
 
 genesis-remove-validator:
-	jq --arg address "$(GENESIS_VALIDATOR_ADDRESS)" 'del(.validators[] | select(.address == $(address))' $(GENESIS_LOCAL_PATH)
+	jq 'del(.validators[] | select(.address == "$(GENESIS_VALIDATOR_ADDRESS)"))' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH) 
 
 genesis-increase-validator:
 	targetValidator=$(jq --arg address "$(GENESIS_VALIDATOR_ADDRESS)" '.validators | select(.address == $(address)' $(GENESIS_LOCAL_PATH))

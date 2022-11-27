@@ -225,10 +225,10 @@ benchmark:
 ###############################################################################
 
 lint:
-	/home/zaradar/go/bin/golangci-lint run --out-format=tab
+	golangci-lint run --out-format=tab
 
 lint-fix:
-	/home/zaradar/go/bin/golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	golangci-lint run --fix --out-format=tab --issues-exit-code=0
 .PHONY: lint lint-fix
 
 format:

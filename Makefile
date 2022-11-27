@@ -10,8 +10,8 @@ SIMAPP = ./app
 HTTPS_GIT := https://github.com/terra-rebels/classic.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
-GENESIS_SOURCE ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
-
+GENESIS_REMOTE_PATH ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
+GENESIS_LOCAL_PATH ?= $(PWD)/genesis.json
 
 ifneq ($(OS),Windows_NT)
   UNAME_S = $(shell uname -s)
@@ -175,18 +175,24 @@ clean:
 ###############################################################################
 
 genesis-tools:
-	sudo apt install jq
+	sudo apt install jq curl
 
 genesis-fetch:
-	curl $(GENESIS_SOURCE) -H "Accept: application/json"  
+	curl $(GENESIS_REMOTE_PATH) -L -H "Accept: application/json" -o $(GENESIS_LOCAL_PATH)
 
 genesis-list-validators:
+	jq '.validators | .[]' $(GENESIS_LOCAL_PATH)
 
 genesis-add-validator:
+	jq --arg json "$(GENESIS_VALIDATOR_JSON)" '.validators += [$(json)]' $(GENESIS_LOCAL_PATH)
 
 genesis-remove-validator:
+	jq --arg address "$(GENESIS_VALIDATOR_ADDRESS)" 'del(.validators[] | select(.address == $(address))' $(GENESIS_LOCAL_PATH)
 
 genesis-increase-validator:
+	targetValidator=$(jq --arg address "$(GENESIS_VALIDATOR_ADDRESS)" '.validators | select(.address == $(address)' $(GENESIS_LOCAL_PATH))
+	totalPower=$(jq '.validators | power' $(GENESIS_LOCAL_PATH))
+### TODO: Finish increase/decrease logic
 
 genesis-decrease-validator:
 

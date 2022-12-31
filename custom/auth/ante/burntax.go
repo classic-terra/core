@@ -6,24 +6,28 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 )
 
 // TaxPowerUpgradeHeight is when taxes are allowed to go into effect
 // This will still need a parameter change proposal, but can be activated
 // anytime after this height
 const TaxPowerUpgradeHeight = 9346889
+const TaxPowerSplitHeight = 123456789
 
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
-	treasuryKeeper TreasuryKeeper
-	bankKeeper     BankKeeper
+	TreasuryKeeper     TreasuryKeeper
+	DistributionKeeper distribution.Keeper
+	BankKeeper         BankKeeper
 }
 
 // NewBurnTaxFeeDecorator returns new tax fee decorator instance
-func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper) BurnTaxFeeDecorator {
+func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper, distributionKeeper distribution.Keeper) BurnTaxFeeDecorator {
 	return BurnTaxFeeDecorator{
-		treasuryKeeper: treasuryKeeper,
-		bankKeeper:     bankKeeper,
+		TreasuryKeeper:     treasuryKeeper,
+		DistributionKeeper: distributionKeeper,
+		BankKeeper:         bankKeeper,
 	}
 }
 
@@ -47,11 +51,27 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	if !simulate {
 		// Compute taxes again.
-		taxes := FilterMsgAndComputeTax(ctx, btfd.treasuryKeeper, msgs...)
+		taxes := FilterMsgAndComputeTax(ctx, btfd.TreasuryKeeper, msgs...)
 
 		// Record tax proceeds
 		if !taxes.IsZero() {
-			err = btfd.bankKeeper.SendCoinsFromModuleToModule(ctx, types.FeeCollectorName, treasury.BurnModuleName, taxes)
+			if currHeight >= TaxPowerSplitHeight {
+				feePool := btfd.DistributionKeeper.GetFeePool(ctx)
+
+				for _, taxCoin := range taxes {
+					splitCoin := sdk.NewCoin(taxCoin.Denom, taxCoin.Amount.Quo(sdk.NewInt(2)))
+					taxCoin.Amount = taxCoin.Amount.Sub(splitCoin.Amount)
+
+					if splitCoin.Amount.IsPositive() {
+						feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(splitCoin))
+					}
+				}
+
+				btfd.DistributionKeeper.SetFeePool(ctx, feePool)
+			}
+
+			err = btfd.BankKeeper.SendCoinsFromModuleToModule(ctx, types.FeeCollectorName, treasury.BurnModuleName, taxes)
+
 			if err != nil {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 			}

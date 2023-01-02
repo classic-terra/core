@@ -54,7 +54,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/classic-terra/classic:${{ env.MAJOR_VERSION }}
-            ghcr.io/classic-terra/classic:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
-            ghcr.io/classic-terra/classic:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+            ghcr.io/classic-terra/terraclassic.terrad-binary:${{ env.MAJOR_VERSION }}
+            ghcr.io/classic-terra/terraclassic.terrad-binary:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ghcr.io/classic-terra/terraclassic.terrad-binary:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
 

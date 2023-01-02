@@ -194,7 +194,12 @@ genesis-remove-validator:
 	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
 	rm $(GENESIS_COPY_PATH)
 
-.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator
+genesis-purge-wasm:
+	jq 'del(.app_state.wasm)' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH)
+
+.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator genesis-purge-wasm
 
 ###############################################################################
 ###                           Tests & Simulation                            ###

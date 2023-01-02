@@ -115,15 +115,15 @@ endif
 
 build-linux:
 	mkdir -p $(BUILDDIR)
-	docker build --no-cache --tag terrarebels/classic ./
-	docker create --name temp terrarebels/classic:latest
+	docker build --no-cache --tag classic-terra/classic ./
+	docker create --name temp classic-terra/classic:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker rm temp
 
 build-linux-with-shared-library:
 	mkdir -p $(BUILDDIR)
-	docker build --tag terrarebels/classic-shared ./ -f ./shared.Dockerfile
-	docker create --name temp terrarebels/classic-shared:latest
+	docker build --tag classic-terra/classic-shared ./ -f ./shared.Dockerfile
+	docker create --name temp classic-terra/classic-shared:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker cp temp:/lib/libwasmvm.so $(BUILDDIR)/
 	docker rm temp
@@ -271,14 +271,14 @@ proto-check-breaking:
 
 # Run a 4-node testnet locally
 localnet-start: build-linux localnet-stop
-	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' terramoney/terrad-env 2>/dev/null),$(info found image terramoney/terrad-env),$(MAKE) -C contrib/images terrad-env)
+	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/classic 2>/dev/null),$(info found image classic-terra/classic-env),$(MAKE) -C contrib/images terrad-env)
 	if ! [ -f build/node0/terrad/config/genesis.json ]; then $(DOCKER) run --rm \
 		--user $(shell id -u):$(shell id -g) \
 		-v $(BUILDDIR):/terrad:Z \
 		-v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro \
 		-v /etc/shadow:/etc/shadow:ro \
-		terramoney/terrad-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+		classic-terra/classic testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:

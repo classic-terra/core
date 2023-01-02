@@ -3,7 +3,7 @@ version: '3'
 services:
   terradnode0:
     container_name: terradnode0
-    image: "ghcr.io/classic-terra/classic"
+    image: "classic-terra/classic"
     ports:
       - "9090:9090"
       - "26656-26657:26656-26657"
@@ -18,7 +18,7 @@ services:
 
   terradnode1:
     container_name: terradnode1
-    image: "ghcr.io/classic-terra/classic"
+    image: "classic-terra/classic"
     ports:
       - "9091:9090"
       - "26659-26660:26656-26657"
@@ -33,7 +33,7 @@ services:
 
   terradnode2:
     container_name: terradnode2
-    image: "ghcr.io/classic-terra/classic"
+    image: "classic-terra/classic"
     environment:
       - ID=2
       - LOG=$${LOG:-terrad.log}
@@ -48,7 +48,7 @@ services:
 
   terradnode3:
     container_name: terradnode3
-    image: "ghcr.io/classic-terra/classic"
+    image: "classic-terra/classic"
     environment:
       - ID=3
       - LOG=$${LOG:-terrad.log}

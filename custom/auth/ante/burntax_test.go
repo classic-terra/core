@@ -18,7 +18,7 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper)
+	mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.DistrKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses

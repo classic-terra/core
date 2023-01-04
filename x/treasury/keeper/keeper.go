@@ -349,3 +349,15 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 		store.Delete(iter.Key())
 	}
 }
+
+func (k Keeper) GetBurnSplitRate(ctx sdk.Context) sdk.Dec {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.KeyBurnTaxSplit)
+	if b == nil {
+		return types.DefaultTaxRate
+	}
+
+	dp := sdk.DecProto{}
+	k.cdc.MustUnmarshal(b, &dp)
+	return dp.Dec
+}

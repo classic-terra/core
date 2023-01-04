@@ -15,8 +15,15 @@ export GOMODCACHE=$ROOT/_build/gocache
 if ! command -v _build/old/terrad &> /dev/null
 then
     mkdir -p _build/old
-    wget -c "https://github.com/terra-rebels/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
+    wget -c "https://github.com/classic-terra/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
     unzip _build/v${OLD_VERSION}.zip -d _build
+    cd ./_build/classic-${OLD_VERSION}
+    GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
+    cd ../..
+fi
+
+# reinstall old binary
+if [ $# -eq 1 ] && [ $1 == "--reinstall-old" ]; then
     cd ./_build/classic-${OLD_VERSION}
     GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
     cd ../..
@@ -29,25 +36,25 @@ then
 fi
 
 # start old node
-screen -dmS node1 bash scripts/run-node.sh _build/old/terrad $DENOM
+screen -L -Logfile mytestnet/log-screen.txt -dmS node1 bash scripts/run-node.sh _build/old/terrad $DENOM
 
 sleep 20
 
 ./_build/old/terrad tx gov submit-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
-sleep 3
+sleep 5
 
 ./_build/old/terrad tx gov deposit 1 "20000000${DENOM}" --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
-sleep 3
+sleep 5
 
 ./_build/old/terrad tx gov vote 1 yes --from test --keyring-backend test --chain-id test --home $HOME -y
 
-sleep 3
+sleep 5
 
 ./_build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id test --home $HOME -y
 
-sleep 3
+sleep 5
 
 # determine block_height to halt
 while true; do 
@@ -64,6 +71,6 @@ while true; do
     fi
 done
 
-sleep 3
+sleep 5
 
-./_build/new/terrad start --log_level debug --home $HOME > mytestnet/log.txt
+./_build/new/terrad start --log_level debug --home $HOME

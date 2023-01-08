@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	v04treasury "github.com/terra-money/core/x/treasury/legacy/v04"
-	"github.com/terra-money/core/x/treasury/types"
 	v05treasury "github.com/terra-money/core/x/treasury/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,7 +59,7 @@ func Migrate(
 		TaxProceeds:          treasuryGenState.TaxProceed,
 		TaxRate:              treasuryGenState.TaxRate,
 		Params: v05treasury.Params{
-			BurnTaxSplit: types.DefaultBurnTaxSplit,
+			BurnTaxSplit: v05treasury.DefaultBurnTaxSplit,
 			TaxPolicy: v05treasury.PolicyConstraints{
 				RateMin:       treasuryGenState.Params.TaxPolicy.RateMin,
 				RateMax:       treasuryGenState.Params.TaxPolicy.RateMax,

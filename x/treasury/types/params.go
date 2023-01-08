@@ -246,5 +246,9 @@ func validateBurnTaxSplit(i interface{}) error {
 		return fmt.Errorf("burn tax split must be positive: %s", v)
 	}
 
+	if v.GTE(sdk.NewDec(1)) {
+		return fmt.Errorf("burn tax split can not greater than 1")
+	}
+
 	return nil
 }

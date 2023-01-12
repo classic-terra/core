@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"strings"
+
 	treasury "github.com/terra-money/core/x/treasury/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +35,10 @@ func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper
 	}
 }
 
+var (
+	burnTaxAddressWhitelist = []string{"terra123456789"}
+)
+
 // AnteHandle handles msg tax fee checking
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// Do not proceed if you are below this block height
@@ -47,6 +53,16 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	}
 
 	msgs := feeTx.GetMsgs()
+
+	for _, msg := range msgs {
+		for _, acc := range msg.GetSigners() {
+			for _, whitelisted := range burnTaxAddressWhitelist {
+				if strings.EqualFold(acc.String(), whitelisted) {
+					return next(ctx, tx, simulate)
+				}
+			}
+		}
+	}
 
 	// At this point we have already run the DeductFees AnteHandler and taken the fees from the sending account
 	// Now we remove the taxes from the gas reward and immediately burn it

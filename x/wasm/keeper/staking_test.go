@@ -24,7 +24,7 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	core "github.com/terra-money/core/types"
+	core "github.com/classic-terra/classic/types"
 )
 
 type StakingInitMsg struct {

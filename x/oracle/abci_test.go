@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	core "github.com/terra-money/core/types"
-	"github.com/terra-money/core/x/oracle"
-	"github.com/terra-money/core/x/oracle/keeper"
-	"github.com/terra-money/core/x/oracle/types"
+	core "github.com/classic-terra/classic/types"
+	"github.com/classic-terra/classic/x/oracle"
+	"github.com/classic-terra/classic/x/oracle/keeper"
+	"github.com/classic-terra/classic/x/oracle/types"
 )
 
 func TestOracleThreshold(t *testing.T) {

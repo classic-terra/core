@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/terra-money/core/custom/auth/ante"
-	oracletypes "github.com/terra-money/core/x/oracle/types"
+	"github.com/classic-terra/classic/custom/auth/ante"
+	oracletypes "github.com/classic-terra/classic/x/oracle/types"
 )
 
 func (suite *AnteTestSuite) TestOracleSpamming() {

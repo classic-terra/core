@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"strings"
 
-	core "github.com/terra-money/core/types"
+	core "github.com/classic-terra/classic/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,7 +14,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/terra-money/core/x/market/types"
+	"github.com/classic-terra/classic/x/market/types"
 )
 
 // Simulation operation weights constants

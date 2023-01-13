@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
+	core "github.com/classic-terra/classic/types"
+	"github.com/classic-terra/classic/x/wasm/types"
 	"github.com/stretchr/testify/require"
-	core "github.com/terra-money/core/types"
-	"github.com/terra-money/core/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

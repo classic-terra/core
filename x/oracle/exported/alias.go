@@ -3,7 +3,7 @@
 
 package exported
 
-import "github.com/terra-money/core/x/oracle/types"
+import "github.com/classic-terra/classic/x/oracle/types"
 
 type (
 	MsgAggregateExchangeRatePrevote = types.MsgAggregateExchangeRatePrevote

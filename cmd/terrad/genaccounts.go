@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	vestingtypes "github.com/terra-money/core/x/vesting/types"
+	vestingtypes "github.com/classic-terra/classic/x/vesting/types"
 )
 
 const (

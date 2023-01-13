@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"github.com/classic-terra/classic/x/oracle/types"
 	"github.com/stretchr/testify/require"
-	"github.com/terra-money/core/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

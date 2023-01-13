@@ -3,7 +3,7 @@
 
 package exported
 
-import "github.com/terra-money/core/x/market/types"
+import "github.com/classic-terra/classic/x/market/types"
 
 type (
 	MsgSwap     = types.MsgSwap

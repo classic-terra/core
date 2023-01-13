@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/classic-terra/classic/x/wasm/types"
 	"github.com/stretchr/testify/require"
-	"github.com/terra-money/core/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

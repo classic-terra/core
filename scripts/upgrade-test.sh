@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OLD_VERSION=1.0.4
+OLD_VERSION=1.0.5
 UPGRADE_HEIGHT=20
 HOME=mytestnet
 ROOT=$(pwd)

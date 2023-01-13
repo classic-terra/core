@@ -7,7 +7,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/terra-money/core/x/market/types"
+	"github.com/classic-terra/classic/x/market/types"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals

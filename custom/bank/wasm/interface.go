@@ -10,7 +10,7 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	wasm "github.com/terra-money/core/x/wasm/exported"
+	wasm "github.com/classic-terra/classic/x/wasm/exported"
 )
 
 var (

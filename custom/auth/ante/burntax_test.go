@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/terra-money/core/custom/auth/ante"
-	core "github.com/terra-money/core/types"
+	"github.com/classic-terra/classic/custom/auth/ante"
+	core "github.com/classic-terra/classic/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"

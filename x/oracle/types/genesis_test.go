@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/classic-terra/classic/app"
+	"github.com/classic-terra/classic/x/oracle/types"
 	"github.com/stretchr/testify/require"
-	"github.com/terra-money/core/app"
-	"github.com/terra-money/core/x/oracle/types"
 )
 
 func TestGenesisValidation(t *testing.T) {

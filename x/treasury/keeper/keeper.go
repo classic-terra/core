@@ -356,8 +356,5 @@ func (k Keeper) GetBurnSplitRate(ctx sdk.Context) sdk.Dec {
 }
 
 func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
-	params := k.GetParams(ctx)
-	params.BurnTaxSplit = burnTaxSplit
-
-	k.SetParams(ctx, params)
+	k.paramSpace.Set(ctx, types.KeyBurnTaxSplit, burnTaxSplit)
 }

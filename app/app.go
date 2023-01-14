@@ -270,7 +270,7 @@ func init() {
 		stdlog.Println("Failed to get home dir %2", err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".terra")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".classic")
 }
 
 // NewTerraApp returns a reference to an initialized TerraApp.

@@ -349,15 +349,3 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 		store.Delete(iter.Key())
 	}
 }
-
-func (k Keeper) GetBurnSplitRate(ctx sdk.Context) sdk.Dec {
-	params := k.GetParams(ctx)
-	return params.BurnTaxSplit
-}
-
-func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
-	params := k.GetParams(ctx)
-	params.BurnTaxSplit = burnTaxSplit
-
-	k.SetParams(ctx, params)
-}

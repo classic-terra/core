@@ -49,9 +49,9 @@ func (k Keeper) WindowProbation(ctx sdk.Context) (res uint64) {
 }
 
 // GetBurnSplitRate returns the burn split rate of treasury parameters.
-func (k Keeper) GetBurnSplitRate(ctx sdk.Context) sdk.Dec {
-	params := k.GetParams(ctx)
-	return params.BurnTaxSplit
+func (k Keeper) GetBurnSplitRate(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeyBurnTaxSplit, &res)
+	return
 }
 
 // GetBurnSplitRate set the burn split rate of treasury parameters.

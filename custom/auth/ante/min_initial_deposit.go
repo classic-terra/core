@@ -14,6 +14,11 @@ const (
 	minInitialDepositRetionPrec int64 = 2
 )
 
+var minInitialDepositEnableBlockHeight = map[string]int64{
+	"columbus-5": 11_440_000,
+	"rebel-2":    12_690_000,
+}
+
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
 type MinInitialDepositDecorator struct {
 	govKeeper GovKeeper
@@ -57,6 +62,12 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper GovKee
 // AnteHandle handles checking MsgSubmitProposal
 func (btfd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	if simulate {
+		return next(ctx, tx, simulate)
+	}
+
+	enableHeight, ok := minInitialDepositEnableBlockHeight[ctx.ChainID()]
+
+	if ok && (ctx.BlockHeight() < enableHeight) {
 		return next(ctx, tx, simulate)
 	}
 

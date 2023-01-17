@@ -20,6 +20,7 @@ type HandlerOptions struct {
 	SignModeHandler  signing.SignModeHandler
 	SigGasConsumer   cosmosante.SignatureVerificationGasConsumer
 	IBCChannelKeeper channelkeeper.Keeper
+	GovKeeper        GovKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -46,7 +47,11 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
 	}
 
-	var sigGasConsumer = options.SigGasConsumer
+	if options.GovKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "gov keeper is required for ante builder")
+	}
+
+	sigGasConsumer := options.SigGasConsumer
 	if sigGasConsumer == nil {
 		sigGasConsumer = cosmosante.DefaultSigVerificationGasConsumer
 	}
@@ -68,5 +73,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCChannelKeeper),
+		NewMinInitialDepositDecorator(options.GovKeeper),
 	), nil
 }

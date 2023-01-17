@@ -2,6 +2,7 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -20,4 +21,9 @@ type OracleKeeper interface {
 type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
+}
+
+// GovKeeper defines the interface needed from Governance related functions
+type GovKeeper interface {
+	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
 }

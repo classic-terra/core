@@ -562,6 +562,7 @@ func NewTerraApp(
 			SigGasConsumer:   ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
 			IBCChannelKeeper: app.IBCKeeper.ChannelKeeper,
+			GovKeeper:        app.GovKeeper,
 		},
 	)
 	if err != nil {

@@ -119,8 +119,8 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 						recipients = append(recipients, output.Address)
 					}
 				default:
-					//TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
-					//return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
+					// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
+					// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
 				}
 
 				for _, acc := range msg.GetSigners() {

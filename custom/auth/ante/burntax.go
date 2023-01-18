@@ -109,7 +109,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			for _, msg := range msgs {
 				var recipients []string
 				senderWhitelisted := false
-				recipientWhitelisted := false
+				recipientWhitelistCount := 0
 
 				switch v := msg.(type) {
 				case *banktypes.MsgSend:
@@ -134,12 +134,12 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 				for _, recipient := range recipients {
 					for _, whitelisted := range BurnTaxAddressWhitelist {
 						if strings.EqualFold(recipient, whitelisted) {
-							recipientWhitelisted = true
+							recipientWhitelistCount++
 						}
 					}
 				}
 
-				if senderWhitelisted && recipientWhitelisted {
+				if senderWhitelisted && len(recipients) == recipientWhitelistCount {
 					return next(ctx, tx, simulate)
 				}
 			}

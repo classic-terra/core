@@ -107,39 +107,43 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		if currHeight >= WhitelistHeight {
 			for _, msg := range msgs {
-				var recipients []string
-				senderWhitelisted := false
+				var whitelistedRecipients []string
+				var whitelistedSigners []string
 				recipientWhitelistCount := 0
 
 				switch v := msg.(type) {
 				case *banktypes.MsgSend:
-					recipients = append(recipients, v.ToAddress)
+					whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
 				case *banktypes.MsgMultiSend:
 					for _, output := range v.Outputs {
-						recipients = append(recipients, output.Address)
+						whitelistedRecipients = append(whitelistedRecipients, output.Address)
 					}
 				default:
 					// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
 					// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
 				}
 
-				for _, acc := range msg.GetSigners() {
-					for _, whitelisted := range BurnTaxAddressWhitelist {
-						if strings.EqualFold(acc.String(), whitelisted) {
-							senderWhitelisted = true
+				signers := msg.GetSigners()
+
+				for _, signer := range signers {
+					signerAddress := signer.String()
+
+					for _, whitelistEntry := range BurnTaxAddressWhitelist {
+						if strings.EqualFold(signerAddress, whitelistEntry) {
+							whitelistedSigners = append(whitelistedSigners, signerAddress)
 						}
 					}
 				}
 
-				for _, recipient := range recipients {
-					for _, whitelisted := range BurnTaxAddressWhitelist {
-						if strings.EqualFold(recipient, whitelisted) {
+				for _, recipient := range whitelistedRecipients {
+					for _, whitelistEntry := range BurnTaxAddressWhitelist {
+						if strings.EqualFold(recipient, whitelistEntry) {
 							recipientWhitelistCount++
 						}
 					}
 				}
 
-				if senderWhitelisted && len(recipients) == recipientWhitelistCount {
+				if len(signers) == len(whitelistedSigners) && len(whitelistedRecipients) == recipientWhitelistCount {
 					return next(ctx, tx, simulate)
 				}
 			}

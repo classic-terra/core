@@ -186,8 +186,10 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 
 		if c.burnShouldWork {
 			suite.Require().Equal(amountBurnBefore.Amount.Add(sdk.NewInt(1000)), amountBurn.Amount)
+			suite.Require().Equal(amountFeeBefore, amountFee)
 		} else {
 			suite.Require().Equal(amountBurnBefore, amountBurn)
+			suite.Require().Equal(amountFeeBefore.Amount.Add(sdk.NewInt(1000)), amountFee.Amount)
 		}
 	}
 }

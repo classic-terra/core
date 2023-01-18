@@ -98,22 +98,40 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	msgs := feeTx.GetMsgs()
 
 	for _, msg := range msgs {
+		var recipients []string
+		senderWhitelisted := false
+		recipientWhitelisted := false
+
+		switch v := msg.(type) {
+		case *banktypes.MsgSend:
+			recipients = append(recipients, v.ToAddress)
+		case *banktypes.MsgMultiSend:
+			for _, output := range v.Outputs {
+				recipients = append(recipients, output.Address)
+			}
+		default:
+			//TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
+			//return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
+		}
+
 		for _, acc := range msg.GetSigners() {
 			for _, whitelisted := range BurnTaxAddressWhitelist {
 				if strings.EqualFold(acc.String(), whitelisted) {
-					return next(ctx, tx, simulate)
+					senderWhitelisted = true
 				}
 			}
 		}
 
-		// filter out recipient from MsgSend
-		msgSend, ok := msg.(*banktypes.MsgSend)
-		if ok {
-			for _, whitelisted := range BurnTaxAddressWhitelist {
-				if strings.EqualFold(msgSend.ToAddress, whitelisted) {
-					return next(ctx, tx, simulate)
+		for _, whitelisted := range BurnTaxAddressWhitelist {
+			for _, recipient := range recipients {
+				if strings.EqualFold(recipient, whitelisted) {
+					recipientWhitelisted = true
 				}
 			}
+		}
+
+		if senderWhitelisted && recipientWhitelisted {
+			return next(ctx, tx, simulate)
 		}
 	}
 

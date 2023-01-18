@@ -147,7 +147,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					}
 				}
 
-				if len(signers) == len(whitelistedSigners) && len(whitelistedRecipients) == recipientWhitelistCount {
+				if len(signers) == len(whitelistedSigners) && len(whitelistedRecipients) <= recipientWhitelistCount {
 					return next(ctx, tx, simulate)
 				}
 			}

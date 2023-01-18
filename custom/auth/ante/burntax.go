@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 )
 
@@ -100,6 +101,16 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		for _, acc := range msg.GetSigners() {
 			for _, whitelisted := range burnTaxAddressWhitelist {
 				if strings.EqualFold(acc.String(), whitelisted) {
+					return next(ctx, tx, simulate)
+				}
+			}
+		}
+
+		// filter out recipient from MsgSend
+		msgSend, ok := msg.(*banktypes.MsgSend)
+		if ok {
+			for _, whitelisted := range burnTaxAddressWhitelist {
+				if strings.EqualFold(msgSend.ToAddress, whitelisted) {
 					return next(ctx, tx, simulate)
 				}
 			}

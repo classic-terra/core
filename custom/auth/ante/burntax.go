@@ -131,8 +131,8 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					}
 				}
 
-				for _, whitelisted := range BurnTaxAddressWhitelist {
-					for _, recipient := range recipients {
+				for _, recipient := range recipients {
+					for _, whitelisted := range BurnTaxAddressWhitelist {
 						if strings.EqualFold(recipient, whitelisted) {
 							recipientWhitelisted = true
 						}

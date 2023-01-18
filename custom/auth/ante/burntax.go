@@ -36,7 +36,7 @@ func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper
 	}
 }
 
-var burnTaxAddressWhitelist = []string{
+var BurnTaxAddressWhitelist = []string{
 	"terra10atxpzafqfjy58z0dvugmd9zf63fycr6uvwhjm",
 	"terra1jrq7xa63a4qgpdgtj70k8yz5p32ps9r7mlj3yr",
 	"terra15s66unmdcpknuxxldd7fsr44skme966tdckq8c",
@@ -99,7 +99,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	for _, msg := range msgs {
 		for _, acc := range msg.GetSigners() {
-			for _, whitelisted := range burnTaxAddressWhitelist {
+			for _, whitelisted := range BurnTaxAddressWhitelist {
 				if strings.EqualFold(acc.String(), whitelisted) {
 					return next(ctx, tx, simulate)
 				}
@@ -109,7 +109,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// filter out recipient from MsgSend
 		msgSend, ok := msg.(*banktypes.MsgSend)
 		if ok {
-			for _, whitelisted := range burnTaxAddressWhitelist {
+			for _, whitelisted := range BurnTaxAddressWhitelist {
 				if strings.EqualFold(msgSend.ToAddress, whitelisted) {
 					return next(ctx, tx, simulate)
 				}

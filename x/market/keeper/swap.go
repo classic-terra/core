@@ -120,7 +120,7 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 		askPool = ConstrainedPool{Pool: terraPool}
 
 	}
-	// Simply hack to ensure that swaps into Luna pool can not happen if it will exceed 2T supply
+	// Simply hack to ensure that swaps into askPool can not happen if it will exceed MaxSize
 	if (askPool.MaxSize != sdk.Dec{} && askPool.Pool.Add(retDecCoin.Amount).GT(askPool.MaxSize)) {
 		return sdk.DecCoin{}, sdk.Dec{}, sdkerrors.Wrap(types.ErrExceedMaxDelta, retDecCoin.Denom)
 	}

@@ -109,36 +109,39 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		if !taxes.IsZero() {
 			// Check if burn tax whitelist feature is active
 			if currHeight >= WhitelistHeight {
+				tainted := false
+
 				// Iterate over messages
 				for _, msg := range msgs {
 					var whitelistedRecipients []string
-					var whitelistedSigners []string
+					var whitelistedSenders []string
+					senderWhitelistCount := 0
 					recipientWhitelistCount := 0
 
 					// Fetch recipients
 					switch v := msg.(type) {
 					case *banktypes.MsgSend:
 						whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
+						whitelistedSenders = append(whitelistedSenders, v.FromAddress)
 					case *banktypes.MsgMultiSend:
 						for _, output := range v.Outputs {
 							whitelistedRecipients = append(whitelistedRecipients, output.Address)
+						}
+
+						for _, input := range v.Inputs {
+							whitelistedSenders = append(whitelistedSenders, input.Address)
 						}
 					default:
 						// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
 						// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
 					}
 
-					// Get signers
-					signers := msg.GetSigners()
-
 					// Match signers vs whitelist
-					for _, signer := range signers {
-						signerAddress := signer.String()
-
+					for _, sender := range whitelistedSenders {
 						for _, whitelistEntry := range BurnTaxAddressWhitelist {
 							// If match add to whitelistedsigners and break inner loop
-							if strings.EqualFold(signerAddress, whitelistEntry) {
-								whitelistedSigners = append(whitelistedSigners, signerAddress)
+							if strings.EqualFold(sender, whitelistEntry) {
+								senderWhitelistCount++
 
 								break
 							}
@@ -146,7 +149,9 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					}
 
 					// If all signers are not matched apply burn tax
-					if len(signers) != len(whitelistedSigners) {
+					if len(whitelistedSenders) > senderWhitelistCount {
+						tainted = true
+
 						break
 					}
 
@@ -163,9 +168,15 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					}
 
 					// If all recipients are not matched apply burn tax
-					if len(whitelistedRecipients) <= recipientWhitelistCount {
-						return next(ctx, tx, simulate)
+					if len(whitelistedRecipients) > recipientWhitelistCount {
+						tainted = true
+
+						break
 					}
+				}
+
+				if !tainted {
+					return next(ctx, tx, simulate)
 				}
 			}
 

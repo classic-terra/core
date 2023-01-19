@@ -18,6 +18,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+// go test -v -run ^TestAnteTestSuite/TestEnsureBurnTaxModule$ github.com/terra-money/core/custom/auth/ante
 func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

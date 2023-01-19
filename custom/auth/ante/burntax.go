@@ -109,6 +109,8 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					taxMsgs = append(taxMsgs, taxMsg)
 				}
 			}
+		} else {
+			taxMsgs = msgs
 		}
 
 		taxes := FilterMsgAndComputeTax(ctx, btfd.TreasuryKeeper, taxMsgs...)

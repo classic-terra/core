@@ -129,21 +129,21 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					signerAddress := signer.String()
 
 					for _, whitelistEntry := range BurnTaxAddressWhitelist {
-						if !strings.EqualFold(signerAddress, whitelistEntry) {
+						if strings.EqualFold(signerAddress, whitelistEntry) {
+							whitelistedSigners = append(whitelistedSigners, signerAddress)
+
 							break
 						}
-
-						whitelistedSigners = append(whitelistedSigners, signerAddress)
 					}
 				}
 
 				for _, recipient := range whitelistedRecipients {
 					for _, whitelistEntry := range BurnTaxAddressWhitelist {
-						if !strings.EqualFold(recipient, whitelistEntry) {
+						if strings.EqualFold(recipient, whitelistEntry) {
+							recipientWhitelistCount++
+
 							break
 						}
-
-						recipientWhitelistCount++
 					}
 				}
 

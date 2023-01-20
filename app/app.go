@@ -129,6 +129,7 @@ import (
 	oraclekeeper "github.com/terra-money/core/x/oracle/keeper"
 	oracletypes "github.com/terra-money/core/x/oracle/types"
 	"github.com/terra-money/core/x/treasury"
+	treasuryclient "github.com/terra-money/core/x/treasury/client"
 	treasurykeeper "github.com/terra-money/core/x/treasury/keeper"
 	treasurytypes "github.com/terra-money/core/x/treasury/types"
 	"github.com/terra-money/core/x/vesting"
@@ -176,6 +177,8 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			treasuryclient.ProposalAddWhitelistHandler,
+			treasuryclient.ProposalRemoveWhitelistHandler,
 		),
 		customparams.AppModuleBasic{},
 		customcrisis.AppModuleBasic{},

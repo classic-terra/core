@@ -50,6 +50,7 @@ var (
 	TaxProceedsKey          = []byte{0x04} // a key for a tax-proceeds
 	EpochInitialIssuanceKey = []byte{0x05} // a key for an initial epoch issuance
 	CumulativeHeightKey     = []byte{0x09} // a key for a cumulated height
+	StoreWhitelist          = []byte{0x20} // prefix for white list substore
 
 	// Keys for store prefixes of internal purpose variables
 	TRKey  = []byte{0x06} // prefix for each key to a TR

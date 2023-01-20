@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -367,11 +368,36 @@ func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
 	k.SetParams(ctx, params)
 }
 
-func(k Keeper) SetBurnTaxWhitelist(ctx sdk.Context, burnTaxWhitelist []string) {
+func (k Keeper) SetBurnTaxWhitelist(ctx sdk.Context, burnTaxWhitelist []string) {
 
 	params := k.GetParams(ctx)
 	params.BurnTaxWhitelist = burnTaxWhitelist
 
 	k.SetParams(ctx, params)
 
+}
+
+// ======Whitelist substore======
+func (k Keeper) SetWhitelistAddress(ctx sdk.Context, address string) {
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+
+	sub.Set([]byte(address), []byte{0x01})
+}
+
+func (k Keeper) RemoveWhitelistAddress(ctx sdk.Context, address string) error {
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+
+	if !sub.Has([]byte(address)) {
+		return types.ErrNoSuchWhitelist.Wrapf("address = %s", address)
+	}
+
+	sub.Delete([]byte(address))
+
+	return nil
+}
+
+func (k Keeper) HasWhitelistAddress(ctx sdk.Context, address string) bool {
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+
+	return sub.Has([]byte(address))
 }

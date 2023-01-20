@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"strings"
-
 	treasury "github.com/terra-money/core/x/treasury/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,8 +43,6 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return next(ctx, tx, simulate)
 	}
 
-	burnTaxAddressWhitelist := btfd.TreasuryKeeper.GetBurnTaxWhitelist(ctx)
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -84,21 +80,14 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 				for _, signer := range signers {
 					signerAddress := signer.String()
 
-					for _, whitelistEntry := range burnTaxAddressWhitelist {
-						if !strings.EqualFold(signerAddress, whitelistEntry) {
-							break
-						}
-
+					if btfd.TreasuryKeeper.HasWhitelistAddress(ctx, signerAddress) {
 						whitelistedSigners = append(whitelistedSigners, signerAddress)
 					}
 				}
 
 				for _, recipient := range whitelistedRecipients {
-					for _, whitelistEntry := range burnTaxAddressWhitelist {
-						if !strings.EqualFold(recipient, whitelistEntry) {
-							break
-						}
 
+					if btfd.TreasuryKeeper.HasWhitelistAddress(ctx, recipient) {
 						recipientWhitelistCount++
 					}
 				}

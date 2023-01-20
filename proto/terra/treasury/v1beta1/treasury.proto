@@ -32,9 +32,6 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-
-  repeated string burn_tax_whitelist = 9
-      [(gogoproto.moretags) = "yaml:\"burn_tax_whitelist\"", (gogoproto.nullable) = false];
 }
 
 // PolicyConstraints - defines policy constraints can be applied in tax & reward policies

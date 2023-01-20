@@ -356,25 +356,11 @@ func (k Keeper) GetBurnSplitRate(ctx sdk.Context) sdk.Dec {
 	return params.BurnTaxSplit
 }
 
-func (k Keeper) GetBurnTaxWhitelist(ctx sdk.Context) []string {
-	params := k.GetParams(ctx)
-	return params.BurnTaxWhitelist
-}
-
 func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
 	params := k.GetParams(ctx)
 	params.BurnTaxSplit = burnTaxSplit
 
 	k.SetParams(ctx, params)
-}
-
-func (k Keeper) SetBurnTaxWhitelist(ctx sdk.Context, burnTaxWhitelist []string) {
-
-	params := k.GetParams(ctx)
-	params.BurnTaxWhitelist = burnTaxWhitelist
-
-	k.SetParams(ctx, params)
-
 }
 
 // ======Whitelist substore======

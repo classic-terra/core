@@ -123,7 +123,7 @@ func (suite *AnteTestSuite) TestEnsureIBCUntaxed() {
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
-	
+
 	// Set the blockheight past the tax height block
 	suite.ctx = suite.ctx.WithBlockHeight(10_000_000)
 
@@ -137,13 +137,11 @@ func (suite *AnteTestSuite) TestEnsureIBCUntaxed() {
 	// IBC must pass without burn after the specified tax block height
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms when block height is 12,000,000")
-
 }
 
 // the following binance addresses should not be applied tax
 // go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/terra-money/core/custom/auth/ante
 func (suite *AnteTestSuite) TestFilterRecipient() {
-
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress

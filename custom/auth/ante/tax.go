@@ -11,10 +11,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	core "github.com/terra-money/core/types"
+	frk "github.com/terra-money/core/types/fork"
 	marketexported "github.com/terra-money/core/x/market/exported"
 	oracleexported "github.com/terra-money/core/x/oracle/exported"
 	wasmexported "github.com/terra-money/core/x/wasm/exported"
-	frk "github.com/terra-money/core/types/fork"
 )
 
 // MaxOracleMsgGasUsage is constant expected oracle msg gas cost

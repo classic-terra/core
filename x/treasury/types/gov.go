@@ -25,7 +25,7 @@ var (
 	_ govtypes.Content = &RemoveWhitelistAddressProposal{}
 )
 
-//======SetWhitelistAddressProposal======
+// ======SetWhitelistAddressProposal======
 
 func NewSetWhitelistAddressProposal(title, description string, whitelist []string) govtypes.Content {
 	return &SetWhitelistAddressProposal{
@@ -69,7 +69,7 @@ func (p *SetWhitelistAddressProposal) ValidateBasic() error {
 	return nil
 }
 
-//======RemoveWhitelistAddressProposal======
+// ======RemoveWhitelistAddressProposal======
 
 func NewRemoveWhitelistAddressProposal(title, description string, whitelist []string) govtypes.Content {
 	return &RemoveWhitelistAddressProposal{

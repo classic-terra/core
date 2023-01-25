@@ -21,7 +21,7 @@ var (
 	KeyWindowLong              = []byte("WindowLong")
 	KeyWindowProbation         = []byte("WindowProbation")
 	KeyBurnTaxSplit            = []byte("BurnTaxSplit")
-	KeyBurnTaxWhitelist		   = []byte("BurnTaxWhitelist")
+	KeyBurnTaxWhitelist        = []byte("BurnTaxWhitelist")
 )
 
 // Default parameter values

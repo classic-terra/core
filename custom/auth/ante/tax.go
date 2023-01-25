@@ -20,7 +20,7 @@ import (
 // MaxOracleMsgGasUsage is constant expected oracle msg gas cost
 const MaxOracleMsgGasUsage = uint64(100_000)
 
-// compile on package import
+// IBCRegexp compiles on package import
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
 
 // TaxFeeDecorator will check if the transaction's fee is at least as large

@@ -42,7 +42,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	if currHeight < TaxPowerUpgradeHeight {
 		return next(ctx, tx, simulate)
 	}
-	
+
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -57,49 +57,71 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// Compute taxes again.
 		taxes := FilterMsgAndComputeTax(ctx, btfd.TreasuryKeeper, msgs...)
 
-		if currHeight >= WhitelistHeight {
-			for _, msg := range msgs {
-				var whitelistedRecipients []string
-				var whitelistedSigners []string
-				recipientWhitelistCount := 0
+		// Record tax proceeds
+		if !taxes.IsZero() {
+			// Check if burn tax whitelist feature is active
+			if currHeight >= WhitelistHeight {
+				tainted := false
 
-				switch v := msg.(type) {
-				case *banktypes.MsgSend:
-					whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
-				case *banktypes.MsgMultiSend:
-					for _, output := range v.Outputs {
-						whitelistedRecipients = append(whitelistedRecipients, output.Address)
+				// Iterate over messages
+				for _, msg := range msgs {
+					var whitelistedRecipients []string
+					var whitelistedSenders []string
+					senderWhitelistCount := 0
+					recipientWhitelistCount := 0
+
+					// Fetch recipients
+					switch v := msg.(type) {
+					case *banktypes.MsgSend:
+						whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
+						whitelistedSenders = append(whitelistedSenders, v.FromAddress)
+					case *banktypes.MsgMultiSend:
+						for _, output := range v.Outputs {
+							whitelistedRecipients = append(whitelistedRecipients, output.Address)
+						}
+
+						for _, input := range v.Inputs {
+							whitelistedSenders = append(whitelistedSenders, input.Address)
+						}
+					default:
+						// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
+						// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
 					}
-				default:
-					// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
-					// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
+
+					// Match signers vs whitelist
+					for _, sender := range whitelistedSenders {
+						if btfd.TreasuryKeeper.HasWhitelistAddress(ctx, sender) {
+							senderWhitelistCount++
+						}
+					}
+
+					// If all signers are not matched apply burn tax
+					if len(whitelistedSenders) > senderWhitelistCount {
+						tainted = true
+
+						break
+					}
+
+					// Check recipients
+					for _, recipient := range whitelistedRecipients {
+						if btfd.TreasuryKeeper.HasWhitelistAddress(ctx, recipient) {
+							recipientWhitelistCount++
+						}
+					}
+
+					// If all recipients are not matched apply burn tax
+					if len(whitelistedRecipients) > recipientWhitelistCount {
+						tainted = true
+
+						break
+					}
 				}
 
-				signers := msg.GetSigners()
-
-				for _, signer := range signers {
-					signerAddress := signer.String()
-
-					if btfd.TreasuryKeeper.HasWhitelistAddress(ctx, signerAddress) {
-						whitelistedSigners = append(whitelistedSigners, signerAddress)
-					}
-				}
-
-				for _, recipient := range whitelistedRecipients {
-
-					if btfd.TreasuryKeeper.HasWhitelistAddress(ctx, recipient) {
-						recipientWhitelistCount++
-					}
-				}
-
-				if len(signers) == len(whitelistedSigners) && len(whitelistedRecipients) <= recipientWhitelistCount {
+				if !tainted {
 					return next(ctx, tx, simulate)
 				}
 			}
-		}
 
-		// Record tax proceeds
-		if !taxes.IsZero() {
 			if currHeight >= TaxPowerSplitHeight {
 				feePool := btfd.DistributionKeeper.GetFeePool(ctx)
 

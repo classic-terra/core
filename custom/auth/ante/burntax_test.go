@@ -1,6 +1,8 @@
 package ante_test
 
 import (
+	"fmt"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,8 +10,10 @@ import (
 
 	"github.com/terra-money/core/custom/auth/ante"
 	core "github.com/terra-money/core/types"
+	treasury "github.com/terra-money/core/x/treasury/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
+	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -90,102 +94,175 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 
 // the following binance addresses should not be applied tax
 // go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/terra-money/core/custom/auth/ante
-// func (suite *AnteTestSuite) TestFilterRecipient() {
+func (suite *AnteTestSuite) TestFilterRecipient() {
 
-// 	// keys and addresses
-// 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-// 	priv2, _, addr2 := testdata.KeyTestPubAddr()
-// 	_, _, addr3 := testdata.KeyTestPubAddr()
-// 	ante.BurnTaxAddressWhitelist = []string{
-// 		addr1.String(),
-// 	}
+	// keys and addresses
+	var privs []cryptotypes.PrivKey
+	var addrs []sdk.AccAddress
 
-// 	cases := []struct {
-// 		name             string
-// 		senderAddress    sdk.AccAddress
-// 		senderPriv       cryptotypes.PrivKey
-// 		recipientAddress sdk.AccAddress
-// 		burnShouldWork   bool
-// 	}{
-// 		{
-// 			name:             "send token from binance address",
-// 			senderAddress:    addr1,
-// 			senderPriv:       priv1,
-// 			recipientAddress: addr2,
-// 			burnShouldWork:   false,
-// 		}, {
-// 			name:             "token received by binance address",
-// 			senderAddress:    addr2,
-// 			senderPriv:       priv2,
-// 			recipientAddress: addr1,
-// 			burnShouldWork:   false,
-// 		}, {
-// 			name:             "normal tax cut",
-// 			senderAddress:    addr2,
-// 			senderPriv:       priv2,
-// 			recipientAddress: addr3,
-// 			burnShouldWork:   true,
-// 		},
-// 	}
+	// 0, 1: binance
+	// 2, 3: normal
+	for i := 0; i < 4; i++ {
+		priv, _, addr := testdata.KeyTestPubAddr()
+		privs = append(privs, priv)
+		addrs = append(addrs, addr)
+	}
 
-// 	// there should be no coin in burn module
-// 	for _, c := range cases {
-// 		fmt.Printf("CASE = %s \n", c.name)
-// 		suite.SetupTest(true) // setup
-// 		suite.ctx = suite.ctx.WithBlockHeight(ante.TaxPowerSplitHeight)
-// 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	// set send amount
+	sendAmt := int64(1000000)
+	sendCoin := sdk.NewInt64Coin(core.MicroSDRDenom, sendAmt)
+	feeAmt := int64(1000)
 
-// 		sendAmount := int64(1000000)
-// 		sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
-// 		fundCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 2000000))
-// 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, c.senderAddress)
-// 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-// 		suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
-// 		suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, c.senderAddress, fundCoins)
+	cases := []struct {
+		name       string
+		msgSigner  cryptotypes.PrivKey
+		msgCreator func() []sdk.Msg
+		burnAmount int64
+		feeAmount  int64
+	}{
+		{
+			name:      "MsgSend(binance -> binance)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
 
-// 		mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.DistrKeeper)
-// 		antehandler := sdk.ChainAnteDecorators(
-// 			cosmosante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
-// 			mfd,
-// 		)
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
 
-// 		// msg and signatures
-// 		msg := banktypes.NewMsgSend(c.senderAddress, c.recipientAddress, sendCoins)
+				return msgs
+			},
+			// skip this one hence burn amount is 0
+			burnAmount: 0,
+			feeAmount:  feeAmt,
+		}, {
+			name:      "MsgSend(normal -> normal)",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
 
-// 		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1000))
-// 		gasLimit := testdata.NewTestGasLimit()
-// 		suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-// 		suite.txBuilder.SetFeeAmount(feeAmount)
-// 		suite.txBuilder.SetGasLimit(gasLimit)
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
 
-// 		privs, accNums, accSeqs := []cryptotypes.PrivKey{c.senderPriv}, []uint64{0}, []uint64{0}
-// 		tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-// 		suite.Require().NoError(err)
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			burnAmount: feeAmt,
+			feeAmount:  feeAmt,
+		}, {
+			name:      "MsgSend(binance -> normal), MsgSend(binance -> binance)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
 
-// 		// check fee decorator and burn module amount before ante handler
-// 		feeCollector := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
-// 		burnModule := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, treasury.BurnModuleName)
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[2], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+				msg2 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg2)
 
-// 		amountFeeBefore := suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
-// 		fmt.Printf("amount fee before = %v \n", amountFeeBefore)
-// 		amountBurnBefore := suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroSDRDenom)
-// 		fmt.Printf("amount burn before = %v \n", amountBurnBefore)
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			burnAmount: feeAmt * 2,
+			feeAmount:  feeAmt * 2,
+		}, {
+			name:      "MsgSend(binance -> binance), MsgMultiSend(binance -> normal, binance -> binance)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
 
-// 		_, err = antehandler(suite.ctx, tx, false)
-// 		suite.Require().NoError(err)
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+				msg2 := banktypes.NewMsgMultiSend(
+					[]banktypes.Input{
+						{
+							Address: addrs[0].String(),
+							Coins:   sdk.NewCoins(sendCoin),
+						},
+						{
+							Address: addrs[0].String(),
+							Coins:   sdk.NewCoins(sendCoin),
+						},
+					},
+					[]banktypes.Output{
+						{
+							Address: addrs[2].String(),
+							Coins:   sdk.NewCoins(sendCoin),
+						},
+						{
+							Address: addrs[1].String(),
+							Coins:   sdk.NewCoins(sendCoin),
+						},
+					},
+				)
+				msgs = append(msgs, msg2)
 
-// 		// check fee decorator
-// 		amountFee := suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
-// 		fmt.Printf("amount fee = %v \n", amountFee)
-// 		amountBurn := suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroSDRDenom)
-// 		fmt.Printf("amount burn before = %v \n", amountBurn)
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			burnAmount: feeAmt * 3,
+			feeAmount:  feeAmt * 3,
+		},
+	}
 
-// 		if c.burnShouldWork {
-// 			suite.Require().Equal(amountBurnBefore.Amount.Add(sdk.NewInt(1000)), amountBurn.Amount)
-// 			suite.Require().Equal(amountFeeBefore, amountFee)
-// 		} else {
-// 			suite.Require().Equal(amountBurnBefore, amountBurn)
-// 			suite.Require().Equal(amountFeeBefore.Amount.Add(sdk.NewInt(1000)), amountFee.Amount)
-// 		}
-// 	}
-// }
+	// there should be no coin in burn module
+	for _, c := range cases {
+		suite.SetupTest(true) // setup
+		fmt.Printf("CASE = %s \n", c.name)
+		suite.ctx = suite.ctx.WithBlockHeight(ante.WhitelistHeight)
+		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[0].String())
+		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[1].String())
+
+		mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.DistrKeeper)
+		antehandler := sdk.ChainAnteDecorators(
+			cosmosante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
+			mfd,
+		)
+
+		for i := 0; i < 4; i++ {
+			fundCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1000000000))
+			acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addrs[i])
+			suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+			suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
+			suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+		}
+
+		// msg and signatures
+		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.feeAmount))
+		gasLimit := testdata.NewTestGasLimit()
+		suite.Require().NoError(suite.txBuilder.SetMsgs(c.msgCreator()...))
+		suite.txBuilder.SetFeeAmount(feeAmount)
+		suite.txBuilder.SetGasLimit(gasLimit)
+
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{0}, []uint64{0}
+		tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+		suite.Require().NoError(err)
+
+		// check fee decorator and burn module amount before ante handler
+		feeCollector := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
+		burnModule := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, treasury.BurnModuleName)
+
+		amountFeeBefore := suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
+		fmt.Printf("amount fee before = %v \n", amountFeeBefore)
+		amountBurnBefore := suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroSDRDenom)
+		fmt.Printf("amount burn before = %v \n", amountBurnBefore)
+
+		_, err = antehandler(suite.ctx, tx, false)
+		suite.Require().NoError(err)
+
+		// check fee decorator
+		amountFee := suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
+		fmt.Printf("amount fee after = %v \n", amountFee)
+		amountBurn := suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroSDRDenom)
+		fmt.Printf("amount burn after = %v \n", amountBurn)
+
+		if c.burnAmount > 0 {
+			suite.Require().Equal(amountBurnBefore.Amount.Add(sdk.NewInt(c.burnAmount)), amountBurn.Amount)
+			suite.Require().Equal(amountFeeBefore, amountFee)
+		} else {
+			suite.Require().Equal(amountBurnBefore, amountBurn)
+			suite.Require().Equal(amountFeeBefore.Amount.Add(sdk.NewInt(c.feeAmount)), amountFee.Amount)
+		}
+	}
+}

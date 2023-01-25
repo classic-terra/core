@@ -314,4 +314,5 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 			suite.Require().Equal(amountBurnBefore, amountBurn)
 			suite.Require().Equal(amountFeeBefore.Amount.Add(sdk.NewInt(c.feeAmount)), amountFee.Amount)
 		}
+	}
 }

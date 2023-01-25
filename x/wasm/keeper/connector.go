@@ -60,7 +60,7 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 			// just take the first one for now if there are multiple sub-sdk messages
 			// and safely return nothing if no data
 			result = wasmvmtypes.SubMsgResult{
-				Ok: &wasmvmtypes.SubcallResponse{
+				Ok: &wasmvmtypes.SubMsgResponse{
 					Events: types.EncodeSdkEvents(events),
 					Data:   data,
 				},

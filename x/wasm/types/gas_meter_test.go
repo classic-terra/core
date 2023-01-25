@@ -63,7 +63,7 @@ func TestReplyCosts(t *testing.T) {
 	reply := wasmvmtypes.Reply{
 		ID: 10,
 		Result: wasmvmtypes.SubMsgResult{
-			Ok: &wasmvmtypes.SubcallResponse{
+			Ok: &wasmvmtypes.SubMsgResponse{
 				Events: events,
 				Data:   make([]byte, dataLength),
 			},

@@ -119,15 +119,18 @@ func (suite *AnteTestSuite) TestEnsureIBCUntaxed() {
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
-
-	// IBC must pass without burn before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms when block height is 1")
-
+	
 	// Set the blockheight past the tax height block
 	suite.ctx = suite.ctx.WithBlockHeight(10_000_000)
 
+	// IBC must pass without burn before the specified tax block height
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().Error(err, "Decorator should have errored on IBC denoms when block height is 10,000,000")
+
+	// Set the blockheight past the tax height block
+	suite.ctx = suite.ctx.WithBlockHeight(12_000_000)
+
 	// IBC must pass without burn after the specified tax block height
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms when block height is 10,000,000")
+	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms when block height is 12,000,000")
 }

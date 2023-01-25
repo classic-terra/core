@@ -14,6 +14,7 @@ import (
 	marketexported "github.com/terra-money/core/x/market/exported"
 	oracleexported "github.com/terra-money/core/x/oracle/exported"
 	wasmexported "github.com/terra-money/core/x/wasm/exported"
+	frk "github.com/terra-money/core/types/fork"
 )
 
 // MaxOracleMsgGasUsage is constant expected oracle msg gas cost
@@ -168,7 +169,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 		if coin.Denom == sdk.DefaultBondDenom {
 			continue
 		}
-		if isIBCDenom(coin.Denom) {
+		if currHeight >= frk.IBCTaxWhitlistEnableForkHeight && isIBCDenom(coin.Denom) {
 			continue
 		}
 

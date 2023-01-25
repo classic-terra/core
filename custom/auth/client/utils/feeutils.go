@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
+	ante "github.com/terra-money/core/custom/auth/ante"
 	core "github.com/terra-money/core/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -53,8 +54,8 @@ func (m EstimateFeeReq) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error 
 
 // ComputeFeesWithBaseReq returns fee amount with given stdTx.
 func ComputeFeesWithBaseReq(
-	clientCtx client.Context, br rest.BaseReq, msgs ...sdk.Msg) (*legacytx.StdFee, error) {
-
+	clientCtx client.Context, br rest.BaseReq, msgs ...sdk.Msg,
+) (*legacytx.StdFee, error) {
 	gasSetting, err := flags.ParseGasSetting(br.Gas)
 	if err != nil {
 		return nil, err
@@ -144,7 +145,8 @@ type ComputeReqParams struct {
 
 // ComputeFeesWithCmd returns fee amount with cli options.
 func ComputeFeesWithCmd(
-	clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) (*legacytx.StdFee, error) {
+	clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg,
+) (*legacytx.StdFee, error) {
 	txf := tx.NewFactoryCLI(clientCtx, flagSet)
 
 	gas := txf.Gas()
@@ -257,15 +259,14 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 		}
 	}
 
-	return
+	return taxes, nil
 }
 
 // computes the stability tax according to tax-rate and tax-cap
 func computeTax(clientCtx client.Context, taxRate sdk.Dec, principal sdk.Coins) (taxes sdk.Coins, err error) {
-
 	for _, coin := range principal {
 
-		if coin.Denom == core.MicroLunaDenom {
+		if coin.Denom == core.MicroLunaDenom && clientCtx.Height < ante.TaxPowerUpgradeHeight {
 			continue
 		}
 

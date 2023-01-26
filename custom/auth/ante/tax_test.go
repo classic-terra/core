@@ -7,10 +7,10 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/classic-terra/classic/custom/auth/ante"
-	core "github.com/classic-terra/classic/types"
-	markettypes "github.com/classic-terra/classic/x/market/types"
-	wasmtypes "github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/custom/auth/ante"
+	core "github.com/classic-terra/core/types"
+	markettypes "github.com/classic-terra/core/x/market/types"
+	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 )
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesGas() {

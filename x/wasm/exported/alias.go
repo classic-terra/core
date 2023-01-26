@@ -1,6 +1,6 @@
 package exported
 
-import "github.com/classic-terra/classic/x/wasm/types"
+import "github.com/classic-terra/core/x/wasm/types"
 
 var (
 	EncodeSdkCoin  = types.EncodeSdkCoin

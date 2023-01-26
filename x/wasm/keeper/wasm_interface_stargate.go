@@ -12,7 +12,7 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	"github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/x/wasm/types"
 )
 
 var (

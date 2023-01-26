@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	core "github.com/classic-terra/classic/types"
+	core "github.com/classic-terra/core/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

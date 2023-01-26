@@ -30,12 +30,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	terraapp "github.com/classic-terra/classic/app"
-	terralegacy "github.com/classic-terra/classic/app/legacy"
-	"github.com/classic-terra/classic/app/params"
-	authcustomcli "github.com/classic-terra/classic/custom/auth/client/cli"
-	core "github.com/classic-terra/classic/types"
-	wasmconfig "github.com/classic-terra/classic/x/wasm/config"
+	terraapp "github.com/classic-terra/core/app"
+	terralegacy "github.com/classic-terra/core/app/legacy"
+	"github.com/classic-terra/core/app/params"
+	authcustomcli "github.com/classic-terra/core/custom/auth/client/cli"
+	core "github.com/classic-terra/core/types"
+	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 )
 
 // NewRootCmd creates a new root command for terrad. It is called once in the

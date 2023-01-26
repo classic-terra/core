@@ -7,7 +7,7 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./app
-HTTPS_GIT := https://github.com/classic-terra/classic.git
+HTTPS_GIT := https://github.com/classic-terra/core.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 

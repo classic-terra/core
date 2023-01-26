@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	feeutils "github.com/classic-terra/classic/custom/auth/client/utils"
-	"github.com/classic-terra/classic/x/market/types"
+	feeutils "github.com/classic-terra/core/custom/auth/client/utils"
+	"github.com/classic-terra/core/x/market/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

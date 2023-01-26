@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/std"
 
-	"github.com/classic-terra/classic/app/params"
+	"github.com/classic-terra/core/app/params"
 )
 
 var legacyCodecRegistered = false

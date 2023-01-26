@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	core "github.com/classic-terra/classic/types"
+	core "github.com/classic-terra/core/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

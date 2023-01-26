@@ -3,7 +3,7 @@ package v040
 import (
 	"testing"
 
-	v039authcustom "github.com/classic-terra/classic/custom/auth/legacy/v039"
+	v039authcustom "github.com/classic-terra/core/custom/auth/legacy/v039"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	core "github.com/classic-terra/classic/types"
+	core "github.com/classic-terra/core/types"
 
 	"github.com/stretchr/testify/require"
 

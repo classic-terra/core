@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	core "github.com/classic-terra/classic/types"
-	"github.com/classic-terra/classic/x/market/keeper"
-	"github.com/classic-terra/classic/x/market/types"
+	core "github.com/classic-terra/core/types"
+	"github.com/classic-terra/core/x/market/keeper"
+	"github.com/classic-terra/core/x/market/types"
 )
 
 func TestMarketFilters(t *testing.T) {

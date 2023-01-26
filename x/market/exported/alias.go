@@ -3,7 +3,7 @@
 
 package exported
 
-import "github.com/classic-terra/classic/x/market/types"
+import "github.com/classic-terra/core/x/market/types"
 
 type (
 	MsgSwap     = types.MsgSwap

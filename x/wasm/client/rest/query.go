@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/x/wasm/types"
 
 	"github.com/gorilla/mux"
 )

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/classic-terra/classic/x/oracle/types"
+	"github.com/classic-terra/core/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

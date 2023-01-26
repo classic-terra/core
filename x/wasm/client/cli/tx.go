@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	feeutils "github.com/classic-terra/classic/custom/auth/client/utils"
-	wasmUtils "github.com/classic-terra/classic/x/wasm/client/utils"
-	"github.com/classic-terra/classic/x/wasm/types"
+	feeutils "github.com/classic-terra/core/custom/auth/client/utils"
+	wasmUtils "github.com/classic-terra/core/x/wasm/client/utils"
+	"github.com/classic-terra/core/x/wasm/types"
 )
 
 const (

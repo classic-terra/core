@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/x/wasm/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

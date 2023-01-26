@@ -2,8 +2,8 @@ package keeper
 
 import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/classic-terra/classic/custom/auth/ante"
-	"github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/custom/auth/ante"
+	"github.com/classic-terra/core/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

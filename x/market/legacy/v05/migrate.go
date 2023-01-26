@@ -3,8 +3,8 @@ package v05
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v04market "github.com/classic-terra/classic/x/market/legacy/v04"
-	v05market "github.com/classic-terra/classic/x/market/types"
+	v04market "github.com/classic-terra/core/x/market/legacy/v04"
+	v05market "github.com/classic-terra/core/x/market/types"
 )
 
 // Migrate accepts exported v0.4 x/market and

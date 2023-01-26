@@ -12,11 +12,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	core "github.com/classic-terra/classic/types"
-	marketwasm "github.com/classic-terra/classic/x/market/wasm"
-	oraclewasm "github.com/classic-terra/classic/x/oracle/wasm"
-	treasurywasm "github.com/classic-terra/classic/x/treasury/wasm"
-	"github.com/classic-terra/classic/x/wasm/types"
+	core "github.com/classic-terra/core/types"
+	marketwasm "github.com/classic-terra/core/x/market/wasm"
+	oraclewasm "github.com/classic-terra/core/x/oracle/wasm"
+	treasurywasm "github.com/classic-terra/core/x/treasury/wasm"
+	"github.com/classic-terra/core/x/wasm/types"
 )
 
 // MakerInitMsg nolint

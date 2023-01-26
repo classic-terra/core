@@ -14,8 +14,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
-	core "github.com/classic-terra/classic/types"
-	"github.com/classic-terra/classic/x/vesting/types"
+	core "github.com/classic-terra/core/types"
+	"github.com/classic-terra/core/x/vesting/types"
 )
 
 var (

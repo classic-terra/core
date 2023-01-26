@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/x/wasm/types"
 )
 
 // GetQueryCmd returns the cli query commands for wasm   module

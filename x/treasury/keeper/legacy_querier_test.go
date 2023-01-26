@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	core "github.com/classic-terra/classic/types"
-	"github.com/classic-terra/classic/x/treasury/types"
+	core "github.com/classic-terra/core/types"
+	"github.com/classic-terra/core/x/treasury/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

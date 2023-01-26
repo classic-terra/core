@@ -8,9 +8,9 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	"github.com/classic-terra/classic/x/treasury/keeper"
-	"github.com/classic-terra/classic/x/treasury/types"
-	wasm "github.com/classic-terra/classic/x/wasm/exported"
+	"github.com/classic-terra/core/x/treasury/keeper"
+	"github.com/classic-terra/core/x/treasury/types"
+	wasm "github.com/classic-terra/core/x/wasm/exported"
 )
 
 var _ wasm.WasmQuerierInterface = Querier{}

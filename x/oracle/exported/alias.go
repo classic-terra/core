@@ -3,7 +3,7 @@
 
 package exported
 
-import "github.com/classic-terra/classic/x/oracle/types"
+import "github.com/classic-terra/core/x/oracle/types"
 
 type (
 	MsgAggregateExchangeRatePrevote = types.MsgAggregateExchangeRatePrevote

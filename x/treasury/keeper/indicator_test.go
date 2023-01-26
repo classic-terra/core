@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	core "github.com/classic-terra/classic/types"
+	core "github.com/classic-terra/core/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

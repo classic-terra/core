@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/classic-terra/classic/x/wasm/types"
+	"github.com/classic-terra/core/x/wasm/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

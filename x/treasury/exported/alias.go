@@ -4,7 +4,7 @@
 package exported
 
 import (
-	"github.com/classic-terra/classic/x/treasury/types"
+	"github.com/classic-terra/core/x/treasury/types"
 )
 
 var NewQueryClient = types.NewQueryClient

@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	terraapp "github.com/classic-terra/classic/app"
-	"github.com/classic-terra/classic/app/helpers"
-	wasmconfig "github.com/classic-terra/classic/x/wasm/config"
+	terraapp "github.com/classic-terra/core/app"
+	"github.com/classic-terra/core/app/helpers"
+	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"

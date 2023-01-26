@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/classic-terra/classic/x/oracle/types"
+	"github.com/classic-terra/core/x/oracle/types"
 	"github.com/stretchr/testify/require"
 )
 

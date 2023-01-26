@@ -1,7 +1,7 @@
 package main
 
 import (
-	wasmconfig "github.com/classic-terra/classic/x/wasm/config"
+	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )

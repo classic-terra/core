@@ -115,15 +115,15 @@ endif
 
 build-linux:
 	mkdir -p $(BUILDDIR)
-	docker build --no-cache --tag classic-terra/terraclassic.terrad-binary ./
-	docker create --name temp classic-terra/terraclassic.terrad-binary:latest
+	docker build --platform linux/amd64 --no-cache --tag classic-terra/terraclassic.terrad-binary ./
+	docker create --platform linux/amd64 --name temp classic-terra/terraclassic.terrad-binary:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker rm temp
 
 build-linux-with-shared-library:
 	mkdir -p $(BUILDDIR)
-	docker build --tag classic-terra/terraclassic.terrad-shared ./ -f ./shared.Dockerfile
-	docker create --name temp classic-terra/terraclassic.terrad-shared:latest
+	docker build --platform linux/amd64 --tag classic-terra/terraclassic.terrad-shared ./ -f ./shared.Dockerfile
+	docker create --platform linux/amd64 --name temp classic-terra/terraclassic.terrad-shared:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker cp temp:/lib/libwasmvm.so $(BUILDDIR)/
 	docker rm temp

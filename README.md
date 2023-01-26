@@ -11,7 +11,7 @@ Upon the implosion of Terra, a group of rebels seized control of the blockchain.
 
 ### Binaries
 
-The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/terra-money/core/releases) page.
+The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/classic-terra/core/releases) page.
 
 ### From Source
 
@@ -23,10 +23,10 @@ If you haven't already, install Golang by following the [official docs](https://
 
 **Step 2: Get Terra Core source code**
 
-Use `git` to retrieve Terra Core from the [official repo](https://github.com/terra-money/core/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `terrad` binary.
+Use `git` to retrieve Terra Core from the [official repo](https://github.com/classic-terra/core/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `terrad` binary.
 
 ```bash
-git clone https://github.com/terra-money/core/
+git clone https://github.com/classic-terra/core.git
 cd core
 git checkout main
 ```
@@ -36,7 +36,7 @@ git checkout main
 Run the following command to install the executable `terrad` to your `GOPATH` and build Terra Core. `terrad` is the node daemon and CLI for interacting with a Terra node.
 
 ```bash
-# COSMOS_BUILD_OPTIONS=rocksdb make install
+# e.g. COSMOS_BUILD_OPTIONS=rocksdb make install
 make install
 ```
 
@@ -115,17 +115,18 @@ Once you have `terrad` installed, you will need to set up your node to be part o
 The following requirements are recommended for running a `columbus-5` mainnet node:
 
 - **4 or more** CPU cores
+- At least **8GB** of memory
 - At least **2TB** of disk storage
 - At least **100mbps** network bandwidth
 - An Linux distribution
 
-For configuration and migration instructions for setting up a Columbus-5 mainnet node, visit [The mainnet repo](https://github.com/terra-money/mainnet).
+For configuration and migration instructions for setting up a Columbus-5 mainnet node, visit [The mainnet repo](https://github.com/classic-terra/mainnet).
 
 **Terra Node Quick Start**
 ```
 terrad init nodename
 wget -O ~/.terra/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmZAMcdu85Qr8saFuNpL9VaxVqqLGWNAs72RVFhchL9jWs
-curl https://network.terra.dev/addrbook.json > ~/.terrad/config/addrbook.json
+curl https://raw.githubusercontent.com/classic-terra/mainnet/master/columbus-5/addrbook.json > ~/.terrad/config/addrbook.json
 terrad start
 ```
 

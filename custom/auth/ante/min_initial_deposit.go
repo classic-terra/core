@@ -11,7 +11,7 @@ import (
 
 const (
 	minInitialDepositRatio      int64 = 2
-	minInitialDepositRetionPrec int64 = 2
+	minInitialDepositRatioPrec int64 = 2
 )
 
 var minInitialDepositEnableBlockHeight = map[string]int64{
@@ -45,7 +45,7 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper GovKee
 	}
 
 	minDeposit := govKeeper.GetDepositParams(ctx).MinDeposit
-	requiredAmount := sdk.NewDecFromInt(minDeposit.AmountOf(core.MicroLunaDenom)).Mul(sdk.NewDecWithPrec(minInitialDepositRatio, minInitialDepositRetionPrec)).TruncateInt()
+	requiredAmount := sdk.NewDecFromInt(minDeposit.AmountOf(core.MicroLunaDenom)).Mul(sdk.NewDecWithPrec(minInitialDepositRatio, minInitialDepositRatioPrec)).TruncateInt()
 
 	requiredDepositCoins := sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, requiredAmount),

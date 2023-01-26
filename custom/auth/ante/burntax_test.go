@@ -8,6 +8,7 @@ import (
 
 	"github.com/terra-money/core/custom/auth/ante"
 	core "github.com/terra-money/core/types"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -85,7 +86,4 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 
 	// Total supply should have decreased by the tax amount
 	suite.Require().Equal(taxes, totalSupply.Sub(supplyAfterBurn))
-
-
 }
-

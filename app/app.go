@@ -415,7 +415,7 @@ func NewTerraApp(
 	// register wasm msg parser & querier
 	app.WasmKeeper.RegisterMsgParsers(map[string]wasmtypes.WasmMsgParserInterface{
 		wasmtypes.WasmMsgParserRouteBank:         bankwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteStaking:      stakingwasm.NewWasmMsgParser(),
+		wasmtypes.WasmMsgParserRouteStaking:      stakingwasm.NewMsgParser(),
 		wasmtypes.WasmMsgParserRouteMarket:       marketwasm.NewWasmMsgParser(),
 		wasmtypes.WasmMsgParserRouteWasm:         wasmkeeper.NewWasmMsgParser(),
 		wasmtypes.WasmMsgParserRouteDistribution: distrwasm.NewWasmMsgParser(),
@@ -423,8 +423,8 @@ func NewTerraApp(
 	}, wasmkeeper.NewStargateWasmMsgParser(appCodec))
 	app.WasmKeeper.RegisterQueriers(map[string]wasmtypes.WasmQuerierInterface{
 		wasmtypes.WasmQueryRouteBank:     bankwasm.NewWasmQuerier(app.BankKeeper),
-		wasmtypes.WasmQueryRouteStaking:  stakingwasm.NewWasmQuerier(app.StakingKeeper, app.DistrKeeper),
-		wasmtypes.WasmQueryRouteMarket:   marketwasm.NewWasmQuerier(app.MarketKeeper),
+		wasmtypes.WasmQueryRouteStaking:  stakingwasm.NewQuerier(app.StakingKeeper, app.DistrKeeper),
+		wasmtypes.WasmQueryRouteMarket:   marketwasm.NewQuerier(app.MarketKeeper),
 		wasmtypes.WasmQueryRouteOracle:   oraclewasm.NewWasmQuerier(app.OracleKeeper),
 		wasmtypes.WasmQueryRouteTreasury: treasurywasm.NewWasmQuerier(app.TreasuryKeeper),
 		wasmtypes.WasmQueryRouteWasm:     wasmkeeper.NewWasmQuerier(app.WasmKeeper),
@@ -479,16 +479,51 @@ func NewTerraApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName,
-		minttypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, evidencetypes.ModuleName,
-		stakingtypes.ModuleName, ibchost.ModuleName,
+		upgradetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		oracletypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		treasurytypes.ModuleName,
+		markettypes.ModuleName,
+		wasmtypes.ModuleName,
 	)
+
 	app.mm.SetOrderEndBlockers(
-		crisistypes.ModuleName, govtypes.ModuleName,
-		oracletypes.ModuleName, markettypes.ModuleName,
-		treasurytypes.ModuleName, authz.ModuleName,
-		feegrant.ModuleName, stakingtypes.ModuleName,
+		upgradetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		oracletypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
+		treasurytypes.ModuleName,
+		markettypes.ModuleName,
+		wasmtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -498,15 +533,26 @@ func NewTerraApp(
 	// can do so safely.
 	// NOTE: Treasury must occur after bank module so that initial supply is properly set
 	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName, authtypes.ModuleName,
-		banktypes.ModuleName, distrtypes.ModuleName,
-		stakingtypes.ModuleName, slashingtypes.ModuleName,
-		govtypes.ModuleName, markettypes.ModuleName,
-		oracletypes.ModuleName, treasurytypes.ModuleName,
-		wasmtypes.ModuleName, authz.ModuleName,
-		minttypes.ModuleName, crisistypes.ModuleName,
-		ibchost.ModuleName, genutiltypes.ModuleName,
-		evidencetypes.ModuleName, ibctransfertypes.ModuleName,
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		markettypes.ModuleName,
+		oracletypes.ModuleName,
+		treasurytypes.ModuleName,
+		wasmtypes.ModuleName,
+		authz.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		minttypes.ModuleName,
+		crisistypes.ModuleName,
+		ibchost.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
 	)
 
@@ -605,7 +651,7 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 				panic(fmt.Sprintf("%s not found", channelID))
 			}
 
-			channel.State = ibcchanneltypes.CLOSED
+			channel.State = ibcchanneltypes.OPEN
 			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
 		}
 	}

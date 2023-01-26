@@ -7,7 +7,7 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./app
-HTTPS_GIT := https://github.com/terra-money/core.git
+HTTPS_GIT := https://github.com/terra-rebels/classic.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
@@ -115,22 +115,23 @@ endif
 
 build-linux:
 	mkdir -p $(BUILDDIR)
-	docker build --no-cache --tag terramoney/core ./
-	docker create --name temp terramoney/core:latest
+	docker build --no-cache --tag terrarebels/classic ./
+	docker create --name temp terrarebels/classic:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker rm temp
 
 build-linux-with-shared-library:
 	mkdir -p $(BUILDDIR)
-	docker build --tag terramoney/core-shared ./ -f ./shared.Dockerfile
-	docker create --name temp terramoney/core-shared:latest
+	docker build --tag terrarebels/classic-shared ./ -f ./shared.Dockerfile
+	docker create --name temp terrarebels/classic-shared:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker cp temp:/lib/libwasmvm.so $(BUILDDIR)/
 	docker rm temp
 
-install: go.sum 
+install: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/terrad
 
+#TODO: Fix broken statik tooling
 update-swagger-docs: statik
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 	@if [ -n "$(git status --porcelain)" ]; then \
@@ -168,6 +169,34 @@ clean:
 .PHONY: distclean clean
 
 ###############################################################################
+###                           Genesis tooling                               ###
+###############################################################################
+GENESIS_REMOTE_PATH ?= https://www.dropbox.com/s/3zevo74iho80llc/col5_nowasm.json?dl=0
+GENESIS_LOCAL_PATH ?= $(PWD)/genesis.json
+GENESIS_COPY_PATH ?= $(PWD)/genesis_copy.json
+
+genesis-tools:
+	sudo apt install jq curl
+
+genesis-fetch:
+	curl $(GENESIS_REMOTE_PATH) -L -H "Accept: application/json" -o $(GENESIS_LOCAL_PATH)
+
+genesis-list-validators:
+	jq '.validators | .[]' $(GENESIS_LOCAL_PATH)
+
+genesis-add-validator:
+	jq '.validators += [$(GENESIS_VALIDATOR_JSON)]' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH) 
+
+genesis-remove-validator:
+	jq 'del(.validators[] | select(.address == "$(GENESIS_VALIDATOR_ADDRESS)"))' $(GENESIS_LOCAL_PATH) > $(GENESIS_COPY_PATH)
+	cp -fr $(GENESIS_COPY_PATH) $(GENESIS_LOCAL_PATH)
+	rm $(GENESIS_COPY_PATH)
+
+.PHONY: genesis-tools genesis-fetch genesis-add-validator genesis-remove-validator
+
+###############################################################################
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
@@ -203,9 +232,9 @@ lint-fix:
 .PHONY: lint lint-fix
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' -not -name '*.pb.gw.go' | xargs gofumpt -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' -not -name '*.pb.gw.go' | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' -not -name '*.pb.gw.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 .PHONY: format
 
 ###############################################################################
@@ -216,7 +245,7 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.3 sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
@@ -234,7 +263,7 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking 
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking
 
 ###############################################################################
 ###                                Localnet                                 ###
@@ -255,4 +284,17 @@ localnet-start: build-linux localnet-stop
 localnet-stop:
 	docker-compose down
 
-.PHONY: localnet-start localnet-stop
+localnet-rebel2-build:
+	docker-compose -f ./docker-compose/docker-compose.yml -f ./docker-compose/docker-compose.build.yml build core
+	docker-compose -f ./docker-compose/docker-compose.yml -f ./docker-compose/docker-compose.build.yml build node
+
+localnet-rebel2-start:
+	docker-compose -f ./docker-compose/docker-compose.yml up
+
+localnet-rebel2-stop:
+	docker-compose -f ./docker-compose/docker-compose.yml stop
+
+localnet-rebel2-clean:
+	docker-compose -f ./docker-compose/docker-compose.yml down
+
+.PHONY: localnet-start localnet-stop localnet-rebel2-start localnet-rebel2-stop localnet-rebel2-build localnet-rebel2-clean

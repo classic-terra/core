@@ -95,7 +95,6 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 // the following binance addresses should not be applied tax
 // go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/terra-money/core/custom/auth/ante
 func (suite *AnteTestSuite) TestFilterRecipient() {
-
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress

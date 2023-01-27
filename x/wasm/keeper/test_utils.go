@@ -409,7 +409,7 @@ type ExampleContract struct {
 }
 
 func StoreExampleContract(t testing.TB, input TestInput, wasmFile string) ExampleContract {
-	anyAmount := sdk.NewCoins(sdk.NewInt64Coin("denom", 1_000_000_000))
+	anyAmount := sdk.NewCoins(sdk.NewInt64Coin("denom", 1_000_000_000_000))
 	creator, creatorAddr := createFakeFundedAccount(input.Ctx, input.AccKeeper, input.BankKeeper, anyAmount)
 
 	wasmCode, err := ioutil.ReadFile(wasmFile)

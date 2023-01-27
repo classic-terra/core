@@ -106,7 +106,7 @@ func TestInitializeStaking(t *testing.T) {
 	assert.Equal(t, v.GetDelegatorShares(), sdk.NewDec(1234567))
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 500000))
-	creatorAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creatorAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload staking derivative code
 	stakingCode, err := os.ReadFile("./testdata/staking.wasm")
@@ -174,7 +174,7 @@ func initializeStaking(t *testing.T, input TestInput) InitInfo {
 	assert.Equal(t, v.Status, stakingtypes.Bonded)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 500000))
-	creatorAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creatorAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload staking derivative code
 	stakingCode, err := os.ReadFile("./testdata/staking.wasm")
@@ -217,7 +217,7 @@ func TestBonding(t *testing.T) {
 	// bob has 160k, putting 80k into the contract
 	full := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 160000))
 	funds := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 80000))
-	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
+	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
 
 	// check contract state before
 	assertBalance(t, ctx, keeper, contractAddr, bob, "0")
@@ -267,7 +267,7 @@ func TestUnbonding(t *testing.T) {
 	// bob has 160k, putting 80k into the contract
 	full := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 160000))
 	funds := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 80000))
-	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
+	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
 
 	bond := StakingHandleMsg{
 		Bond: &struct{}{},
@@ -335,7 +335,7 @@ func TestReinvest(t *testing.T) {
 	// full is 2x funds, 1x goes to the contract, other stays on his wallet
 	full := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 400000))
 	funds := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 200000))
-	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
+	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
 
 	// we will stake 200k to a validator with 1M self-bond
 	// this means we should get 1/6 of the rewards
@@ -404,7 +404,7 @@ func TestQueryStakingInfo(t *testing.T) {
 	// full is 2x funds, 1x goes to the contract, other stays on his wallet
 	full := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 400000))
 	funds := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 200000))
-	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
+	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, full)
 
 	// we will stake 200k to a validator with 1M self-bond
 	// this means we should get 1/6 of the rewards
@@ -428,7 +428,7 @@ func TestQueryStakingInfo(t *testing.T) {
 
 	// STEP 2: Prepare the mask contract
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload mask code
 	maskCode, err := os.ReadFile("./testdata/reflect.wasm")
@@ -582,7 +582,7 @@ func addValidator(
 	addr := sdk.ValAddress(pubKey.Address())
 
 	pkAny, _ := codectypes.NewAnyWithValue(cryptotypes.PubKey(simapp.CreateTestPubKeys(1)[0]))
-	owner := createFakeFundedAccount(ctx, accountKeeper, bankKeeper, sdk.Coins{value})
+	_, owner := createFakeFundedAccount(ctx, accountKeeper, bankKeeper, sdk.Coins{value})
 
 	msg := stakingtypes.MsgCreateValidator{
 		Description: stakingtypes.Description{

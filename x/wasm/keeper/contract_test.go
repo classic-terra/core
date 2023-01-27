@@ -22,7 +22,7 @@ func TestStoreCode(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -43,8 +43,8 @@ func TestMigrateCode(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
-	fakeAccount := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, fakeAccount := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	codeID := uint64(1)
 	keeper.SetCodeInfo(ctx, codeID, types.CodeInfo{
@@ -90,7 +90,7 @@ func TestCreateWithGzippedPayload(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm.gzip")
 	require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestInstantiate(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -141,7 +141,7 @@ func TestInstantiateWithNonExistingCodeID(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	initMsg := HackatomExampleInitMsg{}
 	initMsgBz, err := json.Marshal(initMsg)
@@ -157,7 +157,7 @@ func TestInstantiateWithBigInitMsg(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -178,8 +178,8 @@ func TestExecute(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -251,7 +251,7 @@ func TestExecuteWithNonExistingContractAddress(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
 
 	// unauthorized - trialCtx so we don't change state
 	nonExistingContractAddress := types.GenerateContractAddress(9999, 9999)
@@ -265,8 +265,8 @@ func TestExecuteWithHugeMsg(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -298,8 +298,8 @@ func TestExecuteWithPanic(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -329,8 +329,8 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -365,8 +365,8 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -401,8 +401,8 @@ func TestMigrate(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)))
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)))
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -529,8 +529,8 @@ func TestMigrateWithDispatchedMessage(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000)))
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000)))
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)

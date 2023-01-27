@@ -17,7 +17,7 @@ func TestInstantiateExceedMaxGas(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -50,7 +50,7 @@ func TestExecuteExceedMaxGas(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestMigrateExceedMaxGas(t *testing.T) {
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)

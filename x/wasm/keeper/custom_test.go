@@ -303,7 +303,7 @@ func TestBuyMsg(t *testing.T) {
 	checkAccount(t, ctx, accKeeper, bankKeeper, makerAddr, expectedRetCoins)
 
 	// unauthorized
-	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(offerCoin))
+	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(offerCoin))
 	_, err = keeper.ExecuteContract(ctx, makerAddr, bob, bz, sdk.NewCoins(offerCoin))
 	require.Error(t, err)
 }
@@ -362,7 +362,7 @@ func TestSellMsg(t *testing.T) {
 	checkAccount(t, ctx, accKeeper, bankKeeper, makerAddr, expectedRetCoins)
 
 	// unauthorized
-	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sellCoin))
+	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sellCoin))
 	_, err = keeper.ExecuteContract(ctx, makerAddr, bob, bz, sdk.NewCoins(sellCoin))
 	require.Error(t, err)
 }
@@ -406,7 +406,7 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 	swapAmountInSDR := lunaPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 	initCoin = sdk.NewCoin(core.MicroSDRDenom, swapAmountInSDR)
 
-	creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
+	_, creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
 
 	// upload staking derivatives code
 	makingCode, err := os.ReadFile("./testdata/maker.wasm")
@@ -443,7 +443,7 @@ func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bi
 	swapAmountInSDR := lunaPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 	initCoin = sdk.NewCoin(core.MicroSDRDenom, swapAmountInSDR)
 
-	creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
+	_, creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
 
 	// upload binding_tester contract codes
 	bindingsTCode, err := os.ReadFile("./testdata/bindings_tester.wasm")

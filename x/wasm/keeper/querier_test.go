@@ -21,8 +21,8 @@ func TestQueryContractState(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -86,8 +86,8 @@ func TestQueryMultipleGoroutines(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -137,8 +137,8 @@ func TestQueryCodeAndContractInfo(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
+	_, anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
 	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)

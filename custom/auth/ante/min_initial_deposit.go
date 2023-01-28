@@ -9,25 +9,17 @@ import (
 	core "github.com/terra-money/core/types"
 )
 
-const (
-	minInitialDepositRatio      int64 = 2
-	minInitialDepositRatioPrec int64 = 2
-)
-
-var minInitialDepositEnableBlockHeight = map[string]int64{
-	"columbus-5": 11_440_000,
-	"rebel-2":    12_690_000,
-}
-
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
 type MinInitialDepositDecorator struct {
 	govKeeper GovKeeper
+	treasuryKeeper TreasuryKeeper
 }
 
 // NewMinInitialDeposit returns new min initial deposit decorator instance
-func NewMinInitialDepositDecorator(govKeeper GovKeeper) MinInitialDepositDecorator {
+func NewMinInitialDepositDecorator(govKeeper GovKeeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
 	return MinInitialDepositDecorator{
 		govKeeper: govKeeper,
+		treasuryKeeper: treasuryKeeper,
 	}
 }
 
@@ -38,14 +30,16 @@ func IsMsgSubmitProposal(msg sdk.Msg) bool {
 }
 
 // HandleCheckMinInitialDeposit
-func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper GovKeeper) (err error) {
+func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper GovKeeper, treasuryKeeper TreasuryKeeper) (err error) {
 	submitPropMsg, ok := msg.(*govtypes.MsgSubmitProposal)
 	if !ok {
 		return fmt.Errorf("Could not dereference msg as MsgSubmitProposal")
 	}
 
+	minInitialDepositRatio := treasuryKeeper.GetParams(ctx).MinInitialDepositRatio
+
 	minDeposit := govKeeper.GetDepositParams(ctx).MinDeposit
-	requiredAmount := sdk.NewDecFromInt(minDeposit.AmountOf(core.MicroLunaDenom)).Mul(sdk.NewDecWithPrec(minInitialDepositRatio, minInitialDepositRatioPrec)).TruncateInt()
+	requiredAmount := sdk.NewDecFromInt(minDeposit.AmountOf(core.MicroLunaDenom)).Mul(minInitialDepositRatio).TruncateInt()
 
 	requiredDepositCoins := sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, requiredAmount),
@@ -65,12 +59,6 @@ func (btfd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 		return next(ctx, tx, simulate)
 	}
 
-	enableHeight, ok := minInitialDepositEnableBlockHeight[ctx.ChainID()]
-
-	if ok && (ctx.BlockHeight() < enableHeight) {
-		return next(ctx, tx, simulate)
-	}
-
 	msgs := tx.GetMsgs()
 	for _, msg := range msgs {
 
@@ -78,7 +66,7 @@ func (btfd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 			continue
 		}
 
-		err := HandleCheckMinInitialDeposit(ctx, msg, btfd.govKeeper)
+		err := HandleCheckMinInitialDeposit(ctx, msg, btfd.govKeeper, btfd.treasuryKeeper)
 		if err != nil {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
 		}

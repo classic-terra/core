@@ -75,6 +75,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(&options.IBCChannelKeeper),
-		NewMinInitialDepositDecorator(options.GovKeeper),
+		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 	), nil
 }

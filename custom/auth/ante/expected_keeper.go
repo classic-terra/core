@@ -3,6 +3,7 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	treasurytypes "github.com/terra-money/core/x/treasury/types"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -11,6 +12,7 @@ type TreasuryKeeper interface {
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
+	GetParams(ctx sdk.Context) (params treasurytypes.Params)
 }
 
 // OracleKeeper for feeder validation

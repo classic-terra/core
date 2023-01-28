@@ -21,6 +21,7 @@ var (
 	KeyWindowLong              = []byte("WindowLong")
 	KeyWindowProbation         = []byte("WindowProbation")
 	KeyBurnTaxSplit            = []byte("BurnTaxSplit")
+	KeyMinInitialDepositRatio  = []byte("MinInitialDepositRatio")
 )
 
 // Default parameter values
@@ -45,6 +46,7 @@ var (
 	DefaultTaxRate                 = sdk.NewDecWithPrec(1, 3)   // 0.1%
 	DefaultRewardWeight            = sdk.NewDecWithPrec(5, 2)   // 5%
 	DefaultBurnTaxSplit            = sdk.NewDecWithPrec(5, 1)   // 50%
+	DefaultMinInitialDepositRatio  = sdk.ZeroDec()
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -60,6 +62,7 @@ func DefaultParams() Params {
 		WindowLong:              DefaultWindowLong,
 		WindowProbation:         DefaultWindowProbation,
 		BurnTaxSplit:            DefaultBurnTaxSplit,
+		MinInitialDepositRatio:  DefaultMinInitialDepositRatio,
 	}
 }
 
@@ -87,6 +90,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyWindowLong, &p.WindowLong, validateWindowLong),
 		paramstypes.NewParamSetPair(KeyWindowProbation, &p.WindowProbation, validateWindowProbation),
 		paramstypes.NewParamSetPair(KeyBurnTaxSplit, &p.BurnTaxSplit, validateBurnTaxSplit),
+		paramstypes.NewParamSetPair(KeyMinInitialDepositRatio, &p.MinInitialDepositRatio, validateMinInitialDepositRatio),
 	}
 }
 
@@ -248,6 +252,24 @@ func validateBurnTaxSplit(i interface{}) error {
 
 	if v.GTE(sdk.NewDec(1)) {
 		return fmt.Errorf("burn tax split can not greater than 1")
+	}
+
+	return nil
+
+}
+
+func validateMinInitialDepositRatio(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min initial deposit ratio is > 1.0")
+	}
+
+	if sdk.ZeroDec().GT(v) {
+		return fmt.Errorf("min inital deposit ratio is < 0.0")
 	}
 
 	return nil

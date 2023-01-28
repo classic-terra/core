@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	treasurytypes "github.com/terra-money/core/x/treasury/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -41,6 +42,7 @@ type TreasuryKeeper interface {
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
+	GetParams(ctx sdk.Context) (params treasurytypes.Params)
 }
 
 // GRPCQueryHandler defines a function type which handles ABCI Query requests

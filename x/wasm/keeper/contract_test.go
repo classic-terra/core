@@ -14,11 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	core "github.com/terra-money/core/types"
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 )
 
 func TestStoreCode(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -39,7 +40,7 @@ func TestStoreCode(t *testing.T) {
 }
 
 func TestMigrateCode(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -74,7 +75,7 @@ func TestMigrateCode(t *testing.T) {
 }
 
 func TestStoreCodeWithHugeCode(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, keeper := input.Ctx, input.WasmKeeper
 
 	_, _, creator := keyPubAddr()
@@ -86,7 +87,7 @@ func TestStoreCodeWithHugeCode(t *testing.T) {
 }
 
 func TestCreateWithGzippedPayload(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -107,7 +108,7 @@ func TestCreateWithGzippedPayload(t *testing.T) {
 }
 
 func TestInstantiate(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -137,7 +138,7 @@ func TestInstantiate(t *testing.T) {
 }
 
 func TestInstantiateWithNonExistingCodeID(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -153,7 +154,7 @@ func TestInstantiateWithNonExistingCodeID(t *testing.T) {
 }
 
 func TestInstantiateWithBigInitMsg(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -173,7 +174,7 @@ func TestInstantiateWithBigInitMsg(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -247,7 +248,7 @@ func TestExecute(t *testing.T) {
 }
 
 func TestExecuteWithNonExistingContractAddress(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -260,7 +261,7 @@ func TestExecuteWithNonExistingContractAddress(t *testing.T) {
 }
 
 func TestExecuteWithHugeMsg(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -293,7 +294,7 @@ func TestExecuteWithHugeMsg(t *testing.T) {
 }
 
 func TestExecuteWithPanic(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -324,7 +325,7 @@ func TestExecuteWithPanic(t *testing.T) {
 }
 
 func TestExecuteWithCpuLoop(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -360,7 +361,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 }
 
 func TestExecuteWithStorageLoop(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -397,7 +398,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 }
 
 func TestMigrate(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -525,7 +526,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func TestMigrateWithDispatchedMessage(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))

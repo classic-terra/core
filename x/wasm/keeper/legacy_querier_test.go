@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,7 @@ import (
 )
 
 func TestLegacyContractState(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -98,7 +99,7 @@ func TestLegacyContractState(t *testing.T) {
 }
 
 func TestLegacyParams(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 
 	var params types.Params
 
@@ -111,7 +112,7 @@ func TestLegacyParams(t *testing.T) {
 }
 
 func TestLegacyMultipleGoroutines(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))

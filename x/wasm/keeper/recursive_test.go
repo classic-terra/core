@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerror "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 )
 
@@ -65,7 +66,7 @@ func (wasmQuerierWithCounter) QueryCustom(sdk.Context, json.RawMessage) ([]byte,
 var totalWasmQueryCounter int
 
 func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.AccAddress, ctx sdk.Context, keeper Keeper, cdc *codec.LegacyAmino) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, cdc, accKeeper, bankKeeper, keeper := input.Ctx, input.Cdc, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 	keeper.RegisterQueriers(map[string]types.WasmQuerierInterface{
 		types.WasmQueryRouteWasm: newWasmQuerierWithCounter(keeper),

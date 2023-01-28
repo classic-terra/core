@@ -151,7 +151,7 @@ type TestInput struct {
 
 // CreateTestInput nolint
 // TODO: CreateTestInput will always use default wasm config which limits customization for testing
-func CreateTestInput(t testing.TB) TestInput {
+func CreateTestInput(t testing.TB, wasmConfig *config.Config) TestInput {
 	tempDir := t.TempDir()
 
 	keyContract := sdk.NewKVStoreKey(types.StoreKey)
@@ -317,7 +317,7 @@ func CreateTestInput(t testing.TB) TestInput {
 		querier,
 		types.DefaultFeatures,
 		tempDir,
-		config.DefaultConfig(),
+		wasmConfig,
 	)
 
 	router.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)

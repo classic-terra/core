@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/terra-money/core/x/wasm/config"
 )
 
 // BenchmarkVerification benchmarks secp256k1 verification which is 1000 gas based on cpu time.
@@ -48,7 +49,12 @@ func BenchmarkInstantiationOverhead(b *testing.B) {
 	}
 	for name, spec := range specs {
 		b.Run(name, func(b *testing.B) {
-			input := CreateTestInput(b)
+			// explicitly set ContractMemoryCacheSize to zero to disable InMemoryCache
+			wasmConfig := config.DefaultConfig()
+			wasmConfig.ContractMemoryCacheSize = 0
+			wasmConfig.ContractDebugMode = true
+			input := CreateTestInput(b, wasmConfig)
+
 			example := InstantiateHackatomExampleContract(b, input)
 			if spec.pinned {
 				require.NoError(b, input.WasmKeeper.pinCode(input.Ctx, example.CodeID))
@@ -87,7 +93,7 @@ func BenchmarkCompilation(b *testing.B) {
 
 	for name, spec := range specs {
 		b.Run(name, func(b *testing.B) {
-			input := CreateTestInput(b)
+			input := CreateTestInput(b, config.DefaultConfig())
 
 			// print out code size for comparisons
 			code, err := ioutil.ReadFile(spec.wasmFile)

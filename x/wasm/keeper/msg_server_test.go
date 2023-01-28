@@ -7,13 +7,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "github.com/terra-money/core/types"
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestInstantiateExceedMaxGas(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -46,7 +47,7 @@ func TestInstantiateExceedMaxGas(t *testing.T) {
 }
 
 func TestExecuteExceedMaxGas(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
@@ -81,7 +82,7 @@ func TestExecuteExceedMaxGas(t *testing.T) {
 }
 
 func TestMigrateExceedMaxGas(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))

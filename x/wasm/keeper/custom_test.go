@@ -16,6 +16,7 @@ import (
 	marketwasm "github.com/terra-money/core/x/market/wasm"
 	oraclewasm "github.com/terra-money/core/x/oracle/wasm"
 	treasurywasm "github.com/terra-money/core/x/treasury/wasm"
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 )
 
@@ -111,7 +112,7 @@ type contractInfoQueryMsg struct {
 }
 
 func TestInstantiateMaker(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 
 	ctx, keeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.OracleKeeper
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
@@ -396,7 +397,7 @@ func TestSendMsg(t *testing.T) {
 }
 
 func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr sdk.AccAddress, initCoin sdk.Coin) {
-	input = CreateTestInput(t)
+	input = CreateTestInput(t, config.DefaultConfig())
 
 	ctx, keeper, accKeeper, bankKeeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.AccKeeper, input.BankKeeper, input.OracleKeeper
 
@@ -429,7 +430,7 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 }
 
 func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bindingsTesterAddr sdk.AccAddress, initCoin sdk.Coin) {
-	input = CreateTestInput(t)
+	input = CreateTestInput(t, config.DefaultConfig())
 
 	ctx, keeper, accKeeper, bankKeeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.AccKeeper, input.BankKeeper, input.OracleKeeper
 

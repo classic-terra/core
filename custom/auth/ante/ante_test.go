@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	terraapp "github.com/terra-money/core/app"
 	treasurytypes "github.com/terra-money/core/x/treasury/types"
 	wasmconfig "github.com/terra-money/core/x/wasm/config"
@@ -49,6 +50,8 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
+	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
+	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
 
 	return app, ctx
 }

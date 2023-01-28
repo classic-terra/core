@@ -8,7 +8,7 @@ services:
      #Enable this image if you want to target columbus-5
      #image: terrarebels/terraclassic.terrad-node:latest-columbus-5
      #Enable this image if you want to target rebel-2
-     image: terrarebels/terraclassic.terrad-node:latest-rebel-2
+     image: classic-terra/terraclassic.terrad-node:latest-rebel-2
      environment:
        - CHAINID=rebel-2
        - ENABLE_LCD=true       

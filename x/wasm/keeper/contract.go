@@ -499,3 +499,16 @@ func (k Keeper) getContractDetails(ctx sdk.Context, contractAddress sdk.AccAddre
 	contractStorePrefix = prefix.NewStore(types.KVStore(ctx, k.storeKey), contractStoreKey)
 	return
 }
+
+func (k Keeper) pinCode(ctx sdk.Context, codeID uint64) error {
+	codeInfo, err := k.GetCodeInfo(ctx, codeID)
+	if err != nil {
+		return err
+	}
+
+	if err := k.wasmVM.Pin(codeInfo.CodeHash); err != nil {
+		return sdkerrors.Wrap(types.ErrPinContractFailed, err.Error())
+	}
+
+	return nil
+}

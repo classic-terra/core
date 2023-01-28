@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,34 +34,34 @@ func BenchmarkGasNormalization(b *testing.B) {
 // By comparing the timing for queries on pinned vs unpinned, the difference gives us the overhead of
 // instantiating an unpinned contract. That value can be used to determine a reasonable gas price
 // for the InstantiationCost
-// func BenchmarkInstantiationOverhead(b *testing.B) {
-// 	specs := map[string]struct {
-// 		pinned bool
-// 		db     func() dbm.DB
-// 	}{
-// 		"unpinned, memory db": {
-// 			db: func() dbm.DB { return dbm.NewMemDB() },
-// 		},
-// 		"pinned, memory db": {
-// 			db:     func() dbm.DB { return dbm.NewMemDB() },
-// 			pinned: true,
-// 		},
-// 	}
-// 	for name, spec := range specs {
-// 		b.Run(name, func(b *testing.B) {
-// 			input := CreateTestInput(b)
-// 			example := InstantiateHackatomExampleContract(b, input)
-// 			if spec.pinned {
-// 				require.NoError(b, keepers.ContractKeeper.PinCode(ctx, example.CodeID))
-// 			}
-// 			b.ResetTimer()
-// 			for i := 0; i < b.N; i++ {
-// 				_, err := keepers.WasmKeeper.QuerySmart(ctx, example.Contract, []byte(`{"verifier":{}}`))
-// 				require.NoError(b, err)
-// 			}
-// 		})
-// 	}
-// }
+// go test -benchmem -run=^$ -bench ^BenchmarkInstantiationOverhead$ github.com/terra-money/core/x/wasm/keeper
+func BenchmarkInstantiationOverhead(b *testing.B) {
+	specs := map[string]struct {
+		pinned bool
+	}{
+		"unpinned, memory db": {
+			pinned: false,
+		},
+		"pinned, memory db": {
+			pinned: true,
+		},
+	}
+	for name, spec := range specs {
+		b.Run(name, func(b *testing.B) {
+			input := CreateTestInput(b)
+			example := InstantiateHackatomExampleContract(b, input)
+			if spec.pinned {
+				require.NoError(b, input.WasmKeeper.pinCode(input.Ctx, example.CodeID))
+			}
+			input.Ctx = input.Ctx.WithGasMeter(sdk.NewGasMeter(100_000_000_000))
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, err := input.WasmKeeper.queryToContract(input.Ctx, example.Contract, []byte(`{"verifier":{}}`))
+				require.NoError(b, err)
+			}
+		})
+	}
+}
 
 // Calculate the time it takes to compile some wasm code the first time.
 // This will help us adjust pricing for StoreCode

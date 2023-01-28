@@ -6,7 +6,6 @@ package keeper
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -445,14 +444,7 @@ type HackatomExampleInstance struct {
 
 // InstantiateHackatomExampleContract load and instantiate the "./testdata/hackatom.wasm" contract
 func InstantiateHackatomExampleContract(t testing.TB, input TestInput) HackatomExampleInstance {
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creatorPriv, creator := createFakeFundedAccount(input.Ctx, input.AccKeeper, input.BankKeeper, deposit)
-
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	codeID, err := input.WasmKeeper.StoreCode(input.Ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	verifier, _, verifierAddr := keyPubAddr()
 	beneficiary, _, beneficiaryAddr := keyPubAddr()
@@ -462,15 +454,10 @@ func InstantiateHackatomExampleContract(t testing.TB, input TestInput) HackatomE
 	}.GetBytes(t)
 	initialAmount := sdk.NewCoins(sdk.NewInt64Coin("denom", 100))
 
-	contractAddr, _, err := input.WasmKeeper.InstantiateContract(input.Ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, initialAmount)
+	contractAddr, _, err := input.WasmKeeper.InstantiateContract(input.Ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, initialAmount)
 	require.NoError(t, err)
 	return HackatomExampleInstance{
-		ExampleContract: ExampleContract{
-			InitialAmount: initialAmount,
-			Creator:       creatorPriv,
-			CreatorAddr:   creator,
-			CodeID:        codeID,
-		},
+		ExampleContract: exampleContract,
 		Contract:        contractAddr,
 		Verifier:        verifier,
 		VerifierAddr:    verifierAddr,

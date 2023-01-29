@@ -500,6 +500,7 @@ func (k Keeper) getContractDetails(ctx sdk.Context, contractAddress sdk.AccAddre
 	return
 }
 
+//lint:ignore U1000 Ignore unused function for used in benchmarking
 func (k Keeper) pinCode(ctx sdk.Context, codeID uint64) error {
 	codeInfo, err := k.GetCodeInfo(ctx, codeID)
 	if err != nil {

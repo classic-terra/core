@@ -114,18 +114,13 @@ type contractInfoQueryMsg struct {
 func TestInstantiateMaker(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
 
-	ctx, keeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.OracleKeeper
+	keeper, oracleKeeper := input.WasmKeeper, input.OracleKeeper
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
 	oracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
-	_, _, creatorAddr := keyPubAddr()
-
 	// upload staking derivatives code
-	makingCode, err := os.ReadFile("./testdata/maker.wasm")
-	require.NoError(t, err)
-	makerID, err := keeper.StoreCode(ctx, creatorAddr, makingCode)
-	require.NoError(t, err)
-	require.Equal(t, uint64(1), makerID)
+	exampleContract := StoreExampleContract(t, input, "./testdata/maker.wasm")
+	require.Equal(t, uint64(1), exampleContract.CodeID)
 
 	// valid instantiate
 	initMsg := MakerInitMsg{
@@ -134,12 +129,12 @@ func TestInstantiateMaker(t *testing.T) {
 	}
 
 	initBz, err := json.Marshal(&initMsg)
-	makerAddr, _, err := keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, initBz, nil)
+	makerAddr, _, err := keeper.InstantiateContract(input.Ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initBz, nil)
 	require.NoError(t, err)
 	require.NotEmpty(t, makerAddr)
 
 	// invalid init msg
-	_, _, err = keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, []byte{}, nil)
+	_, _, err = keeper.InstantiateContract(input.Ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, []byte{}, nil)
 	require.Error(t, err)
 }
 

@@ -20,23 +20,15 @@ import (
 
 func TestStoreCode(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
-	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
+	ctx, keeper := input.Ctx, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
-
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	// Create contract
-	codeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
-	require.Equal(t, uint64(1), codeID)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
+	require.Equal(t, uint64(1), exampleContract.CodeID)
 
 	// Verify content
-	storedCode, err := keeper.GetByteCode(ctx, codeID)
+	storedCode, err := keeper.GetByteCode(ctx, exampleContract.CodeID)
 	require.NoError(t, err)
-	require.Equal(t, wasmCode, storedCode)
+	require.Equal(t, exampleContract.WasmCode, storedCode)
 }
 
 func TestMigrateCode(t *testing.T) {
@@ -88,19 +80,12 @@ func TestStoreCodeWithHugeCode(t *testing.T) {
 
 func TestCreateWithGzippedPayload(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
-	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
+	ctx, keeper := input.Ctx, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
-
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm.gzip")
-	require.NoError(t, err)
-
-	contractID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
-	require.Equal(t, uint64(1), contractID)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
+	require.Equal(t, uint64(1), exampleContract.CodeID)
 	// and verify content
-	storedCode, err := keeper.GetByteCode(ctx, contractID)
+	storedCode, err := keeper.GetByteCode(ctx, exampleContract.CodeID)
 	require.NoError(t, err)
 	rawCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
@@ -109,16 +94,9 @@ func TestCreateWithGzippedPayload(t *testing.T) {
 
 func TestInstantiate(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
-	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
+	ctx, keeper := input.Ctx, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
-
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	codeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	_, _, bob := keyPubAddr()
 	_, _, fred := keyPubAddr()
@@ -132,7 +110,7 @@ func TestInstantiate(t *testing.T) {
 	require.NoError(t, err)
 
 	// create with no balance is also legal
-	addr, _, err := keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, nil)
+	addr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, nil)
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 }
@@ -155,20 +133,13 @@ func TestInstantiateWithNonExistingCodeID(t *testing.T) {
 
 func TestInstantiateWithBigInitMsg(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
-	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
+	ctx, keeper := input.Ctx, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
-
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	codeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	// test max init msg size
 	initMsgBz := make([]byte, keeper.MaxContractMsgSize(ctx)+1)
-	_, _, err = keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	_, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "init msg size is too huge")
 }
@@ -264,16 +235,10 @@ func TestExecuteWithHugeMsg(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
 	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	codeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	_, _, bob := keyPubAddr()
 	initMsg := HackatomExampleInitMsg{
@@ -283,7 +248,7 @@ func TestExecuteWithHugeMsg(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	addr, _, err := keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	addr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 	require.Equal(t, "cosmos18vd8fpwxzck93qlwghaj6arh4p7c5n89uzcee5", addr.String())
 
@@ -297,16 +262,10 @@ func TestExecuteWithPanic(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
 	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	contractID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	_, _, bob := keyPubAddr()
 	initMsg := HackatomExampleInitMsg{
@@ -316,7 +275,7 @@ func TestExecuteWithPanic(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	addr, _, err := keeper.InstantiateContract(ctx, contractID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	addr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
 	// let's make sure we get a reasonable error, no panic/crash
@@ -364,16 +323,10 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
 	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	contractID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	_, _, bob := keyPubAddr()
 	initMsg := HackatomExampleInitMsg{
@@ -383,7 +336,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	addr, _, err := keeper.InstantiateContract(ctx, contractID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	addr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
 	// make sure we set a limit before calling
@@ -401,16 +354,11 @@ func TestMigrate(t *testing.T) {
 	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
 	_, fred := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)))
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	originalCodeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
-	newCodeID, err := keeper.StoreCode(ctx, creator, wasmCode)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
+	creator, originalCodeID := exampleContract.CreatorAddr, exampleContract.CodeID
+	newCodeID, err := keeper.StoreCode(ctx, creator, exampleContract.WasmCode)
 	require.NoError(t, err)
 	require.NotEqual(t, originalCodeID, newCodeID)
 

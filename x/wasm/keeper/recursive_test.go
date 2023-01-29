@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -67,19 +66,12 @@ var totalWasmQueryCounter int
 
 func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.AccAddress, ctx sdk.Context, keeper Keeper, cdc *codec.LegacyAmino) {
 	input := CreateTestInput(t, config.DefaultConfig())
-	ctx, cdc, accKeeper, bankKeeper, keeper := input.Ctx, input.Cdc, input.AccKeeper, input.BankKeeper, input.WasmKeeper
+	ctx, cdc, keeper = input.Ctx, input.Cdc, input.WasmKeeper
 	keeper.RegisterQueriers(map[string]types.WasmQuerierInterface{
 		types.WasmQueryRouteWasm: newWasmQuerierWithCounter(keeper),
 	}, nil)
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	_, creator = createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-
-	// store the code
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-	codeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	// instantiate the contract
 	_, _, bob := keyPubAddr()
@@ -90,10 +82,10 @@ func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.Acc
 	}
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
-	contractAddr, _, err := keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	contractAddr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
-	return contractAddr, creator, ctx, keeper, cdc
+	return contractAddr, exampleContract.CreatorAddr, ctx, keeper, cdc
 }
 
 // go test -v -run ^TestGasCostOnQuery$ github.com/terra-money/core/x/wasm/keeper

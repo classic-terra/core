@@ -5,7 +5,7 @@ package keeper
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -379,7 +379,7 @@ func FundAccount(input TestInput, addr sdk.AccAddress, amounts sdk.Coins) error 
 	return input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, faucetAccountName, addr, amounts)
 }
 
-func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, coins sdk.Coins) (crypto.PrivKey, sdk.AccAddress) { //nolint:unused // this is used in tests.
+func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, coins sdk.Coins) (crypto.PrivKey, sdk.AccAddress) {
 	priv, _, addr := keyPubAddr()
 	ak.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
 
@@ -393,7 +393,7 @@ func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk ba
 	return priv, addr
 }
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) { //nolint:unused // keyPubAddr is used in createFakeFundedAccount, which is used in tests.
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
@@ -405,18 +405,19 @@ type ExampleContract struct {
 	Creator       crypto.PrivKey
 	CreatorAddr   sdk.AccAddress
 	CodeID        uint64
+	WasmCode      []byte
 }
 
 func StoreExampleContract(t testing.TB, input TestInput, wasmFile string) ExampleContract {
 	anyAmount := sdk.NewCoins(sdk.NewInt64Coin("denom", 1_000_000_000_000_000))
 	creator, creatorAddr := createFakeFundedAccount(input.Ctx, input.AccKeeper, input.BankKeeper, anyAmount)
 
-	wasmCode, err := ioutil.ReadFile(wasmFile)
+	wasmCode, err := os.ReadFile(wasmFile)
 	require.NoError(t, err)
 
 	codeID, err := input.WasmKeeper.StoreCode(input.Ctx, creatorAddr, wasmCode)
 	require.NoError(t, err)
-	return ExampleContract{anyAmount, creator, creatorAddr, codeID}
+	return ExampleContract{anyAmount, creator, creatorAddr, codeID, wasmCode}
 }
 
 // ====== Hackatom Test Helper function ======

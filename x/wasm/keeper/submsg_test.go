@@ -129,6 +129,7 @@ func TestDispatchSubMsgSuccessCase(t *testing.T) {
 	}, module.Attributes[0])
 }
 
+// go test -v -run ^TestDispatchSubMsgErrorHandling$ github.com/terra-money/core/x/wasm/keeper
 func TestDispatchSubMsgErrorHandling(t *testing.T) {
 	fundedDenom := core.MicroLunaDenom
 	fundedAmount := 1_000_000
@@ -340,7 +341,6 @@ func TestDispatchSubMsgErrorHandling(t *testing.T) {
 			}
 			reflectSendBz, err := json.Marshal(reflectSend)
 			require.NoError(t, err)
-
 			execCtx := ctx.WithGasMeter(sdk.NewGasMeter(ctxGasLimit))
 			defer func() {
 				if tc.isOutOfGasPanic {
@@ -351,6 +351,7 @@ func TestDispatchSubMsgErrorHandling(t *testing.T) {
 					}
 				}
 			}()
+
 			_, err = keeper.ExecuteContract(execCtx, contractAddr, creator, reflectSendBz, nil)
 
 			if tc.executeError {

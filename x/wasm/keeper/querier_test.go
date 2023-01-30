@@ -3,32 +3,26 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestQueryContractState(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	goCtx := sdk.WrapSDKContext(input.Ctx)
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	contractID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	_, _, bob := keyPubAddr()
 	initMsg := HackatomExampleInitMsg{
@@ -38,7 +32,7 @@ func TestQueryContractState(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	addr, _, err := keeper.InstantiateContract(ctx, contractID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	addr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
 	contractModel := []types.Model{
@@ -71,7 +65,7 @@ func TestQueryContractState(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	goCtx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.WasmKeeper)
 	res, err := querier.Params(goCtx, &types.QueryParamsRequest{})
@@ -80,20 +74,14 @@ func TestQueryParams(t *testing.T) {
 }
 
 func TestQueryMultipleGoroutines(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	goCtx := sdk.WrapSDKContext(input.Ctx)
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	contractID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	_, _, bob := keyPubAddr()
 	initMsg := HackatomExampleInitMsg{
@@ -103,7 +91,7 @@ func TestQueryMultipleGoroutines(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	addr, _, err := keeper.InstantiateContract(ctx, contractID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	addr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
 	contractModel := []types.Model{
@@ -131,20 +119,15 @@ func TestQueryMultipleGoroutines(t *testing.T) {
 }
 
 func TestQueryCodeAndContractInfo(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	goCtx := sdk.WrapSDKContext(input.Ctx)
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 5000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-	anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
+	_, anyAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, topUp)
 
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-
-	contractID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
+	contractID, creator := exampleContract.CodeID, exampleContract.CreatorAddr
 
 	_, _, bob := keyPubAddr()
 	initMsg := HackatomExampleInitMsg{
@@ -154,7 +137,7 @@ func TestQueryCodeAndContractInfo(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	addr, _, err := keeper.InstantiateContract(ctx, contractID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	addr, _, err := keeper.InstantiateContract(ctx, contractID, creator, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
 	contractModel := []types.Model{
@@ -173,7 +156,7 @@ func TestQueryCodeAndContractInfo(t *testing.T) {
 
 	res2, err := querier.ByteCode(goCtx, &types.QueryByteCodeRequest{CodeId: contractID})
 	require.NoError(t, err)
-	require.Equal(t, res2.GetByteCode(), wasmCode)
+	require.Equal(t, res2.GetByteCode(), exampleContract.WasmCode)
 
 	res3, err := querier.ContractInfo(goCtx, &types.QueryContractInfoRequest{ContractAddress: addr.String()})
 	require.NoError(t, err)

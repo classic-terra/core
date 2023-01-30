@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	core "github.com/terra-money/core/types"
+	"github.com/terra-money/core/x/wasm/config"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
@@ -85,11 +86,11 @@ func mustParse(t *testing.T, data []byte, res interface{}) {
 const ReflectFeatures = "staking,reflect,stargate"
 
 func TestReflectReflectContractSend(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, bankKeeper, keeper := input.Ctx, input.AccKeeper, input.BankKeeper, input.WasmKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 	_, _, bob := keyPubAddr()
 
 	// upload reflect code
@@ -165,13 +166,13 @@ func TestReflectReflectContractSend(t *testing.T) {
 }
 
 func TestReflectStargateQuery(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, keeper, bankKeeper := input.Ctx, input.AccKeeper, input.WasmKeeper, input.BankKeeper
 
 	funds := sdk.NewCoins(sdk.NewInt64Coin("denom", 320000))
 	contractStart := sdk.NewCoins(sdk.NewInt64Coin("denom", 40000))
 	expectedBalance := funds.Sub(contractStart)
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, funds)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, funds)
 
 	// upload code
 	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
@@ -241,11 +242,11 @@ type reflectState struct {
 }
 
 func TestMaskReflectWasmQueries(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, keeper, bankKeeper := input.Ctx, input.AccKeeper, input.WasmKeeper, input.BankKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload reflect code
 	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
@@ -313,11 +314,11 @@ func TestMaskReflectWasmQueries(t *testing.T) {
 }
 
 func TestWasmRawQueryWithNil(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, keeper, bankKeeper := input.Ctx, input.AccKeeper, input.WasmKeeper, input.BankKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload reflect code
 	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
@@ -404,12 +405,12 @@ func toMaskRawMsg(cdc codec.Codec, msg sdk.Msg) (wasmvmtypes.CosmosMsg, error) {
 }
 
 func TestReflectInvalidStargateQuery(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, accKeeper, keeper, bankKeeper := input.Ctx, input.AccKeeper, input.WasmKeeper, input.BankKeeper
 
 	funds := sdk.NewCoins(sdk.NewInt64Coin("denom", 320000))
 	contractStart := sdk.NewCoins(sdk.NewInt64Coin("denom", 40000))
-	creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, funds)
+	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, funds)
 
 	// upload code
 	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")

@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -16,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerror "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 )
 
@@ -65,20 +65,13 @@ func (wasmQuerierWithCounter) QueryCustom(sdk.Context, json.RawMessage) ([]byte,
 var totalWasmQueryCounter int
 
 func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.AccAddress, ctx sdk.Context, keeper Keeper, cdc *codec.LegacyAmino) {
-	input := CreateTestInput(t)
-	ctx, cdc, accKeeper, bankKeeper, keeper := input.Ctx, input.Cdc, input.AccKeeper, input.BankKeeper, input.WasmKeeper
+	input := CreateTestInput(t, config.DefaultConfig())
+	ctx, cdc, keeper = input.Ctx, input.Cdc, input.WasmKeeper
 	keeper.RegisterQueriers(map[string]types.WasmQuerierInterface{
 		types.WasmQueryRouteWasm: newWasmQuerierWithCounter(keeper),
 	}, nil)
 
-	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
-	creator = createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit.Add(deposit...))
-
-	// store the code
-	wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
-	require.NoError(t, err)
-	codeID, err := keeper.StoreCode(ctx, creator, wasmCode)
-	require.NoError(t, err)
+	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
 
 	// instantiate the contract
 	_, _, bob := keyPubAddr()
@@ -89,12 +82,13 @@ func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.Acc
 	}
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
-	contractAddr, _, err := keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, deposit)
+	contractAddr, _, err := keeper.InstantiateContract(ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, exampleContract.InitialAmount)
 	require.NoError(t, err)
 
-	return contractAddr, creator, ctx, keeper, cdc
+	return contractAddr, exampleContract.CreatorAddr, ctx, keeper, cdc
 }
 
+// go test -v -run ^TestGasCostOnQuery$ github.com/terra-money/core/x/wasm/keeper
 func TestGasCostOnQuery(t *testing.T) {
 	//	GasNoWork := types.InstantiateContractCosts(0) + 3_509
 	// Note: about 100 SDK gas (10k wasmVM gas) for each round of sha256
@@ -114,21 +108,21 @@ func TestGasCostOnQuery(t *testing.T) {
 		"no recursion, no work": {
 			gasLimit:    400_000,
 			msg:         Recurse{},
-			expectedGas: 43_602,
+			expectedGas: 0xaa32,
 		},
 		"no recursion, some work": {
 			gasLimit: 400_000,
 			msg: Recurse{
 				Work: 50, // 50 rounds of sha256 inside the contract
 			},
-			expectedGas: 49_264,
+			expectedGas: 0xb707,
 		},
 		"recursion 1, no work": {
 			gasLimit: 400_000,
 			msg: Recurse{
 				Depth: 1,
 			},
-			expectedGas: 87_402,
+			expectedGas: 0x15514,
 		},
 		"recursion 1, some work": {
 			gasLimit: 400_000,
@@ -136,7 +130,7 @@ func TestGasCostOnQuery(t *testing.T) {
 				Depth: 1,
 				Work:  50,
 			},
-			expectedGas: 98_700,
+			expectedGas: 0x16ea6,
 		},
 		"recursion 4, some work": {
 			gasLimit: 400_000,
@@ -145,7 +139,7 @@ func TestGasCostOnQuery(t *testing.T) {
 				Work:  50,
 			},
 			// NOTE: +6 for rounding issues
-			expectedGas: 247_005,
+			expectedGas: 0x3957d,
 		},
 	}
 
@@ -256,6 +250,7 @@ func TestGasOnExternalQuery(t *testing.T) {
 	}
 }
 
+// go test -v -run ^TestLimitRecursiveQueryGas$ github.com/terra-money/core/x/wasm/keeper
 func TestLimitRecursiveQueryGas(t *testing.T) {
 	// The point of this test from https://github.com/CosmWasm/cosmwasm/issues/456
 	// Basically, if I burn 90% of gas in CPU loop, then query out (to my self)
@@ -286,7 +281,7 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 				Work:  2000,
 			},
 			expectQueriesFromContract: 0,
-			expectedGas:               272_533,
+			expectedGas:               0x2b422,
 		},
 		"recursion 5, lots of work": {
 			gasLimit: 4_000_000,
@@ -296,14 +291,14 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			},
 			expectQueriesFromContract: 5,
 			// NOTE: +2 for rounding issues
-			expectedGas: 1_636_079,
+			expectedGas: 0x103bd5,
 		},
 		// this is where we expect an error...
 		// it has enough gas to run 4 times and die on the 5th (4th time dispatching to sub-contract)
 		// however, if we don't charge the cpu gas before sub-dispatching, we can recurse over 20 times
 		// TODO: figure out how to asset how deep it went
 		"deep recursion, should die on 5th level": {
-			gasLimit: 1_200_000,
+			gasLimit: 800_000,
 			msg: Recurse{
 				Depth: 50,
 				Work:  2000,

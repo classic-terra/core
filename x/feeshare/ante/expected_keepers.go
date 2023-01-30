@@ -1,6 +1,6 @@
 package ante
 
-// Used for the Juno ante handler so we can properly send 50% of fees to dAPP developers via fee share module
+// Used for the ante handler so we can properly send 50% of fees to dAPP developers via x/feeshare module
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

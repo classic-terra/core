@@ -9,9 +9,9 @@ parent:
 
 ## Abstract
 
-This document specifies the internal `x/feeshare` module of Juno Network.
+This document specifies the internal `x/feeshare` module of Terra Classic.
 
-The `x/feeshare` module enables the Juno to support splitting transaction fees between the community and smart contract deployer. This aims to increase the adoption of Juno by offering a new way of income for CosmWasm smart contract developers. Developers can register their smart contracts and every time someone interacts with a registered smart contract, the contract deployer or their assigned withdrawal account receives a part of the transaction fees.
+The `x/feeshare` module enables the Terra Classic network to support splitting transaction fees between the community and smart contract deployer. This aims to increase the adoption of Terra Classic by offering a new way of income for CosmWasm smart contract developers. Developers can register their smart contracts and every time someone interacts with a registered smart contract, the contract deployer or their assigned withdrawal account receives a part of the transaction fees.
 
 ## Contents
 

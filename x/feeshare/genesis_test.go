@@ -10,6 +10,7 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/terra-money/core/app"
+	appparams "github.com/terra-money/core/app/params"
 	"github.com/terra-money/core/x/feeshare"
 	"github.com/terra-money/core/x/feeshare/types"
 )
@@ -54,7 +55,7 @@ func (suite *GenesisTestSuite) TestFeeShareInitGenesis() {
 				Params: types.Params{
 					EnableFeeShare:  false,
 					DeveloperShares: types.DefaultDeveloperShares,
-					AllowedDenoms:   []string{"ujuno"},
+					AllowedDenoms:   []string{appparams.BondDenom},
 				},
 			},
 			false,
@@ -65,7 +66,7 @@ func (suite *GenesisTestSuite) TestFeeShareInitGenesis() {
 				Params: types.Params{
 					EnableFeeShare:  true,
 					DeveloperShares: sdk.NewDecWithPrec(0, 2),
-					AllowedDenoms:   []string{"ujuno"},
+					AllowedDenoms:   []string{appparams.BondDenom},
 				},
 			},
 			false,
@@ -76,7 +77,7 @@ func (suite *GenesisTestSuite) TestFeeShareInitGenesis() {
 				Params: types.Params{
 					EnableFeeShare:  true,
 					DeveloperShares: sdk.NewDecWithPrec(100, 2),
-					AllowedDenoms:   []string{"ujuno"},
+					AllowedDenoms:   []string{appparams.BondDenom},
 				},
 			},
 			false,

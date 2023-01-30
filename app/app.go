@@ -137,6 +137,9 @@ import (
 	wasmkeeper "github.com/terra-money/core/x/wasm/keeper"
 	wasmtypes "github.com/terra-money/core/x/wasm/types"
 
+	feesharekeeper "github.com/terra-money/core/x/feeshare/keeper"
+	feesharetypes "github.com/terra-money/core/x/feeshare/types"
+
 	bankwasm "github.com/terra-money/core/custom/bank/wasm"
 	distrwasm "github.com/terra-money/core/custom/distribution/wasm"
 	govwasm "github.com/terra-money/core/custom/gov/wasm"
@@ -256,6 +259,7 @@ type TerraApp struct { // nolint: golint
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	OracleKeeper     oraclekeeper.Keeper
+	FeeShareKeeper   feesharekeeper.Keeper
 	MarketKeeper     marketkeeper.Keeper
 	TreasuryKeeper   treasurykeeper.Keeper
 	WasmKeeper       wasmkeeper.Keeper
@@ -439,6 +443,15 @@ func NewTerraApp(
 		app.TreasuryKeeper, bApp.MsgServiceRouter(),
 		app.GRPCQueryRouter(), wasmtypes.DefaultFeatures,
 		homePath, wasmConfig,
+	)
+
+	app.FeeShareKeeper = feesharekeeper.NewKeeper(
+		app.keys[feesharetypes.StoreKey],
+		appCodec,
+		app.GetSubspace(feesharetypes.ModuleName),
+		app.BankKeeper,
+		app.WasmKeeper,
+		authtypes.FeeCollectorName,
 	)
 
 	// register wasm msg parser & querier
@@ -864,6 +877,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
+	paramsKeeper.Subspace(feesharetypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper

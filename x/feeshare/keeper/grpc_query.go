@@ -73,7 +73,7 @@ func (q Querier) FeeShare(
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
-			"invalid format for contract %s, should be bech32 ('juno...')", req.ContractAddress,
+			"invalid format for contract %s, should be bech32 ('terra...')", req.ContractAddress,
 		)
 	}
 
@@ -115,7 +115,7 @@ func (q Querier) DeployerFeeShares( // nolint: dupl
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
-			"invalid format for deployer %s, should be bech32 ('juno...')", req.DeployerAddress,
+			"invalid format for deployer %s, should be bech32 ('terra...')", req.DeployerAddress,
 		)
 	}
 
@@ -154,7 +154,7 @@ func (q Querier) WithdrawerFeeShares( // nolint: dupl
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
-			"invalid format for withdraw addr %s, should be bech32 ('juno...')", req.WithdrawerAddress,
+			"invalid format for withdraw addr %s, should be bech32 ('terra...')", req.WithdrawerAddress,
 		)
 	}
 

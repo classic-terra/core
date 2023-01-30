@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
+	appparams "github.com/terra-money/core/app/params"
 )
 
 func TestParamKeyTable(t *testing.T) {
@@ -20,7 +21,7 @@ func TestParamSetPairs(t *testing.T) {
 
 func TestParamsValidate(t *testing.T) {
 	devShares := sdk.NewDecWithPrec(60, 2)
-	acceptedDenoms := []string{"ujuno"}
+	acceptedDenoms := []string{appparams.BondDenom}
 
 	testCases := []struct {
 		name     string

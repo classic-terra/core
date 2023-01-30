@@ -40,7 +40,7 @@ func (ao EmptyBaseAppOptions) Get(o string) interface{} {
 }
 
 // DefaultConsensusParams defines the default Tendermint consensus params used
-// in junoApp testing.
+// in app testing.
 var DefaultConsensusParams = &abci.ConsensusParams{
 	Block: &abci.BlockParams{
 		MaxBytes: 200000,
@@ -85,21 +85,21 @@ func Setup(t *testing.T, isCheckTx bool, invCheckPeriod uint) *app.TerraApp {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new junoApp with a validator set and genesis accounts
+// SetupWithGenesisValSet initializes a new app with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one consensus engine unit in the default token of the JunoApp from first genesis
-// account. A Nop logger is set in JunoApp.
+// of one consensus engine unit in the default token of the app from first genesis
+// account. A Nop logger is set in app.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
 	t.Helper()
 
-	junoApp, genesisState := setup(true, 5)
-	genesisState = genesisStateWithValSet(t, junoApp, genesisState, valSet, genAccs, balances...)
+	terraApp, genesisState := setup(true, 5)
+	genesisState = genesisStateWithValSet(t, terraApp, genesisState, valSet, genAccs, balances...)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	junoApp.InitChain(
+	terraApp.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
@@ -108,15 +108,15 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	)
 
 	// commit genesis changes
-	junoApp.Commit()
-	junoApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		Height:             junoApp.LastBlockHeight() + 1,
-		AppHash:            junoApp.LastCommitID().Hash,
+	terraApp.Commit()
+	terraApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		Height:             terraApp.LastBlockHeight() + 1,
+		AppHash:            terraApp.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
 	}})
 
-	return junoApp
+	return terraApp
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*app.TerraApp, app.GenesisState) {

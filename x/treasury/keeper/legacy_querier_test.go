@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -160,6 +161,27 @@ func getQueriedIndicators(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino,
 	return indicators
 }
 
+func getQueriedWhitelist(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) types.QueryWhitelistResponse {
+	params := types.NewQueryWhitelistParams(0, 100)
+	bz, err := cdc.MarshalJSON(params)
+	require.Nil(t, err)
+
+	query := abci.RequestQuery{
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryWhitelist}, "/"),
+		Data: bz,
+	}
+
+	bz, err = querier(ctx, []string{types.QueryWhitelist}, query)
+	require.Nil(t, err)
+	require.NotNil(t, bz)
+
+	var response types.QueryWhitelistResponse
+	err = cdc.UnmarshalJSON(bz, &response)
+	require.Nil(t, err)
+
+	return response
+}
+
 func TestLegacyQueryParams(t *testing.T) {
 	input := CreateTestInput(t)
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
@@ -304,4 +326,24 @@ func TestLegacyQueryIndicators(t *testing.T) {
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek))
 	queriedIndicators = getQueriedIndicators(t, input.Ctx, input.Cdc, querier)
 	require.Equal(t, targetIndicators, queriedIndicators)
+}
+
+// go test -v -run ^TestLegacyQueryWhitelist$ github.com/terra-money/core/x/treasury/keeper
+func TestLegacyQueryWhitelist(t *testing.T) {
+	input := CreateTestInput(t)
+	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
+
+	// add some address to whitelist address
+	input.TreasuryKeeper.SetWhitelistAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
+
+	targetRes := types.QueryWhitelistResponse{
+		Addresses: []string{"terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t"},
+		Pagination: &query.PageResponse{
+			NextKey: nil,
+			Total:   1,
+		},
+	}
+
+	queriedRes := getQueriedWhitelist(t, input.Ctx, input.Cdc, querier)
+	require.Equal(t, targetRes, queriedRes)
 }

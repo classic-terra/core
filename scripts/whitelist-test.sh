@@ -56,3 +56,6 @@ done
 
 # check whitelist again
 ./_build/new/terrad q treasury whitelist -o json | jq ".addresses"
+
+# query whitelist through rest api
+curl -s http://localhost:1317/treasury/whitelist | jq ".result.addresses"

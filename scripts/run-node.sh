@@ -6,6 +6,19 @@ pkill terrad
 BINARY=$1
 DENOM=$2
 
+SED_BINARY=sed
+# check if this is OS X
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # check if gsed is installed
+    if ! command -v gsed &> /dev/null
+    then
+        echo "gsed could not be found. Please install it with 'brew install gnu-sed'"
+        exit
+    else
+        SED_BINARY=gsed
+    fi
+fi
+
 # check BINARY is set. If not, build terrad and set BINARY
 if [ -z "$BINARY" ]; then
     make build
@@ -46,6 +59,10 @@ update_test_genesis '.app_state["mint"]["params"]["mint_denom"]=$DENOM' $DENOM
 update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom": $DENOM,"amount": "1000000"}]' $DENOM
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom": $DENOM,"amount": "1000"}' $DENOM
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]=$DENOM' $DENOM
+
+# enable rest server and swagger
+$SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME/config/app.toml
+$SED_BINARY -i 's/swagger = false/swagger = true/' $HOME/config/app.toml
 
 # Sign genesis transaction
 $BINARY gentx $KEY "1000000${DENOM}" --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME

@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/terra-money/core/custom/auth/ante"
-	core "github.com/terra-money/core/types"
-	treasury "github.com/terra-money/core/x/treasury/types"
+	"github.com/classic-terra/core/custom/auth/ante"
+	core "github.com/classic-terra/core/types"
+	treasury "github.com/classic-terra/core/x/treasury/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -95,7 +95,6 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 // the following binance addresses should not be applied tax
 // go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/terra-money/core/custom/auth/ante
 func (suite *AnteTestSuite) TestFilterRecipient() {
-
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress

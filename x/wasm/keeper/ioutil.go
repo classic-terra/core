@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"io"
 
-	"github.com/terra-money/core/x/wasm/types"
+	"github.com/classic-terra/core/x/wasm/types"
 )
 
 // magic bytes to identify gzip.

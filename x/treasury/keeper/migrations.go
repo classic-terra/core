@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	"github.com/classic-terra/core/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/terra-money/core/x/treasury/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.

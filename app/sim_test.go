@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	terraapp "github.com/terra-money/core/app"
-	"github.com/terra-money/core/app/helpers"
-	wasmconfig "github.com/terra-money/core/x/wasm/config"
+	terraapp "github.com/classic-terra/core/app"
+	"github.com/classic-terra/core/app/helpers"
+	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -29,6 +29,7 @@ func init() {
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/GaiaApp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
+	simapp.FlagEnabledValue = true
 	config, db, dir, logger, _, err := simapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		b.Fatalf("simulation setup failed: %s", err.Error())

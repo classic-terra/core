@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/terra-money/core/x/feeshare/types"
+	"github.com/classic-terra/core/x/feeshare/types"
 )
 
 // GetFeeShares returns all registered FeeShares.

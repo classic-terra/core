@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/terra-money/core/x/feeshare/types"
+	"github.com/classic-terra/core/x/feeshare/types"
 )
 
 // GetParams returns the total set of fees parameters.

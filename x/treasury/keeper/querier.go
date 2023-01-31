@@ -124,3 +124,9 @@ func (q querier) Indicators(c context.Context, req *types.QueryIndicatorsRequest
 
 	return &res, nil
 }
+
+func (q querier) Whitelist(c context.Context, req *types.QueryWhitelistRequest) (*types.QueryWhitelistResponse, error) {
+	// ctx := sdk.UnwrapSDKContext(c)
+
+	return &types.QueryWhitelistResponse{}, nil
+}

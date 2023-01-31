@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/terra-money/core/x/wasm"
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/keeper"
 	"github.com/terra-money/core/x/wasm/types"
 
@@ -60,7 +61,7 @@ func TestHandleStore(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			input := keeper.CreateTestInput(t)
+			input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 			h := wasm.NewHandler(input.WasmKeeper)
 
@@ -81,7 +82,7 @@ func TestHandleStore(t *testing.T) {
 func TestHandleInstantiate(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t)
+	input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	creator := createFakeFundedAccount(input.Ctx, input.AccKeeper, input.BankKeeper, deposit)
@@ -149,7 +150,7 @@ func TestHandleInstantiate(t *testing.T) {
 func TestHandleExecute(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t)
+	input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
@@ -244,7 +245,7 @@ func TestHandleExecute(t *testing.T) {
 func TestHandleExecuteEscrow(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t)
+	input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
@@ -319,7 +320,7 @@ func TestHandleExecuteEscrow(t *testing.T) {
 func TestHandleMigrate(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t)
+	input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
@@ -399,7 +400,7 @@ func TestHandleMigrate(t *testing.T) {
 func TestHandleUpdateAdmin(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t)
+	input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
@@ -454,7 +455,7 @@ func TestHandleUpdateAdmin(t *testing.T) {
 func TestHandleClearAdmin(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t)
+	input := keeper.CreateTestInput(t, config.DefaultConfig())
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))

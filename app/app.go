@@ -901,6 +901,6 @@ func (app *TerraApp) setupUpgradeStoreLoaders() {
 func (app *TerraApp) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v2.UpgradeName,
-		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
+		v2.CreateV2UpgradeHandler(app.mm, app.configurator, &app.FeeShareKeeper),
 	)
 }

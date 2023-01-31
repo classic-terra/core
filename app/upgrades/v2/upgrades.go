@@ -14,11 +14,15 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+
+	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
+	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 )
 
 func CreateV2UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
+	fskeeper *feesharekeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// set the ICS27 consensus version so InitGenesis is not run
@@ -58,6 +62,14 @@ func CreateV2UpgradeHandler(
 			panic("mm.Modules[icatypes.ModuleName] is not of type icamodule.AppModule")
 		}
 		icaModule.InitModule(ctx, controllerParams, hostParams)
+
+		// set new FeeShare params
+		newFeeShareParams := feesharetypes.Params{
+			EnableFeeShare:  true,
+			DeveloperShares: sdk.NewDecWithPrec(50, 2), // = 50%
+			AllowedDenoms:   []string{"uluna"},
+		}
+		fskeeper.SetParams(ctx, newFeeShareParams)
 
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}

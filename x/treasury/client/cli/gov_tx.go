@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cobra"
@@ -17,7 +18,12 @@ func ProposalAddWhitelistCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whitelist-add [addresses] --title [text] --description [text]",
 		Short: "Submit a set whitelist address proposal",
-		Args:  cobra.ExactArgs(1),
+		Long: fmt.Sprintf(`Submit a proposal to add whitelist addresses for tax exemption.
+
+Example:
+$ %s tx gov submit-proposal whitelist-add terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
+			`, version.AppName),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -72,7 +78,12 @@ func ProposalRemoveWhitelistCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whitelist-remove [addresses] --title [text] --description [text]",
 		Short: "Submit a remove whitelist address proposal",
-		Args:  cobra.ExactArgs(1),
+		Long: fmt.Sprintf(`Submit a proposal to remove whitelist addresses for tax exemption.
+
+Example:
+$ %s tx gov submit-proposal whitelist-remove terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
+			`, version.AppName),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

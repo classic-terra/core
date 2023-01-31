@@ -7,7 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	core "github.com/terra-money/core/types"
 	"github.com/terra-money/core/x/treasury/types"
@@ -126,7 +128,19 @@ func (q querier) Indicators(c context.Context, req *types.QueryIndicatorsRequest
 }
 
 func (q querier) Whitelist(c context.Context, req *types.QueryWhitelistRequest) (*types.QueryWhitelistResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(c)
+	ctx := sdk.UnwrapSDKContext(c)
+	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.StoreWhitelist)
+	var addresses []string
 
-	return &types.QueryWhitelistResponse{}, nil
+	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		address := string(key)
+		addresses = append(addresses, address)
+
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryWhitelistResponse{Addresses: addresses, Pagination: pageRes}, nil
 }

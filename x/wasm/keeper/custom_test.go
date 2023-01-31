@@ -16,7 +16,6 @@ import (
 	marketwasm "github.com/terra-money/core/x/market/wasm"
 	oraclewasm "github.com/terra-money/core/x/oracle/wasm"
 	treasurywasm "github.com/terra-money/core/x/treasury/wasm"
-	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 )
 
@@ -112,15 +111,20 @@ type contractInfoQueryMsg struct {
 }
 
 func TestInstantiateMaker(t *testing.T) {
-	input := CreateTestInput(t, config.DefaultConfig())
+	input := CreateTestInput(t)
 
-	keeper, oracleKeeper := input.WasmKeeper, input.OracleKeeper
+	ctx, keeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.OracleKeeper
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
 	oracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
+	_, _, creatorAddr := keyPubAddr()
+
 	// upload staking derivatives code
-	exampleContract := StoreExampleContract(t, input, "./testdata/maker.wasm")
-	require.Equal(t, uint64(1), exampleContract.CodeID)
+	makingCode, err := os.ReadFile("./testdata/maker.wasm")
+	require.NoError(t, err)
+	makerID, err := keeper.StoreCode(ctx, creatorAddr, makingCode)
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), makerID)
 
 	// valid instantiate
 	initMsg := MakerInitMsg{
@@ -129,12 +133,12 @@ func TestInstantiateMaker(t *testing.T) {
 	}
 
 	initBz, err := json.Marshal(&initMsg)
-	makerAddr, _, err := keeper.InstantiateContract(input.Ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initBz, nil)
+	makerAddr, _, err := keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, initBz, nil)
 	require.NoError(t, err)
 	require.NotEmpty(t, makerAddr)
 
 	// invalid init msg
-	_, _, err = keeper.InstantiateContract(input.Ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, []byte{}, nil)
+	_, _, err = keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, []byte{}, nil)
 	require.Error(t, err)
 }
 
@@ -299,7 +303,7 @@ func TestBuyMsg(t *testing.T) {
 	checkAccount(t, ctx, accKeeper, bankKeeper, makerAddr, expectedRetCoins)
 
 	// unauthorized
-	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(offerCoin))
+	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(offerCoin))
 	_, err = keeper.ExecuteContract(ctx, makerAddr, bob, bz, sdk.NewCoins(offerCoin))
 	require.Error(t, err)
 }
@@ -358,7 +362,7 @@ func TestSellMsg(t *testing.T) {
 	checkAccount(t, ctx, accKeeper, bankKeeper, makerAddr, expectedRetCoins)
 
 	// unauthorized
-	_, bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sellCoin))
+	bob := createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(sellCoin))
 	_, err = keeper.ExecuteContract(ctx, makerAddr, bob, bz, sdk.NewCoins(sellCoin))
 	require.Error(t, err)
 }
@@ -392,7 +396,7 @@ func TestSendMsg(t *testing.T) {
 }
 
 func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr sdk.AccAddress, initCoin sdk.Coin) {
-	input = CreateTestInput(t, config.DefaultConfig())
+	input = CreateTestInput(t)
 
 	ctx, keeper, accKeeper, bankKeeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.AccKeeper, input.BankKeeper, input.OracleKeeper
 
@@ -402,7 +406,7 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 	swapAmountInSDR := lunaPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 	initCoin = sdk.NewCoin(core.MicroSDRDenom, swapAmountInSDR)
 
-	_, creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
+	creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
 
 	// upload staking derivatives code
 	makingCode, err := os.ReadFile("./testdata/maker.wasm")
@@ -425,7 +429,7 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 }
 
 func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bindingsTesterAddr sdk.AccAddress, initCoin sdk.Coin) {
-	input = CreateTestInput(t, config.DefaultConfig())
+	input = CreateTestInput(t)
 
 	ctx, keeper, accKeeper, bankKeeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.AccKeeper, input.BankKeeper, input.OracleKeeper
 
@@ -439,7 +443,7 @@ func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bi
 	swapAmountInSDR := lunaPriceInSDR.MulInt64(rand.Int63()%10000 + 2).TruncateInt()
 	initCoin = sdk.NewCoin(core.MicroSDRDenom, swapAmountInSDR)
 
-	_, creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
+	creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
 
 	// upload binding_tester contract codes
 	bindingsTCode, err := os.ReadFile("./testdata/bindings_tester.wasm")

@@ -4,8 +4,6 @@ package keeper
 //DONTCOVER
 
 import (
-	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
@@ -89,7 +87,7 @@ func MakeTestCodec(t *testing.T) codec.Codec {
 }
 
 // MakeEncodingConfig nolint
-func MakeEncodingConfig(_ testing.TB) simparams.EncodingConfig {
+func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
@@ -150,8 +148,7 @@ type TestInput struct {
 }
 
 // CreateTestInput nolint
-// TODO: CreateTestInput will always use default wasm config which limits customization for testing
-func CreateTestInput(t testing.TB, wasmConfig *config.Config) TestInput {
+func CreateTestInput(t *testing.T) TestInput {
 	tempDir := t.TempDir()
 
 	keyContract := sdk.NewKVStoreKey(types.StoreKey)
@@ -317,7 +314,7 @@ func CreateTestInput(t testing.TB, wasmConfig *config.Config) TestInput {
 		querier,
 		types.DefaultFeatures,
 		tempDir,
-		wasmConfig,
+		config.DefaultConfig(),
 	)
 
 	router.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
@@ -379,8 +376,8 @@ func FundAccount(input TestInput, addr sdk.AccAddress, amounts sdk.Coins) error 
 	return input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, faucetAccountName, addr, amounts)
 }
 
-func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, coins sdk.Coins) (crypto.PrivKey, sdk.AccAddress) {
-	priv, _, addr := keyPubAddr()
+func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, coins sdk.Coins) sdk.AccAddress { //nolint:unused // this is used in tests.
+	_, _, addr := keyPubAddr()
 	ak.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
 
 	if err := bk.MintCoins(ctx, faucetAccountName, coins); err != nil {
@@ -390,79 +387,18 @@ func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk ba
 	if err := bk.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, coins); err != nil {
 		panic(err)
 	}
-	return priv, addr
+	return addr
 }
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) { //nolint:unused // keyPubAddr is used in createFakeFundedAccount, which is used in tests.
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
 }
 
-type ExampleContract struct {
-	InitialAmount sdk.Coins
-	Creator       crypto.PrivKey
-	CreatorAddr   sdk.AccAddress
-	CodeID        uint64
-	WasmCode      []byte
-}
-
-func StoreExampleContract(t testing.TB, input TestInput, wasmFile string) ExampleContract {
-	anyAmount := sdk.NewCoins(sdk.NewInt64Coin("denom", 1_000_000_000_000_000))
-	creator, creatorAddr := createFakeFundedAccount(input.Ctx, input.AccKeeper, input.BankKeeper, anyAmount)
-
-	wasmCode, err := os.ReadFile(wasmFile)
-	require.NoError(t, err)
-
-	codeID, err := input.WasmKeeper.StoreCode(input.Ctx, creatorAddr, wasmCode)
-	require.NoError(t, err)
-	return ExampleContract{anyAmount, creator, creatorAddr, codeID, wasmCode}
-}
-
-// ====== Hackatom Test Helper function ======
-
 // HackatomExampleInitMsg nolint
 type HackatomExampleInitMsg struct {
 	Verifier    sdk.AccAddress `json:"verifier"`
 	Beneficiary sdk.AccAddress `json:"beneficiary"`
-}
-
-func (m HackatomExampleInitMsg) GetBytes(t testing.TB) []byte {
-	initMsgBz, err := json.Marshal(m)
-	require.NoError(t, err)
-	return initMsgBz
-}
-
-type HackatomExampleInstance struct {
-	ExampleContract
-	Contract        sdk.AccAddress
-	Verifier        crypto.PrivKey
-	VerifierAddr    sdk.AccAddress
-	Beneficiary     crypto.PrivKey
-	BeneficiaryAddr sdk.AccAddress
-}
-
-// InstantiateHackatomExampleContract load and instantiate the "./testdata/hackatom.wasm" contract
-func InstantiateHackatomExampleContract(t testing.TB, input TestInput) HackatomExampleInstance {
-	exampleContract := StoreExampleContract(t, input, "./testdata/hackatom.wasm")
-
-	verifier, _, verifierAddr := keyPubAddr()
-	beneficiary, _, beneficiaryAddr := keyPubAddr()
-	initMsgBz := HackatomExampleInitMsg{
-		Verifier:    verifierAddr,
-		Beneficiary: beneficiaryAddr,
-	}.GetBytes(t)
-	initialAmount := sdk.NewCoins(sdk.NewInt64Coin("denom", 100))
-
-	contractAddr, _, err := input.WasmKeeper.InstantiateContract(input.Ctx, exampleContract.CodeID, exampleContract.CreatorAddr, sdk.AccAddress{}, initMsgBz, initialAmount)
-	require.NoError(t, err)
-	return HackatomExampleInstance{
-		ExampleContract: exampleContract,
-		Contract:        contractAddr,
-		Verifier:        verifier,
-		VerifierAddr:    verifierAddr,
-		Beneficiary:     beneficiary,
-		BeneficiaryAddr: beneficiaryAddr,
-	}
 }

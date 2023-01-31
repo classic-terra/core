@@ -24,5 +24,4 @@ var (
 	ErrExceedMaxContractDataSize = sdkerrors.Register(ModuleName, 17, "exceeds max contract data size limit")
 	ErrReplyFailed               = sdkerrors.Register(ModuleName, 18, "reply wasm contract failed")
 	ErrExceedMaxQueryDepth       = sdkerrors.Register(ModuleName, 19, "exceed max query depth")
-	ErrPinContractFailed         = sdkerrors.Register(ModuleName, 20, "pinning contract failed")
 )

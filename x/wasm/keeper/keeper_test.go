@@ -5,20 +5,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestNewKeeper(t *testing.T) {
-	input := CreateTestInput(t, config.DefaultConfig())
+	input := CreateTestInput(t)
 	keeper := input.WasmKeeper
 	require.NotNil(t, keeper)
 }
 
 func TestCodeInfo(t *testing.T) {
-	input := CreateTestInput(t, config.DefaultConfig())
+	input := CreateTestInput(t)
 	ctx, keeper := input.Ctx, input.WasmKeeper
 
 	codeID := uint64(1)
@@ -32,7 +31,7 @@ func TestCodeInfo(t *testing.T) {
 }
 
 func TestContractInfo(t *testing.T) {
-	input := CreateTestInput(t, config.DefaultConfig())
+	input := CreateTestInput(t)
 	ctx, keeper := input.Ctx, input.WasmKeeper
 
 	_, _, alice := keyPubAddr()
@@ -79,7 +78,7 @@ func TestContractStore(t *testing.T) {
 		},
 	}
 
-	input := CreateTestInput(t, config.DefaultConfig())
+	input := CreateTestInput(t)
 	ctx, keeper := input.Ctx, input.WasmKeeper
 
 	_, _, contractAddr := keyPubAddr()

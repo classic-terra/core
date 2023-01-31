@@ -54,19 +54,19 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 			continue
 		}
 
-		// otherwise, we create a SubMsgResult and pass it into the calling contract
-		var result wasmvmtypes.SubMsgResult
+		// otherwise, we create a SubcallResult and pass it into the calling contract
+		var result wasmvmtypes.SubcallResult
 		if err == nil {
 			// just take the first one for now if there are multiple sub-sdk messages
 			// and safely return nothing if no data
-			result = wasmvmtypes.SubMsgResult{
-				Ok: &wasmvmtypes.SubMsgResponse{
+			result = wasmvmtypes.SubcallResult{
+				Ok: &wasmvmtypes.SubcallResponse{
 					Events: types.EncodeSdkEvents(events),
 					Data:   data,
 				},
 			}
 		} else {
-			result = wasmvmtypes.SubMsgResult{
+			result = wasmvmtypes.SubcallResult{
 				Err: err.Error(),
 			}
 		}

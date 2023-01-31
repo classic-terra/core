@@ -8,7 +8,6 @@ import (
 
 	core "github.com/terra-money/core/types"
 	"github.com/terra-money/core/x/wasm"
-	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/keeper"
 	"github.com/terra-money/core/x/wasm/types"
 
@@ -18,7 +17,7 @@ import (
 func TestInitGenesis(t *testing.T) {
 	loadContracts()
 
-	input := keeper.CreateTestInput(t, config.DefaultConfig())
+	input := keeper.CreateTestInput(t)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 100000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 5000))
@@ -101,7 +100,7 @@ func TestInitGenesis(t *testing.T) {
 	genState := wasm.ExportGenesis(input.Ctx, input.WasmKeeper)
 
 	// create new app to import genstate into
-	newInput := keeper.CreateTestInput(t, config.DefaultConfig())
+	newInput := keeper.CreateTestInput(t)
 
 	// initialize new app with genstate
 	wasm.InitGenesis(newInput.Ctx, newInput.WasmKeeper, genState)

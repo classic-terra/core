@@ -35,6 +35,7 @@ import (
 	"github.com/classic-terra/core/app/params"
 	authcustomcli "github.com/classic-terra/core/custom/auth/client/cli"
 	core "github.com/classic-terra/core/types"
+	feesharecmd "github.com/classic-terra/core/x/feeshare/client/cli"
 	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 )
 
@@ -149,6 +150,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 		authcustomcli.GetTxFeesEstimateCommand(),
+		feesharecmd.GetQueryCmd(),
 	)
 
 	terraapp.ModuleBasics.AddQueryCommands(cmd)
@@ -176,6 +178,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
+		feesharecmd.NewTxCmd(),
 		flags.LineBreak,
 	)
 

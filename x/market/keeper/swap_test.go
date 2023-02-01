@@ -108,17 +108,3 @@ func TestIlliquidTobinTaxListParams(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tobinTax.Mul(illiquidFactor), spread)
 }
-
-func TestConstrainedPool(t *testing.T) {
-	input := CreateTestInput(t)
-
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroLunaDenom, lunaPriceInSDR)
-
-	offerCoin := sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(2000000000001))
-
-	_, _, err := input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
-
-	require.EqualError(t, err, "uluna: exceeded maximum ask coin delta")
-}

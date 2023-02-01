@@ -9,11 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type ConstrainedPool struct {
-	Pool    sdk.Dec
-	MaxSize sdk.Dec
-}
-
 // ApplySwapToPool updates each pool with offerCoin and askCoin taken from swap operation,
 // OfferPool = OfferPool + offerAmt (Fills the swap pool with offerAmt)
 // AskPool = AskPool - askAmt       (Uses askAmt from the swap pool)
@@ -108,27 +103,22 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	terraPool := basePool.Add(terraPoolDelta)
 	lunaPool := cp.Quo(terraPool)
 
-	var offerPool sdk.Dec       // base denom(usdr) unit
-	var askPool ConstrainedPool // base denom(usdr) unit
+	var offerPool sdk.Dec // base denom(usdr) unit
+	var askPool sdk.Dec   // base denom(usdr) unit
 	if offerCoin.Denom != core.MicroLunaDenom {
 		// Terra->Luna swap
 		offerPool = terraPool
-		askPool = ConstrainedPool{Pool: lunaPool, MaxSize: sdk.NewDec(2000000000000)}
+		askPool = lunaPool
 	} else {
 		// Luna->Terra swap
 		offerPool = lunaPool
-		askPool = ConstrainedPool{Pool: terraPool}
-
-	}
-	// Simply hack to ensure that swaps into askPool can not happen if it will exceed MaxSize
-	if (askPool.MaxSize != sdk.Dec{} && askPool.Pool.Add(retDecCoin.Amount).GT(askPool.MaxSize)) {
-		return sdk.DecCoin{}, sdk.Dec{}, sdkerrors.Wrap(types.ErrExceedMaxDelta, retDecCoin.Denom)
+		askPool = terraPool
 	}
 
 	// Get cp(constant-product) based swap amount
 	// askBaseAmount = askPool - cp / (offerPool + offerBaseAmount)
 	// askBaseAmount is base denom(usdr) unit
-	askBaseAmount := askPool.Pool.Sub(cp.Quo(offerPool.Add(baseOfferDecCoin.Amount)))
+	askBaseAmount := askPool.Sub(cp.Quo(offerPool.Add(baseOfferDecCoin.Amount)))
 
 	// Both baseOffer and baseAsk are usdr units, so spread can be calculated by
 	// spread = (baseOfferAmt - baseAskAmt) / baseOfferAmt

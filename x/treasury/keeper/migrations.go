@@ -65,7 +65,7 @@ func NewMigrator(keeper Keeper) Migrator {
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	m.keeper.SetBurnSplitRate(ctx, types.DefaultBurnTaxSplit)
 
-	// Set min inital deposit ratio
+	// Set min initial deposit ratio
 	params := m.keeper.GetParams(ctx)
 	params.MinInitialDepositRatio = types.DefaultMinInitialDepositRatio
 	m.keeper.SetParams(ctx, params)

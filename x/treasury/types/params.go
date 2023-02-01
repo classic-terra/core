@@ -269,7 +269,7 @@ func validateMinInitialDepositRatio(i interface{}) error {
 	}
 
 	if sdk.ZeroDec().GT(v) {
-		return fmt.Errorf("min inital deposit ratio is < 0.0")
+		return fmt.Errorf("min initial deposit ratio is < 0.0")
 	}
 
 	return nil

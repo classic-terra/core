@@ -41,6 +41,8 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper GovKee
 	minDeposit := govKeeper.GetDepositParams(ctx).MinDeposit
 	requiredAmount := sdk.NewDecFromInt(minDeposit.AmountOf(core.MicroLunaDenom)).Mul(minInitialDepositRatio).TruncateInt()
 
+	
+
 	requiredDepositCoins := sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, requiredAmount),
 	)

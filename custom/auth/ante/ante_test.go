@@ -27,6 +27,7 @@ import (
 	terraapp "github.com/terra-money/core/app"
 	treasurytypes "github.com/terra-money/core/x/treasury/types"
 	wasmconfig "github.com/terra-money/core/x/wasm/config"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -52,6 +53,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
+	app.GovKeeper.SetDepositParams(ctx, govtypes.DefaultDepositParams())
 
 	return app, ctx
 }

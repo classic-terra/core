@@ -13,16 +13,16 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper    cosmosante.AccountKeeper
-	BankKeeper       BankKeeper
-	FeegrantKeeper   cosmosante.FeegrantKeeper
-	OracleKeeper     OracleKeeper
-	TreasuryKeeper   TreasuryKeeper
-	SignModeHandler  signing.SignModeHandler
-	SigGasConsumer   cosmosante.SignatureVerificationGasConsumer
-	IBCChannelKeeper channelkeeper.Keeper
+	AccountKeeper      cosmosante.AccountKeeper
+	BankKeeper         BankKeeper
+	FeegrantKeeper     cosmosante.FeegrantKeeper
+	OracleKeeper       OracleKeeper
+	TreasuryKeeper     TreasuryKeeper
+	SignModeHandler    signing.SignModeHandler
+	SigGasConsumer     cosmosante.SignatureVerificationGasConsumer
+	IBCChannelKeeper   channelkeeper.Keeper
 	DistributionKeeper distributionkeeper.Keeper
-	GovKeeper        GovKeeper
+	GovKeeper          GovKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

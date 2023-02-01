@@ -11,14 +11,14 @@ import (
 
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
 type MinInitialDepositDecorator struct {
-	govKeeper GovKeeper
+	govKeeper      GovKeeper
 	treasuryKeeper TreasuryKeeper
 }
 
 // NewMinInitialDeposit returns new min initial deposit decorator instance
 func NewMinInitialDepositDecorator(govKeeper GovKeeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
 	return MinInitialDepositDecorator{
-		govKeeper: govKeeper,
+		govKeeper:      govKeeper,
 		treasuryKeeper: treasuryKeeper,
 	}
 }
@@ -40,8 +40,6 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper GovKee
 
 	minDeposit := govKeeper.GetDepositParams(ctx).MinDeposit
 	requiredAmount := sdk.NewDecFromInt(minDeposit.AmountOf(core.MicroLunaDenom)).Mul(minInitialDepositRatio).TruncateInt()
-
-	
 
 	requiredDepositCoins := sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, requiredAmount),

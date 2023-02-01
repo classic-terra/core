@@ -746,7 +746,7 @@ type MsgClient interface {
 	StoreCode(ctx context.Context, in *MsgStoreCode, opts ...grpc.CallOption) (*MsgStoreCodeResponse, error)
 	// MigrateCode to submit new version Wasm code to the system
 	MigrateCode(ctx context.Context, in *MsgMigrateCode, opts ...grpc.CallOption) (*MsgMigrateCodeResponse, error)
-	//  Instantiate creates a new smart contract instance for the given code id.
+	// Instantiate creates a new smart contract instance for the given code id.
 	InstantiateContract(ctx context.Context, in *MsgInstantiateContract, opts ...grpc.CallOption) (*MsgInstantiateContractResponse, error)
 	// Execute submits the given message data to a smart contract
 	ExecuteContract(ctx context.Context, in *MsgExecuteContract, opts ...grpc.CallOption) (*MsgExecuteContractResponse, error)
@@ -835,7 +835,7 @@ type MsgServer interface {
 	StoreCode(context.Context, *MsgStoreCode) (*MsgStoreCodeResponse, error)
 	// MigrateCode to submit new version Wasm code to the system
 	MigrateCode(context.Context, *MsgMigrateCode) (*MsgMigrateCodeResponse, error)
-	//  Instantiate creates a new smart contract instance for the given code id.
+	// Instantiate creates a new smart contract instance for the given code id.
 	InstantiateContract(context.Context, *MsgInstantiateContract) (*MsgInstantiateContractResponse, error)
 	// Execute submits the given message data to a smart contract
 	ExecuteContract(context.Context, *MsgExecuteContract) (*MsgExecuteContractResponse, error)

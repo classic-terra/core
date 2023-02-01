@@ -95,7 +95,6 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 // the following binance addresses should not be applied tax
 // go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/terra-money/core/custom/auth/ante
 func (suite *AnteTestSuite) TestFilterRecipient() {
-
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress
@@ -106,11 +105,6 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		privs = append(privs, priv)
 		addrs = append(addrs, addr)
-	}
-
-	ante.BurnTaxAddressWhitelist = []string{
-		addrs[0].String(),
-		addrs[1].String(),
 	}
 
 	// set send amount
@@ -215,6 +209,9 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 		fmt.Printf("CASE = %s \n", c.name)
 		suite.ctx = suite.ctx.WithBlockHeight(ante.WhitelistHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[0].String())
+		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[1].String())
 
 		mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.DistrKeeper)
 		antehandler := sdk.ChainAnteDecorators(

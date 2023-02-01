@@ -11,11 +11,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/terra-money/core/x/wasm/config"
 	"github.com/terra-money/core/x/wasm/types"
 )
 
 func TestUncompress(t *testing.T) {
-	input := CreateTestInput(t)
+	input := CreateTestInput(t, config.DefaultConfig())
 	ctx, keeper := input.Ctx, input.WasmKeeper
 
 	wasmRaw, err := os.ReadFile("./testdata/hackatom.wasm")

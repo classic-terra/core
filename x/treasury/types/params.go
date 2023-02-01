@@ -21,6 +21,7 @@ var (
 	KeyWindowLong              = []byte("WindowLong")
 	KeyWindowProbation         = []byte("WindowProbation")
 	KeyBurnTaxSplit            = []byte("BurnTaxSplit")
+	KeyBurnTaxWhitelist        = []byte("BurnTaxWhitelist")
 	KeyMinInitialDepositRatio  = []byte("MinInitialDepositRatio")
 )
 
@@ -255,7 +256,6 @@ func validateBurnTaxSplit(i interface{}) error {
 	}
 
 	return nil
-
 }
 
 func validateMinInitialDepositRatio(i interface{}) error {
@@ -263,7 +263,7 @@ func validateMinInitialDepositRatio(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	
+
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min initial deposit ratio is > 1.0")
 	}

@@ -6,11 +6,11 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	//banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/terra-money/core/custom/auth/ante"
-	//core "github.com/terra-money/core/types"
-	//treasury "github.com/terra-money/core/x/treasury/types"
+	// core "github.com/terra-money/core/types"
+	// treasury "github.com/terra-money/core/x/treasury/types"
 
 	//"github.com/cosmos/cosmos-sdk/types/query"
 	//cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -45,7 +45,6 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	// antehandler should not error
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "error: Proposal whithout initial deposit should have gone through")
-
 }
 
 func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
@@ -64,7 +63,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 
 	// set initial deposit ratio to 0.2
 	params := suite.app.TreasuryKeeper.GetParams(suite.ctx)
-	params.MinInitialDepositRatio = sdk.NewDecWithPrec(2,1)
+	params.MinInitialDepositRatio = sdk.NewDecWithPrec(2, 1)
 	suite.app.TreasuryKeeper.SetParams(suite.ctx, params)
 
 	// keys and addresses
@@ -88,7 +87,6 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	// antehandler should not error
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "error: Proposal with sufficient initial deposit should have gone through")
-
 }
 
 func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() {
@@ -107,7 +105,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 
 	// set initial deposit ratio to 0.2
 	params := suite.app.TreasuryKeeper.GetParams(suite.ctx)
-	params.MinInitialDepositRatio = sdk.NewDecWithPrec(2,1)
+	params.MinInitialDepositRatio = sdk.NewDecWithPrec(2, 1)
 	suite.app.TreasuryKeeper.SetParams(suite.ctx, params)
 
 	// keys and addresses
@@ -131,5 +129,4 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	// antehandler should not error
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "error: Proposal with insufficient initial deposit should have failed")
-
 }

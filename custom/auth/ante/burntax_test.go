@@ -107,11 +107,6 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 		addrs = append(addrs, addr)
 	}
 
-	ante.BurnTaxAddressWhitelist = []string{
-		addrs[0].String(),
-		addrs[1].String(),
-	}
-
 	// set send amount
 	sendAmt := int64(1000000)
 	sendCoin := sdk.NewInt64Coin(core.MicroSDRDenom, sendAmt)
@@ -214,6 +209,9 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 		fmt.Printf("CASE = %s \n", c.name)
 		suite.ctx = suite.ctx.WithBlockHeight(ante.WhitelistHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[0].String())
+		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[1].String())
 
 		mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.DistrKeeper)
 		antehandler := sdk.ChainAnteDecorators(

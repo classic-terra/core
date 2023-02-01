@@ -6,8 +6,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	core "github.com/terra-money/core/types"
 	"github.com/terra-money/core/x/treasury/types"
@@ -33,10 +35,46 @@ func NewLegacyQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier
 			return queryParameters(ctx, k, legacyQuerierCdc)
 		case types.QueryIndicators:
 			return queryIndicators(ctx, k, legacyQuerierCdc)
+		case types.QueryWhitelist:
+			return queryWhitelist(ctx, req, k, legacyQuerierCdc)
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
+}
+
+func queryWhitelist(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	var params types.QueryWhitelistRequest
+
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+	var addresses []string
+
+	pageRes, err := query.FilteredPaginate(sub, params.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		address := string(key)
+		addresses = append(addresses, address)
+
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	whitelistRes := &types.QueryWhitelistResponse{
+		Addresses:  addresses,
+		Pagination: pageRes,
+	}
+
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, whitelistRes)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
 }
 
 func queryIndicators(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {

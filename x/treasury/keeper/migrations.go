@@ -66,9 +66,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	m.keeper.SetBurnSplitRate(ctx, types.DefaultBurnTaxSplit)
 
 	// Set min initial deposit ratio
-	params := m.keeper.GetParams(ctx)
-	params.MinInitialDepositRatio = types.DefaultMinInitialDepositRatio
-	m.keeper.SetParams(ctx, params)
+	m.keeper.paramSpace.Set(ctx, types.KeyMinInitialDepositRatio, types.DefaultMinInitialDepositRatio)
 
 	for _, address := range burnTaxAddressWhitelist {
 		m.keeper.SetWhitelistAddress(ctx, address)

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/terra-money/core/x/feeshare/types"
+	"github.com/classic-terra/core/x/feeshare/types"
 )
 
 // NewTxCmd returns a root CLI command handler for certain modules/FeeShare

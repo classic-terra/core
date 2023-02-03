@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	appparams "github.com/terra-money/core/app/params"
-	ante "github.com/terra-money/core/x/feeshare/ante"
+	appparams "github.com/classic-terra/core/app/params"
+	ante "github.com/classic-terra/core/x/feeshare/ante"
 )
 
 type AnteTestSuite struct {

@@ -3,8 +3,8 @@ package feeshare
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/terra-money/core/x/feeshare/keeper"
-	"github.com/terra-money/core/x/feeshare/types"
+	"github.com/classic-terra/core/x/feeshare/keeper"
+	"github.com/classic-terra/core/x/feeshare/types"
 )
 
 // InitGenesis import module genesis

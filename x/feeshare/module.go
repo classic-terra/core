@@ -18,9 +18,9 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/terra-money/core/x/feeshare/client/cli"
-	"github.com/terra-money/core/x/feeshare/keeper"
-	"github.com/terra-money/core/x/feeshare/types"
+	"github.com/classic-terra/core/x/feeshare/client/cli"
+	"github.com/classic-terra/core/x/feeshare/keeper"
+	"github.com/classic-terra/core/x/feeshare/types"
 )
 
 // type check to ensure the interface is properly implemented

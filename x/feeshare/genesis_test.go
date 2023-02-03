@@ -8,11 +8,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/classic-terra/core/app"
+	appparams "github.com/classic-terra/core/app/params"
+	"github.com/classic-terra/core/x/feeshare"
+	"github.com/classic-terra/core/x/feeshare/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/terra-money/core/app"
-	appparams "github.com/terra-money/core/app/params"
-	"github.com/terra-money/core/x/feeshare"
-	"github.com/terra-money/core/x/feeshare/types"
 )
 
 type GenesisTestSuite struct {

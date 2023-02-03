@@ -3,10 +3,10 @@ package types
 import (
 	"testing"
 
+	appparams "github.com/classic-terra/core/app/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
-	appparams "github.com/terra-money/core/app/params"
 )
 
 func TestParamKeyTable(t *testing.T) {

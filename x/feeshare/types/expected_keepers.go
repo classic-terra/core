@@ -1,7 +1,7 @@
 package types
 
 import (
-	wasmtypes "github.com/terra-money/core/x/wasm/types"
+	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 	// "github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	acctypes "github.com/cosmos/cosmos-sdk/x/auth/types"

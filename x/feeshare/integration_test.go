@@ -3,15 +3,15 @@ package feeshare_test
 import (
 	"encoding/json"
 
+	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-	wasmconfig "github.com/terra-money/core/x/wasm/config"
 
+	app "github.com/classic-terra/core/app"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
-	app "github.com/terra-money/core/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

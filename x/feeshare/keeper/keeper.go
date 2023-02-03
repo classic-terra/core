@@ -9,9 +9,9 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	revtypes "github.com/classic-terra/core/x/feeshare/types"
+	wasmkeeper "github.com/classic-terra/core/x/wasm/keeper"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	revtypes "github.com/terra-money/core/x/feeshare/types"
-	wasmkeeper "github.com/terra-money/core/x/wasm/keeper"
 )
 
 // Keeper of this module maintains collections of feeshares for contracts

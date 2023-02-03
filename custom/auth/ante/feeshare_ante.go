@@ -1,12 +1,11 @@
 package ante
 
 import (
+	feesharetype "github.com/classic-terra/core/x/feeshare/types"
+	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	feeshare "github.com/classic-terra/core/x/feeshare/types"
-	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 )
 
 // FeeSharePayoutDecorator Run his after we already deduct the fee from the account with
@@ -37,25 +36,10 @@ func (fsd FeeSharePayoutDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	return next(ctx, tx, simulate)
 }
 
-// FeePayLogic takes the total fees and splits them based on the governance params
-// and the number of contracts we are executing on.
-// This returns the amount of fees each contract developer should get.
-// tested in ante_test.go
-func FeePayLogic(fees sdk.Coins, govPercent sdk.Dec, numPairs int) sdk.Coins {
-	var splitFees sdk.Coins
-	for _, c := range fees.Sort() {
-		rewardAmount := govPercent.MulInt(c.Amount).QuoInt64(int64(numPairs)).RoundInt()
-		if !rewardAmount.IsZero() {
-			splitFees = splitFees.Add(sdk.NewCoin(c.Denom, rewardAmount))
-		}
-	}
-	return splitFees
-}
-
 // FeeSharePayout takes the total fees and redistributes 50% (or param set) to the contract developers
 // provided they opted-in to payments.
-func FeeSharePayout(ctx sdk.Context, bankKeeper BankKeeper, totalFees sdk.Coins, revKeeper FeeShareKeeper, msgs []sdk.Msg) error {
-	params := revKeeper.GetParams(ctx)
+func FeeSharePayout(ctx sdk.Context, bankKeeper BankKeeper, totalFees sdk.Coins, fsk FeeShareKeeper, msgs []sdk.Msg) error {
+	params := fsk.GetParams(ctx)
 	if !params.EnableFeeShare {
 		return nil
 	}
@@ -69,7 +53,7 @@ func FeeSharePayout(ctx sdk.Context, bankKeeper BankKeeper, totalFees sdk.Coins,
 				return err
 			}
 
-			shareData, _ := revKeeper.GetFeeShare(ctx, contractAddr)
+			shareData, _ := fsk.GetFeeShare(ctx, contractAddr)
 
 			withdrawAddr := shareData.GetWithdrawerAddr()
 			if withdrawAddr != nil && !withdrawAddr.Empty() {
@@ -102,13 +86,13 @@ func FeeSharePayout(ctx sdk.Context, bankKeeper BankKeeper, totalFees sdk.Coins,
 	numPairs := len(toPay)
 	if numPairs > 0 {
 		govPercent := params.DeveloperShares
-		splitFees := FeePayLogic(fees, govPercent, numPairs)
+		splitFees := fsk.FeePaySplitLogic(fees, govPercent, numPairs)
 
 		// pay fees evenly between all withdraw addresses
 		for _, withdrawAddr := range toPay {
 			err := bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.FeeCollectorName, withdrawAddr, splitFees)
 			if err != nil {
-				return sdkerrors.Wrapf(feeshare.ErrFeeSharePayment, "failed to pay fees to contract developer: %s", err.Error())
+				return sdkerrors.Wrapf(feesharetype.ErrFeeSharePayment, "failed to pay fees to contract developer: %s", err.Error())
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 # docker build . -t cosmwasm/wasmd:latest
 # docker run --rm -it cosmwasm/wasmd:latest /bin/sh
 FROM golang:1.19-alpine AS go-builder
+ARG source=.
 
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
@@ -12,7 +13,7 @@ RUN apk add git cmake
 # RUN apk add libusb-dev linux-headers
 
 WORKDIR /code
-COPY . /code/
+COPY ${source} /code/
 
 # Install mimalloc
 RUN git clone --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install

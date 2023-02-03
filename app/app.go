@@ -122,6 +122,7 @@ import (
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 	core "github.com/classic-terra/core/types"
 
+	"github.com/classic-terra/core/x/feeshare"
 	"github.com/classic-terra/core/x/market"
 	marketkeeper "github.com/classic-terra/core/x/market/keeper"
 	markettypes "github.com/classic-terra/core/x/market/types"
@@ -194,6 +195,7 @@ var (
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		feeshare.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -515,6 +517,7 @@ func NewTerraApp(
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		feeshare.NewAppModule(app.FeeShareKeeper, app.AccountKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
@@ -545,6 +548,7 @@ func NewTerraApp(
 		treasurytypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
+		feesharetypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -570,6 +574,7 @@ func NewTerraApp(
 		treasurytypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
+		feesharetypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -601,6 +606,7 @@ func NewTerraApp(
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		feegrant.ModuleName,
+		feesharetypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -632,6 +638,7 @@ func NewTerraApp(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		feeshare.NewAppModule(app.FeeShareKeeper, app.AccountKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 

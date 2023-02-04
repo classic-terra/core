@@ -44,6 +44,10 @@ fi
 
 for i in {0..3}; do
     CURRENT=$BUILDDIR/node$i/terrad
+
+    # change gov params voting_period
+    jq '.app_state.gov.voting_params.voting_period = "50s"' $CURRENT/config/genesis.json > $CURRENT/config/genesis.json.tmp && mv $CURRENT/config/genesis.json.tmp $CURRENT/config/genesis.json
+
     docker run --rm \
         --user $(id -u):$(id -g) \
         -v $BUILDDIR:/terrad:Z \

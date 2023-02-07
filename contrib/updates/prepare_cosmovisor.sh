@@ -23,9 +23,9 @@ fi
 # install old version of terrad
 
 ## check if _build/classic-${OLD_VERSION} exists
-if [ ! -d "$CURDIR/_build/classic-${OLD_VERSION}" ]; then
+if [ ! -d "$CURDIR/_build/core-${OLD_VERSION}" ]; then
     mkdir $CURDIR/_build
-    wget -c "https://github.com/classic-terra/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O $CURDIR/_build/v${OLD_VERSION}.zip
+    wget -c "https://github.com/classic-terra/core/archive/refs/tags/v${OLD_VERSION}.zip" -O $CURDIR/_build/v${OLD_VERSION}.zip
     unzip $CURDIR/_build/v${OLD_VERSION}.zip -d $CURDIR/_build
 fi
 

@@ -289,7 +289,7 @@ localnet-start: build-linux localnet-stop
 localnet-start-upgrade: build-linux localnet-upgrade-stop
 	$(MAKE) -C contrib/updates build-cosmovisor-linux BUILDDIR=$(BUILDDIR)
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-upgrade-env 2>/dev/null),$(info found image classic-terra/terrad-upgrade-env),$(MAKE) -C contrib/images terrad-upgrade-env)
-	bash contrib/updates/prepare_cosmovisor.sh $(BUILDDIR)
+	bash contrib/updates/prepare_cosmovisor.sh $(BUILDDIR) $(CURDIR)
 	docker-compose -f ./contrib/updates/docker-compose.yml up -d
 
 localnet-upgrade-stop:

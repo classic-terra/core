@@ -6,6 +6,7 @@
 OLD_VERSION=1.0.5
 SOFTWARE_UPGRADE_NAME=v2
 BUILDDIR=$1
+CURDIR=$2
 
 # check if BUILDDIR is set
 if [ -z "$BUILDDIR" ]; then
@@ -13,19 +14,25 @@ if [ -z "$BUILDDIR" ]; then
     exit 1
 fi
 
+# check if CURDIR is set
+if [ -z "$CURDIR" ]; then
+    echo "CURDIR is not set"
+    exit 1
+fi
+
 # install old version of terrad
 
 ## check if _build/classic-${OLD_VERSION} exists
-if [ ! -d "_build/classic-${OLD_VERSION}" ]; then
-    mkdir _build
-    wget -c "https://github.com/classic-terra/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
-    unzip _build/v${OLD_VERSION}.zip -d _build
+if [ ! -d "$CURDIR/_build/classic-${OLD_VERSION}" ]; then
+    mkdir $CURDIR/_build
+    wget -c "https://github.com/classic-terra/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O $CURDIR/_build/v${OLD_VERSION}.zip
+    unzip $CURDIR/_build/v${OLD_VERSION}.zip -d $CURDIR/_build
 fi
 
 ## check if $BUILDDIR/old/terrad exists
 if [ ! -f "$BUILDDIR/old/terrad" ]; then
     mkdir -p $BUILDDIR/old
-    DOCKER_BUILDKIT=1 docker build --platform linux/amd64 --no-cache --build-arg source=_build/classic-${OLD_VERSION} --tag classic-terra/terraclassic.terrad-binary.old ./
+    DOCKER_BUILDKIT=1 docker build --platform linux/amd64 --no-cache --build-arg source=$CURDIR/_build/classic-${OLD_VERSION} --tag classic-terra/terraclassic.terrad-binary.old ./
     docker create --platform linux/amd64 --name old-temp classic-terra/terraclassic.terrad-binary.old:latest
     docker cp old-temp:/usr/local/bin/terrad $BUILDDIR/old/
     docker rm old-temp

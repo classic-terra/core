@@ -29,7 +29,6 @@ if [ ! -d "$CURDIR/_build/core-${OLD_VERSION}" ]; then
     mkdir $CURDIR/_build
     wget -c "https://github.com/classic-terra/core/archive/refs/tags/v${OLD_VERSION}.zip" -O $CURDIR/_build/v${OLD_VERSION}.zip
     unzip $CURDIR/_build/v${OLD_VERSION}.zip -d $CURDIR/_build
-    chmod 677 $CURDIR/_build
     ls -l $CURDIR/_build
 fi
 

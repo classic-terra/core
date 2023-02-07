@@ -19,5 +19,5 @@ done
 cd ..
 
 # move proto files to the right places
-cp -r github.com/terra-money/core/* ./
+cp -r github.com/classic-terra/core/* ./
 rm -rf github.com

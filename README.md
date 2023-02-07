@@ -1,4 +1,4 @@
-## What is Terra: Rebels?
+## What is Terra Classic?
 
 **[Terra](https://terra.money)** is a public, open-source blockchain protocol that provides fundamental infrastructure for a decentralized economy and enables open participation in the creation of new financial primitives to power the innovation of money.
 
@@ -11,13 +11,13 @@ Upon the implosion of Terra, a group of rebels seized control of the blockchain.
 
 ### Binaries
 
-The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/terra-money/core/releases) page.
+The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/classic-terra/core/releases) page.
 
 ### From Source
 
 **Step 1. Install Golang**
 
-Go v1.19+ or higher is required for Terra Core.
+Go v1.18 is required for Terra Core.
 
 If you haven't already, install Golang by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
@@ -53,10 +53,10 @@ If terrad is installed correctly, the following information is returned:
 ```bash
 name: terra
 server_name: terrad
-version: 0.5.0-rc0-9-g640fd0ed
-commit: 640fd0ed921d029f4d1c3d88435bd5dbd67d14cd
+version: 1.0.5
+commit: 8bb56e9919ecf5234a3239a6a351b509451f9d5d
 build_tags: netgo,ledger
-go: go version go1.17.2 darwin/amd64
+go: go version go1.18.1 linux/amd64
 ```
 
 ## `terrad`

@@ -54,6 +54,7 @@ jobs:
           go-version: 1.19
       - name: start localnet
         run: |
+          chmod +x -R ./contrib/updates
           make clean localnet-start-upgrade
       - name: test upgrade
         run: |

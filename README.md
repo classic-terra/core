@@ -8,11 +8,11 @@
 <p align="center">
 Full-node software implementing the Terra protocol<br/><br/>
 
-<a href="https://codecov.io/gh/terra-money/core">
-    <img src="https://codecov.io/gh/terra-money/core/branch/main/graph/badge.svg">
+<a href="https://codecov.io/gh/classic-terra/core">
+    <img src="https://codecov.io/gh/classic-terra/core/branch/main/graph/badge.svg">
 </a>
-<a href="https://goreportcard.com/report/github.com/terra-money/core">
-    <img src="https://goreportcard.com/badge/github.com/terra-money/core">
+<a href="https://goreportcard.com/report/github.com/classic-terra/core">
+    <img src="https://goreportcard.com/badge/github.com/classic-terra/core">
 </a>
 
 </p>
@@ -23,7 +23,7 @@ Full-node software implementing the Terra protocol<br/><br/>
   <br/>
   <a href="https://docs.terra.money/docs/develop/module-specifications/README.html">Terra Core reference</a>
   ·
-  <a href="https://pkg.go.dev/github.com/terra-money/core?tab=subdirectories">Go API</a>
+  <a href="https://pkg.go.dev/github.com/classic-terra/core?tab=subdirectories">Go API</a>
   ·
   <a href="https://lcd.terra.dev/swagger/#/">Rest API</a>
   ·
@@ -75,7 +75,7 @@ The Terra blockchain is secured by distributed consensus on staked asset Luna an
 
 ### Binaries
 
-The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/terra-money/core/releases) page.
+The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/classic-terra/core/releases) page.
 
 ### From Source
 
@@ -87,10 +87,10 @@ If you haven't already, install Golang by following the [official docs](https://
 
 **Step 2: Get Terra Core source code**
 
-Use `git` to retrieve Terra Core from the [official repo](https://github.com/terra-money/core/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `terrad` binary.
+Use `git` to retrieve Terra Core from the [official repo](https://github.com/classic-terra/core/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `terrad` binary.
 
 ```bash
-git clone https://github.com/terra-money/core/
+git clone https://github.com/classic-terra/core/
 cd core
 git checkout main
 ```

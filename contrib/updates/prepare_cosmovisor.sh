@@ -29,14 +29,14 @@ if [ ! -d "$CURDIR/_build/core-${OLD_VERSION}" ]; then
     mkdir $CURDIR/_build
     wget -c "https://github.com/classic-terra/core/archive/refs/tags/v${OLD_VERSION}.zip" -O $CURDIR/_build/v${OLD_VERSION}.zip
     unzip $CURDIR/_build/v${OLD_VERSION}.zip -d $CURDIR/_build
-    chmod 777 $CURDIR/_build
+    chmod 677 $CURDIR/_build
     ls -l $CURDIR/_build
 fi
 
 ## check if $BUILDDIR/old/terrad exists
 if [ ! -f "$BUILDDIR/old/terrad" ]; then
     mkdir -p $BUILDDIR/old
-    docker build --platform linux/amd64 --no-cache --build-arg source=$CURDIR/_build/core-${OLD_VERSION} --tag classic-terra/terraclassic.terrad-binary.old $CURDIR
+    docker build --platform linux/amd64 --no-cache --build-arg source=/$CURDIR/_build/core-${OLD_VERSION} --tag classic-terra/terraclassic.terrad-binary.old $CURDIR
     docker create --platform linux/amd64 --name old-temp classic-terra/terraclassic.terrad-binary.old:latest
     docker cp old-temp:/usr/local/bin/terrad $BUILDDIR/old/
     docker rm old-temp

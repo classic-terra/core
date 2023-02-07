@@ -32,7 +32,7 @@ fi
 ## check if $BUILDDIR/old/terrad exists
 if [ ! -f "$BUILDDIR/old/terrad" ]; then
     mkdir -p $BUILDDIR/old
-    docker build --platform linux/amd64 --no-cache --build-arg source=$CURDIR/_build/classic-${OLD_VERSION} --tag classic-terra/terraclassic.terrad-binary.old $CURDIR
+    docker build --platform linux/amd64 --no-cache --build-arg source=$CURDIR/_build/core-${OLD_VERSION} --tag classic-terra/terraclassic.terrad-binary.old $CURDIR
     docker create --platform linux/amd64 --name old-temp classic-terra/terraclassic.terrad-binary.old:latest
     docker cp old-temp:/usr/local/bin/terrad $BUILDDIR/old/
     docker rm old-temp

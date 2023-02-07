@@ -7,7 +7,7 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./app
-HTTPS_GIT := https://github.com/terra-money/core.git
+HTTPS_GIT := https://github.com/terra-money/classic-core.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
@@ -232,7 +232,7 @@ proto-lint:
 
 ## TODO - change branch release/v0.5.x to master after columbus-5 merged
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking 
 

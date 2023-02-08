@@ -6,6 +6,7 @@ RUN apt-get update && \
 
 ARG UID=1000
 ARG GID=1000
+ARG wrapper_script=wrapper.sh
 
 USER ${UID}:${GID}
 VOLUME /terrad
@@ -15,4 +16,4 @@ ENTRYPOINT ["/usr/bin/wrapper.sh"]
 CMD ["start", "--log_format", "plain"]
 STOPSIGNAL SIGTERM
 
-COPY wrapper.sh /usr/bin/wrapper.sh
+COPY ${wrapper_script} /usr/bin/wrapper.sh

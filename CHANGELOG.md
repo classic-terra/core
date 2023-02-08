@@ -36,12 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v1.0.5-full-archive](https://github.com/classic-terra/core/releases/tag/v1.0.5-full-archive)
+## [v1.0.5-full-archive](https://github.com/classic-terra/core/releases/tag/v1.0.5-full-archive) - 2023-02-03
 
 ### Bug Fixes
 * (app) [9c2c556](https://github.com/classic-terra/core/commit/9c2c5566dddf4459ff599d3a9ffd4ab96a2df1d0) Fix indexing bug and sync from columbus-5 genesis
 
-## [v1.0.5](https://github.com/classic-terra/core/releases/tag/v1.0.5)
+## [v1.0.5](https://github.com/classic-terra/core/releases/tag/v1.0.5) - 2023-01-18
 
 ### State Machine Breaking
 * (app) [#44](https://github.com/classic-terra/core/pull/44/files) Move version map register to begin block

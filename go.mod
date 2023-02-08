@@ -129,11 +129,12 @@ replace (
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf => github.com/docker/docker v1.6.1
 	github.com/ethereum/go-ethereum v1.9.25 => github.com/ethereum/go-ethereum v1.10.9
-	github.com/gin-gonic/gin v1.4.0 => github.com/gin-gonic/gin v1.6.0
+	github.com/gin-gonic/gin v1.4.0 => github.com/gin-gonic/gin v1.7.7
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/gorilla/websocket v1.4.1-0.20190629185528-ae1634f6a989 => github.com/gorilla/websocket v1.4.1
 	github.com/libp2p/go-buffer-pool v0.0.2 => github.com/libp2p/go-buffer-pool v0.1.0
 	github.com/microcosm-cc/bluemonday v1.0.2 => github.com/microcosm-cc/bluemonday v1.0.16
+	github.com/miekg/dns v1.0.14 => github.com/miekg/dns v1.1.25
 	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.2.0
 	github.com/tendermint/tendermint => github.com/terra-money/tendermint v0.34.14-terra.3
 	github.com/tidwall/gjson v1.6.7 => github.com/tidwall/gjson v1.9.3

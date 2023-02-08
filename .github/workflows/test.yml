@@ -57,4 +57,5 @@ jobs:
           make clean localnet-start-upgrade
       - name: test upgrade
         run: |
+          chmod +x -R ./contrib/updates
           ./contrib/updates/upgrade-test.sh

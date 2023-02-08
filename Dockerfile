@@ -15,7 +15,6 @@ RUN apk add git cmake
 WORKDIR /code
 COPY ${source} /code/
 
-
 # Install mimalloc
 RUN git clone --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install
 ENV MIMALLOC_RESERVE_HUGE_OS_PAGES=4

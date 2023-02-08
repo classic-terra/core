@@ -52,3 +52,18 @@ jobs:
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
+  upgrade-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3.5.0
+        with:
+          go-version: 1.18
+      - name: start localnet
+        run: |
+          make clean localnet-start-upgrade
+      - name: test upgrade
+        run: |
+          chmod +x -R ./contrib/updates
+          ./contrib/updates/upgrade-test.sh

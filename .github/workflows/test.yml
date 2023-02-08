@@ -46,7 +46,7 @@ jobs:
   
   upgrade-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0

@@ -5,12 +5,12 @@ NODE1_HOME=node1/terrad
 BINARY_OLD="docker exec terradnode1 ./terrad"
 
 # sleep to wait for localnet to come up
-sleep 20
+sleep 10
 
 # 100 block from now
 STATUS_INFO=($($BINARY_OLD status --home $NODE1_HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
 CHAIN_ID=${STATUS_INFO[0]}
-UPGRADE_HEIGHT=$((STATUS_INFO[1] + 30))
+UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
 
 $BINARY_OLD tx gov submit-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from node1 --keyring-backend test --chain-id $CHAIN_ID --home $NODE1_HOME -y
 

@@ -3,6 +3,10 @@
 SOFTWARE_UPGRADE_NAME=v2
 NODE1_HOME=node1/terrad
 BINARY_OLD="docker exec terradnode1 ./terrad"
+
+# sleep to wait for localnet to come up
+sleep 20
+
 # 100 block from now
 STATUS_INFO=($($BINARY_OLD status --home $NODE1_HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
 CHAIN_ID=${STATUS_INFO[0]}

@@ -46,6 +46,7 @@ service Query {
     option (google.api.http).get = "/terra/treasury/v1beta1/indicators";
   }
 
+  // Whitelist returns all registered whitelist
   rpc Whitelist(QueryWhitelistRequest) returns (QueryWhitelistResponse) {
     option (google.api.http).get = "/terra/treasury/v1beta1/whitelist";
   }
@@ -156,10 +157,12 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryWhitelistRequest is the request type for the Query/Whitelist RPC method.
 message QueryWhitelistRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
+// QueryWhitelistResponse is response type for the Query/Whitelist RPC method.
 message QueryWhitelistResponse {
   repeated string addresses = 1;
 

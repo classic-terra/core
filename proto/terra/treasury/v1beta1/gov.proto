@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/terra-money/core/x/treasury/types";
 
+// proposal request structure to set whitelist addresses
 message SetWhitelistAddressProposal {
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters) = false;
@@ -15,6 +16,7 @@ message SetWhitelistAddressProposal {
     repeated string whitelist_address = 3 [(gogoproto.moretags) = "yaml:\"whitelist_address\""];
 }
 
+// proposal request structure to remove whitelist addresses
 message RemoveWhitelistAddressProposal {
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters) = false;

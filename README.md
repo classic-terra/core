@@ -1,87 +1,23 @@
-<p>&nbsp;</p>
-<p align="center">
-
-<img src="core_logo.svg" width=500>
-
-</p>
-
-<p align="center">
-Full-node software implementing the Terra protocol<br/><br/>
-
-<a href="https://codecov.io/gh/terra-money/core">
-    <img src="https://codecov.io/gh/terra-money/core/branch/main/graph/badge.svg">
-</a>
-<a href="https://goreportcard.com/report/github.com/terra-money/core">
-    <img src="https://goreportcard.com/badge/github.com/terra-money/core">
-</a>
-
-</p>
-
-<p align="center">
-  <a href="https://docs.terra.money/"><strong>Explore the Docs »</strong></a>
-  <br />
-  <br/>
-  <a href="https://docs.terra.money/docs/develop/module-specifications/README.html">Terra Core reference</a>
-  ·
-  <a href="https://pkg.go.dev/github.com/terra-money/core?tab=subdirectories">Go API</a>
-  ·
-  <a href="https://lcd.terra.dev/swagger/#/">Rest API</a>
-  ·
-  <a href="https://github.com/terra-money/terra.py">Python SDK</a>
-  ·
-  <a href="https://terra-money.github.io/terra.js/">Terra.js</a>
-  ·
-  <a href="https://finder.terra.money/">Finder</a>
-  ·
-  <a href="https://station.terra.money/">Station</a>
-</p>
-
-<br/>
-
-## Table of Contents <!-- omit in toc -->
-
-- [What is Terra?](#what-is-terra)
-- [Installation](#installation)
-  - [Binaries](#binaries)
-  - [From Source](#from-source)
-- [`terrad`](#terrad)
-- [Node Setup](#node-setup)
-  - [Join the mainnet](#join-the-mainnet)
-  - [Join a testnet](#join-a-testnet)
-  - [Run a local testnet](#run-a-local-testnet)
-  - [Run a single node testnet](#run-a-single-node-testnet)
-- [Set up a production environment](#set-up-a-production-environment)
-  - [Increase maximum open files](#increase-maximum-open-files)
-  - [Create a dedicated user](#create-a-dedicated-user)
-  - [Port configuration](#port-configuration)
-  - [Run the server as a daemon](#run-the-server-as-a-daemon)
-  - [Register terrad as a service](#register-terrad-as-a-service)
-  - [Start, stop, or restart service](#start-stop-or-restart-service)
-  - [Access logs](#access-logs)
-- [Resources](#resources)
-- [Community](#community)
-- [Contributing](#contributing)
-- [License](#license)
-
-## What is Terra?
+## What is Terra Classic?
 
 **[Terra](https://terra.money)** is a public, open-source blockchain protocol that provides fundamental infrastructure for a decentralized economy and enables open participation in the creation of new financial primitives to power the innovation of money.
 
-The Terra blockchain is secured by distributed consensus on staked asset Luna and natively supports the issuance of [price-tracking stablecoins](https://docs.terra.money/docs/learn/glossary.html#algorithmic-stablecoin) that are algorithmically pegged to major world currencies, such as UST, KRT, and SDT. Smart contracts on Terra run on WebAssembly and take advantage of core modules, such as on-chain swaps, price oracle, and staking rewards, to power modern [DeFi](https://docs.terra.money/docs/learn/glossary.html#defi) apps. Through dynamic fiscal policy managed by community governance, Terra is an evolving, democratized economy directed by its users.
 
-**Terra Core** is the reference implementation of the Terra protocol, written in Golang. Terra Core is built atop [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) and uses [Tendermint](https://github.com/tendermint/tendermint) BFT consensus. If you intend to work on Terra Core source, it is recommended that you familiarize yourself with the concepts in those projects.
+**Classic** is the reference implementation of the Terra protocol, written in Golang. Terra Core is built atop [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) and uses [Tendermint](https://github.com/tendermint/tendermint) BFT consensus. If you intend to work on Terra Core source, it is recommended that you familiarize yourself with the concepts in those projects.
+
+Upon the implosion of Terra, a group of rebels seized control of the blockchain.  Terra's future is uncertain, but the rebels are now firmly in control. 
 
 ## Installation
 
 ### Binaries
 
-The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/terra-money/core/releases) page.
+The easiest way to get started is by downloading a pre-built binary for your operating system. You can find the latest binaries on the [releases](https://github.com/classic-terra/core/releases) page.
 
 ### From Source
 
 **Step 1. Install Golang**
 
-Go v1.17+ or higher is required for Terra Core.
+Go v1.18 is required for Terra Core.
 
 If you haven't already, install Golang by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 
@@ -90,7 +26,7 @@ If you haven't already, install Golang by following the [official docs](https://
 Use `git` to retrieve Terra Core from the [official repo](https://github.com/terra-money/core/) and checkout the `main` branch. This branch contains the latest stable release, which will install the `terrad` binary.
 
 ```bash
-git clone https://github.com/terra-money/core/
+git clone https://github.com/classic-terra/core/
 cd core
 git checkout main
 ```
@@ -117,10 +53,10 @@ If terrad is installed correctly, the following information is returned:
 ```bash
 name: terra
 server_name: terrad
-version: 0.5.0-rc0-9-g640fd0ed
-commit: 640fd0ed921d029f4d1c3d88435bd5dbd67d14cd
+version: 1.0.5
+commit: 8bb56e9919ecf5234a3239a6a351b509451f9d5d
 build_tags: netgo,ledger
-go: go version go1.17.2 darwin/amd64
+go: go version go1.18.1 linux/amd64
 ```
 
 ## `terrad`
@@ -337,7 +273,7 @@ journalctl -t terrad -r
 journalctl -t terrad -f
 ```
 
-## Using `docker-compose` (Recommended)
+## Using `docker-compose`
 
 1. Install Docker
 

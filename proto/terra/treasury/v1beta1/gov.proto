@@ -1,0 +1,26 @@
+syntax = "proto3";
+package terra.treasury.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/terra-money/core/x/treasury/types";
+
+message SetWhitelistAddressProposal {
+    option (gogoproto.equal) = true;
+    option (gogoproto.goproto_getters) = false;
+    option (gogoproto.goproto_stringer) = false;
+
+    string title = 1;
+    string description = 2;
+    repeated string whitelist_address = 3 [(gogoproto.moretags) = "yaml:\"whitelist_address\""];
+}
+
+message RemoveWhitelistAddressProposal {
+    option (gogoproto.equal) = true;
+    option (gogoproto.goproto_getters) = false;
+    option (gogoproto.goproto_stringer) = false;
+
+    string title = 1;
+    string description = 2;
+    repeated string whitelist_address = 3 [(gogoproto.moretags) = "yaml:\"whitelist_address\""];
+}

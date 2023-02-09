@@ -96,6 +96,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	terraappparams "github.com/classic-terra/core/app/params"
+	v2 "github.com/classic-terra/core/app/upgrades/v2"
 
 	customauth "github.com/classic-terra/core/custom/auth"
 	customante "github.com/classic-terra/core/custom/auth/ante"
@@ -123,6 +124,7 @@ import (
 	oraclekeeper "github.com/classic-terra/core/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/x/oracle/types"
 	"github.com/classic-terra/core/x/treasury"
+	treasuryclient "github.com/classic-terra/core/x/treasury/client"
 	treasurykeeper "github.com/classic-terra/core/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	"github.com/classic-terra/core/x/vesting"
@@ -168,6 +170,8 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			treasuryclient.ProposalAddWhitelistHandler,
+			treasuryclient.ProposalRemoveWhitelistHandler,
 		),
 		customparams.AppModuleBasic{},
 		customcrisis.AppModuleBasic{},
@@ -436,7 +440,8 @@ func NewTerraApp(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(app.TreasuryKeeper))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -514,6 +519,7 @@ func NewTerraApp(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
+	app.setupUpgradeHandlers()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -805,4 +811,11 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper
+}
+
+func (app *TerraApp) setupUpgradeHandlers() {
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v2.UpgradeName,
+		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
+	)
 }

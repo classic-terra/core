@@ -900,6 +900,10 @@
     - [GenesisState](#terra.treasury.v1beta1.GenesisState)
     - [TaxCap](#terra.treasury.v1beta1.TaxCap)
   
+- [terra/treasury/v1beta1/gov.proto](#terra/treasury/v1beta1/gov.proto)
+    - [RemoveWhitelistAddressProposal](#terra.treasury.v1beta1.RemoveWhitelistAddressProposal)
+    - [SetWhitelistAddressProposal](#terra.treasury.v1beta1.SetWhitelistAddressProposal)
+  
 - [terra/treasury/v1beta1/query.proto](#terra/treasury/v1beta1/query.proto)
     - [QueryIndicatorsRequest](#terra.treasury.v1beta1.QueryIndicatorsRequest)
     - [QueryIndicatorsResponse](#terra.treasury.v1beta1.QueryIndicatorsResponse)
@@ -918,6 +922,8 @@
     - [QueryTaxProceedsResponse](#terra.treasury.v1beta1.QueryTaxProceedsResponse)
     - [QueryTaxRateRequest](#terra.treasury.v1beta1.QueryTaxRateRequest)
     - [QueryTaxRateResponse](#terra.treasury.v1beta1.QueryTaxRateResponse)
+    - [QueryWhitelistRequest](#terra.treasury.v1beta1.QueryWhitelistRequest)
+    - [QueryWhitelistResponse](#terra.treasury.v1beta1.QueryWhitelistResponse)
   
     - [Query](#terra.treasury.v1beta1.Query)
   
@@ -13126,6 +13132,56 @@ TaxCap is the max tax amount can be charged for the given denom
 
 
 
+<a name="terra/treasury/v1beta1/gov.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## terra/treasury/v1beta1/gov.proto
+
+
+
+<a name="terra.treasury.v1beta1.RemoveWhitelistAddressProposal"></a>
+
+### RemoveWhitelistAddressProposal
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `whitelist_address` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="terra.treasury.v1beta1.SetWhitelistAddressProposal"></a>
+
+### SetWhitelistAddressProposal
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `whitelist_address` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="terra/treasury/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -13362,6 +13418,37 @@ Query/TaxRate RPC method.
 
 
 
+
+<a name="terra.treasury.v1beta1.QueryWhitelistRequest"></a>
+
+### QueryWhitelistRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="terra.treasury.v1beta1.QueryWhitelistResponse"></a>
+
+### QueryWhitelistResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addresses` | [string](#string) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -13383,6 +13470,7 @@ Query defines the gRPC querier service.
 | `SeigniorageProceeds` | [QuerySeigniorageProceedsRequest](#terra.treasury.v1beta1.QuerySeigniorageProceedsRequest) | [QuerySeigniorageProceedsResponse](#terra.treasury.v1beta1.QuerySeigniorageProceedsResponse) | SeigniorageProceeds return the current seigniorage proceeds | GET|/terra/treasury/v1beta1/seigniorage_proceeds|
 | `TaxProceeds` | [QueryTaxProceedsRequest](#terra.treasury.v1beta1.QueryTaxProceedsRequest) | [QueryTaxProceedsResponse](#terra.treasury.v1beta1.QueryTaxProceedsResponse) | TaxProceeds return the current tax proceeds | GET|/terra/treasury/v1beta1/tax_proceeds|
 | `Indicators` | [QueryIndicatorsRequest](#terra.treasury.v1beta1.QueryIndicatorsRequest) | [QueryIndicatorsResponse](#terra.treasury.v1beta1.QueryIndicatorsResponse) | Indicators return the current trl informations | GET|/terra/treasury/v1beta1/indicators|
+| `Whitelist` | [QueryWhitelistRequest](#terra.treasury.v1beta1.QueryWhitelistRequest) | [QueryWhitelistResponse](#terra.treasury.v1beta1.QueryWhitelistResponse) |  | GET|/terra/treasury/v1beta1/whitelist|
 | `Params` | [QueryParamsRequest](#terra.treasury.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#terra.treasury.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/terra/treasury/v1beta1/params|
 
  <!-- end services -->

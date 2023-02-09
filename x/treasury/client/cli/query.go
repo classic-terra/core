@@ -35,6 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQuerySeigniorageProceeds(),
 		GetCmdQueryIndicators(),
 		GetCmdQueryParams(),
+		GetCmdQueryWhitelist(),
 	)
 
 	return oracleQueryCmd
@@ -279,5 +280,36 @@ func GetCmdQueryParams() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetCmdQueryWhitelist() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "whitelist",
+		Args:  cobra.NoArgs,
+		Short: "Query all whitelist address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Query store
+			res, err := queryClient.Whitelist(context.Background(), &types.QueryWhitelistRequest{Pagination: pageReq})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "whitelist")
 	return cmd
 }

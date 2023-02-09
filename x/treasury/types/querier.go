@@ -16,6 +16,7 @@ const (
 	QueryTaxProceeds         = "taxProceeds"
 	QueryParameters          = "parameters"
 	QueryIndicators          = "indicators"
+	QueryWhitelist           = "whitelist"
 )
 
 // QueryTaxCapParams for query
@@ -53,4 +54,12 @@ func (res IndicatorQueryResponse) String() string {
   TRL Month     : %s
 
   `, res.TRLYear, res.TRLMonth)
+}
+
+type QueryWhitelistParams struct {
+	Page, Limit int
+}
+
+func NewQueryWhitelistParams(page, limit int) QueryWhitelistParams {
+	return QueryWhitelistParams{page, limit}
 }

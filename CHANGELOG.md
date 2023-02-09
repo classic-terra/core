@@ -9,8 +9,6 @@ The latest version comes first.
 The release date of each version is displayed.
 Mention whether you follow Semantic Versioning.
 
-Usage:
-
 Change log entries are to be added to the Unreleased section under the
 appropriate stanza (see below). Each entry should ideally include a tag and
 the Github issue reference in the following format:

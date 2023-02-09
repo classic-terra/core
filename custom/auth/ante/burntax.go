@@ -56,14 +56,14 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			if currHeight >= TaxPowerSplitHeight {
 				feePool := btfd.distrKeeper.GetFeePool(ctx)
 
-				for _, taxCoin := range taxes {
+				for i, taxCoin := range taxes {
 					splitTaxRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
 					splitcoinAmount := splitTaxRate.MulInt(taxCoin.Amount).RoundInt()
 
 					splitCoin := sdk.NewCoin(taxCoin.Denom, splitcoinAmount)
-					taxCoin.Amount = taxCoin.Amount.Sub(splitCoin.Amount)
+					taxes[i] = taxCoin.Sub(splitCoin)
 
-					if splitCoin.Amount.IsPositive() {
+					if splitcoinAmount.IsPositive() {
 						feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(splitCoin))
 					}
 				}

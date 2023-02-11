@@ -12,7 +12,6 @@ import (
 // This will still need a parameter change proposal, but can be activated
 // anytime after this height
 const TaxPowerUpgradeHeight = 9346889
-const WhitelistHeight = 12345678910
 
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
@@ -52,73 +51,70 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		// Record tax proceeds
 		if !taxes.IsZero() {
-			// Check if burn tax whitelist feature is active
-			if currHeight >= WhitelistHeight {
-				tainted := false
+			tainted := false
 
-				// Iterate over messages
-				for _, msg := range msgs {
-					var whitelistedRecipients []string
-					var whitelistedSenders []string
-					senderWhitelistCount := 0
-					recipientWhitelistCount := 0
+			// Iterate over messages
+			for _, msg := range msgs {
+				var whitelistedRecipients []string
+				var whitelistedSenders []string
+				senderWhitelistCount := 0
+				recipientWhitelistCount := 0
 
-					// Fetch recipients
-					switch v := msg.(type) {
-					case *banktypes.MsgSend:
-						whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
-						whitelistedSenders = append(whitelistedSenders, v.FromAddress)
-					case *banktypes.MsgMultiSend:
-						for _, output := range v.Outputs {
-							whitelistedRecipients = append(whitelistedRecipients, output.Address)
-						}
-
-						for _, input := range v.Inputs {
-							whitelistedSenders = append(whitelistedSenders, input.Address)
-						}
-					default:
-						// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
-						// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
+				// Fetch recipients
+				switch v := msg.(type) {
+				case *banktypes.MsgSend:
+					whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
+					whitelistedSenders = append(whitelistedSenders, v.FromAddress)
+				case *banktypes.MsgMultiSend:
+					for _, output := range v.Outputs {
+						whitelistedRecipients = append(whitelistedRecipients, output.Address)
 					}
 
-					// Match signers vs whitelist
-					for _, sender := range whitelistedSenders {
-						if btfd.treasuryKeeper.HasWhitelistAddress(ctx, sender) {
-							senderWhitelistCount++
-						}
+					for _, input := range v.Inputs {
+						whitelistedSenders = append(whitelistedSenders, input.Address)
 					}
+				default:
+					// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
+					// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
+				}
 
-					// If all signers are not matched apply burn tax
-					if len(whitelistedSenders) > senderWhitelistCount {
-						tainted = true
-
-						break
-					}
-
-					// Check recipients
-					for _, recipient := range whitelistedRecipients {
-						if btfd.treasuryKeeper.HasWhitelistAddress(ctx, recipient) {
-							recipientWhitelistCount++
-						}
-					}
-
-					// If all recipients are not matched apply burn tax
-					if len(whitelistedRecipients) > recipientWhitelistCount {
-						tainted = true
-
-						break
+				// Match signers vs whitelist
+				for _, sender := range whitelistedSenders {
+					if btfd.treasuryKeeper.HasWhitelistAddress(ctx, sender) {
+						senderWhitelistCount++
 					}
 				}
 
-				if !tainted {
-					return next(ctx, tx, simulate)
+				// If all signers are not matched apply burn tax
+				if len(whitelistedSenders) > senderWhitelistCount {
+					tainted = true
+
+					break
+				}
+
+				// Check recipients
+				for _, recipient := range whitelistedRecipients {
+					if btfd.treasuryKeeper.HasWhitelistAddress(ctx, recipient) {
+						recipientWhitelistCount++
+					}
+				}
+
+				// If all recipients are not matched apply burn tax
+				if len(whitelistedRecipients) > recipientWhitelistCount {
+					tainted = true
+
+					break
 				}
 			}
 
-			err = btfd.bankKeeper.SendCoinsFromModuleToModule(ctx, types.FeeCollectorName, treasury.BurnModuleName, taxes)
-			if err != nil {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			if !tainted {
+				return next(ctx, tx, simulate)
 			}
+		}
+
+		err = btfd.bankKeeper.SendCoinsFromModuleToModule(ctx, types.FeeCollectorName, treasury.BurnModuleName, taxes)
+		if err != nil {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 

@@ -15,16 +15,16 @@ export GOMODCACHE=$ROOT/_build/gocache
 if ! command -v _build/old/terrad &> /dev/null
 then
     mkdir -p _build/old
-    wget -c "https://github.com/classic-terra/classic/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
+    wget -c "https://github.com/classic-terra/core/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
     unzip _build/v${OLD_VERSION}.zip -d _build
-    cd ./_build/classic-${OLD_VERSION}
+    cd ./_build/core-${OLD_VERSION}
     GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
     cd ../..
 fi
 
 # reinstall old binary
 if [ $# -eq 1 ] && [ $1 == "--reinstall-old" ]; then
-    cd ./_build/classic-${OLD_VERSION}
+    cd ./_build/core-${OLD_VERSION}
     GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
     cd ../..
 fi

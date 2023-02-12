@@ -12,18 +12,21 @@ import (
 // This will still need a parameter change proposal, but can be activated
 // anytime after this height
 const TaxPowerUpgradeHeight = 9346889
+const TaxPowerSplitHeight = 123456789
 
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
 	treasuryKeeper TreasuryKeeper
 	bankKeeper     BankKeeper
+	distrKeeper    DistrKeeper
 }
 
 // NewBurnTaxFeeDecorator returns new tax fee decorator instance
-func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper) BurnTaxFeeDecorator {
+func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper, distrKeeper DistrKeeper) BurnTaxFeeDecorator {
 	return BurnTaxFeeDecorator{
 		treasuryKeeper: treasuryKeeper,
 		bankKeeper:     bankKeeper,
+		distrKeeper:    distrKeeper,
 	}
 }
 
@@ -112,7 +115,26 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			}
 		}
 
+		if currHeight >= TaxPowerSplitHeight {
+			feePool := btfd.distrKeeper.GetFeePool(ctx)
+
+			for i, taxCoin := range taxes {
+				splitTaxRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
+				splitcoinAmount := splitTaxRate.MulInt(taxCoin.Amount).RoundInt()
+
+				splitCoin := sdk.NewCoin(taxCoin.Denom, splitcoinAmount)
+				taxes[i] = taxCoin.Sub(splitCoin)
+
+				if splitcoinAmount.IsPositive() {
+					feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(splitCoin))
+				}
+			}
+
+			btfd.distrKeeper.SetFeePool(ctx, feePool)
+		}
+
 		err = btfd.bankKeeper.SendCoinsFromModuleToModule(ctx, types.FeeCollectorName, treasury.BurnModuleName, taxes)
+
 		if err != nil {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/classic-terra/core/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,8 +63,11 @@ func NewMigrator(keeper Keeper) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+	m.keeper.SetBurnSplitRate(ctx, types.DefaultBurnTaxSplit)
+
 	for _, address := range burnTaxAddressWhitelist {
 		m.keeper.SetWhitelistAddress(ctx, address)
 	}
+
 	return nil
 }

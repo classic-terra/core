@@ -39,6 +39,7 @@ type TreasuryKeeper interface {
 	RecordEpochTaxProceeds(ctx sdk.Context, delta sdk.Coins)
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
+	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
 	HasWhitelistAddress(ctx sdk.Context, address string) bool
 }
 

@@ -17,6 +17,13 @@ import (
 
 // go test -v -run ^TestAnteTestSuite/TestSplitTax$ github.com/classic-terra/core/custom/auth/ante
 func (suite *AnteTestSuite) TestSplitTax() {
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(1, 0)) // 100%
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(1, 1)) // 10%
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(1, 2)) // 0.1%
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(0, 0)) // 0% burn all taxes (old burn tax behavior)
+}
+
+func (suite *AnteTestSuite) runBurnTaxFee(burnSplitRate sdk.Dec) {
 	suite.SetupTest(true) // setup
 	require := suite.Require()
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
@@ -31,11 +38,7 @@ func (suite *AnteTestSuite) TestSplitTax() {
 	suite.ctx = suite.ctx.WithBlockHeight(10000000)
 
 	// Set burn split tax
-	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 0)) // 100%
-	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 1)) // 10%
-	tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 2)) // 1%
-	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 3)) // 0.1%
-	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(0, 0)) // 0% burn all taxes (old burn tax behavior)
+	tk.SetBurnSplitRate(suite.ctx, burnSplitRate)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -76,7 +79,6 @@ func (suite *AnteTestSuite) TestSplitTax() {
 	_, err = antehandler(suite.ctx, tx, false)
 	require.NoError(err)
 
-	burnSplitRate := tk.GetBurnSplitRate(suite.ctx)
 	taxDecCoins := sdk.NewDecCoinsFromCoins(taxes...)
 	splitTaxesDecCoins := taxDecCoins.MulDec(burnSplitRate)
 

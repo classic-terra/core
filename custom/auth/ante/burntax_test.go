@@ -35,6 +35,7 @@ func (suite *AnteTestSuite) TestSplitTax() {
 	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 1)) // 10%
 	tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 2)) // 1%
 	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 3)) // 0.1%
+	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(0, 0)) // 0% burn all taxes (old burn tax behavior)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

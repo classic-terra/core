@@ -3,6 +3,7 @@ package ante
 import (
 	"fmt"
 
+	core "github.com/classic-terra/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
@@ -143,6 +144,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 
 // computes the stability tax according to tax-rate and tax-cap
 func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coins {
+	currHeight := ctx.BlockHeight()
 	taxRate := tk.GetTaxRate(ctx)
 	if taxRate.Equal(sdk.ZeroDec()) {
 		return sdk.Coins{}
@@ -150,7 +152,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 
 	taxes := sdk.Coins{}
 	for _, coin := range principal {
-		if coin.Denom == sdk.DefaultBondDenom {
+		if (coin.Denom == core.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && currHeight < TaxPowerUpgradeHeight {
 			continue
 		}
 

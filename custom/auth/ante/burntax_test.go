@@ -27,6 +27,9 @@ func (suite *AnteTestSuite) TestSplitTax() {
 	mfd := ante.NewBurnTaxFeeDecorator(tk, bk, dk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
+	// Set the blockheight past the tax height block
+	suite.ctx = suite.ctx.WithBlockHeight(10000000)
+
 	// Set burn split tax
 	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(10, 1)) // 100%
 	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 1)) // 10%

@@ -8,6 +8,11 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// TaxPowerUpgradeHeight is when taxes are allowed to go into effect
+// This will still need a parameter change proposal, but can be activated
+// anytime after this height
+const TaxPowerUpgradeHeight = 9346889
+
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
 	treasuryKeeper TreasuryKeeper
@@ -26,6 +31,12 @@ func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper
 
 // AnteHandle handles msg tax fee checking
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	// Do not proceed if you are below this block height
+	currHeight := ctx.BlockHeight()
+	if currHeight < TaxPowerUpgradeHeight {
+		return next(ctx, tx, simulate)
+	}
+
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")

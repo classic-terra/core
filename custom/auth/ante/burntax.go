@@ -41,13 +41,13 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		// Record tax proceeds
 		if !taxes.IsZero() {
-			splitTaxRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
+			burnSplitRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
 
-			if splitTaxRate.IsPositive() {
+			if burnSplitRate.IsPositive() {
 				communityDeltaCoins := sdk.NewCoins()
 
 				for i, taxCoin := range taxes {
-					splitcoinAmount := splitTaxRate.MulInt(taxCoin.Amount).RoundInt()
+					splitcoinAmount := burnSplitRate.MulInt(taxCoin.Amount).RoundInt()
 					splitCoin := sdk.NewCoin(taxCoin.Denom, splitcoinAmount)
 					taxes[i] = taxCoin.Sub(splitCoin)
 

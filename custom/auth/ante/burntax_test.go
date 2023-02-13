@@ -178,7 +178,7 @@ func (suite *AnteTestSuite) DeductFees(sendAmount int64) sdk.Coins {
 }
 
 // the following binance addresses should not be applied tax
-// go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/terra-money/core/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestFilterRecipient$ github.com/classic-terra/core/custom/auth/ante
 func (suite *AnteTestSuite) TestFilterRecipient() {
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
@@ -292,13 +292,13 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 	for _, c := range cases {
 		suite.SetupTest(true) // setup
 		fmt.Printf("CASE = %s \n", c.name)
-		suite.ctx = suite.ctx.WithBlockHeight(ante.WhitelistHeight)
+		suite.ctx = suite.ctx.WithBlockHeight(ante.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[0].String())
 		suite.app.TreasuryKeeper.SetWhitelistAddress(suite.ctx, addrs[1].String())
 
-		mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper)
+		mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.DistrKeeper)
 		antehandler := sdk.ChainAnteDecorators(
 			cosmosante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
 			mfd,

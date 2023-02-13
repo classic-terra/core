@@ -33,6 +33,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
+### Features
+* (build) [#118](https://github.com/classic-terra/core/pull/118) localnet for Apple Silicon
 
 ## [v1.0.5-full-archive](https://github.com/classic-terra/core/releases/tag/v1.0.5-full-archive) - 2023-02-03
 

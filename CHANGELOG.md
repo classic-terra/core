@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (build) [#105](https://github.com/classic-terra/core/pull/105) Update docker assets
 
 ### Bug Fixes
-* (auth/client) [#106] (https://github.com/classic-terra/core/pull/106) fix ungraceful error on failed client tax query
+* (auth/client) [#106](https://github.com/classic-terra/core/pull/106) fix ungraceful error on failed client tax query
 * (ante) [#113](https://github.com/classic-terra/core/pull/113) Fix burn tax split bug
 
 ## [v1.0.5-full-archive](https://github.com/classic-terra/core/releases/tag/v1.0.5-full-archive) - 2023-02-03

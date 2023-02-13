@@ -5,13 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
-
-// TaxPowerUpgradeHeight is when taxes are allowed to go into effect
-// This will still need a parameter change proposal, but can be activated
-// anytime after this height
-const TaxPowerUpgradeHeight = 9346889
-const TaxPowerSplitHeight = 123456789
 
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
@@ -31,12 +26,6 @@ func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper
 
 // AnteHandle handles msg tax fee checking
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// Do not proceed if you are below this block height
-	currHeight := ctx.BlockHeight()
-	if currHeight < TaxPowerUpgradeHeight {
-		return next(ctx, tx, simulate)
-	}
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -46,34 +35,50 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	// At this point we have already run the DeductFees AnteHandler and taken the fees from the sending account
 	// Now we remove the taxes from the gas reward and immediately burn it
-
 	if !simulate {
 		// Compute taxes again.
 		taxes := FilterMsgAndComputeTax(ctx, btfd.treasuryKeeper, msgs...)
 
 		// Record tax proceeds
 		if !taxes.IsZero() {
-			if currHeight >= TaxPowerSplitHeight {
-				feePool := btfd.distrKeeper.GetFeePool(ctx)
+			splitTaxRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
+
+			if splitTaxRate.IsPositive() {
+				communityDeltaCoins := sdk.NewCoins()
 
 				for i, taxCoin := range taxes {
-					splitTaxRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
 					splitcoinAmount := splitTaxRate.MulInt(taxCoin.Amount).RoundInt()
-
 					splitCoin := sdk.NewCoin(taxCoin.Denom, splitcoinAmount)
 					taxes[i] = taxCoin.Sub(splitCoin)
 
 					if splitcoinAmount.IsPositive() {
-						feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(splitCoin))
+						communityDeltaCoins = communityDeltaCoins.Add(splitCoin)
 					}
 				}
 
+				if err = btfd.bankKeeper.SendCoinsFromModuleToModule(
+					ctx,
+					types.FeeCollectorName,
+					distrtypes.ModuleName,
+					communityDeltaCoins,
+				); err != nil {
+					return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				}
+
+				feePool := btfd.distrKeeper.GetFeePool(ctx)
+				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(communityDeltaCoins...)...)
 				btfd.distrKeeper.SetFeePool(ctx, feePool)
 			}
 
-			err = btfd.bankKeeper.SendCoinsFromModuleToModule(ctx, types.FeeCollectorName, treasury.BurnModuleName, taxes)
-			if err != nil {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			if !taxes.IsZero() {
+				if err = btfd.bankKeeper.SendCoinsFromModuleToModule(
+					ctx,
+					types.FeeCollectorName,
+					treasury.BurnModuleName,
+					taxes,
+				); err != nil {
+					return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				}
 			}
 		}
 	}

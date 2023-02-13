@@ -3,12 +3,12 @@ package ante
 import (
 	"fmt"
 
-	core "github.com/classic-terra/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	core "github.com/classic-terra/core/types"
 	marketexported "github.com/classic-terra/core/x/market/exported"
 	oracleexported "github.com/classic-terra/core/x/oracle/exported"
 	wasmexported "github.com/classic-terra/core/x/wasm/exported"
@@ -152,7 +152,11 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 
 	taxes := sdk.Coins{}
 	for _, coin := range principal {
+		// Originally only a stability tax on UST.  Changed to tax Luna as well after TaxPowerUpgradeHeight
 		if (coin.Denom == core.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && currHeight < TaxPowerUpgradeHeight {
+			continue
+		}
+		if coin.Denom == sdk.DefaultBondDenom {
 			continue
 		}
 

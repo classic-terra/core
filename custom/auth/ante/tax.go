@@ -3,15 +3,14 @@ package ante
 import (
 	"fmt"
 
-	core "github.com/classic-terra/core/types"
-	marketexported "github.com/classic-terra/core/x/market/exported"
-	oracleexported "github.com/classic-terra/core/x/oracle/exported"
-	wasmexported "github.com/classic-terra/core/x/wasm/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	marketexported "github.com/classic-terra/core/x/market/exported"
+	oracleexported "github.com/classic-terra/core/x/oracle/exported"
+	wasmexported "github.com/classic-terra/core/x/wasm/exported"
 )
 
 // MaxOracleMsgGasUsage is constant expected oracle msg gas cost
@@ -151,7 +150,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 
 	taxes := sdk.Coins{}
 	for _, coin := range principal {
-		if coin.Denom == core.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom {
+		if coin.Denom == sdk.DefaultBondDenom {
 			continue
 		}
 

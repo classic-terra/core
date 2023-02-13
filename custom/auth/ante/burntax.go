@@ -4,8 +4,8 @@ import (
 	treasury "github.com/classic-terra/core/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // TaxPowerUpgradeHeight is when taxes are allowed to go into effect
@@ -15,14 +15,16 @@ const TaxPowerUpgradeHeight = 9346889
 
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
+	accountKeeper  cosmosante.AccountKeeper
 	treasuryKeeper TreasuryKeeper
 	bankKeeper     BankKeeper
 	distrKeeper    DistrKeeper
 }
 
 // NewBurnTaxFeeDecorator returns new tax fee decorator instance
-func NewBurnTaxFeeDecorator(treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper, distrKeeper DistrKeeper) BurnTaxFeeDecorator {
+func NewBurnTaxFeeDecorator(accountKeeper cosmosante.AccountKeeper, treasuryKeeper TreasuryKeeper, bankKeeper BankKeeper, distrKeeper DistrKeeper) BurnTaxFeeDecorator {
 	return BurnTaxFeeDecorator{
+		accountKeeper:  accountKeeper,
 		treasuryKeeper: treasuryKeeper,
 		bankKeeper:     bankKeeper,
 		distrKeeper:    distrKeeper,
@@ -67,18 +69,13 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					}
 				}
 
-				if err = btfd.bankKeeper.SendCoinsFromModuleToModule(
+				if err = btfd.distrKeeper.FundCommunityPool(
 					ctx,
-					types.FeeCollectorName,
-					distrtypes.ModuleName,
 					communityDeltaCoins,
+					btfd.accountKeeper.GetModuleAddress(types.FeeCollectorName),
 				); err != nil {
 					return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 				}
-
-				feePool := btfd.distrKeeper.GetFeePool(ctx)
-				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(communityDeltaCoins...)...)
-				btfd.distrKeeper.SetFeePool(ctx, feePool)
 			}
 
 			if !taxes.IsZero() {

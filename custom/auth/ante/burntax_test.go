@@ -24,17 +24,17 @@ func (suite *AnteTestSuite) TestSplitTax() {
 	tk := suite.app.TreasuryKeeper
 	bk := suite.app.BankKeeper
 	dk := suite.app.DistrKeeper
-	mfd := ante.NewBurnTaxFeeDecorator(tk, bk, dk)
+	mfd := ante.NewBurnTaxFeeDecorator(suite.app.AccountKeeper, tk, bk, dk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// Set the blockheight past the tax height block
 	suite.ctx = suite.ctx.WithBlockHeight(10000000)
 
 	// Set burn split tax
-	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(10, 1)) // 100%
+	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 0)) // 100%
 	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 1)) // 10%
 	tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 2)) // 1%
-	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 3))  // 0.1%
+	// tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(1, 3)) // 0.1%
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

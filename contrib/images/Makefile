@@ -1,6 +1,6 @@
 all: terrad-env
 
 terrad-env:
-	docker build --build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) --tag terramoney/terrad-env terrad-env
+	docker build --platform linux/amd64 --build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) --tag classic-terra/core terrad-env
 
 .PHONY: all terrad-env

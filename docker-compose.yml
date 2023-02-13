@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   terradnode0:
+    platform: linux/amd64
     container_name: terradnode0
     image: "terramoney/terrad-env"
     ports:
@@ -17,6 +18,7 @@ services:
         ipv4_address: 192.168.10.2
 
   terradnode1:
+    platform: linux/amd64
     container_name: terradnode1
     image: "terramoney/terrad-env"
     ports:
@@ -32,6 +34,7 @@ services:
         ipv4_address: 192.168.10.3
 
   terradnode2:
+    platform: linux/amd64
     container_name: terradnode2
     image: "terramoney/terrad-env"
     environment:
@@ -47,6 +50,7 @@ services:
         ipv4_address: 192.168.10.4
 
   terradnode3:
+    platform: linux/amd64
     container_name: terradnode3
     image: "terramoney/terrad-env"
     environment:

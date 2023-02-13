@@ -115,7 +115,7 @@ endif
 
 build-linux:
 	mkdir -p $(BUILDDIR)
-	docker build --platform linux/amd64 --no-cache --tag classic-terra/core ./
+	docker build --platform linux/amd64 --tag classic-terra/core ./
 	docker create --platform linux/amd64 --name temp classic-terra/core:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker rm temp
@@ -241,7 +241,7 @@ proto-check-breaking:
 ###############################################################################
 
 # Run a 4-node testnet locally
-localnet-start: build-linux localnet-stop
+localnet-start: localnet-stop build-linux
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-env 2>/dev/null),$(info found image classic-terra/terrad-env),$(MAKE) -C contrib/localnet terrad-env)
 	if ! [ -f build/node0/terrad/config/genesis.json ]; then $(DOCKER) run --platform linux/amd64 --rm \
 		--user $(shell id -u):$(shell id -g) \

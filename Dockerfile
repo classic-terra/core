@@ -1,6 +1,6 @@
 # docker build . -t cosmwasm/wasmd:latest
 # docker run --rm -it cosmwasm/wasmd:latest /bin/sh
-FROM golang:1.19-alpine AS go-builder
+FROM golang:1.18-alpine3.17 AS go-builder
 
 # See https://github.com/CosmWasm/wasmvm/releases
 ENV LIBWASMVM_VERSION=0.16.6
@@ -29,7 +29,9 @@ RUN sha256sum /lib/libwasmvm_muslc.a | grep ${LIBWASMVM_SHA256}
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
 RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LDFLAGS="-linkmode=external -extldflags \"-L/code/mimalloc/build -lmimalloc -Wl,-z,muldefs -static\"" make build
 
-FROM alpine:3.15.4
+FROM alpine:3.17
+
+RUN apk add wget lz4 aria2 curl jq gawk coreutils "zlib>1.2.12-r2" "libssl1.1>1.1.1q-r0" && apk update
 
 RUN apk update && apk add wget lz4 aria2 curl jq gawk coreutils
 

@@ -13,6 +13,8 @@ import (
 	"github.com/classic-terra/core/x/oracle/types"
 	"github.com/stretchr/testify/require"
 
+	"time"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"

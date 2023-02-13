@@ -122,7 +122,6 @@ import (
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 	core "github.com/classic-terra/core/types"
 
-	"github.com/classic-terra/core/x/feeshare"
 	"github.com/classic-terra/core/x/market"
 	marketkeeper "github.com/classic-terra/core/x/market/keeper"
 	markettypes "github.com/classic-terra/core/x/market/types"
@@ -138,9 +137,6 @@ import (
 	wasmkeeper "github.com/classic-terra/core/x/wasm/keeper"
 	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 
-	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
-	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
-
 	bankwasm "github.com/classic-terra/core/custom/bank/wasm"
 	distrwasm "github.com/classic-terra/core/custom/distribution/wasm"
 	govwasm "github.com/classic-terra/core/custom/gov/wasm"
@@ -151,8 +147,6 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/client/docs/statik"
-
-	v2 "github.com/classic-terra/core/app/upgrades/v2"
 )
 
 const appName = "TerraApp"
@@ -706,9 +700,31 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 				panic(fmt.Sprintf("%s not found", channelID))
 			}
 
+			channel.State = ibcchanneltypes.CLOSED
+			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
+		}
+	}
+	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapEnableForkHeight { // Re-enable IBCs
+		// Enable IBC Channels
+		channelIDs := []string{
+			"channel-1",  // Osmosis
+			"channel-49", // Crescent
+			"channel-20", // Juno
+		}
+		for _, channelID := range channelIDs {
+			channel, found := app.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, channelID)
+			if !found {
+				panic(fmt.Sprintf("%s not found", channelID))
+			}
+
 			channel.State = ibcchanneltypes.OPEN
 			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
 		}
+	}
+
+	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
+	if ctx.BlockHeight() == core.VersionMapEnableHeight {
+		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	}
 
 	return app.mm.BeginBlock(ctx, req)
@@ -725,7 +741,6 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 

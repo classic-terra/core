@@ -115,15 +115,15 @@ endif
 
 build-linux:
 	mkdir -p $(BUILDDIR)
-	docker build --platform linux/amd64 --no-cache --tag classic-terra/terraclassic.terrad-binary ./
-	docker create --platform linux/amd64 --name temp classic-terra/terraclassic.terrad-binary:latest
+	docker build --no-cache --tag classic-terra/core ./
+	docker create --name temp classic-terra/core:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker rm temp
 
 build-linux-with-shared-library:
 	mkdir -p $(BUILDDIR)
-	docker build --platform linux/amd64 --tag classic-terra/terraclassic.terrad-shared ./ -f ./shared.Dockerfile
-	docker create --platform linux/amd64 --name temp classic-terra/terraclassic.terrad-shared:latest
+	docker build --tag classic-terra/core-shared ./ -f ./shared.Dockerfile
+	docker create --name temp classic-terra/core-shared:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker cp temp:/lib/libwasmvm.so $(BUILDDIR)/
 	docker rm temp
@@ -230,10 +230,10 @@ benchmark:
 ###############################################################################
 
 lint:
-	golangci-lint run --out-format=tab
+	sudo golangci-lint run --out-format=tab
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	sudo golangci-lint run --fix --out-format=tab --issues-exit-code=0
 .PHONY: lint lint-fix
 
 format:
@@ -250,7 +250,7 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.7 sh ./scripts/protocgen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.3 sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
@@ -266,7 +266,7 @@ proto-lint:
 
 ## TODO - change branch release/v0.5.x to master after columbus-5 merged
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking
 
@@ -289,17 +289,4 @@ localnet-start: build-linux localnet-stop
 localnet-stop:
 	docker-compose down
 
-localnet-rebel2-build:
-	docker-compose -f ./docker-compose/docker-compose.yml -f ./docker-compose/docker-compose.build.yml build core
-	docker-compose -f ./docker-compose/docker-compose.yml -f ./docker-compose/docker-compose.build.yml build node
-
-localnet-rebel2-start:
-	docker-compose -f ./docker-compose/docker-compose.yml up
-
-localnet-rebel2-stop:
-	docker-compose -f ./docker-compose/docker-compose.yml stop
-
-localnet-rebel2-clean:
-	docker-compose -f ./docker-compose/docker-compose.yml down
-
-.PHONY: localnet-start localnet-stop localnet-rebel2-start localnet-rebel2-stop localnet-rebel2-build localnet-rebel2-clean
+.PHONY: localnet-start localnet-stop

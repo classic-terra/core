@@ -289,6 +289,9 @@ func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
 	queryClient := treasuryexported.NewQueryClient(clientCtx)
 
 	res, err := queryClient.TaxRate(context.Background(), &treasuryexported.QueryTaxRateRequest{})
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
 	return res.TaxRate, err
 }
 
@@ -296,6 +299,9 @@ func queryTaxCap(clientCtx client.Context, denom string) (sdk.Int, error) {
 	queryClient := treasuryexported.NewQueryClient(clientCtx)
 
 	res, err := queryClient.TaxCap(context.Background(), &treasuryexported.QueryTaxCapRequest{Denom: denom})
+	if err != nil {
+		return sdk.NewInt(0), err
+	}
 	return res.TaxCap, err
 }
 

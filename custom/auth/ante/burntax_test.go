@@ -10,8 +10,6 @@ import (
 
 	"github.com/classic-terra/core/custom/auth/ante"
 	core "github.com/classic-terra/core/types"
-	treasury "github.com/classic-terra/core/x/treasury/types"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -252,18 +250,4 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 		_, err = antehandler(suite.ctx, tx, false)
 		suite.Require().NoError(err)
 
-		// check fee decorator
-		amountFee := suite.app.BankKeeper.GetBalance(suite.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
-		fmt.Printf("amount fee after = %v \n", amountFee)
-		amountBurn := suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroSDRDenom)
-		fmt.Printf("amount burn after = %v \n", amountBurn)
-
-		if c.burnAmount > 0 {
-			suite.Require().Equal(amountBurnBefore.Amount.Add(sdk.NewInt(c.burnAmount)), amountBurn.Amount)
-			suite.Require().Equal(amountFeeBefore, amountFee)
-		} else {
-			suite.Require().Equal(amountBurnBefore, amountBurn)
-			suite.Require().Equal(amountFeeBefore.Amount.Add(sdk.NewInt(c.feeAmount)), amountFee.Amount)
-		}
-	}
 }

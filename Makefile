@@ -212,19 +212,19 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=v0.7
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+CONTAINER_PROTO_VER=v0.7
+CONTAINER_PROTO_IMAGE=tendermintdev/sdk-proto-gen:$(CONTAINER_PROTO_VER)
+CONTAINER_PROTO_FMT=cosmos-sdk-proto-fmt-$(CONTAINER_PROTO_VER)
 
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(CONTAINER_PROTO_IMAGE) sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_PROTO_FMT}$$"; then docker start -a $(CONTAINER_PROTO_FMT); else docker run --name $(CONTAINER_PROTO_FMT) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
 		find ./proto -name "*.proto" -exec clang-format -i {} \; ; fi
 
 proto-swagger-gen:

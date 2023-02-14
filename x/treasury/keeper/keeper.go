@@ -353,15 +353,6 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 	}
 }
 
-func (k Keeper) GetBurnSplitRate(ctx sdk.Context) sdk.Dec {
-	params := k.GetParams(ctx)
-	return params.BurnTaxSplit
-}
-
-func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
-	k.paramSpace.Set(ctx, types.KeyBurnTaxSplit, burnTaxSplit)
-}
-
 // ======Whitelist substore======
 func (k Keeper) SetWhitelistAddress(ctx sdk.Context, address string) {
 	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)

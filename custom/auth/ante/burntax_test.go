@@ -1,6 +1,8 @@
 package ante_test
 
 import (
+	"fmt"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,12 +15,30 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
+// go test -v -run ^TestAnteTestSuite/TestSplitTax$ github.com/classic-terra/core/custom/auth/ante
+func (suite *AnteTestSuite) TestSplitTax() {
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(1, 0)) // 100%
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(1, 1)) // 10%
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(1, 2)) // 0.1%
+	suite.runBurnTaxFee(sdk.NewDecWithPrec(0, 0)) // 0% burn all taxes (old burn tax behavior)
+}
+
+func (suite *AnteTestSuite) runBurnTaxFee(burnSplitRate sdk.Dec) {
 	suite.SetupTest(true) // setup
+	require := suite.Require()
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewBurnTaxFeeDecorator(suite.app.TreasuryKeeper, suite.app.BankKeeper)
+	tk := suite.app.TreasuryKeeper
+	bk := suite.app.BankKeeper
+	dk := suite.app.DistrKeeper
+	mfd := ante.NewBurnTaxFeeDecorator(suite.app.AccountKeeper, tk, bk, dk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	// Set the blockheight past the tax height block
+	suite.ctx = suite.ctx.WithBlockHeight(10000000)
+
+	// Set burn split tax
+	tk.SetBurnSplitRate(suite.ctx, burnSplitRate)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -30,60 +50,83 @@ func (suite *AnteTestSuite) TestEnsureBurnTaxModule() {
 
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	require.NoError(suite.txBuilder.SetMsgs(msg))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	require.NoError(err)
 
-	// set zero gas prices
-	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins())
+	// Send taxes to fee collector to simulate DeductFeeDecorator antehandler
+	taxes := suite.DeductFees(sendAmount)
+	feeCollector := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-	// Set IsCheckTx to true
-	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	// expected: fee collector = taxes
+	amountFeeBefore := bk.GetAllBalances(suite.ctx, feeCollector.GetAddress())
+	require.Equal(amountFeeBefore, taxes)
 
-	// Luna must pass without burn before the specified tax block height
+	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
+
+	fmt.Printf(
+		"Before: TotalSupply %v, Community %v, FeeCollector %v\n",
+		totalSupplyBefore,
+		dk.GetFeePool(suite.ctx).CommunityPool,
+		amountFeeBefore,
+	)
+
+	// send tx to BurnTaxFeeDecorator antehandler
 	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
+	require.NoError(err)
 
-	// Set the blockheight past the tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(10000000)
-	// antehandler errors with insufficient fees due to tax
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
+	taxDecCoins := sdk.NewDecCoinsFromCoins(taxes...)
+	splitTaxesDecCoins := taxDecCoins.MulDec(burnSplitRate)
 
+	// expected: community pool 50%
+	communityPoolAfter := dk.GetFeePool(suite.ctx).CommunityPool
+	require.Equal(communityPoolAfter, splitTaxesDecCoins)
+
+	// burn the burn account
+	tk.BurnCoinsFromBurnAccount(suite.ctx)
+
+	// TODO: remove below line
+	fmt.Printf("BurnSplitRate %v, splitTaxes %v\n", burnSplitRate, splitTaxesDecCoins)
+
+	// expected: total supply = tax - split tax
+	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
+	burnTax := taxDecCoins.Sub(splitTaxesDecCoins)
+
+	if !burnTax.Empty() {
+		require.Equal(
+			sdk.NewDecCoinsFromCoins(totalSupplyBefore.Sub(totalSupplyAfter)...),
+			burnTax,
+		)
+	}
+
+	// expected: fee collector = 0
+	amountFeeAfter := bk.GetAllBalances(suite.ctx, feeCollector.GetAddress())
+	require.True(amountFeeAfter.Empty())
+
+	// TODO: remove below line
+	fmt.Printf(
+		"After: TotalSupply %v, Community %v, FeeCollector %v\n",
+		totalSupplyAfter,
+		communityPoolAfter,
+		amountFeeAfter,
+	)
+}
+
+func (suite *AnteTestSuite) DeductFees(sendAmount int64) sdk.Coins {
 	tk := suite.app.TreasuryKeeper
 	expectedTax := tk.GetTaxRate(suite.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(suite.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
-
 	taxes := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, expectedTax.Int64()))
-
 	bk := suite.app.BankKeeper
-	bk.MintCoins(suite.ctx, minttypes.ModuleName, sendCoins)
-
-	// Populate the FeeCollector module with taxes
+	bk.MintCoins(suite.ctx, minttypes.ModuleName, taxes)
+	// populate the FeeCollector module with taxes
 	bk.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, types.FeeCollectorName, taxes)
-	feeCollector := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
-	amountFee := bk.GetAllBalances(suite.ctx, feeCollector.GetAddress())
-	suite.Require().Equal(amountFee, taxes)
-	totalSupply, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
-
-	// must pass with tax and burn
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
-
-	// Burn the taxes
-	tk.BurnCoinsFromBurnAccount(suite.ctx)
-	suite.Require().NoError(err)
-
-	supplyAfterBurn, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
-
-	// Total supply should have decreased by the tax amount
-	suite.Require().Equal(taxes, totalSupply.Sub(supplyAfterBurn))
-
+	return taxes
 }

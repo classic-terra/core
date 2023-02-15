@@ -161,21 +161,21 @@ func getQueriedIndicators(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino,
 	return indicators
 }
 
-func getQueriedWhitelist(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) types.QueryWhitelistResponse {
-	params := types.NewQueryWhitelistParams(0, 100)
+func getQueriedExemptList(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) types.QueryExemptListResponse {
+	params := types.NewQueryExemptListParams(0, 100)
 	bz, err := cdc.MarshalJSON(params)
 	require.Nil(t, err)
 
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryWhitelist}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryExemptList}, "/"),
 		Data: bz,
 	}
 
-	bz, err = querier(ctx, []string{types.QueryWhitelist}, query)
+	bz, err = querier(ctx, []string{types.QueryExemptList}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var response types.QueryWhitelistResponse
+	var response types.QueryExemptListResponse
 	err = cdc.UnmarshalJSON(bz, &response)
 	require.Nil(t, err)
 
@@ -328,15 +328,15 @@ func TestLegacyQueryIndicators(t *testing.T) {
 	require.Equal(t, targetIndicators, queriedIndicators)
 }
 
-// go test -v -run ^TestLegacyQueryWhitelist$ github.com/terra-money/core/x/treasury/keeper
-func TestLegacyQueryWhitelist(t *testing.T) {
+// go test -v -run ^TestLegacyQueryExemptList$ github.com/terra-money/core/x/treasury/keeper
+func TestLegacyQueryExemptList(t *testing.T) {
 	input := CreateTestInput(t)
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
 
 	// add some address to whitelist address
-	input.TreasuryKeeper.SetWhitelistAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
+	input.TreasuryKeeper.SetExemptAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
 
-	targetRes := types.QueryWhitelistResponse{
+	targetRes := types.QueryExemptListResponse{
 		Addresses: []string{"terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t"},
 		Pagination: &query.PageResponse{
 			NextKey: nil,
@@ -344,6 +344,6 @@ func TestLegacyQueryWhitelist(t *testing.T) {
 		},
 	}
 
-	queriedRes := getQueriedWhitelist(t, input.Ctx, input.Cdc, querier)
+	queriedRes := getQueriedExemptList(t, input.Ctx, input.Cdc, querier)
 	require.Equal(t, targetRes, queriedRes)
 }

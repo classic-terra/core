@@ -259,8 +259,8 @@ func (suite *AnteTestSuite) TestFilterRecipient() {
 		suite.ctx = suite.ctx.WithBlockHeight(ante.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
-		tk.SetWhitelistAddress(suite.ctx, addrs[0].String())
-		tk.SetWhitelistAddress(suite.ctx, addrs[1].String())
+		tk.SetExemptAddress(suite.ctx, addrs[0].String())
+		tk.SetExemptAddress(suite.ctx, addrs[1].String())
 
 		mfd := ante.NewBurnTaxFeeDecorator(ak, tk, bk, suite.app.DistrKeeper)
 		antehandler := sdk.ChainAnteDecorators(

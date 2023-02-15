@@ -14,13 +14,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func ProposalAddWhitelistCmd() *cobra.Command {
+func ProposalAddBurnTaxExemptionAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "whitelist-add [addresses] --title [text] --description [text]",
-		Short: "Submit a set whitelist address proposal",
-		Long: fmt.Sprintf(`Submit a proposal to add whitelist addresses for tax exemption.
+		Use:   "tax-exemption-add [addresses] --title [text] --description [text]",
+		Short: "Submit a set tax exemption address proposal",
+		Long: fmt.Sprintf(`Submit a proposal to add addresses for tax exemption.
 Example:
-$ %s tx gov submit-proposal whitelist-add terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
+$ %s tx gov submit-proposal tax-exemption-add terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,10 +48,10 @@ $ %s tx gov submit-proposal whitelist-add terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8
 				return err
 			}
 
-			content := types.SetWhitelistAddressProposal{
+			content := types.AddBurnTaxExemptionAddressProposal{
 				Title:            proposalTitle,
 				Description:      proposalDescr,
-				WhitelistAddress: addresses,
+				ExemptionAddress: addresses,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -73,13 +73,13 @@ $ %s tx gov submit-proposal whitelist-add terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8
 	return cmd
 }
 
-func ProposalRemoveWhitelistCmd() *cobra.Command {
+func ProposalRemoveBurnTaxExemptionAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "whitelist-remove [addresses] --title [text] --description [text]",
-		Short: "Submit a remove whitelist address proposal",
-		Long: fmt.Sprintf(`Submit a proposal to remove whitelist addresses for tax exemption.
+		Use:   "tax-exemption-remove [addresses] --title [text] --description [text]",
+		Short: "Submit a remove tax exemption address proposal",
+		Long: fmt.Sprintf(`Submit a proposal to remove addresses from tax exemption.
 Example:
-$ %s tx gov submit-proposal whitelist-remove terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
+$ %s tx gov submit-proposal tax-exemption-remove terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -107,10 +107,10 @@ $ %s tx gov submit-proposal whitelist-remove terra1dczz24r33fwlj0q5ra7rcdryjpk9h
 				return err
 			}
 
-			content := types.RemoveWhitelistAddressProposal{
+			content := types.RemoveBurnTaxExemptionAddressProposal{
 				Title:            proposalTitle,
 				Description:      proposalDescr,
-				WhitelistAddress: addresses,
+				ExemptionAddress: addresses,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())

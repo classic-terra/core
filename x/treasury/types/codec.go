@@ -7,14 +7,14 @@ import (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&SetWhitelistAddressProposal{}, "terra/SetWhitelistAddressProposal", nil)
-	cdc.RegisterConcrete(&RemoveWhitelistAddressProposal{}, "terra/RemoveWhitelistAddressProposal", nil)
+	cdc.RegisterConcrete(&AddBurnTaxExemptionAddressProposal{}, "terra/AddBurnTaxExemptionAddressProposal", nil)
+	cdc.RegisterConcrete(&RemoveBurnTaxExemptionAddressProposal{}, "terra/RemoveBurnTaxExemptionAddressProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
-		&SetWhitelistAddressProposal{},
-		&RemoveWhitelistAddressProposal{},
+		&AddBurnTaxExemptionAddressProposal{},
+		&RemoveBurnTaxExemptionAddressProposal{},
 	)
 }

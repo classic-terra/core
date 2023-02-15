@@ -16,7 +16,7 @@ const (
 	QueryTaxProceeds         = "taxProceeds"
 	QueryParameters          = "parameters"
 	QueryIndicators          = "indicators"
-	QueryWhitelist           = "whitelist"
+	QueryExemptList          = "exemptList"
 )
 
 // QueryTaxCapParams for query
@@ -56,10 +56,10 @@ func (res IndicatorQueryResponse) String() string {
   `, res.TRLYear, res.TRLMonth)
 }
 
-type QueryWhitelistParams struct {
+type QueryExemptListParams struct {
 	Page, Limit int
 }
 
-func NewQueryWhitelistParams(page, limit int) QueryWhitelistParams {
-	return QueryWhitelistParams{page, limit}
+func NewQueryExemptListParams(page, limit int) QueryExemptListParams {
+	return QueryExemptListParams{page, limit}
 }

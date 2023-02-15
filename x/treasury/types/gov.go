@@ -9,57 +9,57 @@ import (
 )
 
 const (
-	ProposalTypeSetWhitelistAddressProposal    = "SetWhitelistAddressProposal"
-	ProposalTypeRemoveWhitelistAddressProposal = "RemoveWhitelistAddressProposal"
+	ProposalTypeAddBurnTaxExemptionAddressProposal    = "AddBurnTaxExemptionAddressProposal"
+	ProposalTypeRemoveBurnTaxExemptionAddressProposal = "RemoveBurnTaxExemptionAddressProposal"
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeSetWhitelistAddressProposal)
-	govtypes.RegisterProposalTypeCodec(&SetWhitelistAddressProposal{}, "terra/SetWhitelistAddressProposal")
-	govtypes.RegisterProposalType(ProposalTypeRemoveWhitelistAddressProposal)
-	govtypes.RegisterProposalTypeCodec(&RemoveWhitelistAddressProposal{}, "terra/RemoveWhitelistAddressProposal")
+	govtypes.RegisterProposalType(ProposalTypeAddBurnTaxExemptionAddressProposal)
+	govtypes.RegisterProposalTypeCodec(&AddBurnTaxExemptionAddressProposal{}, "terra/AddBurnTaxExemptionAddressProposal")
+	govtypes.RegisterProposalType(ProposalTypeRemoveBurnTaxExemptionAddressProposal)
+	govtypes.RegisterProposalTypeCodec(&RemoveBurnTaxExemptionAddressProposal{}, "terra/RemoveBurnTaxExemptionAddressProposal")
 }
 
 var (
-	_ govtypes.Content = &SetWhitelistAddressProposal{}
-	_ govtypes.Content = &RemoveWhitelistAddressProposal{}
+	_ govtypes.Content = &AddBurnTaxExemptionAddressProposal{}
+	_ govtypes.Content = &RemoveBurnTaxExemptionAddressProposal{}
 )
 
-// ======SetWhitelistAddressProposal======
+// ======AddBurnTaxExemptionAddressProposal======
 
-func NewSetWhitelistAddressProposal(title, description string, whitelist []string) govtypes.Content {
-	return &SetWhitelistAddressProposal{
+func NewAddBurnTaxExemptionAddressProposal(title, description string, exempt_list []string) govtypes.Content {
+	return &AddBurnTaxExemptionAddressProposal{
 		Title:            title,
 		Description:      description,
-		WhitelistAddress: whitelist,
+		ExemptionAddress: exempt_list,
 	}
 }
 
-func (p *SetWhitelistAddressProposal) GetTitle() string { return p.Title }
+func (p *AddBurnTaxExemptionAddressProposal) GetTitle() string { return p.Title }
 
-func (p *SetWhitelistAddressProposal) GetDescription() string { return p.Description }
+func (p *AddBurnTaxExemptionAddressProposal) GetDescription() string { return p.Description }
 
-func (p *SetWhitelistAddressProposal) ProposalRoute() string { return RouterKey }
+func (p *AddBurnTaxExemptionAddressProposal) ProposalRoute() string { return RouterKey }
 
-func (p *SetWhitelistAddressProposal) ProposalType() string {
-	return ProposalTypeSetWhitelistAddressProposal
+func (p *AddBurnTaxExemptionAddressProposal) ProposalType() string {
+	return ProposalTypeAddBurnTaxExemptionAddressProposal
 }
 
-func (p SetWhitelistAddressProposal) String() string {
-	return fmt.Sprintf(`SetWhitelistAddressProposal:
+func (p AddBurnTaxExemptionAddressProposal) String() string {
+	return fmt.Sprintf(`AddBurnTaxExemptionAddressProposal:
 	Title:       		     %s
 	Description: 		     %s
 	WhitelistAddress: 		 %v
-  `, p.Title, p.Description, p.WhitelistAddress)
+  `, p.Title, p.Description, p.ExemptionAddress)
 }
 
-func (p *SetWhitelistAddressProposal) ValidateBasic() error {
+func (p *AddBurnTaxExemptionAddressProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
 
-	for _, address := range p.WhitelistAddress {
+	for _, address := range p.ExemptionAddress {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid address (%s)", err)
@@ -69,41 +69,41 @@ func (p *SetWhitelistAddressProposal) ValidateBasic() error {
 	return nil
 }
 
-// ======RemoveWhitelistAddressProposal======
+// ======RemoveBurnTaxExemptionAddressProposal======
 
-func NewRemoveWhitelistAddressProposal(title, description string, whitelist []string) govtypes.Content {
-	return &RemoveWhitelistAddressProposal{
+func NewRemoveBurnTaxExemptionAddressProposal(title, description string, exempt_list []string) govtypes.Content {
+	return &RemoveBurnTaxExemptionAddressProposal{
 		Title:            title,
 		Description:      description,
-		WhitelistAddress: whitelist,
+		ExemptionAddress: exempt_list,
 	}
 }
 
-func (p *RemoveWhitelistAddressProposal) GetTitle() string { return p.Title }
+func (p *RemoveBurnTaxExemptionAddressProposal) GetTitle() string { return p.Title }
 
-func (p *RemoveWhitelistAddressProposal) GetDescription() string { return p.Description }
+func (p *RemoveBurnTaxExemptionAddressProposal) GetDescription() string { return p.Description }
 
-func (p *RemoveWhitelistAddressProposal) ProposalRoute() string { return RouterKey }
+func (p *RemoveBurnTaxExemptionAddressProposal) ProposalRoute() string { return RouterKey }
 
-func (p *RemoveWhitelistAddressProposal) ProposalType() string {
-	return ProposalTypeRemoveWhitelistAddressProposal
+func (p *RemoveBurnTaxExemptionAddressProposal) ProposalType() string {
+	return ProposalTypeRemoveBurnTaxExemptionAddressProposal
 }
 
-func (p RemoveWhitelistAddressProposal) String() string {
-	return fmt.Sprintf(`RemoveWhitelistAddressProposal:
+func (p RemoveBurnTaxExemptionAddressProposal) String() string {
+	return fmt.Sprintf(`RemoveBurnTaxExemptionAddressProposal:
 	Title:       		 	 %s
 	Description: 		 	 %s
 	WhitelistAddress: 		 %v
-  `, p.Title, p.Description, p.WhitelistAddress)
+  `, p.Title, p.Description, p.ExemptionAddress)
 }
 
-func (p *RemoveWhitelistAddressProposal) ValidateBasic() error {
+func (p *RemoveBurnTaxExemptionAddressProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
 
-	for _, address := range p.WhitelistAddress {
+	for _, address := range p.ExemptionAddress {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid address (%s)", err)

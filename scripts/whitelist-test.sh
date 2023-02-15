@@ -28,7 +28,7 @@ sleep 20
 test1=$(./_build/new/terrad keys show $KEY1 -a --keyring-backend $KEYRING --home $HOME)
 test2=$(./_build/new/terrad keys show $KEY2 -a --keyring-backend $KEYRING --home $HOME)
 echo "addresses = $test1,$test2"
-./_build/new/terrad tx gov submit-proposal whitelist-add "$test1,$test2" --title "whitelist" --description "whitelist"  --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
+./_build/new/terrad tx gov submit-proposal tax-exemption-add "$test1,$test2" --title "whitelist" --description "whitelist"  --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
 
 sleep 5
 
@@ -55,7 +55,7 @@ while true; do
 done
 
 # check whitelist again
-./_build/new/terrad q treasury whitelist -o json | jq ".addresses"
+./_build/new/terrad q treasury exempt-list -o json | jq ".addresses"
 
 # query whitelist through rest api
-curl -s http://localhost:1317/treasury/whitelist | jq ".result.addresses"
+curl -s http://localhost:1317/treasury/exempt_list | jq ".result.addresses"

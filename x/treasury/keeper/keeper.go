@@ -362,15 +362,15 @@ func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
 	k.paramSpace.Set(ctx, types.KeyBurnTaxSplit, burnTaxSplit)
 }
 
-// ======Whitelist substore======
-func (k Keeper) SetWhitelistAddress(ctx sdk.Context, address string) {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+// ======Exemption address substore======
+func (k Keeper) SetExemptAddress(ctx sdk.Context, address string) {
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreExemptList)
 
 	sub.Set([]byte(address), []byte{0x01})
 }
 
-func (k Keeper) RemoveWhitelistAddress(ctx sdk.Context, address string) error {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+func (k Keeper) RemoveExemptAddress(ctx sdk.Context, address string) error {
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreExemptList)
 
 	if !sub.Has([]byte(address)) {
 		return types.ErrNoSuchWhitelist.Wrapf("address = %s", address)
@@ -381,8 +381,8 @@ func (k Keeper) RemoveWhitelistAddress(ctx sdk.Context, address string) error {
 	return nil
 }
 
-func (k Keeper) HasWhitelistAddress(ctx sdk.Context, address string) bool {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreWhitelist)
+func (k Keeper) HasExemptAddress(ctx sdk.Context, address string) bool {
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreExemptList)
 
 	return sub.Has([]byte(address))
 }

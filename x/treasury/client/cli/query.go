@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQuerySeigniorageProceeds(),
 		GetCmdQueryIndicators(),
 		GetCmdQueryParams(),
-		GetCmdQueryWhitelist(),
+		GetCmdQueryExemptlist(),
 	)
 
 	return oracleQueryCmd
@@ -283,11 +283,11 @@ func GetCmdQueryParams() *cobra.Command {
 	return cmd
 }
 
-func GetCmdQueryWhitelist() *cobra.Command {
+func GetCmdQueryExemptlist() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "whitelist",
+		Use:   "exempt-list",
 		Args:  cobra.NoArgs,
-		Short: "Query all whitelist address",
+		Short: "Query all exempt address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -301,7 +301,7 @@ func GetCmdQueryWhitelist() *cobra.Command {
 			}
 
 			// Query store
-			res, err := queryClient.Whitelist(context.Background(), &types.QueryWhitelistRequest{Pagination: pageReq})
+			res, err := queryClient.ExemptList(context.Background(), &types.QueryExemptListRequest{Pagination: pageReq})
 			if err != nil {
 				return err
 			}

@@ -11,20 +11,20 @@ import (
 func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *types.SetWhitelistAddressProposal:
-			return handleSetWhitelistAddressProposal(ctx, k, c)
-		case *types.RemoveWhitelistAddressProposal:
-			return handleRemoveWhitelistAddressProposal(ctx, k, c)
+		case *types.AddBurnTaxExemptionAddressProposal:
+			return handleAddBurnTaxExemptionAddressProposal(ctx, k, c)
+		case *types.RemoveBurnTaxExemptionAddressProposal:
+			return handleRemoveBurnTaxExemptionAddressProposal(ctx, k, c)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized treasury proposal content type: %T", c)
 		}
 	}
 }
 
-func handleSetWhitelistAddressProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetWhitelistAddressProposal) error {
-	return keeper.HandleSetWhitelistAddressProposal(ctx, k, p)
+func handleAddBurnTaxExemptionAddressProposal(ctx sdk.Context, k keeper.Keeper, p *types.AddBurnTaxExemptionAddressProposal) error {
+	return keeper.HandleAddBurnTaxExemptionAddressProposal(ctx, k, p)
 }
 
-func handleRemoveWhitelistAddressProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveWhitelistAddressProposal) error {
+func handleRemoveBurnTaxExemptionAddressProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveBurnTaxExemptionAddressProposal) error {
 	return keeper.HandleRemoveWhitelistAddressProposal(ctx, k, p)
 }

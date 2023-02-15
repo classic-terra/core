@@ -127,9 +127,9 @@ func (q querier) Indicators(c context.Context, req *types.QueryIndicatorsRequest
 	return &res, nil
 }
 
-func (q querier) Whitelist(c context.Context, req *types.QueryWhitelistRequest) (*types.QueryWhitelistResponse, error) {
+func (q querier) ExemptList(c context.Context, req *types.QueryExemptListRequest) (*types.QueryExemptListResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.StoreWhitelist)
+	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.StoreExemptList)
 	var addresses []string
 
 	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
@@ -142,5 +142,5 @@ func (q querier) Whitelist(c context.Context, req *types.QueryWhitelistRequest) 
 		return nil, err
 	}
 
-	return &types.QueryWhitelistResponse{Addresses: addresses, Pagination: pageRes}, nil
+	return &types.QueryExemptListResponse{Addresses: addresses, Pagination: pageRes}, nil
 }

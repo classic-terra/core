@@ -7,7 +7,7 @@ import (
 
 func HandleAddBurnTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *types.AddBurnTaxExemptionAddressProposal) error {
 	for _, address := range p.ExemptionAddress {
-		k.SetExemptAddress(ctx, address)
+		k.AddBurnTaxExemptionAddress(ctx, address)
 	}
 
 	return nil
@@ -15,7 +15,7 @@ func HandleAddBurnTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *type
 
 func HandleRemoveWhitelistAddressProposal(ctx sdk.Context, k Keeper, p *types.RemoveBurnTaxExemptionAddressProposal) error {
 	for _, address := range p.ExemptionAddress {
-		err := k.RemoveExemptAddress(ctx, address)
+		err := k.RemoveBurnTaxExemptionAddress(ctx, address)
 		if err != nil {
 			return err
 		}

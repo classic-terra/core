@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	ProposalTypeAddBurnTaxExemptionAddressProposal    = "AddBurnTaxExemptionAddressProposal"
-	ProposalTypeRemoveBurnTaxExemptionAddressProposal = "RemoveBurnTaxExemptionAddressProposal"
+	ProposalTypeAddBurnTaxExemptionAddress    = "AddBurnTaxExemptionAddress"
+	ProposalTypeRemoveBurnTaxExemptionAddress = "RemoveBurnTaxExemptionAddress"
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeAddBurnTaxExemptionAddressProposal)
+	govtypes.RegisterProposalType(ProposalTypeAddBurnTaxExemptionAddress)
 	govtypes.RegisterProposalTypeCodec(&AddBurnTaxExemptionAddressProposal{}, "terra/AddBurnTaxExemptionAddressProposal")
-	govtypes.RegisterProposalType(ProposalTypeRemoveBurnTaxExemptionAddressProposal)
+	govtypes.RegisterProposalType(ProposalTypeRemoveBurnTaxExemptionAddress)
 	govtypes.RegisterProposalTypeCodec(&RemoveBurnTaxExemptionAddressProposal{}, "terra/RemoveBurnTaxExemptionAddressProposal")
 }
 
@@ -42,7 +42,7 @@ func (p *AddBurnTaxExemptionAddressProposal) GetDescription() string { return p.
 func (p *AddBurnTaxExemptionAddressProposal) ProposalRoute() string { return RouterKey }
 
 func (p *AddBurnTaxExemptionAddressProposal) ProposalType() string {
-	return ProposalTypeAddBurnTaxExemptionAddressProposal
+	return ProposalTypeAddBurnTaxExemptionAddress
 }
 
 func (p AddBurnTaxExemptionAddressProposal) String() string {
@@ -86,7 +86,7 @@ func (p *RemoveBurnTaxExemptionAddressProposal) GetDescription() string { return
 func (p *RemoveBurnTaxExemptionAddressProposal) ProposalRoute() string { return RouterKey }
 
 func (p *RemoveBurnTaxExemptionAddressProposal) ProposalType() string {
-	return ProposalTypeRemoveBurnTaxExemptionAddressProposal
+	return ProposalTypeRemoveBurnTaxExemptionAddress
 }
 
 func (p RemoveBurnTaxExemptionAddressProposal) String() string {

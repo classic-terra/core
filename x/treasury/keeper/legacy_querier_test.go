@@ -334,7 +334,7 @@ func TestLegacyQueryExemptList(t *testing.T) {
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
 
 	// add some address to whitelist address
-	input.TreasuryKeeper.SetExemptAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
+	input.TreasuryKeeper.AddBurnTaxExemptionAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
 
 	targetRes := types.QueryExemptListResponse{
 		Addresses: []string{"terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t"},

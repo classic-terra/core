@@ -66,7 +66,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	m.keeper.SetBurnSplitRate(ctx, types.DefaultBurnTaxSplit)
 
 	for _, address := range burnTaxAddressWhitelist {
-		m.keeper.SetExemptAddress(ctx, address)
+		m.keeper.AddBurnTaxExemptionAddress(ctx, address)
 	}
 
 	return nil

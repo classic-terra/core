@@ -84,7 +84,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 				// Match signers vs whitelist
 				for _, sender := range whitelistedSenders {
-					if btfd.treasuryKeeper.HasExemptAddress(ctx, sender) {
+					if btfd.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, sender) {
 						senderWhitelistCount++
 					}
 				}
@@ -98,7 +98,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 				// Check recipients
 				for _, recipient := range whitelistedRecipients {
-					if btfd.treasuryKeeper.HasExemptAddress(ctx, recipient) {
+					if btfd.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, recipient) {
 						recipientWhitelistCount++
 					}
 				}

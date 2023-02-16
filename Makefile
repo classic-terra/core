@@ -235,7 +235,7 @@ proto-lint:
 
 ## TODO - change branch release/v0.5.x to master after columbus-5 merged
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against '$(HTTPS_GIT)#branch=release/v2.x'
+	@$(DOCKER_BUF) breaking --against '$(HTTPS_GIT)#branch=main'
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking 
 

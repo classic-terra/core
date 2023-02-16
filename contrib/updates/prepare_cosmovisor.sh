@@ -5,8 +5,8 @@
 
 # These fields should be fetched automatically in the future
 # Need to do more upgrade to see upgrade patterns
-OLD_VERSION=1.0.5
-SOFTWARE_UPGRADE_NAME=v2
+OLD_VERSION=v1.0.5
+SOFTWARE_UPGRADE_NAME=$(ls -td -- ./app/upgrades/* | head -n 1 | cut -d'/' -f4)
 BUILDDIR=$1
 
 # check if BUILDDIR is set
@@ -18,16 +18,16 @@ fi
 # install old version of terrad
 
 ## check if _build/classic-${OLD_VERSION} exists
-if [ ! -d "_build/core-${OLD_VERSION}" ]; then
+if [ ! -d "_build/core-${OLD_VERSION:1}" ]; then
     mkdir _build
-    wget -c "https://github.com/classic-terra/core/archive/refs/tags/v${OLD_VERSION}.zip" -O _build/v${OLD_VERSION}.zip
-    unzip _build/v${OLD_VERSION}.zip -d _build
+    wget -c "https://github.com/classic-terra/core/archive/refs/tags/${OLD_VERSION}.zip" -O _build/${OLD_VERSION}.zip
+    unzip _build/${OLD_VERSION}.zip -d _build
 fi
 
 ## check if $BUILDDIR/old/terrad exists
 if [ ! -f "$BUILDDIR/old/terrad" ]; then
     mkdir -p $BUILDDIR/old
-    docker build --platform linux/amd64 --no-cache --build-arg source=./_build/core-${OLD_VERSION}/ --tag classic-terra/terraclassic.terrad-binary.old .
+    docker build --platform linux/amd64 --no-cache --build-arg source=./_build/core-${OLD_VERSION:1}/ --tag classic-terra/terraclassic.terrad-binary.old .
     docker create --platform linux/amd64 --name old-temp classic-terra/terraclassic.terrad-binary.old:latest
     docker cp old-temp:/usr/local/bin/terrad $BUILDDIR/old/
     docker rm old-temp

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # should make this auto fetch upgrade name from app upgrades once many upgrades have been done
-SOFTWARE_UPGRADE_NAME=v2
+SOFTWARE_UPGRADE_NAME=$(ls -td -- ./app/upgrades/* | head -n 1 | cut -d'/' -f4)
 NODE1_HOME=node1/terrad
 BINARY_OLD="docker exec terradnode1 ./terrad"
 

@@ -333,7 +333,7 @@ func TestLegacyQueryBurnTaxExemptionList(t *testing.T) {
 	input := CreateTestInput(t)
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
 
-	// add some address to whitelist address
+	// add some address to burn tax exemption list
 	input.TreasuryKeeper.AddBurnTaxExemptionAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
 
 	targetRes := types.QueryBurnTaxExemptionListResponse{

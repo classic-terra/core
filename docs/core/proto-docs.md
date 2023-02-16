@@ -13143,7 +13143,7 @@ TaxCap is the max tax amount can be charged for the given denom
 <a name="terra.treasury.v1beta1.AddBurnTaxExemptionAddressProposal"></a>
 
 ### AddBurnTaxExemptionAddressProposal
-proposal request structure to set whitelist addresses
+proposal request structure for adding burn tax exemption address(es)
 
 
 | Field | Type | Label | Description |
@@ -13160,7 +13160,7 @@ proposal request structure to set whitelist addresses
 <a name="terra.treasury.v1beta1.RemoveBurnTaxExemptionAddressProposal"></a>
 
 ### RemoveBurnTaxExemptionAddressProposal
-proposal request structure to remove whitelist addresses
+proposal request structure for removing burn tax exemption address(es)
 
 
 | Field | Type | Label | Description |

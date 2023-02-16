@@ -57,5 +57,5 @@ done
 # check burn tax exemption address
 ./_build/new/terrad q treasury burn-tax-exemption-list -o json | jq ".addresses"
 
-# query whitelist through rest api
-curl -s http://localhost:1317/treasury/exempt_list | jq ".result.addresses"
+# query burn tax exemption list through rest api
+curl -s http://localhost:1317/treasury/burn_tax_exemption_list | jq ".result.addresses"

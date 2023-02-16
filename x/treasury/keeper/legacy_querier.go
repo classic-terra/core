@@ -61,12 +61,12 @@ func queryBurnTaxExemptionList(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 		return true, nil
 	})
 
-	whitelistRes := &types.QueryBurnTaxExemptionListResponse{
+	burnTaxExemptionListRes := &types.QueryBurnTaxExemptionListResponse{
 		Addresses:  addresses,
 		Pagination: pageRes,
 	}
 
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, whitelistRes)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, burnTaxExemptionListRes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

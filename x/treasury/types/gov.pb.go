@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// proposal request structure to set whitelist addresses
+// proposal request structure for adding burn tax exemption address(es)
 type AddBurnTaxExemptionAddressProposal struct {
 	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -62,7 +62,7 @@ func (m *AddBurnTaxExemptionAddressProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AddBurnTaxExemptionAddressProposal proto.InternalMessageInfo
 
-// proposal request structure to remove whitelist addresses
+// proposal request structure for removing burn tax exemption address(es)
 type RemoveBurnTaxExemptionAddressProposal struct {
 	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

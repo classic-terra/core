@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/terra-money/core/x/treasury/types";
 
-// proposal request structure to set whitelist addresses
+// proposal request structure for adding burn tax exemption address(es)
 message AddBurnTaxExemptionAddressProposal {
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters) = false;
@@ -16,7 +16,7 @@ message AddBurnTaxExemptionAddressProposal {
     repeated string addresses = 3 [(gogoproto.moretags) = "yaml:\"addresses\""];
 }
 
-// proposal request structure to remove whitelist addresses
+// proposal request structure for removing burn tax exemption address(es)
 message RemoveBurnTaxExemptionAddressProposal {
     option (gogoproto.equal) = true;
     option (gogoproto.goproto_getters) = false;

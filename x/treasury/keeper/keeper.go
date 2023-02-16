@@ -353,13 +353,21 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 	}
 }
 
-// ======Exemption address substore======
+// Burn tax exemption list
 func (k Keeper) AddBurnTaxExemptionAddress(ctx sdk.Context, address string) {
+	if _, err := sdk.AccAddressFromBech32(address); err != nil {
+		panic(err)
+	}
+
 	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
 	sub.Set([]byte(address), []byte{0x01})
 }
 
 func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) error {
+	if _, err := sdk.AccAddressFromBech32(address); err != nil {
+		panic(err)
+	}
+
 	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
 
 	if !sub.Has([]byte(address)) {
@@ -367,12 +375,10 @@ func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) e
 	}
 
 	sub.Delete([]byte(address))
-
 	return nil
 }
 
 func (k Keeper) HasBurnTaxExemptionAddress(ctx sdk.Context, address string) bool {
 	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
-
 	return sub.Has([]byte(address))
 }

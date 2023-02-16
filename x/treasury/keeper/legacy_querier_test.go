@@ -161,21 +161,21 @@ func getQueriedIndicators(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino,
 	return indicators
 }
 
-func getQueriedExemptList(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) types.QueryExemptListResponse {
-	params := types.NewQueryExemptListParams(0, 100)
+func getQueriedBurnTaxExemptionList(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) types.QueryBurnTaxExemptionListResponse {
+	params := types.NewQueryBurnTaxExemptionListParams(0, 100)
 	bz, err := cdc.MarshalJSON(params)
 	require.Nil(t, err)
 
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryExemptList}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryBurnTaxExemptionList}, "/"),
 		Data: bz,
 	}
 
-	bz, err = querier(ctx, []string{types.QueryExemptList}, query)
+	bz, err = querier(ctx, []string{types.QueryBurnTaxExemptionList}, query)
 	require.Nil(t, err)
 	require.NotNil(t, bz)
 
-	var response types.QueryExemptListResponse
+	var response types.QueryBurnTaxExemptionListResponse
 	err = cdc.UnmarshalJSON(bz, &response)
 	require.Nil(t, err)
 
@@ -328,15 +328,15 @@ func TestLegacyQueryIndicators(t *testing.T) {
 	require.Equal(t, targetIndicators, queriedIndicators)
 }
 
-// go test -v -run ^TestLegacyQueryExemptList$ github.com/terra-money/core/x/treasury/keeper
-func TestLegacyQueryExemptList(t *testing.T) {
+// go test -v -run ^TestLegacyQueryBurnTaxExemptionList$ github.com/terra-money/core/x/treasury/keeper
+func TestLegacyQueryBurnTaxExemptionList(t *testing.T) {
 	input := CreateTestInput(t)
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
 
 	// add some address to whitelist address
 	input.TreasuryKeeper.AddBurnTaxExemptionAddress(input.Ctx, "terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t")
 
-	targetRes := types.QueryExemptListResponse{
+	targetRes := types.QueryBurnTaxExemptionListResponse{
 		Addresses: []string{"terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t"},
 		Pagination: &query.PageResponse{
 			NextKey: nil,
@@ -344,6 +344,6 @@ func TestLegacyQueryExemptList(t *testing.T) {
 		},
 	}
 
-	queriedRes := getQueriedExemptList(t, input.Ctx, input.Cdc, querier)
+	queriedRes := getQueriedBurnTaxExemptionList(t, input.Ctx, input.Cdc, querier)
 	require.Equal(t, targetRes, queriedRes)
 }

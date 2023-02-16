@@ -285,9 +285,9 @@ func GetCmdQueryParams() *cobra.Command {
 
 func GetCmdQueryExemptlist() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exempt-list",
+		Use:   "burn-tax-exemption-list",
 		Args:  cobra.NoArgs,
-		Short: "Query all exempt address",
+		Short: "Query all burn tax exemption addresses",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -301,7 +301,7 @@ func GetCmdQueryExemptlist() *cobra.Command {
 			}
 
 			// Query store
-			res, err := queryClient.ExemptList(context.Background(), &types.QueryExemptListRequest{Pagination: pageReq})
+			res, err := queryClient.BurnTaxExemptionList(context.Background(), &types.QueryBurnTaxExemptionListRequest{Pagination: pageReq})
 			if err != nil {
 				return err
 			}

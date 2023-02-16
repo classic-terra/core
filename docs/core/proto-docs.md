@@ -905,8 +905,8 @@
     - [RemoveBurnTaxExemptionAddressProposal](#terra.treasury.v1beta1.RemoveBurnTaxExemptionAddressProposal)
   
 - [terra/treasury/v1beta1/query.proto](#terra/treasury/v1beta1/query.proto)
-    - [QueryExemptListRequest](#terra.treasury.v1beta1.QueryExemptListRequest)
-    - [QueryExemptListResponse](#terra.treasury.v1beta1.QueryExemptListResponse)
+    - [QueryBurnTaxExemptionListRequest](#terra.treasury.v1beta1.QueryBurnTaxExemptionListRequest)
+    - [QueryBurnTaxExemptionListResponse](#terra.treasury.v1beta1.QueryBurnTaxExemptionListResponse)
     - [QueryIndicatorsRequest](#terra.treasury.v1beta1.QueryIndicatorsRequest)
     - [QueryIndicatorsResponse](#terra.treasury.v1beta1.QueryIndicatorsResponse)
     - [QueryParamsRequest](#terra.treasury.v1beta1.QueryParamsRequest)
@@ -13190,10 +13190,10 @@ proposal request structure to remove whitelist addresses
 
 
 
-<a name="terra.treasury.v1beta1.QueryExemptListRequest"></a>
+<a name="terra.treasury.v1beta1.QueryBurnTaxExemptionListRequest"></a>
 
-### QueryExemptListRequest
-QueryExemptListRequest is the request type for the Query/ExemptList RPC method.
+### QueryBurnTaxExemptionListRequest
+QueryBurnTaxExemptionListRequest is the request type for the Query/BurnTaxExemptionList RPC method.
 
 
 | Field | Type | Label | Description |
@@ -13205,10 +13205,10 @@ QueryExemptListRequest is the request type for the Query/ExemptList RPC method.
 
 
 
-<a name="terra.treasury.v1beta1.QueryExemptListResponse"></a>
+<a name="terra.treasury.v1beta1.QueryBurnTaxExemptionListResponse"></a>
 
-### QueryExemptListResponse
-QueryExemptListResponse is response type for the Query/ExemptList RPC method.
+### QueryBurnTaxExemptionListResponse
+QueryBurnTaxExemptionListResponse is response type for the Query/BurnTaxExemptionList RPC method.
 
 
 | Field | Type | Label | Description |
@@ -13471,7 +13471,7 @@ Query defines the gRPC querier service.
 | `SeigniorageProceeds` | [QuerySeigniorageProceedsRequest](#terra.treasury.v1beta1.QuerySeigniorageProceedsRequest) | [QuerySeigniorageProceedsResponse](#terra.treasury.v1beta1.QuerySeigniorageProceedsResponse) | SeigniorageProceeds return the current seigniorage proceeds | GET|/terra/treasury/v1beta1/seigniorage_proceeds|
 | `TaxProceeds` | [QueryTaxProceedsRequest](#terra.treasury.v1beta1.QueryTaxProceedsRequest) | [QueryTaxProceedsResponse](#terra.treasury.v1beta1.QueryTaxProceedsResponse) | TaxProceeds return the current tax proceeds | GET|/terra/treasury/v1beta1/tax_proceeds|
 | `Indicators` | [QueryIndicatorsRequest](#terra.treasury.v1beta1.QueryIndicatorsRequest) | [QueryIndicatorsResponse](#terra.treasury.v1beta1.QueryIndicatorsResponse) | Indicators return the current trl informations | GET|/terra/treasury/v1beta1/indicators|
-| `ExemptList` | [QueryExemptListRequest](#terra.treasury.v1beta1.QueryExemptListRequest) | [QueryExemptListResponse](#terra.treasury.v1beta1.QueryExemptListResponse) | ExemptList returns all registered ExemptList | GET|/terra/treasury/v1beta1/exempt_list|
+| `BurnTaxExemptionList` | [QueryBurnTaxExemptionListRequest](#terra.treasury.v1beta1.QueryBurnTaxExemptionListRequest) | [QueryBurnTaxExemptionListResponse](#terra.treasury.v1beta1.QueryBurnTaxExemptionListResponse) | BurnTaxExemptionList returns all registered burn tax exemption addresses | GET|/terra/treasury/v1beta1/burn_tax_exemption_list|
 | `Params` | [QueryParamsRequest](#terra.treasury.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#terra.treasury.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/terra/treasury/v1beta1/params|
 
  <!-- end services -->

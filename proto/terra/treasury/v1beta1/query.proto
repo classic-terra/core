@@ -46,9 +46,9 @@ service Query {
     option (google.api.http).get = "/terra/treasury/v1beta1/indicators";
   }
 
-  // ExemptList returns all registered ExemptList
-  rpc ExemptList(QueryExemptListRequest) returns (QueryExemptListResponse) {
-    option (google.api.http).get = "/terra/treasury/v1beta1/exempt_list";
+  // BurnTaxExemptionList returns all registered burn tax exemption addresses
+  rpc BurnTaxExemptionList(QueryBurnTaxExemptionListRequest) returns (QueryBurnTaxExemptionListResponse) {
+    option (google.api.http).get = "/terra/treasury/v1beta1/burn_tax_exemption_list";
   }
 
   // Params queries all parameters.
@@ -157,13 +157,13 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryExemptListRequest is the request type for the Query/ExemptList RPC method.
-message QueryExemptListRequest {
+// QueryBurnTaxExemptionListRequest is the request type for the Query/BurnTaxExemptionList RPC method.
+message QueryBurnTaxExemptionListRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryExemptListResponse is response type for the Query/ExemptList RPC method.
-message QueryExemptListResponse {
+// QueryBurnTaxExemptionListResponse is response type for the Query/BurnTaxExemptionList RPC method.
+message QueryBurnTaxExemptionListResponse {
   repeated string addresses = 1;
 
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

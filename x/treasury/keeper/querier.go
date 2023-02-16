@@ -127,9 +127,9 @@ func (q querier) Indicators(c context.Context, req *types.QueryIndicatorsRequest
 	return &res, nil
 }
 
-func (q querier) ExemptList(c context.Context, req *types.QueryExemptListRequest) (*types.QueryExemptListResponse, error) {
+func (q querier) BurnTaxExemptionList(c context.Context, req *types.QueryBurnTaxExemptionListRequest) (*types.QueryBurnTaxExemptionListResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.StoreExemptList)
+	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.BurnTaxExemptionListPrefixKey)
 	var addresses []string
 
 	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
@@ -142,5 +142,5 @@ func (q querier) ExemptList(c context.Context, req *types.QueryExemptListRequest
 		return nil, err
 	}
 
-	return &types.QueryExemptListResponse{Addresses: addresses, Pagination: pageRes}, nil
+	return &types.QueryBurnTaxExemptionListResponse{Addresses: addresses, Pagination: pageRes}, nil
 }

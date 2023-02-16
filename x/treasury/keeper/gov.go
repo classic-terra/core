@@ -13,7 +13,7 @@ func HandleAddBurnTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *type
 	return nil
 }
 
-func HandleRemoveWhitelistAddressProposal(ctx sdk.Context, k Keeper, p *types.RemoveBurnTaxExemptionAddressProposal) error {
+func HandleRemoveBurnTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *types.RemoveBurnTaxExemptionAddressProposal) error {
 	for _, address := range p.ExemptionAddress {
 		err := k.RemoveBurnTaxExemptionAddress(ctx, address)
 		if err != nil {

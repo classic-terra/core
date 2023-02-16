@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	ErrNoSuchWhitelist = sdkerrors.Register(ModuleName, 1, "no such whitelist address in substore")
+	ErrNoSuchBurnTaxExemptionAddress = sdkerrors.Register(ModuleName, 1, "no such address in extemption list")
 )

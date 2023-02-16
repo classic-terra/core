@@ -26,5 +26,5 @@ func handleAddBurnTaxExemptionAddressProposal(ctx sdk.Context, k keeper.Keeper, 
 }
 
 func handleRemoveBurnTaxExemptionAddressProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveBurnTaxExemptionAddressProposal) error {
-	return keeper.HandleRemoveWhitelistAddressProposal(ctx, k, p)
+	return keeper.HandleRemoveBurnTaxExemptionAddressProposal(ctx, k, p)
 }

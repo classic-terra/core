@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var burnTaxAddressWhitelist = []string{
+var burnTaxExcemptionAddressList = []string{
 	"terra10atxpzafqfjy58z0dvugmd9zf63fycr6uvwhjm",
 	"terra1jrq7xa63a4qgpdgtj70k8yz5p32ps9r7mlj3yr",
 	"terra15s66unmdcpknuxxldd7fsr44skme966tdckq8c",
@@ -65,7 +65,7 @@ func NewMigrator(keeper Keeper) Migrator {
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	m.keeper.SetBurnSplitRate(ctx, types.DefaultBurnTaxSplit)
 
-	for _, address := range burnTaxAddressWhitelist {
+	for _, address := range burnTaxExcemptionAddressList {
 		m.keeper.AddBurnTaxExemptionAddress(ctx, address)
 	}
 

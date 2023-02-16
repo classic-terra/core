@@ -49,7 +49,7 @@ func (p AddBurnTaxExemptionAddressProposal) String() string {
 	return fmt.Sprintf(`AddBurnTaxExemptionAddressProposal:
 	Title:       		     %s
 	Description: 		     %s
-	WhitelistAddress: 		 %v
+	ExtemptionAddress: 		 %v
   `, p.Title, p.Description, p.ExemptionAddress)
 }
 
@@ -93,7 +93,7 @@ func (p RemoveBurnTaxExemptionAddressProposal) String() string {
 	return fmt.Sprintf(`RemoveBurnTaxExemptionAddressProposal:
 	Title:       		 	 %s
 	Description: 		 	 %s
-	WhitelistAddress: 		 %v
+	ExtemptionAddress: 		 %v
   `, p.Title, p.Description, p.ExemptionAddress)
 }
 

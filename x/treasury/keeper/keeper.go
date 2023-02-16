@@ -363,7 +363,7 @@ func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) e
 	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.StoreExemptList)
 
 	if !sub.Has([]byte(address)) {
-		return types.ErrNoSuchWhitelist.Wrapf("address = %s", address)
+		return types.ErrNoSuchBurnTaxExemptionAddress.Wrapf("address = %s", address)
 	}
 
 	sub.Delete([]byte(address))

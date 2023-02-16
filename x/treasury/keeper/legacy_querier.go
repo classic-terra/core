@@ -51,7 +51,7 @@ func queryBurnTaxExemptionList(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefixKey)
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
 	var addresses []string
 
 	pageRes, err := query.FilteredPaginate(sub, params.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {

@@ -129,7 +129,7 @@ func (q querier) Indicators(c context.Context, req *types.QueryIndicatorsRequest
 
 func (q querier) BurnTaxExemptionList(c context.Context, req *types.QueryBurnTaxExemptionListRequest) (*types.QueryBurnTaxExemptionListResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.BurnTaxExemptionListPrefixKey)
+	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.BurnTaxExemptionListPrefix)
 	var addresses []string
 
 	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {

@@ -355,12 +355,12 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 
 // ======Exemption address substore======
 func (k Keeper) AddBurnTaxExemptionAddress(ctx sdk.Context, address string) {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefixKey)
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
 	sub.Set([]byte(address), []byte{0x01})
 }
 
 func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) error {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefixKey)
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
 
 	if !sub.Has([]byte(address)) {
 		return types.ErrNoSuchBurnTaxExemptionAddress.Wrapf("address = %s", address)
@@ -372,7 +372,7 @@ func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) e
 }
 
 func (k Keeper) HasBurnTaxExemptionAddress(ctx sdk.Context, address string) bool {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefixKey)
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
 
 	return sub.Has([]byte(address))
 }

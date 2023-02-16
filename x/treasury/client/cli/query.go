@@ -310,6 +310,6 @@ func GetCmdQueryExemptlist() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "whitelist")
+	flags.AddPaginationFlagsToCmd(cmd, "burn tax exemption list")
 	return cmd
 }

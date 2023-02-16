@@ -20,7 +20,7 @@ func ProposalAddBurnTaxExemptionAddressCmd() *cobra.Command {
 		Short: "Submit an add burn tax exemption address proposal",
 		Long: fmt.Sprintf(`Submit a proposal to add addresses for burn tax exemption.
 Example:
-$ %s tx gov submit-proposal add-burn-tax-exemption-address terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
+$ %s tx gov submit-proposal add-burn-tax-exemption-address terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "add burn tax exemption address" --description "add address to burn tax exemption list"
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -79,7 +79,7 @@ func ProposalRemoveBurnTaxExemptionAddressCmd() *cobra.Command {
 		Short: "Submit a remove burn tax exemption address proposal",
 		Long: fmt.Sprintf(`Submit a proposal to remove addresses from burn tax exemption.
 Example:
-$ %s tx gov submit-proposal remove-burn-tax-exemption-address terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "whitelist" --description "whitelist"
+$ %s tx gov submit-proposal remove-burn-tax-exemption-address terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --title "remove burn tax exemption address" --description "remove address from burn tax exemption list"
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

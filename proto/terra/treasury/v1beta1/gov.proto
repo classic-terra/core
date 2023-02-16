@@ -13,7 +13,7 @@ message AddBurnTaxExemptionAddressProposal {
 
     string title = 1;
     string description = 2;
-    repeated string exemption_address = 3 [(gogoproto.moretags) = "yaml:\"exemption_address\""];
+    repeated string addresses = 3 [(gogoproto.moretags) = "yaml:\"addresses\""];
 }
 
 // proposal request structure to remove whitelist addresses
@@ -24,5 +24,5 @@ message RemoveBurnTaxExemptionAddressProposal {
 
     string title = 1;
     string description = 2;
-    repeated string exemption_address = 3 [(gogoproto.moretags) = "yaml:\"exemption_address\""];
+    repeated string addresses = 3 [(gogoproto.moretags) = "yaml:\"addresses\""];
 }

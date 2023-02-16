@@ -27,11 +27,11 @@ var (
 
 // ======AddBurnTaxExemptionAddressProposal======
 
-func NewAddBurnTaxExemptionAddressProposal(title, description string, exempt_list []string) govtypes.Content {
+func NewAddBurnTaxExemptionAddressProposal(title, description string, addresses []string) govtypes.Content {
 	return &AddBurnTaxExemptionAddressProposal{
-		Title:            title,
-		Description:      description,
-		ExemptionAddress: exempt_list,
+		Title:       title,
+		Description: description,
+		Addresses:   addresses,
 	}
 }
 
@@ -47,10 +47,10 @@ func (p *AddBurnTaxExemptionAddressProposal) ProposalType() string {
 
 func (p AddBurnTaxExemptionAddressProposal) String() string {
 	return fmt.Sprintf(`AddBurnTaxExemptionAddressProposal:
-	Title:       		     %s
-	Description: 		     %s
-	ExtemptionAddress: 		 %v
-  `, p.Title, p.Description, p.ExemptionAddress)
+	Title:       %s
+	Description: %s
+	Addresses:   %v
+  `, p.Title, p.Description, p.Addresses)
 }
 
 func (p *AddBurnTaxExemptionAddressProposal) ValidateBasic() error {
@@ -59,10 +59,10 @@ func (p *AddBurnTaxExemptionAddressProposal) ValidateBasic() error {
 		return err
 	}
 
-	for _, address := range p.ExemptionAddress {
+	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid address (%s)", err)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 
@@ -71,11 +71,11 @@ func (p *AddBurnTaxExemptionAddressProposal) ValidateBasic() error {
 
 // ======RemoveBurnTaxExemptionAddressProposal======
 
-func NewRemoveBurnTaxExemptionAddressProposal(title, description string, exempt_list []string) govtypes.Content {
+func NewRemoveBurnTaxExemptionAddressProposal(title, description string, addresses []string) govtypes.Content {
 	return &RemoveBurnTaxExemptionAddressProposal{
-		Title:            title,
-		Description:      description,
-		ExemptionAddress: exempt_list,
+		Title:       title,
+		Description: description,
+		Addresses:   addresses,
 	}
 }
 
@@ -91,10 +91,10 @@ func (p *RemoveBurnTaxExemptionAddressProposal) ProposalType() string {
 
 func (p RemoveBurnTaxExemptionAddressProposal) String() string {
 	return fmt.Sprintf(`RemoveBurnTaxExemptionAddressProposal:
-	Title:       		 	 %s
-	Description: 		 	 %s
-	ExtemptionAddress: 		 %v
-  `, p.Title, p.Description, p.ExemptionAddress)
+	Title:       %s
+	Description: %s
+	Addresses:   %v
+  `, p.Title, p.Description, p.Addresses)
 }
 
 func (p *RemoveBurnTaxExemptionAddressProposal) ValidateBasic() error {
@@ -103,10 +103,10 @@ func (p *RemoveBurnTaxExemptionAddressProposal) ValidateBasic() error {
 		return err
 	}
 
-	for _, address := range p.ExemptionAddress {
+	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid address (%s)", err)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 

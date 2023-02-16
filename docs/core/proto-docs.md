@@ -13150,7 +13150,7 @@ proposal request structure to set whitelist addresses
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `exemption_address` | [string](#string) | repeated |  |
+| `addresses` | [string](#string) | repeated |  |
 
 
 
@@ -13167,7 +13167,7 @@ proposal request structure to remove whitelist addresses
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `exemption_address` | [string](#string) | repeated |  |
+| `addresses` | [string](#string) | repeated |  |
 
 
 

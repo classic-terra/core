@@ -28,7 +28,7 @@ sleep 20
 test1=$(./_build/new/terrad keys show $KEY1 -a --keyring-backend $KEYRING --home $HOME)
 test2=$(./_build/new/terrad keys show $KEY2 -a --keyring-backend $KEYRING --home $HOME)
 echo "addresses = $test1,$test2"
-./_build/new/terrad tx gov submit-proposal add-burn-tax-exemption "$test1,$test2" --title "burn tax exemption address" --description "burn tax exemption address"  --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
+./_build/new/terrad tx gov submit-proposal add-burn-tax-exemption-address "$test1,$test2" --title "burn tax exemption address" --description "burn tax exemption address"  --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
 
 sleep 5
 

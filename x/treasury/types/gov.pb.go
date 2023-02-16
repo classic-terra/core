@@ -25,9 +25,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // proposal request structure to set whitelist addresses
 type AddBurnTaxExemptionAddressProposal struct {
-	Title            string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description      string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ExemptionAddress []string `protobuf:"bytes,3,rep,name=exemption_address,json=exemptionAddress,proto3" json:"exemption_address,omitempty" yaml:"exemption_address"`
+	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Addresses   []string `protobuf:"bytes,3,rep,name=addresses,proto3" json:"addresses,omitempty" yaml:"addresses"`
 }
 
 func (m *AddBurnTaxExemptionAddressProposal) Reset()      { *m = AddBurnTaxExemptionAddressProposal{} }
@@ -64,9 +64,9 @@ var xxx_messageInfo_AddBurnTaxExemptionAddressProposal proto.InternalMessageInfo
 
 // proposal request structure to remove whitelist addresses
 type RemoveBurnTaxExemptionAddressProposal struct {
-	Title            string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description      string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ExemptionAddress []string `protobuf:"bytes,3,rep,name=exemption_address,json=exemptionAddress,proto3" json:"exemption_address,omitempty" yaml:"exemption_address"`
+	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Addresses   []string `protobuf:"bytes,3,rep,name=addresses,proto3" json:"addresses,omitempty" yaml:"addresses"`
 }
 
 func (m *RemoveBurnTaxExemptionAddressProposal) Reset()      { *m = RemoveBurnTaxExemptionAddressProposal{} }
@@ -109,26 +109,25 @@ func init() {
 func init() { proto.RegisterFile("terra/treasury/v1beta1/gov.proto", fileDescriptor_a71b37663a441645) }
 
 var fileDescriptor_a71b37663a441645 = []byte{
-	// 291 bytes of a gzipped FileDescriptorProto
+	// 286 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x28, 0x49, 0x2d, 0x2a,
 	0x4a, 0xd4, 0x2f, 0x29, 0x4a, 0x4d, 0x2c, 0x2e, 0x2d, 0xaa, 0xd4, 0x2f, 0x33, 0x4c, 0x4a, 0x2d,
 	0x49, 0x34, 0xd4, 0x4f, 0xcf, 0x2f, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x03, 0xab,
 	0xd0, 0x83, 0xa9, 0xd0, 0x83, 0xaa, 0x90, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0x2b, 0xd1, 0x07,
-	0xb1, 0x20, 0xaa, 0x95, 0xb6, 0x32, 0x72, 0x29, 0x39, 0xa6, 0xa4, 0x38, 0x95, 0x16, 0xe5, 0x85,
+	0xb1, 0x20, 0xaa, 0x95, 0xe6, 0x31, 0x72, 0x29, 0x39, 0xa6, 0xa4, 0x38, 0x95, 0x16, 0xe5, 0x85,
 	0x24, 0x56, 0xb8, 0x56, 0xa4, 0xe6, 0x16, 0x94, 0x64, 0xe6, 0xe7, 0x39, 0xa6, 0xa4, 0x14, 0xa5,
 	0x16, 0x17, 0x07, 0x14, 0xe5, 0x17, 0xe4, 0x17, 0x27, 0xe6, 0x08, 0x89, 0x70, 0xb1, 0x96, 0x64,
 	0x96, 0xe4, 0xa4, 0x4a, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x41, 0x38, 0x42, 0x0a, 0x5c, 0xdc,
-	0x29, 0xa9, 0xc5, 0xc9, 0x45, 0x99, 0x60, 0x3d, 0x12, 0x4c, 0x60, 0x39, 0x64, 0x21, 0x21, 0x4f,
-	0x2e, 0xc1, 0x54, 0x98, 0x99, 0xf1, 0x89, 0x10, 0x43, 0x25, 0x98, 0x15, 0x98, 0x35, 0x38, 0x9d,
-	0x64, 0x3e, 0xdd, 0x93, 0x97, 0xa8, 0x4c, 0xcc, 0xcd, 0xb1, 0x52, 0xc2, 0x50, 0xa2, 0x14, 0x24,
-	0x90, 0x8a, 0xe6, 0x14, 0x2b, 0x9e, 0x8e, 0x05, 0xf2, 0x0c, 0x33, 0x16, 0xc8, 0x33, 0xbc, 0x58,
-	0x20, 0xcf, 0xa8, 0xb4, 0x83, 0x91, 0x4b, 0x35, 0x28, 0x35, 0x37, 0xbf, 0x2c, 0x75, 0xa8, 0x39,
-	0xdd, 0xc9, 0xed, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c,
-	0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x74, 0xd2, 0x33,
-	0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0xc1, 0xb1, 0xa8, 0x9b, 0x9b, 0x9f, 0x97,
-	0x5a, 0xa9, 0x9f, 0x9c, 0x5f, 0x94, 0xaa, 0x5f, 0x81, 0x88, 0xf4, 0x92, 0xca, 0x82, 0xd4, 0xe2,
-	0x24, 0x36, 0x70, 0x0c, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x84, 0x03, 0x18, 0x13,
-	0x02, 0x00, 0x00,
+	0x29, 0xa9, 0xc5, 0xc9, 0x45, 0x99, 0x60, 0x3d, 0x12, 0x4c, 0x60, 0x39, 0x64, 0x21, 0x21, 0x23,
+	0x2e, 0xce, 0x44, 0x88, 0x51, 0xa9, 0xc5, 0x12, 0xcc, 0x0a, 0xcc, 0x1a, 0x9c, 0x4e, 0x22, 0x9f,
+	0xee, 0xc9, 0x0b, 0x54, 0x26, 0xe6, 0xe6, 0x58, 0x29, 0xc1, 0xa5, 0x94, 0x82, 0x10, 0xca, 0xac,
+	0x78, 0x3a, 0x16, 0xc8, 0x33, 0xcc, 0x58, 0x20, 0xcf, 0xf0, 0x62, 0x81, 0x3c, 0xa3, 0xd2, 0x42,
+	0x46, 0x2e, 0xd5, 0xa0, 0xd4, 0xdc, 0xfc, 0xb2, 0xd4, 0x41, 0xeb, 0x46, 0x27, 0xb7, 0x13, 0x8f,
+	0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b,
+	0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0xd2, 0x49, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2,
+	0x4b, 0xce, 0xcf, 0xd5, 0x07, 0xc7, 0x8b, 0x6e, 0x6e, 0x7e, 0x5e, 0x6a, 0xa5, 0x7e, 0x72, 0x7e,
+	0x51, 0xaa, 0x7e, 0x05, 0x22, 0x1a, 0x4b, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x71, 0x62,
+	0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x28, 0x61, 0xe3, 0x6e, 0xe5, 0x01, 0x00, 0x00,
 }
 
 func (this *AddBurnTaxExemptionAddressProposal) Equal(that interface{}) bool {
@@ -156,11 +155,11 @@ func (this *AddBurnTaxExemptionAddressProposal) Equal(that interface{}) bool {
 	if this.Description != that1.Description {
 		return false
 	}
-	if len(this.ExemptionAddress) != len(that1.ExemptionAddress) {
+	if len(this.Addresses) != len(that1.Addresses) {
 		return false
 	}
-	for i := range this.ExemptionAddress {
-		if this.ExemptionAddress[i] != that1.ExemptionAddress[i] {
+	for i := range this.Addresses {
+		if this.Addresses[i] != that1.Addresses[i] {
 			return false
 		}
 	}
@@ -191,11 +190,11 @@ func (this *RemoveBurnTaxExemptionAddressProposal) Equal(that interface{}) bool 
 	if this.Description != that1.Description {
 		return false
 	}
-	if len(this.ExemptionAddress) != len(that1.ExemptionAddress) {
+	if len(this.Addresses) != len(that1.Addresses) {
 		return false
 	}
-	for i := range this.ExemptionAddress {
-		if this.ExemptionAddress[i] != that1.ExemptionAddress[i] {
+	for i := range this.Addresses {
+		if this.Addresses[i] != that1.Addresses[i] {
 			return false
 		}
 	}
@@ -221,11 +220,11 @@ func (m *AddBurnTaxExemptionAddressProposal) MarshalToSizedBuffer(dAtA []byte) (
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExemptionAddress) > 0 {
-		for iNdEx := len(m.ExemptionAddress) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ExemptionAddress[iNdEx])
-			copy(dAtA[i:], m.ExemptionAddress[iNdEx])
-			i = encodeVarintGov(dAtA, i, uint64(len(m.ExemptionAddress[iNdEx])))
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintGov(dAtA, i, uint64(len(m.Addresses[iNdEx])))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -267,11 +266,11 @@ func (m *RemoveBurnTaxExemptionAddressProposal) MarshalToSizedBuffer(dAtA []byte
 	_ = i
 	var l int
 	_ = l
-	if len(m.ExemptionAddress) > 0 {
-		for iNdEx := len(m.ExemptionAddress) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ExemptionAddress[iNdEx])
-			copy(dAtA[i:], m.ExemptionAddress[iNdEx])
-			i = encodeVarintGov(dAtA, i, uint64(len(m.ExemptionAddress[iNdEx])))
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintGov(dAtA, i, uint64(len(m.Addresses[iNdEx])))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -318,8 +317,8 @@ func (m *AddBurnTaxExemptionAddressProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGov(uint64(l))
 	}
-	if len(m.ExemptionAddress) > 0 {
-		for _, s := range m.ExemptionAddress {
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
 			l = len(s)
 			n += 1 + l + sovGov(uint64(l))
 		}
@@ -341,8 +340,8 @@ func (m *RemoveBurnTaxExemptionAddressProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGov(uint64(l))
 	}
-	if len(m.ExemptionAddress) > 0 {
-		for _, s := range m.ExemptionAddress {
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
 			l = len(s)
 			n += 1 + l + sovGov(uint64(l))
 		}
@@ -451,7 +450,7 @@ func (m *AddBurnTaxExemptionAddressProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExemptionAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -479,7 +478,7 @@ func (m *AddBurnTaxExemptionAddressProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExemptionAddress = append(m.ExemptionAddress, string(dAtA[iNdEx:postIndex]))
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -597,7 +596,7 @@ func (m *RemoveBurnTaxExemptionAddressProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExemptionAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -625,7 +624,7 @@ func (m *RemoveBurnTaxExemptionAddressProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ExemptionAddress = append(m.ExemptionAddress, string(dAtA[iNdEx:postIndex]))
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

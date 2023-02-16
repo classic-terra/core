@@ -59,54 +59,54 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 			// Iterate over messages
 			for _, msg := range msgs {
-				var whitelistedRecipients []string
-				var whitelistedSenders []string
-				senderWhitelistCount := 0
-				recipientWhitelistCount := 0
+				var recipients []string
+				var senders []string
 
 				// Fetch recipients
 				switch v := msg.(type) {
 				case *banktypes.MsgSend:
-					whitelistedRecipients = append(whitelistedRecipients, v.ToAddress)
-					whitelistedSenders = append(whitelistedSenders, v.FromAddress)
+					recipients = append(recipients, v.ToAddress)
+					senders = append(senders, v.FromAddress)
 				case *banktypes.MsgMultiSend:
 					for _, output := range v.Outputs {
-						whitelistedRecipients = append(whitelistedRecipients, output.Address)
+						recipients = append(recipients, output.Address)
 					}
 
 					for _, input := range v.Inputs {
-						whitelistedSenders = append(whitelistedSenders, input.Address)
+						senders = append(senders, input.Address)
 					}
 				default:
 					// TODO: We might want to return an error if we cannot match the msg types, but as such I think that means we also need to cover MsgSetSendEnabled & MsgUpdateParams
 					// return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Unsupported message type")
 				}
 
-				// Match signers vs whitelist
-				for _, sender := range whitelistedSenders {
+				// Match senders vs. burn tax exemption list
+				exemptionCount := 0
+
+				for _, sender := range senders {
 					if btfd.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, sender) {
-						senderWhitelistCount++
+						exemptionCount++
 					}
 				}
 
 				// If all signers are not matched apply burn tax
-				if len(whitelistedSenders) > senderWhitelistCount {
+				if len(senders) > exemptionCount {
 					tainted = true
-
 					break
 				}
 
 				// Check recipients
-				for _, recipient := range whitelistedRecipients {
+				exemptionCount = 0
+
+				for _, recipient := range recipients {
 					if btfd.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, recipient) {
-						recipientWhitelistCount++
+						exemptionCount++
 					}
 				}
 
 				// If all recipients are not matched apply burn tax
-				if len(whitelistedRecipients) > recipientWhitelistCount {
+				if len(recipients) > exemptionCount {
 					tainted = true
-
 					break
 				}
 			}

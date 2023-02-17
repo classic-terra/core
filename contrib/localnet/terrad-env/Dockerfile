@@ -6,13 +6,14 @@ RUN apt-get update && \
 
 ARG UID=1000
 ARG GID=1000
+ARG entrypoint=entrypoint.sh
 
 USER ${UID}:${GID}
 VOLUME /terrad
 WORKDIR /terrad
 EXPOSE 26656 26657
-ENTRYPOINT ["/usr/bin/wrapper.sh"]
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["start", "--log_format", "plain"]
 STOPSIGNAL SIGTERM
 
-COPY wrapper.sh /usr/bin/wrapper.sh
+COPY ${entrypoint} /usr/bin/entrypoint.sh

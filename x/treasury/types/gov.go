@@ -15,9 +15,9 @@ const (
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeAddBurnTaxExemptionAddress)
-	govtypes.RegisterProposalTypeCodec(&AddBurnTaxExemptionAddressProposal{}, "terra/AddBurnTaxExemptionAddressProposal")
+	govtypes.RegisterProposalTypeCodec(&AddBurnTaxExemptionAddressProposal{}, "treasury/AddBurnTaxExemptionAddressProposal")
 	govtypes.RegisterProposalType(ProposalTypeRemoveBurnTaxExemptionAddress)
-	govtypes.RegisterProposalTypeCodec(&RemoveBurnTaxExemptionAddressProposal{}, "terra/RemoveBurnTaxExemptionAddressProposal")
+	govtypes.RegisterProposalTypeCodec(&RemoveBurnTaxExemptionAddressProposal{}, "treasury/RemoveBurnTaxExemptionAddressProposal")
 }
 
 var (

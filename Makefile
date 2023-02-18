@@ -237,7 +237,6 @@ proto-swagger-gen:
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
 
-## TODO - change branch release/v0.5.x to master after columbus-5 merged
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against '$(HTTPS_GIT)#branch=main'
 

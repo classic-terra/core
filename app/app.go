@@ -633,7 +633,7 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 	}
 
 	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
-	if ctx.BlockHeight() == core.VersionMapEnableHeight {
+	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.VersionMapEnableHeight {
 		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	}
 
@@ -651,6 +651,10 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+	if ctx.ChainID() == core.ColumbusChainID {
+		panic("Must use v1.0.x for importing the columbus genesis (https://github.com/classic-terra/core/releases/)")
+	}
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 

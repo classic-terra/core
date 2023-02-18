@@ -328,7 +328,7 @@ func TestLegacyQueryIndicators(t *testing.T) {
 	require.Equal(t, targetIndicators, queriedIndicators)
 }
 
-// go test -v -run ^TestLegacyQueryBurnTaxExemptionList$ github.com/terra-money/core/x/treasury/keeper
+// go test -v -run ^TestLegacyQueryBurnTaxExemptionList$ github.com/classic-terra/core/x/treasury/keeper
 func TestLegacyQueryBurnTaxExemptionList(t *testing.T) {
 	input := CreateTestInput(t)
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)

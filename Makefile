@@ -11,6 +11,10 @@ HTTPS_GIT := https://github.com/classic-terra/core.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
+#TESTNET PARAMETERS
+TESTNET_NVAL := $(if $(TESTNET_NVAL),$(TESTNET_NVAL),4)
+TESTNET_CHAINID := $(if $(TESTNET_CHAINID),$(TESTNET_CHAINID),localnet-1)
+
 ifneq ($(OS),Windows_NT)
   UNAME_S = $(shell uname -s)
 endif
@@ -115,15 +119,15 @@ endif
 
 build-linux:
 	mkdir -p $(BUILDDIR)
-	docker build --no-cache --tag classic-terra/core ./
-	docker create --name temp classic-terra/core:latest
+	docker build --platform linux/amd64 --no-cache --tag classic-terra/core ./
+	docker create --platform linux/amd64 --name temp classic-terra/core:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker rm temp
 
 build-linux-with-shared-library:
 	mkdir -p $(BUILDDIR)
-	docker build --tag classic-terra/core-shared ./ -f ./shared.Dockerfile
-	docker create --name temp classic-terra/core-shared:latest
+	docker build --platform linux/amd64 --no-cache --tag classic-terra/core-shared ./ -f ./shared.Dockerfile
+	docker create --platform linux/amd64 --name temp classic-terra/core-shared:latest
 	docker cp temp:/usr/local/bin/terrad $(BUILDDIR)/
 	docker cp temp:/lib/libwasmvm.so $(BUILDDIR)/
 	docker rm temp
@@ -212,17 +216,20 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
+CONTAINER_PROTO_VER=v0.7
+CONTAINER_PROTO_IMAGE=tendermintdev/sdk-proto-gen:$(CONTAINER_PROTO_VER)
+CONTAINER_PROTO_FMT=cosmos-sdk-proto-fmt-$(CONTAINER_PROTO_VER)
+
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.3 sh ./scripts/protocgen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(CONTAINER_PROTO_IMAGE) sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace tendermintdev/docker-build-proto \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_PROTO_FMT}$$"; then docker start -a $(CONTAINER_PROTO_FMT); else docker run --name $(CONTAINER_PROTO_FMT) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./proto -name "*.proto" -exec clang-format -i {} \; ; fi
 
 proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
@@ -230,9 +237,8 @@ proto-swagger-gen:
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
 
-## TODO - change branch release/v0.5.x to master after columbus-5 merged
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+	@$(DOCKER_BUF) breaking --against '$(HTTPS_GIT)#branch=main'
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking 
 
@@ -241,16 +247,25 @@ proto-check-breaking:
 ###############################################################################
 
 # Run a 4-node testnet locally
-localnet-start: build-linux localnet-stop
-	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' terramoney/terrad-env 2>/dev/null),$(info found image terramoney/terrad-env),$(MAKE) -C contrib/images terrad-env)
-	if ! [ -f build/node0/terrad/config/genesis.json ]; then $(DOCKER) run --rm \
+localnet-start: localnet-stop build-linux
+	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-env 2>/dev/null),$(info found image classic-terra/terrad-env),$(MAKE) -C contrib/localnet terrad-env)
+	if ! [ -f build/node0/terrad/config/genesis.json ]; then $(DOCKER) run --platform linux/amd64 --rm \
 		--user $(shell id -u):$(shell id -g) \
 		-v $(BUILDDIR):/terrad:Z \
 		-v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro \
 		-v /etc/shadow:/etc/shadow:ro \
-		terramoney/terrad-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+		classic-terra/terrad-env testnet --chain-id ${TESTNET_CHAINID} --v ${TESTNET_NVAL} -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
+
+localnet-start-upgrade: localnet-upgrade-stop build-linux
+	$(MAKE) -C contrib/updates build-cosmovisor-linux BUILDDIR=$(BUILDDIR)
+	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-upgrade-env 2>/dev/null),$(info found image classic-terra/terrad-upgrade-env),$(MAKE) -C contrib/localnet terrad-upgrade-env)
+	bash contrib/updates/prepare_cosmovisor.sh $(BUILDDIR)
+	docker-compose -f ./contrib/updates/docker-compose.yml up -d
+
+localnet-upgrade-stop:
+	docker-compose -f ./contrib/updates/docker-compose.yml down
 
 localnet-stop:
 	docker-compose down

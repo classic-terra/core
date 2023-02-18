@@ -67,7 +67,7 @@ services:
 
   terradnode4:
     container_name: terradnode4
-    image: "terramoney/terrad-env"
+    image: classic-terra/terrad-env
     environment:
       - ID=4
       - LOG=$${LOG:-terrad.log}
@@ -82,7 +82,7 @@ services:
 
   terradnode5:
     container_name: terradnode5
-    image: "terramoney/terrad-env"
+    image: classic-terra/terrad-env
     environment:
       - ID=5
       - LOG=$${LOG:-terrad.log}

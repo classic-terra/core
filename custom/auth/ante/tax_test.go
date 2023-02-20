@@ -847,7 +847,7 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: feeAmt,
+			expectedFeeAmount: feeAmt * 2,
 		},
 	}
 

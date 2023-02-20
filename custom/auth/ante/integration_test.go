@@ -81,7 +81,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 			// tax this one hence burn amount is fee amount
 			expectedFeeAmount: feeAmt,
 		}, {
-			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
+			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption)",
 			msgSigner: 0,
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -92,11 +92,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 					[]banktypes.Input{
 						{
 							Address: addrs[0].String(),
-							Coins:   sdk.NewCoins(sendCoin),
-						},
-						{
-							Address: addrs[0].String(),
-							Coins:   sdk.NewCoins(sendCoin),
+							Coins:   sdk.NewCoins(sendCoin.Add(sendCoin)),
 						},
 					},
 					[]banktypes.Output{
@@ -114,7 +110,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: feeAmt,
+			expectedFeeAmount: feeAmt * 2,
 		},
 	}
 

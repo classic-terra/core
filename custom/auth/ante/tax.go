@@ -119,9 +119,22 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 			}
 
 		case *banktypes.MsgMultiSend:
-			for i, input := range msg.Inputs {
-				output := msg.Outputs[i]
-				if !tk.HasBurnTaxExemptionAddress(ctx, input.Address, output.Address) {
+			tainted := 0
+
+			for _, input := range msg.Inputs {
+				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
+					tainted += 1
+				}
+			}
+
+			for _, output := range msg.Outputs {
+				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
+					tainted += 1
+				}
+			}
+
+			if tainted != len(msg.Inputs)+len(msg.Outputs) {
+				for _, input := range msg.Inputs {
 					taxes = taxes.Add(computeTax(ctx, tk, input.Coins)...)
 				}
 			}

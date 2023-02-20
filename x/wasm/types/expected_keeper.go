@@ -40,7 +40,8 @@ type TreasuryKeeper interface {
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
-	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
+	HasBurnTaxExemptionAddress(ctx sdk.Context, address string) bool
+	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
 }
 
 // GRPCQueryHandler defines a function type which handles ABCI Query requests

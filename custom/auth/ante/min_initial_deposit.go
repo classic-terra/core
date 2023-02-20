@@ -24,7 +24,7 @@ func NewMinInitialDepositDecorator(govKeeper GovKeeper, treasuryKeeper TreasuryK
 	}
 }
 
-// IsMsgSubmitProposal checks wheter the input msg is a MsgSubmitProposal
+// IsMsgSubmitProposal checks whether the input msg is a MsgSubmitProposal
 func IsMsgSubmitProposal(msg sdk.Msg) bool {
 	_, ok := msg.(*govtypes.MsgSubmitProposal)
 	return ok

@@ -191,7 +191,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 			banktypes.NewInput(addr1, sendCoins),
 		},
 		[]banktypes.Output{
-			banktypes.NewOutput(addr1, sendCoins.Add(sendCoins...)),
+			banktypes.NewOutput(addr1, sendCoins),
+			banktypes.NewOutput(addr1, sendCoins),
 		},
 	)
 
@@ -523,7 +524,8 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesMultiSendLunaTax() {
 			banktypes.NewInput(addr1, sendCoins),
 		},
 		[]banktypes.Output{
-			banktypes.NewOutput(addr1, sendCoins.Add(sendCoins...)),
+			banktypes.NewOutput(addr1, sendCoins),
+			banktypes.NewOutput(addr1, sendCoins),
 		},
 	)
 

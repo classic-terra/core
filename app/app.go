@@ -124,6 +124,7 @@ import (
 	oraclekeeper "github.com/classic-terra/core/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/x/oracle/types"
 	"github.com/classic-terra/core/x/treasury"
+	treasuryclient "github.com/classic-terra/core/x/treasury/client"
 	treasurykeeper "github.com/classic-terra/core/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	"github.com/classic-terra/core/x/vesting"
@@ -169,6 +170,8 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
+			treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
 		),
 		customparams.AppModuleBasic{},
 		customcrisis.AppModuleBasic{},
@@ -437,7 +440,8 @@ func NewTerraApp(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(app.TreasuryKeeper))
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
@@ -556,14 +560,15 @@ func NewTerraApp(
 
 	anteHandler, err := customante.NewAnteHandler(
 		customante.HandlerOptions{
-			AccountKeeper:    app.AccountKeeper,
-			BankKeeper:       app.BankKeeper,
-			FeegrantKeeper:   app.FeeGrantKeeper,
-			OracleKeeper:     app.OracleKeeper,
-			TreasuryKeeper:   app.TreasuryKeeper,
-			SigGasConsumer:   ante.DefaultSigVerificationGasConsumer,
-			SignModeHandler:  encodingConfig.TxConfig.SignModeHandler(),
-			IBCChannelKeeper: app.IBCKeeper.ChannelKeeper,
+			AccountKeeper:      app.AccountKeeper,
+			BankKeeper:         app.BankKeeper,
+			FeegrantKeeper:     app.FeeGrantKeeper,
+			OracleKeeper:       app.OracleKeeper,
+			TreasuryKeeper:     app.TreasuryKeeper,
+			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
+			IBCChannelKeeper:   app.IBCKeeper.ChannelKeeper,
+			DistributionKeeper: app.DistrKeeper,
 		},
 	)
 	if err != nil {
@@ -629,7 +634,7 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 	}
 
 	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
-	if ctx.BlockHeight() == core.VersionMapEnableHeight {
+	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.VersionMapEnableHeight {
 		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	}
 
@@ -646,6 +651,9 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
+	}
+	if ctx.ChainID() == core.ColumbusChainID {
+		panic("Must use v1.0.x for importing the columbus genesis (https://github.com/classic-terra/core/releases/)")
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)

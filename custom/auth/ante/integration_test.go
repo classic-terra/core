@@ -13,6 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	appparams "github.com/classic-terra/core/app/params"
+	feeshareante "github.com/classic-terra/core/x/feeshare/ante"
 )
 
 // go test -v -run ^TestAnteTestSuite/TestIntegrationTaxExemption$ github.com/classic-terra/core/custom/auth/ante
@@ -120,6 +123,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		ak := suite.app.AccountKeeper
 		bk := suite.app.BankKeeper
 		dk := suite.app.DistrKeeper
+		fsk := suite.app.FeeShareKeeper
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
@@ -140,6 +144,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 				SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 				IBCChannelKeeper:   suite.app.IBCKeeper.ChannelKeeper,
 				DistributionKeeper: dk,
+				FeeShareKeeper:     fsk,
 			},
 		)
 		suite.Require().NoError(err)
@@ -204,6 +209,104 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 				suite.Require().Equal(burnBefore, burnAfter.AddAmount(splitAmount))
 				suite.Require().Equal(communityBefore, communityAfter.Add(sdk.NewDecFromInt(splitAmount)))
 				suite.Require().Equal(supplyBefore, supplyAfter.SubAmount(splitAmount))
+			}
+		}
+	}
+}
+
+// go test -v -run ^TestAnteTestSuite/TestFeeLogic$ github.com/classic-terra/core/custom/auth/ante
+func (suite *AnteTestSuite) TestFeeLogic() {
+	// We expect all to pass
+	feeCoins := sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(500)), sdk.NewCoin("utoken", sdk.NewInt(250)))
+
+	testCases := []struct {
+		name               string
+		incomingFee        sdk.Coins
+		govPercent         sdk.Dec
+		numContracts       int
+		expectedFeePayment sdk.Coins
+	}{
+		{
+			"100% fee / 1 contract",
+			feeCoins,
+			sdk.NewDecWithPrec(100, 2),
+			1,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(500)), sdk.NewCoin("utoken", sdk.NewInt(250))),
+		},
+		{
+			"100% fee / 2 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(100, 2),
+			2,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(250)), sdk.NewCoin("utoken", sdk.NewInt(125))),
+		},
+		{
+			"100% fee / 10 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(100, 2),
+			10,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(50)), sdk.NewCoin("utoken", sdk.NewInt(25))),
+		},
+		{
+			"67% fee / 7 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(67, 2),
+			7,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(48)), sdk.NewCoin("utoken", sdk.NewInt(24))),
+		},
+		{
+			"50% fee / 1 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(50, 2),
+			1,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(250)), sdk.NewCoin("utoken", sdk.NewInt(125))),
+		},
+		{
+			"50% fee / 2 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(50, 2),
+			2,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(125)), sdk.NewCoin("utoken", sdk.NewInt(62))),
+		},
+		{
+			"50% fee / 3 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(50, 2),
+			3,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(83)), sdk.NewCoin("utoken", sdk.NewInt(42))),
+		},
+		{
+			"25% fee / 2 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(25, 2),
+			2,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(62)), sdk.NewCoin("utoken", sdk.NewInt(31))),
+		},
+		{
+			"15% fee / 3 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(15, 2),
+			3,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(25)), sdk.NewCoin("utoken", sdk.NewInt(12))),
+		},
+		{
+			"1% fee / 2 contracts",
+			feeCoins,
+			sdk.NewDecWithPrec(1, 2),
+			2,
+			sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(2)), sdk.NewCoin("utoken", sdk.NewInt(1))),
+		},
+	}
+
+	for _, tc := range testCases {
+		// coins := feesharekeeper.FeePaySplitLogic(tc.incomingFee, tc.govPercent, tc.numContracts)
+		coins := feeshareante.FeePayLogic(tc.incomingFee, tc.govPercent, tc.numContracts)
+
+		for _, coin := range coins {
+			for _, expectedCoin := range tc.expectedFeePayment {
+				if coin.Denom == expectedCoin.Denom {
+					suite.Require().Equal(expectedCoin.Amount.Int64(), coin.Amount.Int64(), tc.name)
+				}
 			}
 		}
 	}

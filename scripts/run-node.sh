@@ -4,7 +4,8 @@ rm -rf mytestnet
 pkill terrad
 
 BINARY=$1
-DENOM=$2
+# check DENOM is set. If not, set to uluna
+DENOM=${2:-uluna}
 
 SED_BINARY=sed
 # check if this is OS X
@@ -25,11 +26,6 @@ if [ -z "$BINARY" ]; then
     BINARY=build/terrad
 fi
 
-# check DENOM is set. If not, set to uluna
-if [ -z "$DENOM" ]; then
-    DENOM=uluna
-fi
-
 HOME=mytestnet
 CHAIN_ID="test"
 KEYRING="test"
@@ -38,11 +34,6 @@ KEY1="test1"
 KEY2="test2"
 
 # Function updates the config based on a jq argument as a string
-# update_test_genesis () {
-#     # EX: update_test_genesis '.consensus_params["block"]["max_gas"]="100000000"'
-#     cat $HOME/config/genesis.json | jq --arg DENOM "$2" "$1" > $HOME/config/tmp_genesis.json && mv $HOME/config/tmp_genesis.json $HOME/config/genesis.json
-# }
-
 update_test_genesis () {
     # update_test_genesis '.consensus_params["block"]["max_gas"]="100000000"'
     cat $HOME/config/genesis.json | jq "$1" > $HOME/config/tmp_genesis.json && mv $HOME/config/tmp_genesis.json $HOME/config/genesis.json

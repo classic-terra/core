@@ -154,7 +154,7 @@ func (m *PolicyConstraints) GetCap() types.Coin {
 // EpochTaxProceeds represents the tax amount
 // collected at the current epoch
 type EpochTaxProceeds struct {
-	TaxProceeds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=tax_proceeds,json=taxProceeds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"tax_proceeds" yaml:"tax_proceeds"`
+	TaxProceeds []types.Coin `protobuf:"bytes,1,rep,name=tax_proceeds,json=taxProceeds,proto3" json:"tax_proceeds" yaml:"tax_proceeds"`
 }
 
 func (m *EpochTaxProceeds) Reset()         { *m = EpochTaxProceeds{} }
@@ -190,7 +190,7 @@ func (m *EpochTaxProceeds) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EpochTaxProceeds proto.InternalMessageInfo
 
-func (m *EpochTaxProceeds) GetTaxProceeds() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *EpochTaxProceeds) GetTaxProceeds() []types.Coin {
 	if m != nil {
 		return m.TaxProceeds
 	}
@@ -200,7 +200,7 @@ func (m *EpochTaxProceeds) GetTaxProceeds() github_com_cosmos_cosmos_sdk_types.C
 // EpochInitialIssuance represents initial issuance
 // of the currrent epoch
 type EpochInitialIssuance struct {
-	Issuance github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=issuance,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"issuance" yaml:"issuance"`
+	Issuance []types.Coin `protobuf:"bytes,1,rep,name=issuance,proto3" json:"issuance" yaml:"issuance"`
 }
 
 func (m *EpochInitialIssuance) Reset()         { *m = EpochInitialIssuance{} }
@@ -236,7 +236,7 @@ func (m *EpochInitialIssuance) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EpochInitialIssuance proto.InternalMessageInfo
 
-func (m *EpochInitialIssuance) GetIssuance() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *EpochInitialIssuance) GetIssuance() []types.Coin {
 	if m != nil {
 		return m.Issuance
 	}
@@ -402,16 +402,13 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.BurnTaxSplit.Size()
-		i -= size
-		if _, err := m.BurnTaxSplit.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTreasury(dAtA, i, uint64(size))
+	if len(m.BurnTaxSplit) > 0 {
+		i -= len(m.BurnTaxSplit)
+		copy(dAtA[i:], m.BurnTaxSplit)
+		i = encodeVarintTreasury(dAtA, i, uint64(len(m.BurnTaxSplit)))
+		i--
+		dAtA[i] = 0x42
 	}
-	i--
-	dAtA[i] = 0x42
 	if m.WindowProbation != 0 {
 		i = encodeVarintTreasury(dAtA, i, uint64(m.WindowProbation))
 		i--
@@ -427,26 +424,20 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x28
 	}
-	{
-		size := m.MiningIncrement.Size()
-		i -= size
-		if _, err := m.MiningIncrement.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTreasury(dAtA, i, uint64(size))
+	if len(m.MiningIncrement) > 0 {
+		i -= len(m.MiningIncrement)
+		copy(dAtA[i:], m.MiningIncrement)
+		i = encodeVarintTreasury(dAtA, i, uint64(len(m.MiningIncrement)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.SeigniorageBurdenTarget.Size()
-		i -= size
-		if _, err := m.SeigniorageBurdenTarget.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTreasury(dAtA, i, uint64(size))
+	if len(m.SeigniorageBurdenTarget) > 0 {
+		i -= len(m.SeigniorageBurdenTarget)
+		copy(dAtA[i:], m.SeigniorageBurdenTarget)
+		i = encodeVarintTreasury(dAtA, i, uint64(len(m.SeigniorageBurdenTarget)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
 	{
 		size, err := m.RewardPolicy.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -490,16 +481,13 @@ func (m *PolicyConstraints) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.ChangeRateMax.Size()
-		i -= size
-		if _, err := m.ChangeRateMax.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTreasury(dAtA, i, uint64(size))
+	if len(m.ChangeRateMax) > 0 {
+		i -= len(m.ChangeRateMax)
+		copy(dAtA[i:], m.ChangeRateMax)
+		i = encodeVarintTreasury(dAtA, i, uint64(len(m.ChangeRateMax)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
 	{
 		size, err := m.Cap.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -510,26 +498,20 @@ func (m *PolicyConstraints) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	{
-		size := m.RateMax.Size()
-		i -= size
-		if _, err := m.RateMax.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTreasury(dAtA, i, uint64(size))
+	if len(m.RateMax) > 0 {
+		i -= len(m.RateMax)
+		copy(dAtA[i:], m.RateMax)
+		i = encodeVarintTreasury(dAtA, i, uint64(len(m.RateMax)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.RateMin.Size()
-		i -= size
-		if _, err := m.RateMin.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTreasury(dAtA, i, uint64(size))
+	if len(m.RateMin) > 0 {
+		i -= len(m.RateMin)
+		copy(dAtA[i:], m.RateMin)
+		i = encodeVarintTreasury(dAtA, i, uint64(len(m.RateMin)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -628,10 +610,14 @@ func (m *Params) Size() (n int) {
 	n += 1 + l + sovTreasury(uint64(l))
 	l = m.RewardPolicy.Size()
 	n += 1 + l + sovTreasury(uint64(l))
-	l = m.SeigniorageBurdenTarget.Size()
-	n += 1 + l + sovTreasury(uint64(l))
-	l = m.MiningIncrement.Size()
-	n += 1 + l + sovTreasury(uint64(l))
+	l = len(m.SeigniorageBurdenTarget)
+	if l > 0 {
+		n += 1 + l + sovTreasury(uint64(l))
+	}
+	l = len(m.MiningIncrement)
+	if l > 0 {
+		n += 1 + l + sovTreasury(uint64(l))
+	}
 	if m.WindowShort != 0 {
 		n += 1 + sovTreasury(uint64(m.WindowShort))
 	}
@@ -641,8 +627,10 @@ func (m *Params) Size() (n int) {
 	if m.WindowProbation != 0 {
 		n += 1 + sovTreasury(uint64(m.WindowProbation))
 	}
-	l = m.BurnTaxSplit.Size()
-	n += 1 + l + sovTreasury(uint64(l))
+	l = len(m.BurnTaxSplit)
+	if l > 0 {
+		n += 1 + l + sovTreasury(uint64(l))
+	}
 	return n
 }
 
@@ -652,14 +640,20 @@ func (m *PolicyConstraints) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.RateMin.Size()
-	n += 1 + l + sovTreasury(uint64(l))
-	l = m.RateMax.Size()
-	n += 1 + l + sovTreasury(uint64(l))
+	l = len(m.RateMin)
+	if l > 0 {
+		n += 1 + l + sovTreasury(uint64(l))
+	}
+	l = len(m.RateMax)
+	if l > 0 {
+		n += 1 + l + sovTreasury(uint64(l))
+	}
 	l = m.Cap.Size()
 	n += 1 + l + sovTreasury(uint64(l))
-	l = m.ChangeRateMax.Size()
-	n += 1 + l + sovTreasury(uint64(l))
+	l = len(m.ChangeRateMax)
+	if l > 0 {
+		n += 1 + l + sovTreasury(uint64(l))
+	}
 	return n
 }
 
@@ -824,9 +818,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SeigniorageBurdenTarget.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.SeigniorageBurdenTarget = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -858,9 +850,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MiningIncrement.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.MiningIncrement = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
@@ -949,9 +939,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.BurnTaxSplit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.BurnTaxSplit = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1033,9 +1021,7 @@ func (m *PolicyConstraints) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RateMin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RateMin = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1067,9 +1053,7 @@ func (m *PolicyConstraints) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RateMax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RateMax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1134,9 +1118,7 @@ func (m *PolicyConstraints) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ChangeRateMax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ChangeRateMax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

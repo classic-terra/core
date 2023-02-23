@@ -7,10 +7,8 @@ import (
 	context "context"
 	encoding_json "encoding/json"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -213,7 +211,7 @@ type MsgInstantiateContract struct {
 	// InitMsg json encoded message to be passed to the contract on instantiation
 	InitMsg encoding_json.RawMessage `protobuf:"bytes,4,opt,name=init_msg,json=initMsg,proto3,casttype=encoding/json.RawMessage" json:"init_msg,omitempty" yaml:"init_msg"`
 	// InitCoins that are transferred to the contract on execution
-	InitCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=init_coins,json=initCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"init_coins" yaml:"init_coins"`
+	InitCoins []types.Coin `protobuf:"bytes,5,rep,name=init_coins,json=initCoins,proto3" json:"init_coins" yaml:"init_coins"`
 }
 
 func (m *MsgInstantiateContract) Reset()         { *m = MsgInstantiateContract{} }
@@ -314,7 +312,7 @@ type MsgExecuteContract struct {
 	// ExecuteMsg json encoded message to be passed to the contract
 	ExecuteMsg encoding_json.RawMessage `protobuf:"bytes,3,opt,name=execute_msg,json=executeMsg,proto3,casttype=encoding/json.RawMessage" json:"execute_msg,omitempty" yaml:"execute_msg"`
 	// Coins that are transferred to the contract on execution
-	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins" yaml:"coins"`
+	Coins []types.Coin `protobuf:"bytes,5,rep,name=coins,proto3" json:"coins" yaml:"coins"`
 }
 
 func (m *MsgExecuteContract) Reset()         { *m = MsgExecuteContract{} }
@@ -747,7 +745,7 @@ type MsgClient interface {
 	StoreCode(ctx context.Context, in *MsgStoreCode, opts ...grpc.CallOption) (*MsgStoreCodeResponse, error)
 	// MigrateCode to submit new version Wasm code to the system
 	MigrateCode(ctx context.Context, in *MsgMigrateCode, opts ...grpc.CallOption) (*MsgMigrateCodeResponse, error)
-	//  Instantiate creates a new smart contract instance for the given code id.
+	// Instantiate creates a new smart contract instance for the given code id.
 	InstantiateContract(ctx context.Context, in *MsgInstantiateContract, opts ...grpc.CallOption) (*MsgInstantiateContractResponse, error)
 	// Execute submits the given message data to a smart contract
 	ExecuteContract(ctx context.Context, in *MsgExecuteContract, opts ...grpc.CallOption) (*MsgExecuteContractResponse, error)
@@ -760,10 +758,10 @@ type MsgClient interface {
 }
 
 type msgClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+func NewMsgClient(cc *grpc.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
@@ -836,7 +834,7 @@ type MsgServer interface {
 	StoreCode(context.Context, *MsgStoreCode) (*MsgStoreCodeResponse, error)
 	// MigrateCode to submit new version Wasm code to the system
 	MigrateCode(context.Context, *MsgMigrateCode) (*MsgMigrateCodeResponse, error)
-	//  Instantiate creates a new smart contract instance for the given code id.
+	// Instantiate creates a new smart contract instance for the given code id.
 	InstantiateContract(context.Context, *MsgInstantiateContract) (*MsgInstantiateContractResponse, error)
 	// Execute submits the given message data to a smart contract
 	ExecuteContract(context.Context, *MsgExecuteContract) (*MsgExecuteContractResponse, error)
@@ -874,7 +872,7 @@ func (*UnimplementedMsgServer) ClearContractAdmin(ctx context.Context, req *MsgC
 	return nil, status.Errorf(codes.Unimplemented, "method ClearContractAdmin not implemented")
 }
 
-func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+func RegisterMsgServer(s *grpc.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 

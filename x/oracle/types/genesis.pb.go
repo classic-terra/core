@@ -28,7 +28,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type GenesisState struct {
 	Params                        Params                         `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	FeederDelegations             []FeederDelegation             `protobuf:"bytes,2,rep,name=feeder_delegations,json=feederDelegations,proto3" json:"feeder_delegations"`
-	ExchangeRates                 ExchangeRateTuples             `protobuf:"bytes,3,rep,name=exchange_rates,json=exchangeRates,proto3,castrepeated=ExchangeRateTuples" json:"exchange_rates"`
+	ExchangeRates                 []ExchangeRateTuple            `protobuf:"bytes,3,rep,name=exchange_rates,json=exchangeRates,proto3" json:"exchange_rates"`
 	MissCounters                  []MissCounter                  `protobuf:"bytes,4,rep,name=miss_counters,json=missCounters,proto3" json:"miss_counters"`
 	AggregateExchangeRatePrevotes []AggregateExchangeRatePrevote `protobuf:"bytes,5,rep,name=aggregate_exchange_rate_prevotes,json=aggregateExchangeRatePrevotes,proto3" json:"aggregate_exchange_rate_prevotes"`
 	AggregateExchangeRateVotes    []AggregateExchangeRateVote    `protobuf:"bytes,6,rep,name=aggregate_exchange_rate_votes,json=aggregateExchangeRateVotes,proto3" json:"aggregate_exchange_rate_votes"`
@@ -82,7 +82,7 @@ func (m *GenesisState) GetFeederDelegations() []FeederDelegation {
 	return nil
 }
 
-func (m *GenesisState) GetExchangeRates() ExchangeRateTuples {
+func (m *GenesisState) GetExchangeRates() []ExchangeRateTuple {
 	if m != nil {
 		return m.ExchangeRates
 	}
@@ -532,16 +532,13 @@ func (m *TobinTax) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TobinTax.Size()
-		i -= size
-		if _, err := m.TobinTax.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.TobinTax) > 0 {
+		i -= len(m.TobinTax)
+		copy(dAtA[i:], m.TobinTax)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.TobinTax)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
 		copy(dAtA[i:], m.Denom)
@@ -653,8 +650,10 @@ func (m *TobinTax) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGenesis(uint64(l))
 	}
-	l = m.TobinTax.Size()
-	n += 1 + l + sovGenesis(uint64(l))
+	l = len(m.TobinTax)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
 	return n
 }
 
@@ -1257,9 +1256,7 @@ func (m *TobinTax) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TobinTax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TobinTax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

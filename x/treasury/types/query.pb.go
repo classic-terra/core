@@ -10,7 +10,6 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -432,7 +431,7 @@ var xxx_messageInfo_QueryTaxProceedsRequest proto.InternalMessageInfo
 // QueryTaxProceedsResponse is response type for the
 // Query/TaxProceeds RPC method.
 type QueryTaxProceedsResponse struct {
-	TaxProceeds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=tax_proceeds,json=taxProceeds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"tax_proceeds"`
+	TaxProceeds []types.Coin `protobuf:"bytes,1,rep,name=tax_proceeds,json=taxProceeds,proto3" json:"tax_proceeds"`
 }
 
 func (m *QueryTaxProceedsResponse) Reset()         { *m = QueryTaxProceedsResponse{} }
@@ -468,7 +467,7 @@ func (m *QueryTaxProceedsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTaxProceedsResponse proto.InternalMessageInfo
 
-func (m *QueryTaxProceedsResponse) GetTaxProceeds() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *QueryTaxProceedsResponse) GetTaxProceeds() []types.Coin {
 	if m != nil {
 		return m.TaxProceeds
 	}
@@ -937,10 +936,10 @@ type QueryClient interface {
 }
 
 type queryClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewQueryClient(cc grpc1.ClientConn) QueryClient {
+func NewQueryClient(cc *grpc.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
@@ -1079,7 +1078,7 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 
-func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
+func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
@@ -1333,16 +1332,13 @@ func (m *QueryTaxRateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TaxRate.Size()
-		i -= size
-		if _, err := m.TaxRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.TaxRate) > 0 {
+		i -= len(m.TaxRate)
+		copy(dAtA[i:], m.TaxRate)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TaxRate)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1396,16 +1392,13 @@ func (m *QueryTaxCapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TaxCap.Size()
-		i -= size
-		if _, err := m.TaxCap.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.TaxCap) > 0 {
+		i -= len(m.TaxCap)
+		copy(dAtA[i:], m.TaxCap)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TaxCap)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1452,16 +1445,13 @@ func (m *QueryTaxCapsResponseItem) MarshalToSizedBuffer(dAtA []byte) (int, error
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TaxCap.Size()
-		i -= size
-		if _, err := m.TaxCap.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.TaxCap) > 0 {
+		i -= len(m.TaxCap)
+		copy(dAtA[i:], m.TaxCap)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TaxCap)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
 		copy(dAtA[i:], m.Denom)
@@ -1552,16 +1542,13 @@ func (m *QueryRewardWeightResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.RewardWeight.Size()
-		i -= size
-		if _, err := m.RewardWeight.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.RewardWeight) > 0 {
+		i -= len(m.RewardWeight)
+		copy(dAtA[i:], m.RewardWeight)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.RewardWeight)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1668,16 +1655,13 @@ func (m *QuerySeigniorageProceedsResponse) MarshalToSizedBuffer(dAtA []byte) (in
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.SeigniorageProceeds.Size()
-		i -= size
-		if _, err := m.SeigniorageProceeds.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.SeigniorageProceeds) > 0 {
+		i -= len(m.SeigniorageProceeds)
+		copy(dAtA[i:], m.SeigniorageProceeds)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.SeigniorageProceeds)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1724,26 +1708,20 @@ func (m *QueryIndicatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TRLMonth.Size()
-		i -= size
-		if _, err := m.TRLMonth.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.TRLMonth) > 0 {
+		i -= len(m.TRLMonth)
+		copy(dAtA[i:], m.TRLMonth)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TRLMonth)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
-	{
-		size := m.TRLYear.Size()
-		i -= size
-		if _, err := m.TRLYear.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.TRLYear) > 0 {
+		i -= len(m.TRLYear)
+		copy(dAtA[i:], m.TRLYear)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TRLYear)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1908,8 +1886,10 @@ func (m *QueryTaxRateResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.TaxRate.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.TaxRate)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -1932,8 +1912,10 @@ func (m *QueryTaxCapResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.TaxCap.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.TaxCap)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -1956,8 +1938,10 @@ func (m *QueryTaxCapsResponseItem) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = m.TaxCap.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.TaxCap)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -1991,8 +1975,10 @@ func (m *QueryRewardWeightResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.RewardWeight.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.RewardWeight)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -2035,8 +2021,10 @@ func (m *QuerySeigniorageProceedsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.SeigniorageProceeds.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.SeigniorageProceeds)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -2055,10 +2043,14 @@ func (m *QueryIndicatorsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.TRLYear.Size()
-	n += 1 + l + sovQuery(uint64(l))
-	l = m.TRLMonth.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.TRLYear)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.TRLMonth)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -2229,9 +2221,7 @@ func (m *QueryTaxRateResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TaxRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TaxRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2395,9 +2385,7 @@ func (m *QueryTaxCapResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TaxCap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TaxCap = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2561,9 +2549,7 @@ func (m *QueryTaxCapsResponseItem) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TaxCap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TaxCap = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2779,9 +2765,7 @@ func (m *QueryRewardWeightResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RewardWeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RewardWeight = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3047,9 +3031,7 @@ func (m *QuerySeigniorageProceedsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SeigniorageProceeds.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.SeigniorageProceeds = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3181,9 +3163,7 @@ func (m *QueryIndicatorsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TRLYear.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TRLYear = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -3215,9 +3195,7 @@ func (m *QueryIndicatorsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TRLMonth.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TRLMonth = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

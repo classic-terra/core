@@ -6,11 +6,9 @@ package tx
 import (
 	context "context"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	golang_proto "github.com/golang/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -96,7 +94,7 @@ func (m *ComputeTaxRequest) GetTxBytes() []byte {
 // RPC method.
 type ComputeTaxResponse struct {
 	// amount is the amount of coins to be paid as a fee
-	TaxAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=tax_amount,json=taxAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"tax_amount"`
+	TaxAmount []types.Coin `protobuf:"bytes,1,rep,name=tax_amount,json=taxAmount,proto3" json:"tax_amount"`
 }
 
 func (m *ComputeTaxResponse) Reset()         { *m = ComputeTaxResponse{} }
@@ -132,7 +130,7 @@ func (m *ComputeTaxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ComputeTaxResponse proto.InternalMessageInfo
 
-func (m *ComputeTaxResponse) GetTaxAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *ComputeTaxResponse) GetTaxAmount() []types.Coin {
 	if m != nil {
 		return m.TaxAmount
 	}
@@ -198,10 +196,10 @@ type ServiceClient interface {
 }
 
 type serviceClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewServiceClient(cc grpc1.ClientConn) ServiceClient {
+func NewServiceClient(cc *grpc.ClientConn) ServiceClient {
 	return &serviceClient{cc}
 }
 
@@ -228,7 +226,7 @@ func (*UnimplementedServiceServer) ComputeTax(ctx context.Context, req *ComputeT
 	return nil, status.Errorf(codes.Unimplemented, "method ComputeTax not implemented")
 }
 
-func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
+func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
 	s.RegisterService(&_Service_serviceDesc, srv)
 }
 

@@ -30,7 +30,7 @@ type Params struct {
 	VoteThreshold            github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=vote_threshold,json=voteThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"vote_threshold" yaml:"vote_threshold"`
 	RewardBand               github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=reward_band,json=rewardBand,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_band" yaml:"reward_band"`
 	RewardDistributionWindow uint64                                 `protobuf:"varint,4,opt,name=reward_distribution_window,json=rewardDistributionWindow,proto3" json:"reward_distribution_window,omitempty" yaml:"reward_distribution_window"`
-	Whitelist                DenomList                              `protobuf:"bytes,5,rep,name=whitelist,proto3,castrepeated=DenomList" json:"whitelist" yaml:"whitelist"`
+	Whitelist                []Denom                                `protobuf:"bytes,5,rep,name=whitelist,proto3" json:"whitelist" yaml:"whitelist"`
 	SlashFraction            github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=slash_fraction,json=slashFraction,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"slash_fraction" yaml:"slash_fraction"`
 	SlashWindow              uint64                                 `protobuf:"varint,7,opt,name=slash_window,json=slashWindow,proto3" json:"slash_window,omitempty" yaml:"slash_window"`
 	MinValidPerWindow        github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=min_valid_per_window,json=minValidPerWindow,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_valid_per_window" yaml:"min_valid_per_window"`
@@ -82,7 +82,7 @@ func (m *Params) GetRewardDistributionWindow() uint64 {
 	return 0
 }
 
-func (m *Params) GetWhitelist() DenomList {
+func (m *Params) GetWhitelist() []Denom {
 	if m != nil {
 		return m.Whitelist
 	}
@@ -178,8 +178,8 @@ var xxx_messageInfo_AggregateExchangeRatePrevote proto.InternalMessageInfo
 // MsgAggregateExchangeRateVote - struct for voting on
 // the exchange rates of Luna denominated in various Terra assets.
 type AggregateExchangeRateVote struct {
-	ExchangeRateTuples ExchangeRateTuples `protobuf:"bytes,1,rep,name=exchange_rate_tuples,json=exchangeRateTuples,proto3,castrepeated=ExchangeRateTuples" json:"exchange_rate_tuples" yaml:"exchange_rate_tuples"`
-	Voter              string             `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty" yaml:"voter"`
+	ExchangeRateTuples []ExchangeRateTuple `protobuf:"bytes,1,rep,name=exchange_rate_tuples,json=exchangeRateTuples,proto3" json:"exchange_rate_tuples" yaml:"exchange_rate_tuples"`
+	Voter              string              `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty" yaml:"voter"`
 }
 
 func (m *AggregateExchangeRateVote) Reset()      { *m = AggregateExchangeRateVote{} }
@@ -384,31 +384,25 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.MinValidPerWindow.Size()
-		i -= size
-		if _, err := m.MinValidPerWindow.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintOracle(dAtA, i, uint64(size))
+	if len(m.MinValidPerWindow) > 0 {
+		i -= len(m.MinValidPerWindow)
+		copy(dAtA[i:], m.MinValidPerWindow)
+		i = encodeVarintOracle(dAtA, i, uint64(len(m.MinValidPerWindow)))
+		i--
+		dAtA[i] = 0x42
 	}
-	i--
-	dAtA[i] = 0x42
 	if m.SlashWindow != 0 {
 		i = encodeVarintOracle(dAtA, i, uint64(m.SlashWindow))
 		i--
 		dAtA[i] = 0x38
 	}
-	{
-		size := m.SlashFraction.Size()
-		i -= size
-		if _, err := m.SlashFraction.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintOracle(dAtA, i, uint64(size))
+	if len(m.SlashFraction) > 0 {
+		i -= len(m.SlashFraction)
+		copy(dAtA[i:], m.SlashFraction)
+		i = encodeVarintOracle(dAtA, i, uint64(len(m.SlashFraction)))
+		i--
+		dAtA[i] = 0x32
 	}
-	i--
-	dAtA[i] = 0x32
 	if len(m.Whitelist) > 0 {
 		for iNdEx := len(m.Whitelist) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -428,26 +422,20 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x20
 	}
-	{
-		size := m.RewardBand.Size()
-		i -= size
-		if _, err := m.RewardBand.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintOracle(dAtA, i, uint64(size))
+	if len(m.RewardBand) > 0 {
+		i -= len(m.RewardBand)
+		copy(dAtA[i:], m.RewardBand)
+		i = encodeVarintOracle(dAtA, i, uint64(len(m.RewardBand)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.VoteThreshold.Size()
-		i -= size
-		if _, err := m.VoteThreshold.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintOracle(dAtA, i, uint64(size))
+	if len(m.VoteThreshold) > 0 {
+		i -= len(m.VoteThreshold)
+		copy(dAtA[i:], m.VoteThreshold)
+		i = encodeVarintOracle(dAtA, i, uint64(len(m.VoteThreshold)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if m.VotePeriod != 0 {
 		i = encodeVarintOracle(dAtA, i, uint64(m.VotePeriod))
 		i--
@@ -476,16 +464,13 @@ func (m *Denom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TobinTax.Size()
-		i -= size
-		if _, err := m.TobinTax.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintOracle(dAtA, i, uint64(size))
+	if len(m.TobinTax) > 0 {
+		i -= len(m.TobinTax)
+		copy(dAtA[i:], m.TobinTax)
+		i = encodeVarintOracle(dAtA, i, uint64(len(m.TobinTax)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.Name) > 0 {
 		i -= len(m.Name)
 		copy(dAtA[i:], m.Name)
@@ -602,16 +587,13 @@ func (m *ExchangeRateTuple) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.ExchangeRate.Size()
-		i -= size
-		if _, err := m.ExchangeRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintOracle(dAtA, i, uint64(size))
+	if len(m.ExchangeRate) > 0 {
+		i -= len(m.ExchangeRate)
+		copy(dAtA[i:], m.ExchangeRate)
+		i = encodeVarintOracle(dAtA, i, uint64(len(m.ExchangeRate)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
 		copy(dAtA[i:], m.Denom)
@@ -642,10 +624,14 @@ func (m *Params) Size() (n int) {
 	if m.VotePeriod != 0 {
 		n += 1 + sovOracle(uint64(m.VotePeriod))
 	}
-	l = m.VoteThreshold.Size()
-	n += 1 + l + sovOracle(uint64(l))
-	l = m.RewardBand.Size()
-	n += 1 + l + sovOracle(uint64(l))
+	l = len(m.VoteThreshold)
+	if l > 0 {
+		n += 1 + l + sovOracle(uint64(l))
+	}
+	l = len(m.RewardBand)
+	if l > 0 {
+		n += 1 + l + sovOracle(uint64(l))
+	}
 	if m.RewardDistributionWindow != 0 {
 		n += 1 + sovOracle(uint64(m.RewardDistributionWindow))
 	}
@@ -655,13 +641,17 @@ func (m *Params) Size() (n int) {
 			n += 1 + l + sovOracle(uint64(l))
 		}
 	}
-	l = m.SlashFraction.Size()
-	n += 1 + l + sovOracle(uint64(l))
+	l = len(m.SlashFraction)
+	if l > 0 {
+		n += 1 + l + sovOracle(uint64(l))
+	}
 	if m.SlashWindow != 0 {
 		n += 1 + sovOracle(uint64(m.SlashWindow))
 	}
-	l = m.MinValidPerWindow.Size()
-	n += 1 + l + sovOracle(uint64(l))
+	l = len(m.MinValidPerWindow)
+	if l > 0 {
+		n += 1 + l + sovOracle(uint64(l))
+	}
 	return n
 }
 
@@ -675,8 +665,10 @@ func (m *Denom) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovOracle(uint64(l))
 	}
-	l = m.TobinTax.Size()
-	n += 1 + l + sovOracle(uint64(l))
+	l = len(m.TobinTax)
+	if l > 0 {
+		n += 1 + l + sovOracle(uint64(l))
+	}
 	return n
 }
 
@@ -729,8 +721,10 @@ func (m *ExchangeRateTuple) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovOracle(uint64(l))
 	}
-	l = m.ExchangeRate.Size()
-	n += 1 + l + sovOracle(uint64(l))
+	l = len(m.ExchangeRate)
+	if l > 0 {
+		n += 1 + l + sovOracle(uint64(l))
+	}
 	return n
 }
 
@@ -818,9 +812,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.VoteThreshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.VoteThreshold = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -852,9 +844,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RewardBand.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RewardBand = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
@@ -939,9 +929,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SlashFraction.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.SlashFraction = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
 			if wireType != 0 {
@@ -992,9 +980,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.MinValidPerWindow.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.MinValidPerWindow = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1108,9 +1094,7 @@ func (m *Denom) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TobinTax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TobinTax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1473,9 +1457,7 @@ func (m *ExchangeRateTuple) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ExchangeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ExchangeRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

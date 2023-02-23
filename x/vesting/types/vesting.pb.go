@@ -29,7 +29,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // coins according to a predefined schedule.
 type LazyGradedVestingAccount struct {
 	*types.BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3,embedded=base_vesting_account" json:"base_vesting_account,omitempty"`
-	VestingSchedules          VestingSchedules `protobuf:"bytes,2,rep,name=vesting_schedules,json=vestingSchedules,proto3,castrepeated=VestingSchedules" json:"vesting_schedules" yaml:"vesting_schedules"`
+	VestingSchedules          []VestingSchedule `protobuf:"bytes,2,rep,name=vesting_schedules,json=vestingSchedules,proto3" json:"vesting_schedules" yaml:"vesting_schedules"`
 }
 
 func (m *LazyGradedVestingAccount) Reset()      { *m = LazyGradedVestingAccount{} }
@@ -106,8 +106,8 @@ var xxx_messageInfo_Schedule proto.InternalMessageInfo
 
 // VestingSchedule defines vesting schedule for a denom
 type VestingSchedule struct {
-	Denom     string    `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"start_time"`
-	Schedules Schedules `protobuf:"bytes,2,rep,name=schedules,proto3,castrepeated=Schedules" json:"schedules" yaml:"schedules"`
+	Denom     string     `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"start_time"`
+	Schedules []Schedule `protobuf:"bytes,2,rep,name=schedules,proto3" json:"schedules" yaml:"schedules"`
 }
 
 func (m *VestingSchedule) Reset()         { *m = VestingSchedule{} }
@@ -256,16 +256,13 @@ func (m *Schedule) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.Ratio.Size()
-		i -= size
-		if _, err := m.Ratio.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintVesting(dAtA, i, uint64(size))
+	if len(m.Ratio) > 0 {
+		i -= len(m.Ratio)
+		copy(dAtA[i:], m.Ratio)
+		i = encodeVarintVesting(dAtA, i, uint64(len(m.Ratio)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
 	if m.EndTime != 0 {
 		i = encodeVarintVesting(dAtA, i, uint64(m.EndTime))
 		i--
@@ -365,8 +362,10 @@ func (m *Schedule) Size() (n int) {
 	if m.EndTime != 0 {
 		n += 1 + sovVesting(uint64(m.EndTime))
 	}
-	l = m.Ratio.Size()
-	n += 1 + l + sovVesting(uint64(l))
+	l = len(m.Ratio)
+	if l > 0 {
+		n += 1 + l + sovVesting(uint64(l))
+	}
 	return n
 }
 
@@ -612,9 +611,7 @@ func (m *Schedule) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Ratio.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Ratio = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

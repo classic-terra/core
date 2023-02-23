@@ -27,13 +27,13 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the oracle module's genesis state.
 type GenesisState struct {
-	Params               Params                                   `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	TaxRate              github_com_cosmos_cosmos_sdk_types.Dec   `protobuf:"bytes,2,opt,name=tax_rate,json=taxRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tax_rate"`
-	RewardWeight         github_com_cosmos_cosmos_sdk_types.Dec   `protobuf:"bytes,3,opt,name=reward_weight,json=rewardWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_weight"`
-	TaxCaps              []TaxCap                                 `protobuf:"bytes,4,rep,name=tax_caps,json=taxCaps,proto3" json:"tax_caps"`
-	TaxProceeds          github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=tax_proceeds,json=taxProceeds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"tax_proceeds"`
-	EpochInitialIssuance github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=epoch_initial_issuance,json=epochInitialIssuance,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"epoch_initial_issuance"`
-	EpochStates          []EpochState                             `protobuf:"bytes,7,rep,name=epoch_states,json=epochStates,proto3" json:"epoch_states"`
+	Params               Params                                 `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	TaxRate              github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=tax_rate,json=taxRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tax_rate"`
+	RewardWeight         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=reward_weight,json=rewardWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_weight"`
+	TaxCaps              []TaxCap                               `protobuf:"bytes,4,rep,name=tax_caps,json=taxCaps,proto3" json:"tax_caps"`
+	TaxProceeds          []types.Coin                           `protobuf:"bytes,5,rep,name=tax_proceeds,json=taxProceeds,proto3" json:"tax_proceeds"`
+	EpochInitialIssuance []types.Coin                           `protobuf:"bytes,6,rep,name=epoch_initial_issuance,json=epochInitialIssuance,proto3" json:"epoch_initial_issuance"`
+	EpochStates          []EpochState                           `protobuf:"bytes,7,rep,name=epoch_states,json=epochStates,proto3" json:"epoch_states"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -83,14 +83,14 @@ func (m *GenesisState) GetTaxCaps() []TaxCap {
 	return nil
 }
 
-func (m *GenesisState) GetTaxProceeds() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *GenesisState) GetTaxProceeds() []types.Coin {
 	if m != nil {
 		return m.TaxProceeds
 	}
 	return nil
 }
 
-func (m *GenesisState) GetEpochInitialIssuance() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *GenesisState) GetEpochInitialIssuance() []types.Coin {
 	if m != nil {
 		return m.EpochInitialIssuance
 	}
@@ -323,26 +323,20 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x22
 		}
 	}
-	{
-		size := m.RewardWeight.Size()
-		i -= size
-		if _, err := m.RewardWeight.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.RewardWeight) > 0 {
+		i -= len(m.RewardWeight)
+		copy(dAtA[i:], m.RewardWeight)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.RewardWeight)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.TaxRate.Size()
-		i -= size
-		if _, err := m.TaxRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.TaxRate) > 0 {
+		i -= len(m.TaxRate)
+		copy(dAtA[i:], m.TaxRate)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.TaxRate)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	{
 		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -376,16 +370,13 @@ func (m *TaxCap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TaxCap.Size()
-		i -= size
-		if _, err := m.TaxCap.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.TaxCap) > 0 {
+		i -= len(m.TaxCap)
+		copy(dAtA[i:], m.TaxCap)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.TaxCap)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
 		copy(dAtA[i:], m.Denom)
@@ -416,36 +407,27 @@ func (m *EpochState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TotalStakedLuna.Size()
-		i -= size
-		if _, err := m.TotalStakedLuna.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.TotalStakedLuna) > 0 {
+		i -= len(m.TotalStakedLuna)
+		copy(dAtA[i:], m.TotalStakedLuna)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.TotalStakedLuna)))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x22
-	{
-		size := m.SeigniorageReward.Size()
-		i -= size
-		if _, err := m.SeigniorageReward.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.SeigniorageReward) > 0 {
+		i -= len(m.SeigniorageReward)
+		copy(dAtA[i:], m.SeigniorageReward)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.SeigniorageReward)))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.TaxReward.Size()
-		i -= size
-		if _, err := m.TaxReward.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	if len(m.TaxReward) > 0 {
+		i -= len(m.TaxReward)
+		copy(dAtA[i:], m.TaxReward)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.TaxReward)))
+		i--
+		dAtA[i] = 0x12
 	}
-	i--
-	dAtA[i] = 0x12
 	if m.Epoch != 0 {
 		i = encodeVarintGenesis(dAtA, i, uint64(m.Epoch))
 		i--
@@ -473,10 +455,14 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
-	l = m.TaxRate.Size()
-	n += 1 + l + sovGenesis(uint64(l))
-	l = m.RewardWeight.Size()
-	n += 1 + l + sovGenesis(uint64(l))
+	l = len(m.TaxRate)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.RewardWeight)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
 	if len(m.TaxCaps) > 0 {
 		for _, e := range m.TaxCaps {
 			l = e.Size()
@@ -514,8 +500,10 @@ func (m *TaxCap) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovGenesis(uint64(l))
 	}
-	l = m.TaxCap.Size()
-	n += 1 + l + sovGenesis(uint64(l))
+	l = len(m.TaxCap)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
 	return n
 }
 
@@ -528,12 +516,18 @@ func (m *EpochState) Size() (n int) {
 	if m.Epoch != 0 {
 		n += 1 + sovGenesis(uint64(m.Epoch))
 	}
-	l = m.TaxReward.Size()
-	n += 1 + l + sovGenesis(uint64(l))
-	l = m.SeigniorageReward.Size()
-	n += 1 + l + sovGenesis(uint64(l))
-	l = m.TotalStakedLuna.Size()
-	n += 1 + l + sovGenesis(uint64(l))
+	l = len(m.TaxReward)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.SeigniorageReward)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.TotalStakedLuna)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
 	return n
 }
 
@@ -635,9 +629,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TaxRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TaxRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -669,9 +661,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.RewardWeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.RewardWeight = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -921,9 +911,7 @@ func (m *TaxCap) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TaxCap.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TaxCap = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1024,9 +1012,7 @@ func (m *EpochState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TaxReward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TaxReward = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1058,9 +1044,7 @@ func (m *EpochState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.SeigniorageReward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.SeigniorageReward = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1092,9 +1076,7 @@ func (m *EpochState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TotalStakedLuna.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TotalStakedLuna = github_com_cosmos_cosmos_sdk_types.Int(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

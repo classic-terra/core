@@ -9,7 +9,6 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -151,7 +150,7 @@ var xxx_messageInfo_QueryExchangeRatesRequest proto.InternalMessageInfo
 // Query/ExchangeRates RPC method.
 type QueryExchangeRatesResponse struct {
 	// exchange_rates defines a list of the exchange rate for all whitelisted denoms.
-	ExchangeRates github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=exchange_rates,json=exchangeRates,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"exchange_rates"`
+	ExchangeRates []types.DecCoin `protobuf:"bytes,1,rep,name=exchange_rates,json=exchangeRates,proto3" json:"exchange_rates"`
 }
 
 func (m *QueryExchangeRatesResponse) Reset()         { *m = QueryExchangeRatesResponse{} }
@@ -187,7 +186,7 @@ func (m *QueryExchangeRatesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryExchangeRatesResponse proto.InternalMessageInfo
 
-func (m *QueryExchangeRatesResponse) GetExchangeRates() github_com_cosmos_cosmos_sdk_types.DecCoins {
+func (m *QueryExchangeRatesResponse) GetExchangeRates() []types.DecCoin {
 	if m != nil {
 		return m.ExchangeRates
 	}
@@ -314,7 +313,7 @@ var xxx_messageInfo_QueryTobinTaxesRequest proto.InternalMessageInfo
 // Query/TobinTaxes RPC method.
 type QueryTobinTaxesResponse struct {
 	// tobin_taxes defines a list of the tobin tax of all whitelisted denoms
-	TobinTaxes DenomList `protobuf:"bytes,1,rep,name=tobin_taxes,json=tobinTaxes,proto3,castrepeated=DenomList" json:"tobin_taxes" yaml:"tobin_taxes"`
+	TobinTaxes []Denom `protobuf:"bytes,1,rep,name=tobin_taxes,json=tobinTaxes,proto3" json:"tobin_taxes" yaml:"tobin_taxes"`
 }
 
 func (m *QueryTobinTaxesResponse) Reset()         { *m = QueryTobinTaxesResponse{} }
@@ -350,7 +349,7 @@ func (m *QueryTobinTaxesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryTobinTaxesResponse proto.InternalMessageInfo
 
-func (m *QueryTobinTaxesResponse) GetTobinTaxes() DenomList {
+func (m *QueryTobinTaxesResponse) GetTobinTaxes() []Denom {
 	if m != nil {
 		return m.TobinTaxes
 	}
@@ -1275,10 +1274,10 @@ type QueryClient interface {
 }
 
 type queryClient struct {
-	cc grpc1.ClientConn
+	cc *grpc.ClientConn
 }
 
-func NewQueryClient(cc grpc1.ClientConn) QueryClient {
+func NewQueryClient(cc *grpc.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
@@ -1473,7 +1472,7 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 
-func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
+func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
@@ -1822,16 +1821,13 @@ func (m *QueryExchangeRateResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.ExchangeRate.Size()
-		i -= size
-		if _, err := m.ExchangeRate.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.ExchangeRate) > 0 {
+		i -= len(m.ExchangeRate)
+		copy(dAtA[i:], m.ExchangeRate)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ExchangeRate)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1945,16 +1941,13 @@ func (m *QueryTobinTaxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.TobinTax.Size()
-		i -= size
-		if _, err := m.TobinTax.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintQuery(dAtA, i, uint64(size))
+	if len(m.TobinTax) > 0 {
+		i -= len(m.TobinTax)
+		copy(dAtA[i:], m.TobinTax)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TobinTax)))
+		i--
+		dAtA[i] = 0xa
 	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -2578,8 +2571,10 @@ func (m *QueryExchangeRateResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.ExchangeRate.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.ExchangeRate)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -2626,8 +2621,10 @@ func (m *QueryTobinTaxResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.TobinTax.Size()
-	n += 1 + l + sovQuery(uint64(l))
+	l = len(m.TobinTax)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -3017,9 +3014,7 @@ func (m *QueryExchangeRateResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ExchangeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.ExchangeRate = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3317,9 +3312,7 @@ func (m *QueryTobinTaxResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TobinTax.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.TobinTax = github_com_cosmos_cosmos_sdk_types.Dec(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

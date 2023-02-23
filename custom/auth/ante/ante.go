@@ -4,6 +4,7 @@ import (
 	channelkeeper "github.com/cosmos/ibc-go/modules/core/04-channel/keeper"
 	ibcante "github.com/cosmos/ibc-go/modules/core/ante"
 
+	feehshareante "github.com/classic-terra/core/x/feeshare/ante"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -22,6 +23,8 @@ type HandlerOptions struct {
 	SigGasConsumer     cosmosante.SignatureVerificationGasConsumer
 	IBCChannelKeeper   channelkeeper.Keeper
 	DistributionKeeper distributionkeeper.Keeper
+
+	FeeShareKeeper FeeShareKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -64,7 +67,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		NewBurnTaxFeeDecorator(options.AccountKeeper, options.TreasuryKeeper, options.BankKeeper, options.DistributionKeeper), // burn tax proceeds
-		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper),                                                               // SetPubKeyDecorator must be called before all signature verification decorators
+		feehshareante.NewFeeSharePayoutDecorator(options.BankKeeper, options.FeeShareKeeper),
+		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),

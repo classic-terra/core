@@ -117,7 +117,6 @@ import (
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 	core "github.com/classic-terra/core/types"
 
-	"github.com/classic-terra/core/x/feeshare"
 	"github.com/classic-terra/core/x/market"
 	marketkeeper "github.com/classic-terra/core/x/market/keeper"
 	markettypes "github.com/classic-terra/core/x/market/types"
@@ -142,6 +141,7 @@ import (
 	oraclewasm "github.com/classic-terra/core/x/oracle/wasm"
 	treasurywasm "github.com/classic-terra/core/x/treasury/wasm"
 
+	"github.com/classic-terra/core/x/feeshare"
 	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 
@@ -304,7 +304,8 @@ func NewTerraApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		oracletypes.StoreKey, markettypes.StoreKey, treasurytypes.StoreKey,
-		wasmtypes.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey, feesharetypes.StoreKey,
+		wasmtypes.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey,
+		feesharetypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -504,14 +505,12 @@ func NewTerraApp(
 		minttypes.ModuleName, distrtypes.ModuleName,
 		slashingtypes.ModuleName, evidencetypes.ModuleName,
 		stakingtypes.ModuleName, ibchost.ModuleName,
-		feesharetypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName,
 		oracletypes.ModuleName, markettypes.ModuleName,
 		treasurytypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, stakingtypes.ModuleName,
-		feesharetypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are

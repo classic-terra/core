@@ -304,7 +304,7 @@ func NewTerraApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		oracletypes.StoreKey, markettypes.StoreKey, treasurytypes.StoreKey,
-		wasmtypes.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey,
+		wasmtypes.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey, feesharetypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -834,8 +834,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
-	paramsKeeper.Subspace(feesharetypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(feesharetypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -843,6 +843,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 func (app *TerraApp) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v2.UpgradeName,
-		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
+		v2.CreateV2UpgradeHandler(app.mm, app.configurator, &app.FeeShareKeeper),
 	)
 }

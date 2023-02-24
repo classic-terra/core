@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand" //#nosec G404
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -23,14 +22,16 @@ const (
 
 // GenEnableFeeShare
 func GenEnableFeeShare(r *rand.Rand) bool {
-	rand.Seed(time.Now().UnixNano())
-
-	return rand.Intn(2) == 1
+	return r.Intn(2) == 1
 }
 
 // GenDeveloperShares
 func GenDeveloperShares(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(50000000000000).Add(sdk.NewDec(int64(r.Intn(10000000000))))
+	// Generate a random float number between 0 and 1
+	randNum := r.Float64()
+
+	// precision of 10
+	return sdk.MustNewDecFromStr(fmt.Sprintf("%.10f", randNum))
 }
 
 // GenAllowedDenoms

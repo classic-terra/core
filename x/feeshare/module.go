@@ -20,6 +20,7 @@ import (
 
 	"github.com/classic-terra/core/x/feeshare/client/cli"
 	"github.com/classic-terra/core/x/feeshare/keeper"
+	"github.com/classic-terra/core/x/feeshare/simulation"
 	"github.com/classic-terra/core/x/feeshare/types"
 )
 
@@ -180,7 +181,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the fees module.
-func (am AppModule) GenerateGenesisState(input *module.SimulationState) {
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents returns content functions for governance proposals.

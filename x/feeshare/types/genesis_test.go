@@ -36,7 +36,7 @@ func (suite *GenesisTestSuite) TestValidateGenesis() {
 	}{
 		{
 			name:     "valid genesis constructor",
-			genState: &newGen,
+			genState: newGen,
 			expPass:  true,
 		},
 		{

@@ -5,7 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"math/rand" //#nosec
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

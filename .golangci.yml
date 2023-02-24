@@ -22,7 +22,7 @@ linters-settings:
 issues:
   exclude:
     - composite
-   exclude-rules:
+  exclude-rules:
     - text: "G404:" # Ignore weak random number generator lint. We do not need strong randomness here.
       linters:
         - gosec

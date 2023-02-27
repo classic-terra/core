@@ -97,6 +97,7 @@ import (
 
 	terraappparams "github.com/classic-terra/core/app/params"
 	v2 "github.com/classic-terra/core/app/upgrades/v2"
+	v3 "github.com/classic-terra/core/app/upgrades/v3"
 
 	customauth "github.com/classic-terra/core/custom/auth"
 	customante "github.com/classic-terra/core/custom/auth/ante"
@@ -569,7 +570,7 @@ func NewTerraApp(
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 			IBCChannelKeeper:   app.IBCKeeper.ChannelKeeper,
 			DistributionKeeper: app.DistrKeeper,
-			GovKeeper:			app.GovKeeper,
+			GovKeeper:          app.GovKeeper,
 		},
 	)
 	if err != nil {
@@ -823,5 +824,9 @@ func (app *TerraApp) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v2.UpgradeName,
 		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
+	)
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v3.UpgradeName,
+		v3.CreateV3UpgradeHandler(app.mm, app.configurator),
 	)
 }

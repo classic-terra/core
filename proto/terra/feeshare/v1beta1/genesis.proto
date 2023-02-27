@@ -6,14 +6,6 @@ import "terra/feeshare/v1beta1/feeshare.proto";
 
 option go_package = "github.com/classic-terra/core/x/feeshare/types";
 
-// GenesisState defines the module's genesis state.
-message GenesisState {
-  // params are the feeshare module parameters
-  Params params = 1 [(gogoproto.nullable) = false];
-  // FeeShare is a slice of active registered contracts for fee distribution
-  repeated FeeShare fee_share = 2 [(gogoproto.nullable) = false];
-}
-
 // Params defines the feeshare module params
 message Params {
   // enable_feeshare defines a parameter to enable the feeshare module
@@ -27,4 +19,12 @@ message Params {
   // will ONLY be sent to the community pool.
   // If this list is empty, all denoms are allowed.
   repeated string allowed_denoms = 3;
+}
+
+// GenesisState defines the module's genesis state.
+message GenesisState {
+  // params are the feeshare module parameters
+  Params params = 1 [(gogoproto.nullable) = false];
+  // FeeShare is a slice of active registered contracts for fee distribution
+  repeated FeeShare fee_share = 2 [(gogoproto.nullable) = false];
 }

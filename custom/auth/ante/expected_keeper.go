@@ -3,6 +3,7 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -29,4 +30,8 @@ type BankKeeper interface {
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	GetFeePool(ctx sdk.Context) distributiontypes.FeePool
+}
+
+type GovKeeper interface {
+	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
 }

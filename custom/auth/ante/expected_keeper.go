@@ -12,6 +12,7 @@ type TreasuryKeeper interface {
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
 	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
+	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
 }
 
 // OracleKeeper for feeder validation

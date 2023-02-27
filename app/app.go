@@ -569,6 +569,7 @@ func NewTerraApp(
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 			IBCChannelKeeper:   app.IBCKeeper.ChannelKeeper,
 			DistributionKeeper: app.DistrKeeper,
+			GovKeeper:          app.GovKeeper,
 		},
 	)
 	if err != nil {

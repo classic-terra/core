@@ -14,17 +14,16 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper          cosmosante.AccountKeeper
-	BankKeeper             BankKeeper
-	FeegrantKeeper         cosmosante.FeegrantKeeper
-	OracleKeeper           OracleKeeper
-	TreasuryKeeper         TreasuryKeeper
-	SignModeHandler        signing.SignModeHandler
-	SigGasConsumer         cosmosante.SignatureVerificationGasConsumer
-	IBCChannelKeeper       channelkeeper.Keeper
-	DistributionKeeper     distributionkeeper.Keeper
-	FeeShareKeeper         feehshareante.FeeShareKeeper
-	FeeShareBankKeeperFork feehshareante.BankKeeper
+	AccountKeeper      cosmosante.AccountKeeper
+	BankKeeper         BankKeeper
+	FeegrantKeeper     cosmosante.FeegrantKeeper
+	OracleKeeper       OracleKeeper
+	TreasuryKeeper     TreasuryKeeper
+	SignModeHandler    signing.SignModeHandler
+	SigGasConsumer     cosmosante.SignatureVerificationGasConsumer
+	IBCChannelKeeper   channelkeeper.Keeper
+	DistributionKeeper distributionkeeper.Keeper
+	FeeShareKeeper     feehshareante.FeeShareKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -71,7 +70,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		NewBurnTaxFeeDecorator(options.AccountKeeper, options.TreasuryKeeper, options.BankKeeper, options.DistributionKeeper), // burn tax proceeds
-		feehshareante.NewFeeSharePayoutDecorator(options.FeeShareBankKeeperFork, options.FeeShareKeeper),
+		feehshareante.NewFeeSharePayoutDecorator(options.BankKeeper, options.FeeShareKeeper),
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),

@@ -12,10 +12,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/custom/auth/ante"
 	core "github.com/classic-terra/core/types"
 	markettypes "github.com/classic-terra/core/x/market/types"
-	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 )
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesGas() {

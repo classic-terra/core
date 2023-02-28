@@ -9,7 +9,7 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	wasm "github.com/classic-terra/core/x/wasm/exported"
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
 )
 
 var _ wasm.WasmMsgParserInterface = WasmMsgParser{}

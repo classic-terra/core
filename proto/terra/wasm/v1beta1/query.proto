@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "terra/wasm/v1beta1/wasm.proto";
 
-option go_package = "github.com/classic-terra/core/x/wasm/types";
+option go_package = "github.com/CosmWasm/wasmd/x/wasm/types";
 
 // Query defines the gRPC querier service.
 service Query {

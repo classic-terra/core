@@ -27,7 +27,6 @@ import (
 
 	terraapp "github.com/classic-terra/core/app"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
-	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.

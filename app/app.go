@@ -117,6 +117,8 @@ import (
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 	core "github.com/classic-terra/core/types"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/classic-terra/core/x/market"
 	marketkeeper "github.com/classic-terra/core/x/market/keeper"
 	markettypes "github.com/classic-terra/core/x/market/types"
@@ -128,10 +130,6 @@ import (
 	treasurykeeper "github.com/classic-terra/core/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	"github.com/classic-terra/core/x/vesting"
-	"github.com/classic-terra/core/x/wasm"
-	wasmconfig "github.com/classic-terra/core/x/wasm/config"
-	wasmkeeper "github.com/classic-terra/core/x/wasm/keeper"
-	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 
 	bankwasm "github.com/classic-terra/core/custom/bank/wasm"
 	distrwasm "github.com/classic-terra/core/custom/distribution/wasm"
@@ -281,7 +279,7 @@ func init() {
 func NewTerraApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig terraappparams.EncodingConfig, appOpts servertypes.AppOptions,
-	wasmConfig *wasmconfig.Config, baseAppOptions ...func(*baseapp.BaseApp),
+	wasmOpts []wasm.Option, baseAppOptions ...func(*baseapp.BaseApp),
 ) *TerraApp {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
@@ -298,7 +296,7 @@ func NewTerraApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		oracletypes.StoreKey, markettypes.StoreKey, treasurytypes.StoreKey,
-		wasmtypes.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey,
+		wasm.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -323,6 +321,7 @@ func NewTerraApp(
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -407,31 +406,47 @@ func NewTerraApp(
 		app.StakingKeeper, app.DistrKeeper,
 		distrtypes.ModuleName)
 
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+
+	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,token_factory"
+	// TODO: app.TreasuryKeeper needs to go into WasmKeeper for querying somehow
 	app.WasmKeeper = wasmkeeper.NewKeeper(
-		appCodec, keys[wasmtypes.StoreKey],
-		app.GetSubspace(wasmtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper,
-		app.TreasuryKeeper, bApp.MsgServiceRouter(),
-		app.GRPCQueryRouter(), wasmtypes.DefaultFeatures,
+		appCodec,
+		keys[wasm.StoreKey],
+		app.GetSubspace(wasm.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+
+		bApp.MsgServiceRouter(),
+		app.GRPCQueryRouter(), supportedFeatures,
 		homePath, wasmConfig,
 	)
 
 	// register wasm msg parser & querier
-	app.WasmKeeper.RegisterMsgParsers(map[string]wasmtypes.WasmMsgParserInterface{
-		wasmtypes.WasmMsgParserRouteBank:         bankwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteStaking:      stakingwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteMarket:       marketwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteWasm:         wasmkeeper.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteDistribution: distrwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteGov:          govwasm.NewWasmMsgParser(),
+	app.WasmKeeper.RegisterMsgParsers(map[string]wasm.WasmMsgParserInterface{
+		wasm.WasmMsgParserRouteBank:         bankwasm.NewWasmMsgParser(),
+		wasm.WasmMsgParserRouteStaking:      stakingwasm.NewWasmMsgParser(),
+		wasm.WasmMsgParserRouteMarket:       marketwasm.NewWasmMsgParser(),
+		wasm.WasmMsgParserRouteWasm:         wasmkeeper.NewWasmMsgParser(),
+		wasm.WasmMsgParserRouteDistribution: distrwasm.NewWasmMsgParser(),
+		wasm.WasmMsgParserRouteGov:          govwasm.NewWasmMsgParser(),
 	}, wasmkeeper.NewStargateWasmMsgParser(appCodec))
-	app.WasmKeeper.RegisterQueriers(map[string]wasmtypes.WasmQuerierInterface{
-		wasmtypes.WasmQueryRouteBank:     bankwasm.NewWasmQuerier(app.BankKeeper),
-		wasmtypes.WasmQueryRouteStaking:  stakingwasm.NewWasmQuerier(app.StakingKeeper, app.DistrKeeper),
-		wasmtypes.WasmQueryRouteMarket:   marketwasm.NewWasmQuerier(app.MarketKeeper),
-		wasmtypes.WasmQueryRouteOracle:   oraclewasm.NewWasmQuerier(app.OracleKeeper),
-		wasmtypes.WasmQueryRouteTreasury: treasurywasm.NewWasmQuerier(app.TreasuryKeeper),
-		wasmtypes.WasmQueryRouteWasm:     wasmkeeper.NewWasmQuerier(app.WasmKeeper),
+	app.WasmKeeper.RegisterQueriers(map[string]wasm.WasmQuerierInterface{
+		wasm.WasmQueryRouteBank:     bankwasm.NewWasmQuerier(app.BankKeeper),
+		wasm.WasmQueryRouteStaking:  stakingwasm.NewWasmQuerier(app.StakingKeeper, app.DistrKeeper),
+		wasm.WasmQueryRouteMarket:   marketwasm.NewWasmQuerier(app.MarketKeeper),
+		wasm.WasmQueryRouteOracle:   oraclewasm.NewWasmQuerier(app.OracleKeeper),
+		wasm.WasmQueryRouteTreasury: treasurywasm.NewWasmQuerier(app.TreasuryKeeper),
+		wasm.WasmQueryRouteWasm:     wasmkeeper.NewWasmQuerier(app.WasmKeeper),
 	}, wasmkeeper.NewStargateWasmQuerier(app.WasmKeeper))
 
 	// register the proposal types
@@ -508,7 +523,7 @@ func NewTerraApp(
 		stakingtypes.ModuleName, slashingtypes.ModuleName,
 		govtypes.ModuleName, markettypes.ModuleName,
 		oracletypes.ModuleName, treasurytypes.ModuleName,
-		wasmtypes.ModuleName, authz.ModuleName,
+		wasm.ModuleName, authz.ModuleName,
 		minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName,
 		evidencetypes.ModuleName, ibctransfertypes.ModuleName,
@@ -813,7 +828,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
-	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
 
 	return paramsKeeper
 }

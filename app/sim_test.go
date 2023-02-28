@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	terraapp "github.com/classic-terra/core/app"
 	"github.com/classic-terra/core/app/helpers"
-	wasmconfig "github.com/classic-terra/core/x/wasm/config"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -45,7 +45,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := terraapp.NewTerraApp(
 		logger, db, nil, true, map[int64]bool{},
 		terraapp.DefaultNodeHome, simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-		simapp.EmptyAppOptions{}, wasmconfig.DefaultConfig(), interBlockCacheOpt())
+		simapp.EmptyAppOptions{}, wasm.DefaultConfig(), interBlockCacheOpt())
 
 	// Run randomized simulation:w
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -113,7 +113,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			app := terraapp.NewTerraApp(
 				logger, db, nil, true, map[int64]bool{}, terraapp.DefaultNodeHome,
 				simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-				simapp.EmptyAppOptions{}, wasmconfig.DefaultConfig(), interBlockCacheOpt())
+				simapp.EmptyAppOptions{}, wasm.DefaultConfig(), interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

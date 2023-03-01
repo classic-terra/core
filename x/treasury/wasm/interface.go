@@ -58,7 +58,7 @@ func (querier WasmQuerier) QueryCustom(ctx sdk.Context, data json.RawMessage) ([
 
 	var bz []byte
 
-	if query.TaxRate != nil {
+	if query.TaxRate != nil { //nolint:gocritic
 		rate := querier.keeper.GetTaxRate(ctx)
 		bz, err = json.Marshal(TaxRateQueryResponse{Rate: rate.String()})
 	} else if query.TaxCap != nil {

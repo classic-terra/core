@@ -14,7 +14,7 @@ import (
 var _ wasm.WasmMsgParserInterface = WasmMsgParser{}
 
 // WasmMsgParser - wasm msg parser for staking msgs
-type WasmMsgParser struct{}
+type WasmMsgParser struct{} //nolint:revive
 
 // NewWasmMsgParser returns bank wasm msg parser
 func NewWasmMsgParser() WasmMsgParser {

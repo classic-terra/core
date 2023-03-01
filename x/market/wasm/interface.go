@@ -19,7 +19,7 @@ var (
 )
 
 // WasmMsgParser - wasm msg parser for staking msgs
-type WasmMsgParser struct{}
+type WasmMsgParser struct{} //nolint:revive
 
 // NewWasmMsgParser returns bank wasm msg parser
 func NewWasmMsgParser() WasmMsgParser {
@@ -57,7 +57,7 @@ func (WasmMsgParser) ParseCustom(contractAddr sdk.AccAddress, data json.RawMessa
 }
 
 // WasmQuerier - staking query interface for wasm contract
-type WasmQuerier struct {
+type WasmQuerier struct { //nolint:revive
 	keeper keeper.Keeper
 }
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -72,7 +72,7 @@ $ terrad tx store ./path-to-binary --migrate-code-id 3
 			}
 
 			// parse coins trying to be sent
-			wasmBytes, err := ioutil.ReadFile(args[0])
+			wasmBytes, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}

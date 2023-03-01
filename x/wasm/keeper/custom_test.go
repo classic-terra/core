@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"testing"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -121,7 +121,7 @@ func TestInstantiateMaker(t *testing.T) {
 	_, _, creatorAddr := keyPubAddr()
 
 	// upload staking derivatives code
-	makingCode, err := ioutil.ReadFile("./testdata/maker.wasm")
+	makingCode, err := os.ReadFile("./testdata/maker.wasm")
 	require.NoError(t, err)
 	makerID, err := keeper.StoreCode(ctx, creatorAddr, makingCode)
 	require.NoError(t, err)
@@ -410,7 +410,7 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 	_, creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
 
 	// upload staking derivatives code
-	makingCode, err := ioutil.ReadFile("./testdata/maker.wasm")
+	makingCode, err := os.ReadFile("./testdata/maker.wasm")
 	require.NoError(t, err)
 	makerID, err := keeper.StoreCode(ctx, creatorAddr, makingCode)
 	require.NoError(t, err)
@@ -447,7 +447,7 @@ func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bi
 	_, creatorAddr = createFakeFundedAccount(ctx, accKeeper, bankKeeper, sdk.NewCoins(initCoin))
 
 	// upload binding_tester contract codes
-	bindingsTCode, err := ioutil.ReadFile("./testdata/bindings_tester.wasm")
+	bindingsTCode, err := os.ReadFile("./testdata/bindings_tester.wasm")
 	require.NoError(t, err)
 	bindingsTesterID, err := keeper.StoreCode(ctx, creatorAddr, bindingsTCode)
 	require.NoError(t, err)

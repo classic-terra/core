@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -94,14 +94,14 @@ func TestReflectReflectContractSend(t *testing.T) {
 	_, _, bob := keyPubAddr()
 
 	// upload reflect code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	reflectID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), reflectID)
 
 	// upload hackatom escrow code
-	escrowCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	escrowCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 	escrowID, err := keeper.StoreCode(ctx, creator, escrowCode)
 	require.NoError(t, err)
@@ -175,7 +175,7 @@ func TestReflectStargateQuery(t *testing.T) {
 	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, funds)
 
 	// upload code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	codeID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)
@@ -249,7 +249,7 @@ func TestMaskReflectWasmQueries(t *testing.T) {
 	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload reflect code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	reflectID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)
@@ -321,7 +321,7 @@ func TestWasmRawQueryWithNil(t *testing.T) {
 	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload reflect code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	reflectID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)
@@ -413,7 +413,7 @@ func TestReflectInvalidStargateQuery(t *testing.T) {
 	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, funds)
 
 	// upload code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	codeID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)

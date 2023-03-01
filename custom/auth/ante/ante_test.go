@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	terraapp "github.com/classic-terra/core/app"
@@ -49,7 +48,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 		simapp.EmptyAppOptions{}, wasmconfig.DefaultConfig(),
 	)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())

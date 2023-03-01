@@ -2,8 +2,8 @@ package simulation
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -111,7 +111,7 @@ func WeightedOperations(
 }
 
 func mustLoad(path string) []byte {
-	bz, err := ioutil.ReadFile(path)
+	bz, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
@@ -120,7 +120,6 @@ func mustLoad(path string) []byte {
 
 var testContract []byte
 
-//nolint: funlen
 func SimulateMsgStoreCode(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -184,7 +183,6 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 	return key, pub, addr
 }
 
-//nolint: funlen
 func SimulateMsgInstantiateContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -244,7 +242,6 @@ func SimulateMsgInstantiateContract(
 	}
 }
 
-//nolint: funlen
 func SimulateMsgExecuteContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -310,7 +307,6 @@ func SimulateMsgExecuteContract(
 	}
 }
 
-//nolint: funlen
 func SimulateMsgMigrateContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -382,7 +378,6 @@ func SimulateMsgMigrateContract(
 	}
 }
 
-//nolint: funlen
 func SimulateMsgUpdateContractAdmin(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -442,7 +437,6 @@ func SimulateMsgUpdateContractAdmin(
 	}
 }
 
-//nolint: funlen
 func SimulateMsgClearContractAdmin(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,

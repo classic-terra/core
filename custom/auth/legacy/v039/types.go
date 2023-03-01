@@ -1,8 +1,5 @@
 package v039
 
-// DONTCOVER
-// nolint
-
 import (
 	"errors"
 

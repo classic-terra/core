@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -110,7 +110,7 @@ func TestInitializeStaking(t *testing.T) {
 	_, creatorAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload staking derivative code
-	stakingCode, err := ioutil.ReadFile("./testdata/staking.wasm")
+	stakingCode, err := os.ReadFile("./testdata/staking.wasm")
 	require.NoError(t, err)
 	stakingID, err := keeper.StoreCode(ctx, creatorAddr, stakingCode)
 	require.NoError(t, err)
@@ -178,7 +178,7 @@ func initializeStaking(t *testing.T, input TestInput) InitInfo {
 	_, creatorAddr := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload staking derivative code
-	stakingCode, err := ioutil.ReadFile("./testdata/staking.wasm")
+	stakingCode, err := os.ReadFile("./testdata/staking.wasm")
 	require.NoError(t, err)
 	stakingID, err := keeper.StoreCode(ctx, creatorAddr, stakingCode)
 	require.NoError(t, err)
@@ -432,7 +432,7 @@ func TestQueryStakingInfo(t *testing.T) {
 	_, creator := createFakeFundedAccount(ctx, accKeeper, bankKeeper, deposit)
 
 	// upload mask code
-	maskCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	maskCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	maskID, err := keeper.StoreCode(ctx, creator, maskCode)
 	require.NoError(t, err)

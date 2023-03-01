@@ -56,7 +56,7 @@ func buildEvent(
 	eventType string,
 	contractAddr sdk.AccAddress,
 	attributes wasmvmtypes.EventAttributes,
-) (*sdk.Event, error) {
+) (*sdk.Event, error) { //nolint:unparam
 	if len(attributes) == 0 {
 		return nil, nil
 	}

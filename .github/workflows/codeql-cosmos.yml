@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: "CodeQL for cosmos"
 
 on:
   pull_request:

@@ -40,15 +40,15 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+
 	marketkeeper "github.com/classic-terra/core/x/market/keeper"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/x/oracle/types"
 	treasurykeeper "github.com/classic-terra/core/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
-	wasmconfig "github.com/classic-terra/core/x/wasm/config"
-	wasmkeeper "github.com/classic-terra/core/x/wasm/keeper"
-	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 
 	bankwasm "github.com/classic-terra/core/custom/bank/wasm"
 	distrwasm "github.com/classic-terra/core/custom/distribution/wasm"
@@ -105,7 +105,7 @@ func NewAppKeepers(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	wasmConfig *wasmconfig.Config,
+	wasmOpts []wasm.Option,
 	appOpts servertypes.AppOptions,
 ) AppKeepers {
 	appKeepers := AppKeepers{}
@@ -122,6 +122,7 @@ func NewAppKeepers(
 	scopedIBCKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -215,13 +216,29 @@ func NewAppKeepers(
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
 		distrtypes.ModuleName)
 
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,token_factory"
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
-		appCodec, appKeepers.keys[wasmtypes.StoreKey],
-		appKeepers.GetSubspace(wasmtypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper,
-		appKeepers.TreasuryKeeper, bApp.MsgServiceRouter(),
-		bApp.GRPCQueryRouter(), wasmtypes.DefaultFeatures,
-		homePath, wasmConfig,
+		appCodec,
+		appKeepers.keys[wasm.StoreKey],
+		appKeepers.GetSubspace(wasm.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.StakingKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		appKeepers.TransferKeeper,
+		bApp.MsgServiceRouter(),
+		bApp.GRPCQueryRouter(),
+		homePath,
+		wasmConfig,
+		supportedFeatures,
+		wasmOpts,
 	)
 
 	// register wasm msg parser & querier
@@ -274,7 +291,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
-	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
 
 	return paramsKeeper
 }

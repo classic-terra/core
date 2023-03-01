@@ -120,7 +120,7 @@ func mustLoad(path string) []byte {
 
 var testContract []byte
 
-// nolint: funlen
+//nolint: funlen
 func SimulateMsgStoreCode(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -184,7 +184,7 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 	return key, pub, addr
 }
 
-// nolint: funlen
+//nolint: funlen
 func SimulateMsgInstantiateContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -244,7 +244,7 @@ func SimulateMsgInstantiateContract(
 	}
 }
 
-// nolint: funlen
+//nolint: funlen
 func SimulateMsgExecuteContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -310,7 +310,7 @@ func SimulateMsgExecuteContract(
 	}
 }
 
-// nolint: funlen
+//nolint: funlen
 func SimulateMsgMigrateContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -382,7 +382,7 @@ func SimulateMsgMigrateContract(
 	}
 }
 
-// nolint: funlen
+//nolint: funlen
 func SimulateMsgUpdateContractAdmin(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -442,7 +442,7 @@ func SimulateMsgUpdateContractAdmin(
 	}
 }
 
-// nolint: funlen
+//nolint: funlen
 func SimulateMsgClearContractAdmin(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,

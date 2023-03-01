@@ -422,11 +422,13 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 	}
 
 	initBz, err := json.Marshal(&initMsg)
+	require.NoError(t, err)
+
 	makerAddr, _, err = keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, initBz, nil)
 	require.NoError(t, err)
 	require.NotEmpty(t, makerAddr)
 
-	return
+	return input, creatorAddr, makerAddr, initCoin
 }
 
 func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bindingsTesterAddr sdk.AccAddress, initCoin sdk.Coin) {
@@ -455,9 +457,10 @@ func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bi
 
 	type EmptyStruct struct{}
 	initBz, err := json.Marshal(&EmptyStruct{})
+	require.NoError(t, err)
 	bindingsTesterAddr, _, err = keeper.InstantiateContract(input.Ctx, bindingsTesterID, creatorAddr, sdk.AccAddress{}, initBz, nil)
 	require.NoError(t, err)
 	require.NotEmpty(t, bindingsTesterAddr)
 
-	return
+	return input, creatorAddr, bindingsTesterAddr, initCoin
 }

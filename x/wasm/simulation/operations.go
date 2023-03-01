@@ -3,11 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"math/rand"
-	"os"
 	"strings"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -110,14 +106,6 @@ func WeightedOperations(
 	}
 }
 
-func mustLoad(path string) []byte {
-	bz, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	return bz
-}
-
 var testContract []byte
 
 func SimulateMsgStoreCode(
@@ -174,13 +162,6 @@ func SimulateMsgStoreCode(
 type initMsg struct {
 	Verifier    string `json:"verifier"`
 	Beneficiary string `json:"beneficiary"`
-}
-
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := ed25519.GenPrivKey()
-	pub := key.PubKey()
-	addr := sdk.AccAddress(pub.Address())
-	return key, pub, addr
 }
 
 func SimulateMsgInstantiateContract(

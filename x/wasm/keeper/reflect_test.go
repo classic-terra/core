@@ -210,6 +210,7 @@ func TestReflectStargateQuery(t *testing.T) {
 		Address: creator.String(),
 	}
 	protoQueryBin, err := proto.Marshal(&protoQuery)
+	require.NoError(t, err)
 	protoRequest := wasmvmtypes.QueryRequest{
 		Stargate: &wasmvmtypes.StargateQuery{
 			Path: "/cosmos.bank.v1beta1.Query/AllBalances",
@@ -370,12 +371,6 @@ func checkAccount(t *testing.T, ctx sdk.Context, accKeeper authkeeper.AccountKee
 			assert.Equal(t, expected, balance)
 		}
 	}
-}
-
-/**** Code to support custom messages *****/
-type reflectCustomMsg struct {
-	Debug string `json:"debug,omitempty"`
-	Raw   []byte `json:"raw,omitempty"`
 }
 
 func TestReflectInvalidStargateQuery(t *testing.T) {

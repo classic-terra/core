@@ -621,7 +621,7 @@ func nextBlock(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper) sdk.Context 
 // also allocate that coins to validator rewards pool
 func setValidatorRewards(
 	ctx sdk.Context,
-	accountKeeper authkeeper.AccountKeeper,
+	accountKeeper authkeeper.AccountKeeper, //nolint:unparam
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper stakingkeeper.Keeper,
 	distKeeper distrkeeper.Keeper,

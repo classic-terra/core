@@ -18,8 +18,8 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/ibc-go/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/modules/core"
+	"github.com/cosmos/ibc-go/v4/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

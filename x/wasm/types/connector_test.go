@@ -134,7 +134,7 @@ func TestBuildEvent(t *testing.T) {
 	), *event)
 }
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) { //nolint:unparam
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())

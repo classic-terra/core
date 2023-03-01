@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // this is the correct import for protobuf
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

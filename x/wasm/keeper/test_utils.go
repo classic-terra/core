@@ -392,7 +392,7 @@ func createFakeFundedAccount(ctx sdk.Context, ak authkeeper.AccountKeeper, bk ba
 	return priv, addr
 }
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) { //nolint:unparam
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())

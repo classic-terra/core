@@ -8,7 +8,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -582,7 +581,7 @@ func addValidator(
 	pubKey := privKey.PubKey()
 	addr := sdk.ValAddress(pubKey.Address())
 
-	pkAny, _ := codectypes.NewAnyWithValue(cryptotypes.PubKey(simapp.CreateTestPubKeys(1)[0]))
+	pkAny, _ := codectypes.NewAnyWithValue(simapp.CreateTestPubKeys(1)[0])
 	_, owner := createFakeFundedAccount(ctx, accountKeeper, bankKeeper, sdk.Coins{value})
 
 	msg := stakingtypes.MsgCreateValidator{

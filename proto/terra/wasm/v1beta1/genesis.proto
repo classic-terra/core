@@ -4,7 +4,7 @@ package terra.wasm.v1beta1;
 import "gogoproto/gogo.proto";
 import "terra/wasm/v1beta1/wasm.proto";
 
-option go_package = "github.com/classic-terra/core/x/wasm/types";
+option go_package = "github.com/CosmWasm/wasmd/x/wasm/types";
 
 // GenesisState defines the oracle module's genesis state.
 message GenesisState {

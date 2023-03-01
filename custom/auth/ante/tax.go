@@ -3,6 +3,7 @@ package ante
 import (
 	"fmt"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
@@ -11,7 +12,6 @@ import (
 	core "github.com/classic-terra/core/types"
 	marketexported "github.com/classic-terra/core/x/market/exported"
 	oracleexported "github.com/classic-terra/core/x/oracle/exported"
-	wasmexported "github.com/classic-terra/core/x/wasm/exported"
 )
 
 // MaxOracleMsgGasUsage is constant expected oracle msg gas cost
@@ -142,10 +142,10 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 		case *marketexported.MsgSwapSend:
 			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin))...)
 
-		case *wasmexported.MsgInstantiateContract:
+		case *wasm.MsgInstantiateContract:
 			taxes = taxes.Add(computeTax(ctx, tk, msg.InitCoins)...)
 
-		case *wasmexported.MsgExecuteContract:
+		case *wasm.MsgExecuteContract:
 			taxes = taxes.Add(computeTax(ctx, tk, msg.Coins)...)
 
 		case *authz.MsgExec:

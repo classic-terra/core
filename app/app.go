@@ -99,6 +99,8 @@ import (
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 	core "github.com/classic-terra/core/types"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/classic-terra/core/x/market"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	"github.com/classic-terra/core/x/oracle"
@@ -109,6 +111,7 @@ import (
 	"github.com/classic-terra/core/x/vesting"
 	"github.com/classic-terra/core/x/wasm"
 	wasmconfig "github.com/classic-terra/core/x/wasm/config"
+	wasmkeeper "github.com/classic-terra/core/x/wasm/keeper"
 	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 
 	"github.com/classic-terra/core/app/keepers"
@@ -226,7 +229,7 @@ func init() {
 func NewTerraApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig terraappparams.EncodingConfig, appOpts servertypes.AppOptions,
-	wasmConfig *wasmconfig.Config, baseAppOptions ...func(*baseapp.BaseApp),
+	wasmOpts []wasm.Option, baseAppOptions ...func(*baseapp.BaseApp),
 ) *TerraApp {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
@@ -236,6 +239,17 @@ func NewTerraApp(
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
+
+	keys := sdk.NewKVStoreKeys(
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+		oracletypes.StoreKey, markettypes.StoreKey, treasurytypes.StoreKey,
+		wasm.StoreKey, authzkeeper.StoreKey, feegrant.StoreKey,
+	)
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &TerraApp{
 		BaseApp:           bApp,
@@ -634,6 +648,28 @@ func GetMaccPerms() map[string][]string {
 		dupMaccPerms[k] = v
 	}
 	return dupMaccPerms
+}
+
+// initParamsKeeper init params keeper and its subspaces
+func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
+
+	paramsKeeper.Subspace(authtypes.ModuleName)
+	paramsKeeper.Subspace(banktypes.ModuleName)
+	paramsKeeper.Subspace(stakingtypes.ModuleName)
+	paramsKeeper.Subspace(minttypes.ModuleName)
+	paramsKeeper.Subspace(distrtypes.ModuleName)
+	paramsKeeper.Subspace(slashingtypes.ModuleName)
+	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
+	paramsKeeper.Subspace(crisistypes.ModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(markettypes.ModuleName)
+	paramsKeeper.Subspace(oracletypes.ModuleName)
+	paramsKeeper.Subspace(treasurytypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
+
+	return paramsKeeper
 }
 
 func (app *TerraApp) setupUpgradeHandlers() {

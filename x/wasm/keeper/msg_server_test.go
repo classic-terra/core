@@ -71,6 +71,7 @@ func TestExecuteExceedMaxGas(t *testing.T) {
 	require.NoError(t, err)
 
 	addr, _, err := keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, nil)
+	require.NoError(t, err)
 
 	// must panic
 	require.Panics(t, func() {
@@ -106,6 +107,7 @@ func TestMigrateExceedMaxGas(t *testing.T) {
 	require.NoError(t, err)
 
 	addr, _, err := keeper.InstantiateContract(ctx, codeID, creator, sdk.AccAddress{}, initMsgBz, nil)
+	require.NoError(t, err)
 
 	// must panic
 	require.Panics(t, func() {

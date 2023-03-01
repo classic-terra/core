@@ -57,11 +57,6 @@ type simulateQuery struct {
 	OfferCoin wasmvmtypes.Coin `json:"offer"`
 }
 
-type simulateResponse struct {
-	SellCoin wasmvmtypes.Coin `json:"sell"`
-	BuyCoin  wasmvmtypes.Coin `json:"buy"`
-}
-
 // MakerTreasuryQuerymsg nolint
 type MakerTreasuryQuerymsg struct {
 	Reflect treasuryQueryMsg `json:"reflect,omitempty"`

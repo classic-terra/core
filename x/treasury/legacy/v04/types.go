@@ -1,5 +1,5 @@
 // DONTCOVER
-// nolint
+//nolint
 package v04
 
 import (

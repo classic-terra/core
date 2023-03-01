@@ -28,7 +28,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	*types.ModuleCdc = *customtypes.ModuleCdc // nolint
 }
 
-//____________________________________________________________________________
+// ____________________________________________________________________________
 
 // AppModule implements an application module for the auth module.
 type AppModule struct {

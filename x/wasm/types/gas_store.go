@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,10 +17,10 @@ var _ types.KVStore = &Store{}
 func KVStore(ctx sdk.Context, key sdk.StoreKey) types.KVStore {
 	if (ctx.ChainID() == "bombay-12" && ctx.BlockHeight() < 7_800_000) ||
 		(ctx.ChainID() == "columbus-5" && ctx.BlockHeight() < 6_470_000) {
-		return gaskv.NewStore(ctx.MultiStore().GetKVStore(key), ctx.GasMeter(), stypes.KVGasConfig())
+		return gaskv.NewStore(ctx.MultiStore().GetKVStore(key), ctx.GasMeter(), types.KVGasConfig())
 	}
 
-	return NewStore(ctx.MultiStore().GetKVStore(key), ctx.GasMeter(), stypes.KVGasConfig())
+	return NewStore(ctx.MultiStore().GetKVStore(key), ctx.GasMeter(), types.KVGasConfig())
 }
 
 // Store applies gas tracking to an underlying KVStore. It implements the

@@ -80,7 +80,8 @@ func TestOracleThreshold(t *testing.T) {
 	// Case 3.
 	// Increase voting power of absent validator, exchange rate consensus fails
 	val, _ := input.StakingKeeper.GetValidator(input.Ctx, keeper.ValAddrs[2])
-	input.StakingKeeper.Delegate(input.Ctx.WithBlockHeight(0), keeper.Addrs[2], stakingAmt.MulRaw(3), stakingtypes.Unbonded, val, false)
+	_, err = input.StakingKeeper.Delegate(input.Ctx.WithBlockHeight(0), keeper.Addrs[2], stakingAmt.MulRaw(3), stakingtypes.Unbonded, val, false)
+	require.NoError(t, err)
 
 	salt = "1"
 	hash = types.GetAggregateVoteHash(salt, exchangeRateStr, keeper.ValAddrs[0])

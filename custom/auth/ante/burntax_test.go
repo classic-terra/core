@@ -68,6 +68,8 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	require.Equal(amountFeeBefore, taxes)
 
 	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
+	require.NoError(err)
+
 	fmt.Printf(
 		"Before: TotalSupply %v, Community %v, FeeCollector %v\n",
 		totalSupplyBefore,
@@ -96,6 +98,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	tk.BurnCoinsFromBurnAccount(suite.ctx)
 
 	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
+	require.NoError(err)
 
 	if !burnTax.Empty() {
 		// expected: total supply = tax - split tax
@@ -117,6 +120,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	)
 }
 
+// TODO: this function should return an error
 func (suite *AnteTestSuite) DeductFees(sendAmount int64) sdk.Coins {
 	tk := suite.app.TreasuryKeeper
 	expectedTax := tk.GetTaxRate(suite.ctx).MulInt64(sendAmount).TruncateInt()
@@ -125,9 +129,9 @@ func (suite *AnteTestSuite) DeductFees(sendAmount int64) sdk.Coins {
 	}
 	taxes := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, expectedTax.Int64()))
 	bk := suite.app.BankKeeper
-	bk.MintCoins(suite.ctx, minttypes.ModuleName, taxes)
+	bk.MintCoins(suite.ctx, minttypes.ModuleName, taxes) //nolint:errcheck
 	// populate the FeeCollector module with taxes
-	bk.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, types.FeeCollectorName, taxes)
+	bk.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, types.FeeCollectorName, taxes) //nolint:errcheck
 
 	return taxes
 }

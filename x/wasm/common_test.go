@@ -72,7 +72,10 @@ func createFakeFundedAccount(
 		panic(err)
 	}
 
-	bk.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, coins)
+	err := bk.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, coins)
+	if err != nil {
+		panic(err)
+	}
 
 	return addr
 }

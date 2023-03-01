@@ -134,6 +134,8 @@ func TestInstantiateMaker(t *testing.T) {
 	}
 
 	initBz, err := json.Marshal(&initMsg)
+	require.NoError(t, err)
+
 	makerAddr, _, err := keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, initBz, nil)
 	require.NoError(t, err)
 	require.NotEmpty(t, makerAddr)
@@ -287,6 +289,8 @@ func TestBuyMsg(t *testing.T) {
 	ctx, keeper, accKeeper, bankKeeper := input.Ctx, input.WasmKeeper, input.AccKeeper, input.BankKeeper
 
 	retCoin, spread, err := input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
+	require.NoError(t, err)
+
 	expectedRetCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()))
 
 	// buy without limit
@@ -295,6 +299,7 @@ func TestBuyMsg(t *testing.T) {
 	}
 
 	bz, err := json.Marshal(&buyMsg)
+	require.NoError(t, err)
 
 	// normal buy
 	_, err = keeper.ExecuteContract(ctx, makerAddr, creatorAddr, bz, sdk.NewCoins(offerCoin))

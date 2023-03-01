@@ -154,8 +154,12 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 			acc := ak.NewAccountWithAddress(suite.ctx, addrs[i])
 			suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
 			ak.SetAccount(suite.ctx, acc)
-			bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
-			bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+			err = bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
+			suite.NoError(err)
+
+			err = bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+			suite.NoError(err)
+
 		}
 
 		// case 1 provides zero fee so not enough fee

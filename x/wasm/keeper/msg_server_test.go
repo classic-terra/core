@@ -42,7 +42,7 @@ func TestInstantiateExceedMaxGas(t *testing.T) {
 		params := keeper.GetParams(ctx)
 		params.MaxContractGas = types.InstantiateContractCosts(0) + 1
 		keeper.SetParams(ctx, params)
-		NewMsgServerImpl(keeper).InstantiateContract(ctx.Context(), types.NewMsgInstantiateContract(creator, sdk.AccAddress{}, codeID, initMsgBz, nil))
+		NewMsgServerImpl(keeper).InstantiateContract(ctx.Context(), types.NewMsgInstantiateContract(creator, sdk.AccAddress{}, codeID, initMsgBz, nil)) //nolint:errcheck
 	})
 }
 
@@ -77,7 +77,7 @@ func TestExecuteExceedMaxGas(t *testing.T) {
 		params := keeper.GetParams(ctx)
 		params.MaxContractGas = types.InstantiateContractCosts(0) + 1
 		keeper.SetParams(ctx, params)
-		NewMsgServerImpl(keeper).ExecuteContract(ctx.Context(), types.NewMsgExecuteContract(creator, addr, []byte(`{"release":{}}`), nil))
+		NewMsgServerImpl(keeper).ExecuteContract(ctx.Context(), types.NewMsgExecuteContract(creator, addr, []byte(`{"release":{}}`), nil)) //nolint:errcheck
 	})
 }
 
@@ -112,6 +112,6 @@ func TestMigrateExceedMaxGas(t *testing.T) {
 		params := keeper.GetParams(ctx)
 		params.MaxContractGas = types.InstantiateContractCosts(0) + 1
 		keeper.SetParams(ctx, params)
-		NewMsgServerImpl(keeper).MigrateContract(ctx.Context(), types.NewMsgMigrateContract(creator, addr, codeID, []byte(`{"release":{}}`)))
+		NewMsgServerImpl(keeper).MigrateContract(ctx.Context(), types.NewMsgMigrateContract(creator, addr, codeID, []byte(`{"release":{}}`))) //nolint:errcheck
 	})
 }

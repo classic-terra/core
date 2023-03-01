@@ -873,8 +873,10 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 			fundCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1000000000))
 			acc := ak.NewAccountWithAddress(suite.ctx, addrs[i])
 			ak.SetAccount(suite.ctx, acc)
-			bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
-			bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+			err := bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
+			require.NoError(err)
+			err = bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+			require.NoError(err)
 		}
 
 		// msg and signatures

@@ -282,7 +282,8 @@ func TestLegacyQuerySeigniorageProceeds(t *testing.T) {
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
 
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek))
-	input.BankKeeper.BurnCoins(input.Ctx, faucetAccountName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, targetSeigniorage)))
+	err := input.BankKeeper.BurnCoins(input.Ctx, faucetAccountName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, targetSeigniorage)))
+	require.NoError(t, err)
 
 	queriedSeigniorageProceeds := getQueriedSeigniorageProceeds(t, input.Ctx, input.Cdc, querier, input.TreasuryKeeper.GetEpoch(input.Ctx))
 

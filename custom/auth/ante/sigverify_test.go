@@ -188,7 +188,7 @@ func (suite *AnteTestSuite) TestSigVerification() {
 				},
 				Sequence: tc.accSeqs[0],
 			}
-			suite.txBuilder.SetSignatures(txSigs...)
+			suite.txBuilder.SetSignatures(txSigs...) //nolint:errcheck
 			tx = suite.txBuilder.GetTx()
 		}
 

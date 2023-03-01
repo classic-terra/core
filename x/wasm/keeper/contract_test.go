@@ -217,7 +217,7 @@ func TestExecute(t *testing.T) {
 
 	// unauthorized - trialCtx so we don't change state
 	trialCtx := ctx.WithMultiStore(ctx.MultiStore().CacheWrap().(sdk.MultiStore))
-	res, err := keeper.ExecuteContract(trialCtx, addr, creator, []byte(`{"release":{}}`), nil)
+	_, err = keeper.ExecuteContract(trialCtx, addr, creator, []byte(`{"release":{}}`), nil)
 	require.Error(t, err)
 	require.Equal(t, "Unauthorized: execute wasm contract failed", err.Error())
 
@@ -225,7 +225,7 @@ func TestExecute(t *testing.T) {
 	start := time.Now()
 	gasBefore := ctx.GasMeter().GasConsumed()
 
-	res, err = keeper.ExecuteContract(ctx, addr, fred, []byte(`{"release":{}}`), topUp)
+	res, err := keeper.ExecuteContract(ctx, addr, fred, []byte(`{"release":{}}`), topUp)
 	diff := time.Since(start)
 	require.NoError(t, err)
 	require.NotNil(t, res)

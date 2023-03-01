@@ -126,13 +126,13 @@ func TestAggregatePrevoteVote(t *testing.T) {
 	require.Error(t, err)
 
 	// Invalid reveal period
-	aggregateExchangeRateVoteMsg := types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, sdk.AccAddress(keeper.Addrs[0]), keeper.ValAddrs[0])
+	aggregateExchangeRateVoteMsg := types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, keeper.Addrs[0], keeper.ValAddrs[0])
 	_, err = h(input.Ctx, aggregateExchangeRateVoteMsg)
 	require.Error(t, err)
 
 	// Invalid reveal period
 	input.Ctx = input.Ctx.WithBlockHeight(2)
-	aggregateExchangeRateVoteMsg = types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, sdk.AccAddress(keeper.Addrs[0]), keeper.ValAddrs[0])
+	aggregateExchangeRateVoteMsg = types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, keeper.Addrs[0], keeper.ValAddrs[0])
 	_, err = h(input.Ctx, aggregateExchangeRateVoteMsg)
 	require.Error(t, err)
 

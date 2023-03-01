@@ -323,8 +323,6 @@ func SimulateMsgMigrateContract(
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMigrateContract, "unable to generate fee"), nil, err
 		}
 
-		spendableCoins = spendableCoins.Sub(fees)
-
 		migData := map[string]interface{}{
 			"verifier": info.Creator,
 		}

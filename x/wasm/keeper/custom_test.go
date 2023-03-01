@@ -156,6 +156,8 @@ func TestMarketQuerier(t *testing.T) {
 	}
 
 	retCoin, spread, err := marketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
+	require.NoError(t, err)
+
 	retAmount := retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()
 
 	bz, err := json.Marshal(swapQueryMsg)
@@ -316,6 +318,8 @@ func TestBuyAndSendMsg(t *testing.T) {
 	treasuryKeeper.SetTaxRate(ctx, sdk.ZeroDec())
 
 	retCoin, spread, err := input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
+	require.NoError(t, err)
+
 	expectedRetCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()))
 
 	// buy without limit
@@ -326,6 +330,7 @@ func TestBuyAndSendMsg(t *testing.T) {
 	}
 
 	bz, err := json.Marshal(&buyMsg)
+	require.NoError(t, err)
 
 	// normal buy
 	_, err = keeper.ExecuteContract(ctx, makerAddr, creatorAddr, bz, sdk.NewCoins(offerCoin))
@@ -346,6 +351,8 @@ func TestSellMsg(t *testing.T) {
 	require.NoError(t, err)
 
 	retCoin, spread, err := input.MarketKeeper.ComputeSwap(input.Ctx, sellCoin, core.MicroSDRDenom)
+	require.NoError(t, err)
+
 	expectedRetCoins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()))
 
 	// sell without limit
@@ -354,6 +361,7 @@ func TestSellMsg(t *testing.T) {
 	}
 
 	bz, err := json.Marshal(&sellMsg)
+	require.NoError(t, err)
 
 	// normal sell
 	_, err = keeper.ExecuteContract(ctx, makerAddr, creatorAddr, bz, sdk.NewCoins(sellCoin))
@@ -384,6 +392,7 @@ func TestSendMsg(t *testing.T) {
 	}
 
 	bz, err := json.Marshal(&sendMsg)
+	require.NoError(t, err)
 
 	expectedTaxAmount := taxRate.MulInt(offerCoin.Amount).TruncateInt()
 	if expectedTaxAmount.GT(taxCap) {
@@ -431,7 +440,7 @@ func setupMakerContract(t *testing.T) (input TestInput, creatorAddr, makerAddr s
 	return input, creatorAddr, makerAddr, initCoin
 }
 
-func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bindingsTesterAddr sdk.AccAddress, initCoin sdk.Coin) {
+func setupBindingsTesterContract(t *testing.T) (input TestInput, creatorAddr, bindingsTesterAddr sdk.AccAddress, initCoin sdk.Coin) { //nolint:unparam
 	input = CreateTestInput(t, config.DefaultConfig())
 
 	ctx, keeper, accKeeper, bankKeeper, oracleKeeper := input.Ctx, input.WasmKeeper, input.AccKeeper, input.BankKeeper, input.OracleKeeper

@@ -163,8 +163,6 @@ func (k Keeper) IterateTaxCap(ctx sdk.Context, handler func(denom string, taxCap
 			break
 		}
 	}
-
-	return
 }
 
 // RecordEpochTaxProceeds adds tax proceeds that have been added this epoch

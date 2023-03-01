@@ -22,7 +22,7 @@ func (k Keeper) GetEpoch(ctx sdk.Context) int64 {
 // - TRL: Computes the Tax Reward per unit Luna (TR/TSL)
 
 // alignCoins align the coins to the given denom through the market swap
-func (k Keeper) alignCoins(ctx sdk.Context, coins sdk.DecCoins, denom string) (alignedAmt sdk.Dec) {
+func (k Keeper) alignCoins(ctx sdk.Context, coins sdk.DecCoins, denom string) (alignedAmt sdk.Dec) { //nolint:unparam
 	alignedAmt = sdk.ZeroDec()
 	for _, coinReward := range coins {
 		if coinReward.Denom != denom {

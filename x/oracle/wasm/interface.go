@@ -15,7 +15,7 @@ import (
 var _ wasm.WasmQuerierInterface = WasmQuerier{}
 
 // WasmQuerier - staking query interface for wasm contract
-type WasmQuerier struct {
+type WasmQuerier struct { //nolint:revive
 	keeper keeper.Keeper
 }
 

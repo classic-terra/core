@@ -670,7 +670,7 @@ func TestAbstainWithSmallStakingPower(t *testing.T) {
 	require.Error(t, err)
 }
 
-func makeAggregatePrevoteAndVote(t *testing.T, input keeper.TestInput, h sdk.Handler, height int64, rates sdk.DecCoins, idx int) {
+func makeAggregatePrevoteAndVote(t *testing.T, input keeper.TestInput, h sdk.Handler, height int64, rates sdk.DecCoins, idx int) { //nolint:unparam
 	// Account 1, SDR
 	salt := "1"
 	hash := types.GetAggregateVoteHash(salt, rates.String(), keeper.ValAddrs[idx])

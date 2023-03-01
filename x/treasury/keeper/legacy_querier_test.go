@@ -18,7 +18,7 @@ import (
 
 const custom = "custom"
 
-func getQueriedTaxRate(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Dec {
+func getQueriedTaxRate(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Dec { //nolint:unparam
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryTaxRate}, "/"),
 		Data: nil,
@@ -76,7 +76,7 @@ func getQueriedTaxCaps(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, qu
 	return response
 }
 
-func getQueriedRewardWeight(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Dec {
+func getQueriedRewardWeight(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Dec { //nolint:unparam
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryRewardWeight}, "/"),
 		Data: nil,
@@ -93,7 +93,7 @@ func getQueriedRewardWeight(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmin
 	return response
 }
 
-func getQueriedTaxProceeds(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Coins {
+func getQueriedTaxProceeds(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Coins { //nolint:unparam
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryTaxProceeds}, "/"),
 		Data: nil,
@@ -110,7 +110,7 @@ func getQueriedTaxProceeds(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino
 	return response
 }
 
-func getQueriedSeigniorageProceeds(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Int {
+func getQueriedSeigniorageProceeds(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, epoch int64) sdk.Int { //nolint:unparam
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QuerySeigniorageProceeds}, "/"),
 		Data: nil,

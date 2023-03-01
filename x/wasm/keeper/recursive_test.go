@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -95,6 +96,7 @@ func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.Acc
 	return contractAddr, creator, ctx, keeper, cdc
 }
 
+// go test -v -run ^TestGasCostOnQuery$ github.com/classic-terra/core/x/wasm/keeper
 func TestGasCostOnQuery(t *testing.T) {
 	GasNoWork := types.InstantiateContractCosts(0) + 3_509
 	// Note: about 100 SDK gas (10k wasmVM gas) for each round of sha256
@@ -163,7 +165,9 @@ func TestGasCostOnQuery(t *testing.T) {
 			recurse := tc.msg
 			recurse.Contract = contractAddr
 			msg := buildQuery(t, recurse)
+			fmt.Printf("gas meter before query to contract = %v \n", ctx.GasMeter().GasConsumed())
 			data, err := keeper.queryToContract(ctx, contractAddr, msg)
+			fmt.Printf("gas meter after query to contract = %v \n", ctx.GasMeter().GasConsumed())
 			require.NoError(t, err)
 
 			// check the gas is what we expected
@@ -182,6 +186,7 @@ func TestGasCostOnQuery(t *testing.T) {
 	}
 }
 
+// go test -v -run ^TestGasOnExternalQuery$ github.com/classic-terra/core/x/wasm/keeper
 func TestGasOnExternalQuery(t *testing.T) {
 	GasNoWork := types.InstantiateContractCosts(0) + 3_509
 	// Note: about 100 SDK gas (10k wasmVM gas) for each round of sha256

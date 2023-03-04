@@ -38,11 +38,15 @@ It is hard to invoke a begin, end block logic without first understanding what e
 
 Details implementation for framework above
 
-## Continous integration
+## Functional continous integration
+
+![ci-flow](../assets/ci-flow.drawio.png)
 
 Goal: 
 * Quickly check for errors in code base
 * Setting up e2e testing in golang instead of script allows much closer check on the chain inner working. It will also allow go test to use it.
+
+This will affect currently test.yml and sims.yml
 
 ### Build environment
 
@@ -67,11 +71,17 @@ Goal:
 
 6. fuzz test: 
     * test-sim-multi-seed-short
+    * test-sim-multi-seed-long
     * test-sim-after-import
     * test-sim-import-export
     * test-sim-nondeterminism
-    * test broken smart contract
-    * test broken ibc request
+    * test sim smart contract (for terra query request since we maintain a custom implementation of this)
+
+## Non - functional continous integration
+
+1. linting
+2. proto
+3. codeql
 
 ## Continous delivery
 

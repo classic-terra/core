@@ -94,11 +94,11 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 				ExchangeRates: items,
 			})
 
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-		}
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+			}
 
-		return bz, nil
+			return bz, nil
 		
 		case contractQuery.TaxRate != nil:
 			rate := qp.treasuryKeeper.GetTaxRate(ctx)

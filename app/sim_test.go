@@ -42,10 +42,12 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
+	var emptyWasmOpts []wasm.Option
+
 	app := terraapp.NewTerraApp(
 		logger, db, nil, true, map[int64]bool{},
 		terraapp.DefaultNodeHome, simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-		simapp.EmptyAppOptions{}, wasm.DefaultConfig(), interBlockCacheOpt())
+		simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt())
 
 	// Run randomized simulation:w
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -110,10 +112,11 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
+			var emptyWasmOpts []wasm.Option
 			app := terraapp.NewTerraApp(
 				logger, db, nil, true, map[int64]bool{}, terraapp.DefaultNodeHome,
 				simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-				simapp.EmptyAppOptions{}, wasm.DefaultConfig(), interBlockCacheOpt())
+				simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

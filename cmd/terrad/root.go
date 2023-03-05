@@ -192,7 +192,6 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
-		cache.SetCacheSize(cast.ToUint(appOpts.Get(server.FlagInterBlockCacheSize)))
 	}
 
 	skipUpgradeHeights := make(map[int64]bool)

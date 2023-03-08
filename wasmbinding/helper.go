@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ConvertProtoToJsonMarshal  unmarshals the given bytes into a proto message and then marshals it to json.

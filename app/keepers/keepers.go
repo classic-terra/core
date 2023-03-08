@@ -49,14 +49,6 @@ import (
 	oracletypes "github.com/classic-terra/core/x/oracle/types"
 	treasurykeeper "github.com/classic-terra/core/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
-
-	bankwasm "github.com/classic-terra/core/custom/bank/wasm"
-	distrwasm "github.com/classic-terra/core/custom/distribution/wasm"
-	govwasm "github.com/classic-terra/core/custom/gov/wasm"
-	stakingwasm "github.com/classic-terra/core/custom/staking/wasm"
-	marketwasm "github.com/classic-terra/core/x/market/wasm"
-	oraclewasm "github.com/classic-terra/core/x/oracle/wasm"
-	treasurywasm "github.com/classic-terra/core/x/treasury/wasm"
 )
 
 type AppKeepers struct {
@@ -238,26 +230,8 @@ func NewAppKeepers(
 		homePath,
 		wasmConfig,
 		supportedFeatures,
-		wasmOpts,
+		wasmOpts...,
 	)
-
-	// register wasm msg parser & querier
-	appKeepers.WasmKeeper.RegisterMsgParsers(map[string]wasmtypes.WasmMsgParserInterface{
-		wasmtypes.WasmMsgParserRouteBank:         bankwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteStaking:      stakingwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteMarket:       marketwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteWasm:         wasmkeeper.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteDistribution: distrwasm.NewWasmMsgParser(),
-		wasmtypes.WasmMsgParserRouteGov:          govwasm.NewWasmMsgParser(),
-	}, wasmkeeper.NewStargateWasmMsgParser(appCodec))
-	appKeepers.WasmKeeper.RegisterQueriers(map[string]wasmtypes.WasmQuerierInterface{
-		wasmtypes.WasmQueryRouteBank:     bankwasm.NewWasmQuerier(appKeepers.BankKeeper),
-		wasmtypes.WasmQueryRouteStaking:  stakingwasm.NewWasmQuerier(appKeepers.StakingKeeper, appKeepers.DistrKeeper),
-		wasmtypes.WasmQueryRouteMarket:   marketwasm.NewWasmQuerier(appKeepers.MarketKeeper),
-		wasmtypes.WasmQueryRouteOracle:   oraclewasm.NewWasmQuerier(appKeepers.OracleKeeper),
-		wasmtypes.WasmQueryRouteTreasury: treasurywasm.NewWasmQuerier(appKeepers.TreasuryKeeper),
-		wasmtypes.WasmQueryRouteWasm:     wasmkeeper.NewWasmQuerier(appKeepers.WasmKeeper),
-	}, wasmkeeper.NewStargateWasmQuerier(appKeepers.WasmKeeper))
 
 	// register the proposal types
 	govRouter := appKeepers.getGovRouter()

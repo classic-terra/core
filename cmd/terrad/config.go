@@ -1,14 +1,16 @@
 package main
 
 import (
+//	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+//	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // TerraAppConfig terra specify app config
 type TerraAppConfig struct {
 	serverconfig.Config
 
-	WASMConfig wasmconfig.Config `mapstructure:"wasm"`
+	//WASMConfig wasmtypes.WasmConfig `mapstructure:"wasm"`
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -34,10 +36,10 @@ func initAppConfig() (string, interface{}) {
 
 	terraAppConfig := TerraAppConfig{
 		Config:     *srvCfg,
-		WASMConfig: *wasmconfig.DefaultConfig(),
+		//WASMConfig: wasmtypes.DefaultWasmConfig(),
 	}
 
-	terraAppTemplate := serverconfig.DefaultConfigTemplate + wasmconfig.DefaultConfigTemplate
+	terraAppTemplate := serverconfig.DefaultConfigTemplate //+ wasmconfig.DefaultConfigTemplate
 
 	return terraAppTemplate, terraAppConfig
 }

@@ -143,10 +143,10 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin))...)
 
 		case *wasm.MsgInstantiateContract:
-			taxes = taxes.Add(computeTax(ctx, tk, msg.InitCoins)...)
+			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 
 		case *wasm.MsgExecuteContract:
-			taxes = taxes.Add(computeTax(ctx, tk, msg.Coins)...)
+			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()

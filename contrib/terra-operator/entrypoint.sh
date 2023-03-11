@@ -78,5 +78,6 @@ y
 EOF
     fi
   fi
-  wait
 fi
+
+wait

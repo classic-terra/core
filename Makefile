@@ -276,9 +276,15 @@ localnet-stop:
 ###                                Images                                   ###
 ###############################################################################
 
-build-operator-img-all:
-	docker-compose -f contrib/terra-operator/docker-compose.build.yml build core
-	docker-compose -f contrib/terra-operator/docker-compose.build.yml build node
+build-operator-img-all: build-operator-img-core build-operator-img-node
+
+build-operator-img-core:
+	docker-compose -f contrib/terra-operator/docker-compose.build.yml build core --no-cache
+
+build-operator-img-node:
+	docker-compose -f contrib/terra-operator/docker-compose.build.yml build node --no-cache
 
 push-operator-img-all:
 	docker-compose -f contrib/terra-operator/docker-compose.build.yml push
+
+.PHONY: build-operator-img-all build-operator-img-core build-operator-img-node push-operator-img-all

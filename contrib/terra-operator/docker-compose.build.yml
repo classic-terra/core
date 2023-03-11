@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+   core:
+     image: nghuyenthevinh2000/core
+     build:
+      context: ../../
+      dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
+      labels:
+        - "nghuyenthevinh2000/core description=Contains the terrad binary"
+   node:
+     image: nghuyenthevinh2000/node
+     build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        base_image: nghuyenthevinh2000/core
+      platforms:
+        - "linux/amd64"
+      labels:
+        - "nghuyenthevinh2000/node description=Contains everything to run a full node"

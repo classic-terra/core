@@ -271,3 +271,14 @@ localnet-stop:
 	docker-compose down
 
 .PHONY: localnet-start localnet-stop
+
+###############################################################################
+###                                Images                                   ###
+###############################################################################
+
+build-operator-img-all:
+	docker-compose -f contrib/terra-operator/docker-compose.build.yml build core
+	docker-compose -f contrib/terra-operator/docker-compose.build.yml build node
+
+push-operator-img-all:
+	docker-compose -f contrib/terra-operator/docker-compose.build.yml push

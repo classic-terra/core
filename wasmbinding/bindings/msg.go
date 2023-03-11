@@ -1,7 +1,7 @@
 package bindings
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+//	sdk "github.com/cosmos/cosmos-sdk/types"
 	markettypes "github.com/classic-terra/core/x/market/types"
 )
 

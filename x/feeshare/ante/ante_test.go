@@ -29,6 +29,7 @@ import (
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	wasmconfig "github.com/classic-terra/core/x/wasm/config"
+	wasmtypes "github.com/classic-terra/core/x/wasm/types"
 )
 
 type AnteTestSuite struct {
@@ -241,10 +242,19 @@ func (suite *AnteTestSuite) TestFeeSharePayout() {
 	suite.ctx = suite.ctx.WithBlockHeight(10000000)
 
 	// keys and addresses
-	priv1, _, _ := testdata.KeyTestPubAddr()
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
-	//Create test tx
+	// Create msg for tx
+	msg := &wasmtypes.MsgExecuteContract{
+		Sender:     addr1.String(),
+		Contract:   addr1.String(),
+		ExecuteMsg: []byte(`{"send":{}}`),
+		Coins:      sdk.NewCoins(sdk.NewCoin("utoken", sdk.NewInt(100))),
+	}
+
+	//Create tx
+	require.NoError(suite.txBuilder.SetMsgs(msg))
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	require.NoError(err)
 

@@ -44,14 +44,14 @@ if [ "$CHAINID" = "columbus-5" ] && [[ ! -z "$SNAPSHOT_NAME" ]] ; then
 fi
 
 # check if CHAINID is test
-if [ "$NEW_NETWORK" = "false" ] ; then
+if [ "$NEW_NETWORK" = "true" ] ; then
   # add new gentx
   source /test-node-setup.sh
 fi
 
 terrad start $TERRAD_STARTUP_PARAMETERS &
 
-if [ "$NEW_NETWORK" = "true" ] ; then
+if [ "$NEW_NETWORK" = "false" ] ; then
   #Wait for Terrad to catch up
   while true
   do

@@ -2,22 +2,22 @@ version: '3.8'
 
 services:
    core:
-     image: nghuyenthevinh2000/core
+     image: classic-terra/core
      build:
       context: ../../
       dockerfile: Dockerfile
       platforms:
         - "linux/amd64"
       labels:
-        - "nghuyenthevinh2000/core description=Contains the terrad binary"
+        - "classic-terra/core description=Contains the terrad binary"
    node:
-     image: nghuyenthevinh2000/node
+     image: classic-terra/node
      build: 
       context: .
       dockerfile: Dockerfile
       args:
-        base_image: nghuyenthevinh2000/core
+        base_image: classic-terra/core
       platforms:
         - "linux/amd64"
       labels:
-        - "nghuyenthevinh2000/node description=Contains everything to run a full node"
+        - "classic-terra/node description=Contains everything to run a full node"

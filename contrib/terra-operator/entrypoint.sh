@@ -28,7 +28,8 @@ sed 's/minimum-gas-prices = "0uluna"/minimum-gas-prices = "'"$MINIMUM_GAS_PRICES
 
 # Needed to use awk to replace this multiline string.
 if [ "$ENABLE_LCD" = true ] ; then
-  gawk -i inplace '/^# Enable defines if the API server should be enabled./,/^enable = false/{if (/^enable = false/) print "# Enable defines if the API server should be enabled.\nenable = true"; next} 1' ~/.terra/config/app.toml
+  sed -i '0,/enable = false/s//enable = true/' ~/.terra/config/app.toml
+
 fi
 
 # config.toml updates
@@ -60,7 +61,7 @@ fi
 # check if CHAINID is test
 if [ "$NEW_NETWORK" = "true" ] ; then
   # add new gentx
-  source /test-node-setup.sh
+  sh /test-node-setup.sh
 fi
 
 terrad start $TERRAD_STARTUP_PARAMETERS &

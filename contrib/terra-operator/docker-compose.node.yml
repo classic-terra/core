@@ -7,7 +7,7 @@ services:
      platform: linux/amd64
      environment:
        - CHAINID=test
-       - NEW_NETWORK=false
+       - NEW_NETWORK=true
        - ENABLE_LCD=true
        - TERRAD_STARTUP_PARAMETERS=--x-crisis-skip-assert-invariants
        - MINIMUM_GAS_PRICES=0.05uluna,0.104938usdr,0.15uusd,170.0ukrw

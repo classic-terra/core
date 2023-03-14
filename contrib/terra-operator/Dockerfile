@@ -1,4 +1,4 @@
-ARG base_image=terraclassic.terrad-binary
+ARG base_image=classic-terra/core
 ARG version=latest
 
 FROM ${base_image}:${version}
@@ -24,7 +24,7 @@ ENV VALIDATOR_COMMISSION_RATE ${validator_commission_rate}
 ENV VALIDATOR_COMMISSION_RATE_MAX ${validator_commission_rate_max}
 ENV VALIDATOR_COMMISSION_RATE_MAX_CHANGE ${validator_commission_rate_max_change}
 ENV VALIDATOR_MIN_SELF_DELEGATION ${validator_min_self_delegation}
-    
+
 COPY ./entrypoint.sh /entrypoint.sh
 COPY ./keys-add.sh /keys-add.sh
 COPY ./create-validator.sh /create-validator.sh

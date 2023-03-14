@@ -129,6 +129,7 @@ func TestDispatchSubMsgSuccessCase(t *testing.T) {
 	}, module.Attributes[0])
 }
 
+// go test -v -run ^TestDispatchSubMsgErrorHandling$ github.com/classic-terra/core/x/wasm/keeper
 func TestDispatchSubMsgErrorHandling(t *testing.T) {
 	fundedDenom := core.MicroLunaDenom
 	fundedAmount := 1_000_000

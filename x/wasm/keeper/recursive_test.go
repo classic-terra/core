@@ -95,6 +95,7 @@ func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.Acc
 	return contractAddr, creator, ctx, keeper, cdc
 }
 
+// go test -v -run ^TestGasCostOnQuery$ github.com/classic-terra/core/x/wasm/keeper
 func TestGasCostOnQuery(t *testing.T) {
 	GasNoWork := types.InstantiateContractCosts(0) + 3_509
 	// Note: about 100 SDK gas (10k wasmVM gas) for each round of sha256

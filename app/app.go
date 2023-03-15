@@ -43,7 +43,7 @@ import (
 
 	"github.com/classic-terra/core/app/keepers"
 	terraappparams "github.com/classic-terra/core/app/params"
-	v2 "github.com/classic-terra/core/app/upgrades/v2"
+	"github.com/classic-terra/core/app/upgrades/v3"
 
 	customante "github.com/classic-terra/core/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/custom/auth/client/rest"
@@ -399,7 +399,7 @@ func GetMaccPerms() map[string][]string {
 
 func (app *TerraApp) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v2.UpgradeName,
-		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
+		v3.UpgradeName,
+		v3.CreateV3UpgradeHandler(app.mm, app.configurator),
 	)
 }

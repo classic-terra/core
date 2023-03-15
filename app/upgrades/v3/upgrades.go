@@ -11,7 +11,7 @@ func CreateV3UpgradeHandler(
 	cfg module.Configurator,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-    // no-op
+		// no-op
 		return fromVM, nil
 	}
 }

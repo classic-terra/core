@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/classic-terra/core/custom/auth/ante"
+	customante "github.com/classic-terra/core/custom/auth/ante"
 	core "github.com/classic-terra/core/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -122,13 +123,14 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
+		tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(5, 1)) // 50%
 
 		feeCollector := ak.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 		burnModule := ak.GetModuleAccount(suite.ctx, treasurytypes.BurnModuleName)
 
 		encodingConfig := suite.SetupEncoding()
-		antehandler, err := ante.NewAnteHandler(
-			ante.HandlerOptions{
+		antehandler, err := customante.NewAnteHandler(
+			customante.HandlerOptions{
 				AccountKeeper:      ak,
 				BankKeeper:         bk,
 				FeegrantKeeper:     suite.app.FeeGrantKeeper,
@@ -154,12 +156,8 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 			acc := ak.NewAccountWithAddress(suite.ctx, addrs[i])
 			suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
 			ak.SetAccount(suite.ctx, acc)
-			err = bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
-			suite.NoError(err)
-
-			err = bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
-			suite.NoError(err)
-
+			bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
+			bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
 		}
 
 		// case 1 provides zero fee so not enough fee

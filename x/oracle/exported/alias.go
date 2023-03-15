@@ -1,6 +1,6 @@
 // DONTCOVER
 //
-
+//nolint:deadcode,unused
 package exported
 
 import "github.com/classic-terra/core/x/oracle/types"

@@ -1,9 +1,15 @@
 package simulation
 
+// DONTCOVER
+
 import (
 	"encoding/json"
+	"io/ioutil"
 	"math/rand"
 	"strings"
+
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -106,8 +112,17 @@ func WeightedOperations(
 	}
 }
 
+func mustLoad(path string) []byte {
+	bz, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return bz
+}
+
 var testContract []byte
 
+// nolint: funlen
 func SimulateMsgStoreCode(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -164,6 +179,14 @@ type initMsg struct {
 	Beneficiary string `json:"beneficiary"`
 }
 
+func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+	key := ed25519.GenPrivKey()
+	pub := key.PubKey()
+	addr := sdk.AccAddress(pub.Address())
+	return key, pub, addr
+}
+
+// nolint: funlen
 func SimulateMsgInstantiateContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -223,6 +246,7 @@ func SimulateMsgInstantiateContract(
 	}
 }
 
+// nolint: funlen
 func SimulateMsgExecuteContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -288,6 +312,7 @@ func SimulateMsgExecuteContract(
 	}
 }
 
+// nolint: funlen
 func SimulateMsgMigrateContract(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -323,6 +348,8 @@ func SimulateMsgMigrateContract(
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMigrateContract, "unable to generate fee"), nil, err
 		}
 
+		spendableCoins = spendableCoins.Sub(fees)
+
 		migData := map[string]interface{}{
 			"verifier": info.Creator,
 		}
@@ -357,6 +384,7 @@ func SimulateMsgMigrateContract(
 	}
 }
 
+// nolint: funlen
 func SimulateMsgUpdateContractAdmin(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -416,6 +444,7 @@ func SimulateMsgUpdateContractAdmin(
 	}
 }
 
+// nolint: funlen
 func SimulateMsgClearContractAdmin(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,

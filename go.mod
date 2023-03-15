@@ -140,13 +140,19 @@ replace (
 	// This for is replaced by cosmos/gogoproto in future versions
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
+	// use a secure protoreflect version
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
+
+	// use grpc compatible with regen gogoproto fork
+	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
 
 // replaces that lunc needs
 replace (
+	// use fork of cosmos-sdk with lunc's changes
 	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.45.13-classic
+	// use a ledger library that uses coin-type 330
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
-	github.com/tendermint/tendermint => github.com/classic-terra/tendermint v0.34.24-terra.0
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+	// use a version of tendermint that is patched for lunc
+	github.com/tendermint/tendermint => github.com/classic-terra/tendermint v0.34.24-terra.0 // TODO: minimum safe version of tendermint is v0.34.26, see release notes at https://github.com/informalsystems/tendermint
 )

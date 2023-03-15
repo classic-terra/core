@@ -48,7 +48,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgSwap generates a MsgSwap with random values.
-// nolint: funlen
 func SimulateMsgSwap(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -119,7 +118,6 @@ func SimulateMsgSwap(
 }
 
 // SimulateMsgSwapSend generates a MsgSwapSend with random values.
-// nolint: funlen
 func SimulateMsgSwapSend(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,

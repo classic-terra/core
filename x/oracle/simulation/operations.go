@@ -29,8 +29,8 @@ const (
 )
 
 var (
-	whitelist                     = []string{core.MicroKRWDenom, core.MicroUSDDenom, core.MicroSDRDenom}
-	voteHashMap map[string]string = make(map[string]string)
+	whitelist   = []string{core.MicroKRWDenom, core.MicroUSDDenom, core.MicroSDRDenom}
+	voteHashMap = make(map[string]string)
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -81,7 +81,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgAggregateExchangeRatePrevote generates a MsgAggregateExchangeRatePrevote with random values.
-// nolint: funlen
 func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -144,7 +143,6 @@ func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.Ba
 }
 
 // SimulateMsgAggregateExchangeRateVote generates a MsgAggregateExchangeRateVote with random values.
-// nolint: funlen
 func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -212,7 +210,6 @@ func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankK
 }
 
 // SimulateMsgDelegateFeedConsent generates a MsgDelegateFeedConsent with random values.
-// nolint: funlen
 func SimulateMsgDelegateFeedConsent(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

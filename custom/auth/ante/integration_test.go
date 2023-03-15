@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/classic-terra/core/custom/auth/ante"
-	customante "github.com/classic-terra/core/custom/auth/ante"
 	core "github.com/classic-terra/core/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -129,8 +128,8 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		burnModule := ak.GetModuleAccount(suite.ctx, treasurytypes.BurnModuleName)
 
 		encodingConfig := suite.SetupEncoding()
-		antehandler, err := customante.NewAnteHandler(
-			customante.HandlerOptions{
+		antehandler, err := ante.NewAnteHandler(
+			ante.HandlerOptions{
 				AccountKeeper:      ak,
 				BankKeeper:         bk,
 				FeegrantKeeper:     suite.app.FeeGrantKeeper,
@@ -156,8 +155,10 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 			acc := ak.NewAccountWithAddress(suite.ctx, addrs[i])
 			suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
 			ak.SetAccount(suite.ctx, acc)
-			bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
-			bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+			err = bk.MintCoins(suite.ctx, minttypes.ModuleName, fundCoins)
+			suite.Require().NoError(err)
+			err = bk.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addrs[i], fundCoins)
+			suite.Require().NoError(err)
 		}
 
 		// case 1 provides zero fee so not enough fee

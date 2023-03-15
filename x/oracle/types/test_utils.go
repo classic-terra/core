@@ -1,4 +1,3 @@
-//nolint
 package types
 
 import (
@@ -24,7 +23,7 @@ func GenerateRandomTestCase() (rates []float64, valValAddrs []sdk.ValAddress, st
 
 	base := math.Pow10(OracleDecPrecision)
 
-	rand.Seed(int64(time.Now().Nanosecond()))
+	rand.Seed(int64(time.Now().Nanosecond())) //nolint:staticcheck // not crypto related
 	numInputs := 10 + (rand.Int() % 100)
 	for i := 0; i < numInputs; i++ {
 		rate := float64(int64(rand.Float64()*base)) / base

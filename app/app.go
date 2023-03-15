@@ -399,7 +399,7 @@ func GetMaccPerms() map[string][]string {
 
 func (app *TerraApp) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v2.UpgradeName,
-		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
+		v3.UpgradeName,
+		v3.CreateV3UpgradeHandler(app.mm, app.configurator),
 	)
 }

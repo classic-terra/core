@@ -4,8 +4,8 @@ services:
    core:
      image: classic-terra/core
      build:
-      context: .
-      dockerfile: Dockerfile.core
+      context: ../..
+      dockerfile: Dockerfile
       platforms:
         - "linux/amd64"
       labels:

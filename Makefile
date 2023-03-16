@@ -284,7 +284,4 @@ build-operator-img-core:
 build-operator-img-node:
 	docker-compose -f contrib/terra-operator/docker-compose.build.yml build node --no-cache
 
-push-operator-img-all:
-	docker-compose -f contrib/terra-operator/docker-compose.build.yml push
-
-.PHONY: build-operator-img-all build-operator-img-core build-operator-img-node push-operator-img-all
+.PHONY: build-operator-img-all build-operator-img-core build-operator-img-node

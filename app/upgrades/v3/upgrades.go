@@ -15,7 +15,7 @@ func CreateV3UpgradeHandler(
 	_ *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// no-op
-		return fromVM, nil
+		// treasury store migration
+		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

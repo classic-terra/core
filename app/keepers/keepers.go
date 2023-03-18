@@ -99,12 +99,12 @@ func NewAppKeepers(
 	cdc *codec.LegacyAmino,
 	maccPerms map[string][]string,
 	allowedReceivingModAcc map[string]bool,
-	blockedAddress map[string]bool,
+	_ map[string]bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
 	wasmConfig *wasmconfig.Config,
-	appOpts servertypes.AppOptions,
+	_ servertypes.AppOptions,
 ) AppKeepers {
 	appKeepers := AppKeepers{}
 

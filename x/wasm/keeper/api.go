@@ -10,7 +10,7 @@ import (
 	"github.com/classic-terra/core/x/wasm/types"
 )
 
-func (k Keeper) getCosmWasmAPI(ctx sdk.Context) cosmwasm.GoAPI { //nolint:unparam
+func (k Keeper) getCosmWasmAPI(_ sdk.Context) cosmwasm.GoAPI {
 	return cosmwasm.GoAPI{
 		HumanAddress: func(canon []byte) (humanAddr string, usedGas uint64, err error) {
 			humanizeCost := types.HumanizeWasmGasCost * types.GasMultiplier

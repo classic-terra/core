@@ -104,7 +104,7 @@ func (parser WasmMsgParser) Parse(contractAddr sdk.AccAddress, wasmMsg wasmvmtyp
 }
 
 // ParseCustom implements custom parser
-func (parser WasmMsgParser) ParseCustom(contractAddr sdk.AccAddress, data json.RawMessage) (sdk.Msg, error) {
+func (parser WasmMsgParser) ParseCustom(_ sdk.AccAddress, _ json.RawMessage) (sdk.Msg, error) {
 	return nil, nil
 }
 
@@ -220,7 +220,7 @@ func (querier WasmQuerier) Query(ctx sdk.Context, request wasmvmtypes.QueryReque
 }
 
 // QueryCustom implements custom query interface
-func (WasmQuerier) QueryCustom(ctx sdk.Context, data json.RawMessage) ([]byte, error) {
+func (WasmQuerier) QueryCustom(_ sdk.Context, _ json.RawMessage) ([]byte, error) {
 	return nil, nil
 }
 

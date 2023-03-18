@@ -27,7 +27,7 @@ func NewQuerier(keeper Keeper) types.QueryServer {
 var _ types.QueryServer = querier{}
 
 // Params queries params of wasm module
-func (q querier) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryParamsResponse{Params: q.GetParams(ctx)}, nil
 }

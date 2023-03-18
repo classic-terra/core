@@ -50,7 +50,7 @@ func NewWasmMsgParser() MsgParser {
 }
 
 // Parse convert Wasm raw msg to chain msg
-func (p MsgParser) Parse(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmvmtypes.CosmosMsg) (sdk.Msg, error) {
+func (p MsgParser) Parse(_ sdk.Context, contractAddr sdk.AccAddress, msg wasmvmtypes.CosmosMsg) (sdk.Msg, error) {
 	switch {
 	case msg.Bank != nil:
 		if msg.Bank.Burn != nil {

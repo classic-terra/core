@@ -31,30 +31,30 @@ type (
 		VestingSchedules VestingSchedules `json:"vesting_schedules,omitempty" yaml:"vesting_schedules,omitempty"`
 	}
 
-	// LazyGradedVestingAccount nolint
+	// LazyGradedVestingAccount
 	LazyGradedVestingAccount struct {
 		*v039auth.BaseVestingAccount
 
 		VestingSchedules VestingSchedules `json:"vesting_schedules"`
 	}
 
-	// LazySchedule nolint
+	// LazySchedule
 	LazySchedule struct {
 		StartTime int64   `json:"start_time"`
 		EndTime   int64   `json:"end_time"`
 		Ratio     sdk.Dec `json:"ratio"`
 	}
 
-	// LazySchedules nolint
+	// LazySchedules
 	LazySchedules []LazySchedule
 
-	// VestingSchedule nolint
+	// VestingSchedule
 	VestingSchedule struct {
 		Denom         string        `json:"denom"`
 		LazySchedules LazySchedules `json:"schedules"` // maps blocktime to percentage vested. Should sum to 1.
 	}
 
-	// VestingSchedules nolint
+	// VestingSchedules
 	VestingSchedules []VestingSchedule
 
 	// LegacyAminoPubKey specifies a public key type
@@ -68,7 +68,7 @@ type (
 
 var _ cryptotypes.PubKey = &LegacyAminoPubKey{}
 
-// NewLazyGradedVestingAccountRaw nolint
+// NewLazyGradedVestingAccountRaw
 func NewLazyGradedVestingAccountRaw(baseVestingAcc *v039auth.BaseVestingAccount, lazyVestingSchedules VestingSchedules) *LazyGradedVestingAccount {
 	return &LazyGradedVestingAccount{
 		BaseVestingAccount: baseVestingAcc,
@@ -76,7 +76,7 @@ func NewLazyGradedVestingAccountRaw(baseVestingAcc *v039auth.BaseVestingAccount,
 	}
 }
 
-// Validate nolint
+// Validate
 func (lgva LazyGradedVestingAccount) Validate() error {
 	for _, vestingSchedule := range lgva.VestingSchedules {
 		if err := vestingSchedule.Validate(); err != nil {
@@ -87,7 +87,7 @@ func (lgva LazyGradedVestingAccount) Validate() error {
 	return lgva.BaseVestingAccount.Validate()
 }
 
-// Validate nolint
+// Validate
 func (s LazySchedule) Validate() error {
 	startTime := s.StartTime
 	endTime := s.EndTime
@@ -108,7 +108,7 @@ func (s LazySchedule) Validate() error {
 	return nil
 }
 
-// Validate nolint
+// Validate
 func (vs VestingSchedule) Validate() error {
 	sumRatio := sdk.ZeroDec()
 	for _, lazySchedule := range vs.LazySchedules {
@@ -173,26 +173,26 @@ func (*LegacyAminoPubKey) Address() cryptotypes.Address {
 	return nil
 }
 
-// Bytes no-lint
+// Bytes
 func (*LegacyAminoPubKey) Bytes() []byte { return nil }
 
-// Equals no-lint
-func (*LegacyAminoPubKey) Equals(key cryptotypes.PubKey) bool { return false }
+// Equals
+func (*LegacyAminoPubKey) Equals(_ cryptotypes.PubKey) bool { return false }
 
-// ProtoMessage no-lint
+// ProtoMessage
 func (*LegacyAminoPubKey) ProtoMessage() {}
 
-// Reset no-lint
+// Reset
 func (*LegacyAminoPubKey) Reset() {}
 
-// String no-lint
+// String
 func (*LegacyAminoPubKey) String() string { return "not implemented" }
 
-// Type no-lint
+// Type
 func (*LegacyAminoPubKey) Type() string { return "PubKeyMultisigThreshold" }
 
-// VerifySignature no-lint
-func (*LegacyAminoPubKey) VerifySignature(msg []byte, sig []byte) bool {
+// VerifySignature
+func (*LegacyAminoPubKey) VerifySignature(_ []byte, _ []byte) bool {
 	panic("not implemented")
 }
 
@@ -230,7 +230,7 @@ func registerCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(sr25519.PrivKey{},
 		sr25519.PrivKeyName, nil)
-	cdc.RegisterConcrete(&ed25519.PrivKey{}, //nolint:staticcheck
+	cdc.RegisterConcrete(&ed25519.PrivKey{}, //:staticcheck
 		ed25519.PrivKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PrivKey{},
 		secp256k1.PrivKeyName, nil)

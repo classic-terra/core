@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	terraapp "github.com/classic-terra/core/app"
@@ -48,7 +48,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 		simapp.EmptyAppOptions{}, wasmconfig.DefaultConfig(),
 	)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
@@ -156,9 +156,9 @@ func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
 		pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
 		switch {
 		case strings.Contains(pubkeyType, "ed25519"):
-			cost += types.DefaultParams().SigVerifyCostED25519
+			cost += authtypes.DefaultParams().SigVerifyCostED25519
 		case strings.Contains(pubkeyType, "secp256k1"):
-			cost += types.DefaultParams().SigVerifyCostSecp256k1
+			cost += authtypes.DefaultParams().SigVerifyCostSecp256k1
 		default:
 			panic("unexpected key type")
 		}

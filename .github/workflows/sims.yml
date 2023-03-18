@@ -10,17 +10,8 @@ on:
       - "release/*"
 
 jobs:
-  cleanup-runs:
-    runs-on: ubuntu-latest
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
   build:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3.5.0
@@ -56,21 +47,13 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v4
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - uses: actions/cache@v3.2.5
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
       - name: test-sim-nondeterminism
         run: |
           make test-sim-nondeterminism
-        if: env.GIT_DIFF
 
   test-sim-import-export:
     runs-on: ubuntu-latest
@@ -82,23 +65,9 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v4
-        with:
-          SUFFIX_FILTER: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3.2.5
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
       - name: test-sim-import-export
         run: |
           make test-sim-import-export
-        if: env.GIT_DIFF
 
   test-sim-after-import:
     runs-on: ubuntu-latest
@@ -110,23 +79,13 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v4
-        with:
-          SUFFIX_FILTER: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v3.2.5
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
       - name: test-sim-after-import
         run: |
           make test-sim-after-import
-        if: env.GIT_DIFF
 
   test-sim-multi-seed-short:
     runs-on: ubuntu-latest
@@ -138,20 +97,7 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v4
-        with:
-          SUFFIX_FILTER: |
-            **/**.go
-            go.mod
-            go.sum
-          SET_ENV_NAME_INSERTIONS: 1
-          SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3.2.5
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-        if: env.GIT_DIFF
+
       - name: test-sim-multi-seed-short
         run: |
           make test-sim-multi-seed-short
-        if: env.GIT_DIFF

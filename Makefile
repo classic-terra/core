@@ -160,7 +160,7 @@ go.sum: go.mod
 
 draw-deps:
 	@# requires brew install graphviz or apt-get install graphviz
-	go get github.com/RobotsAndPencils/goviz
+	go install github.com/RobotsAndPencils/goviz
 	@goviz -i ./cmd/terrad -d 2 | dot -Tpng -o dependency-graph.png
 
 distclean: clean tools-clean

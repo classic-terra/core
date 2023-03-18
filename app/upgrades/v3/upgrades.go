@@ -1,4 +1,4 @@
-package v2
+package v3
 
 import (
 	"github.com/classic-terra/core/app/keepers"
@@ -8,7 +8,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func CreateV2UpgradeHandler(
+func CreateV3UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
 	_ upgrades.BaseAppParamManager,

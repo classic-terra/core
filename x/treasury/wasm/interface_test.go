@@ -44,8 +44,8 @@ func TestQueryTaxRate(t *testing.T) {
 func TestQueryTaxCap(t *testing.T) {
 	input := keeper.CreateTestInput(t)
 
-	cap := sdk.NewInt(123) // 0.7%
-	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroSDRDenom, cap)
+	taxCap := sdk.NewInt(123) // 0.7%
+	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroSDRDenom, taxCap)
 
 	querier := NewWasmQuerier(input.TreasuryKeeper)
 	var err error
@@ -68,5 +68,5 @@ func TestQueryTaxCap(t *testing.T) {
 
 	var taxCapResponse TaxCapQueryResponse
 	require.NoError(t, json.Unmarshal(res, &taxCapResponse))
-	require.Equal(t, cap.String(), taxCapResponse.Cap)
+	require.Equal(t, taxCap.String(), taxCapResponse.Cap)
 }

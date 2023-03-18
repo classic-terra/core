@@ -179,7 +179,7 @@ func InitTestnet(
 			return err
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
+		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo) //nolint:staticcheck // SA1019: server.GenerateSaveCoinKey is deprecated
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err

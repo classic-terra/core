@@ -62,8 +62,8 @@ func (querier WasmQuerier) QueryCustom(ctx sdk.Context, data json.RawMessage) ([
 		rate := querier.keeper.GetTaxRate(ctx)
 		bz, err = json.Marshal(TaxRateQueryResponse{Rate: rate.String()})
 	} else if query.TaxCap != nil {
-		cap := querier.keeper.GetTaxCap(ctx, query.TaxCap.Denom)
-		bz, err = json.Marshal(TaxCapQueryResponse{Cap: cap.String()})
+		taxCap := querier.keeper.GetTaxCap(ctx, query.TaxCap.Denom)
+		bz, err = json.Marshal(TaxCapQueryResponse{Cap: taxCap.String()})
 	} else {
 		return nil, sdkerrors.ErrInvalidRequest
 	}

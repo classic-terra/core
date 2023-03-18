@@ -230,7 +230,7 @@ func registerCrypto(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
 	cdc.RegisterConcrete(sr25519.PrivKey{},
 		sr25519.PrivKeyName, nil)
-	cdc.RegisterConcrete(&ed25519.PrivKey{}, //:staticcheck
+	cdc.RegisterConcrete(&ed25519.PrivKey{}, //nolint:staticcheck
 		ed25519.PrivKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PrivKey{},
 		secp256k1.PrivKeyName, nil)

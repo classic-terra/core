@@ -34,13 +34,13 @@ func NewStargateWasmMsgParser(unpacker codectypes.AnyUnpacker) StargateWasmMsgPa
 func (parser StargateWasmMsgParser) Parse(wasmMsg wasmvmtypes.CosmosMsg) (sdk.Msg, error) {
 	msg := wasmMsg.Stargate
 
-	any := codectypes.Any{
+	codecsany := codectypes.Any{
 		TypeUrl: msg.TypeURL,
 		Value:   msg.Value,
 	}
 
 	var cosmosMsg sdk.Msg
-	if err := parser.unpacker.UnpackAny(&any, &cosmosMsg); err != nil {
+	if err := parser.unpacker.UnpackAny(&codecsany, &cosmosMsg); err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidMsg, fmt.Sprintf("Cannot unpack proto message with type URL: %s", msg.TypeURL))
 	}
 

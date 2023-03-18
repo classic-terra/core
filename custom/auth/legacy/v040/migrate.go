@@ -18,7 +18,7 @@ import (
 
 // convertBaseAccount converts a 0.39 BaseAccount to a 0.40 BaseAccount.
 func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
-	var any *codectypes.Any
+	var codecsany *codectypes.Any
 
 	// If the old genesis had a pubkey, we pack it inside an Any. Or else, we
 	// just leave it nil.
@@ -31,7 +31,7 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 		}
 
 		var err error
-		any, err = codectypes.NewAnyWithValue(pk)
+		codecsany, err = codectypes.NewAnyWithValue(pk)
 		if err != nil {
 			panic(err)
 		}
@@ -39,7 +39,7 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 
 	return &v040auth.BaseAccount{
 		Address:       old.Address.String(),
-		PubKey:        any,
+		PubKey:        codecsany,
 		AccountNumber: old.AccountNumber,
 		Sequence:      old.Sequence,
 	}
@@ -145,12 +145,12 @@ func Migrate(authGenState v039auth.GenesisState) *v040auth.GenesisState {
 	// Convert v0.40 accounts into Anys.
 	anys := make([]*codectypes.Any, len(v040Accounts))
 	for i, v040Account := range v040Accounts {
-		any, err := codectypes.NewAnyWithValue(v040Account)
+		codecsany, err := codectypes.NewAnyWithValue(v040Account)
 		if err != nil {
 			panic(err)
 		}
 
-		anys[i] = any
+		anys[i] = codecsany
 	}
 
 	return &v040auth.GenesisState{

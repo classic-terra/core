@@ -31,7 +31,7 @@ jobs:
           go-version: 1.18
       - name: start localnet
         run: |
-          make clean localnet-start
+          TESTNET_NVAL=6 make clean localnet-start
       - name: test liveness
         run: |
           ./contrib/localnet/localnet_liveness.sh 100 3 30 localhost

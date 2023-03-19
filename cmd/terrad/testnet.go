@@ -139,7 +139,7 @@ func InitTestnet(
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	// generate private keys, node IDs, and initial transactions
-	
+
 	// can have 6 validators at most
 	// but need to go through all nodes to initialize config and such
 	for i := 0; i < 6; i++ {
@@ -149,7 +149,7 @@ func InitTestnet(
 
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-	
+
 		// 1.) create testnet config dirs
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
 			_ = os.RemoveAll(outputDir)
@@ -173,7 +173,6 @@ func InitTestnet(
 			return err
 		}
 
-		
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
@@ -205,14 +204,13 @@ func InitTestnet(
 		if err := writeFile(fmt.Sprintf("%v.json", "key_seed"), nodeDir, cliPrint); err != nil {
 			return err
 		}
-		
+
 		// create account Tokens for node
 		accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
-		
+
 		// create staking tokens for node
 		accStakingTokens := sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction)
-		
-		
+
 		coins := sdk.Coins{
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
 			sdk.NewCoin(core.MicroLunaDenom, accStakingTokens),
@@ -221,7 +219,7 @@ func InitTestnet(
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-		
+
 		// create gentxs only for numValidators
 		if i < numValidators {
 			// create the validator for node i
@@ -236,7 +234,7 @@ func InitTestnet(
 			if err != nil {
 				return err
 			}
-		
+
 			// create gentx (create validator) and write to file
 			txBuilder := clientCtx.TxConfig.NewTxBuilder()
 			if err := txBuilder.SetMsgs(createValMsg); err != nil {
@@ -260,7 +258,7 @@ func InitTestnet(
 				return err
 			}
 		}
-		
+
 		// write config file app.toml
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), terraappConfig)
 	}

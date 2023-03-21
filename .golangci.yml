@@ -1,7 +1,9 @@
 run:
   tests: true
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  timeout: 5m
+  timeout: 10m
+  sort-results: true
+  allow-parallel-runners: true
+  concurrency: 4
 
 linters:
   disable-all: true
@@ -28,9 +30,6 @@ linters:
     - unparam
     - unused
 
-# TODO: fix the sdkerrors.Wrap deprecation warning and re-enable staticcheck
-# TODO: fix the use of deprecated gov style
-
 issues:
   exclude-rules:
     - text: "Use of weak random number generator"
@@ -48,6 +47,9 @@ issues:
       text: "SA1019:"
       linters:
         - staticcheck
+    - text: "leading space"
+      linters:
+        - nolintlint
 
   max-issues-per-linter: 10000
   max-same-issues: 10000
@@ -62,4 +64,4 @@ linters-settings:
     allow-unused: false
     allow-leading-space: true
     require-explanation: false
-    require-specific: false
+    require-specific: true

@@ -130,7 +130,6 @@ func TestInstantiateMaker(t *testing.T) {
 
 	initBz, err := json.Marshal(&initMsg)
 	require.NoError(t, err)
-
 	makerAddr, _, err := keeper.InstantiateContract(input.Ctx, makerID, creatorAddr, sdk.AccAddress{}, initBz, nil)
 	require.NoError(t, err)
 	require.NotEmpty(t, makerAddr)
@@ -157,7 +156,6 @@ func TestMarketQuerier(t *testing.T) {
 
 	retCoin, spread, err := marketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
 	require.NoError(t, err)
-
 	retAmount := retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()
 
 	bz, err := json.Marshal(swapQueryMsg)
@@ -287,7 +285,6 @@ func TestBuyMsg(t *testing.T) {
 
 	retCoin, spread, err := input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
 	require.NoError(t, err)
-
 	expectedRetCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()))
 
 	// buy without limit
@@ -319,7 +316,6 @@ func TestBuyAndSendMsg(t *testing.T) {
 
 	retCoin, spread, err := input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
 	require.NoError(t, err)
-
 	expectedRetCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()))
 
 	// buy without limit
@@ -352,7 +348,6 @@ func TestSellMsg(t *testing.T) {
 
 	retCoin, spread, err := input.MarketKeeper.ComputeSwap(input.Ctx, sellCoin, core.MicroSDRDenom)
 	require.NoError(t, err)
-
 	expectedRetCoins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, retCoin.Amount.Mul(sdk.OneDec().Sub(spread)).TruncateInt()))
 
 	// sell without limit

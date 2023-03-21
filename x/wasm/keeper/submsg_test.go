@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // we need to use the old protobuf API for amino compatibility
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // cosmos proto currently uses this
 	"github.com/stretchr/testify/assert"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"

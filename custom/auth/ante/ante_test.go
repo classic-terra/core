@@ -142,7 +142,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 		//	privkey = ed25519.GenPrivKey()
 		// } else {
 		//	privkey = secp256k1.GenPrivKey()
-		//}
+		// }
 
 		pubkeys[i] = privkey.PubKey()
 		signatures[i], _ = privkey.Sign(msg)

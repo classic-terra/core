@@ -46,8 +46,8 @@ import (
 
 	// upgrades
 	"github.com/classic-terra/core/app/upgrades"
-	"github.com/classic-terra/core/app/upgrades/v2"
-	"github.com/classic-terra/core/app/upgrades/v3"
+	v2 "github.com/classic-terra/core/app/upgrades/v2"
+	v3 "github.com/classic-terra/core/app/upgrades/v3"
 
 	customante "github.com/classic-terra/core/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/custom/auth/client/rest"

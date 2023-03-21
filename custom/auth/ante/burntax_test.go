@@ -69,7 +69,6 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 
 	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
 	require.NoError(err)
-
 	fmt.Printf(
 		"Before: TotalSupply %v, Community %v, FeeCollector %v\n",
 		totalSupplyBefore,
@@ -99,7 +98,6 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 
 	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
 	require.NoError(err)
-
 	if !burnTax.Empty() {
 		// expected: total supply = tax - split tax
 		require.Equal(

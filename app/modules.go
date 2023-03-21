@@ -71,6 +71,7 @@ import (
 	"github.com/classic-terra/core/x/vesting"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/client/docs/statik"
@@ -90,14 +91,17 @@ var (
 		custommint.AppModuleBasic{},
 		customdistr.AppModuleBasic{},
 		customgov.NewAppModuleBasic(
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
-			treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
+			append(
+				wasmclient.ProposalHandlers, //nolint:staticcheck
+				paramsclient.ProposalHandler,
+				distrclient.ProposalHandler,
+				upgradeclient.ProposalHandler,
+				upgradeclient.CancelProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler,
+				ibcclientclient.UpgradeProposalHandler,
+				treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
+				treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
+			)...,
 		),
 		customparams.AppModuleBasic{},
 		customcrisis.AppModuleBasic{},

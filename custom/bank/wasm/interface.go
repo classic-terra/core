@@ -92,6 +92,6 @@ func (querier Querier) Query(ctx sdk.Context, request wasmvmtypes.QueryRequest) 
 }
 
 // QueryCustom implements custom query interface
-func (Querier) QueryCustom(ctx sdk.Context, data json.RawMessage) ([]byte, error) {
+func (Querier) QueryCustom(_ sdk.Context, _ json.RawMessage) ([]byte, error) {
 	return nil, nil
 }

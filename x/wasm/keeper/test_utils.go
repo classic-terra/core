@@ -1,8 +1,5 @@
 package keeper
 
-//nolint
-//DONTCOVER
-
 import (
 	"encoding/json"
 	"os"

@@ -3,7 +3,6 @@ package ante_test
 import (
 	"fmt"
 
-	"github.com/classic-terra/core/custom/auth/ante"
 	customante "github.com/classic-terra/core/custom/auth/ante"
 	core "github.com/classic-terra/core/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
@@ -129,8 +128,8 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		burnModule := ak.GetModuleAccount(suite.ctx, treasurytypes.BurnModuleName)
 
 		encodingConfig := suite.SetupEncoding()
-		antehandler, err := ante.NewAnteHandler(
-			ante.HandlerOptions{
+		antehandler, err := customante.NewAnteHandler(
+			customante.HandlerOptions{
 				AccountKeeper:      ak,
 				BankKeeper:         bk,
 				FeegrantKeeper:     suite.app.FeeGrantKeeper,

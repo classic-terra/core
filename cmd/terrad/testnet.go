@@ -262,12 +262,12 @@ func InitTestnet(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), terraappConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
+		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
@@ -281,7 +281,7 @@ func InitTestnet(
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
-	genFiles []string, numValidators int,
+	genFiles []string,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
@@ -326,7 +326,7 @@ func initGenFiles(
 
 func collectGenFiles(
 	clientCtx client.Context, nodeConfig *tmconfig.Config, chainID string,
-	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
+	nodeIDs []string, valPubKeys []cryptotypes.PubKey,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
 	var appState json.RawMessage

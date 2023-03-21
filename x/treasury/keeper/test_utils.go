@@ -183,7 +183,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(banktypes.ModuleName), blackListAddrs)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)*10))))
-	bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
+	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
+	require.NoError(t, err)
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
@@ -221,7 +222,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	burnAcc := authtypes.NewEmptyModuleAccount(types.BurnModuleName, authtypes.Burner)
 
 	// + 1 for burn account
-	bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)+1)))))
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)+1)))))
+	require.NoError(t, err)
 
 	accountKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	accountKeeper.SetModuleAccount(ctx, bondPool)
@@ -239,7 +241,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	// to test burn module account
-	err := bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, types.BurnModuleName, InitCoins)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, types.BurnModuleName, InitCoins)
 	require.NoError(t, err)
 
 	oracleKeeper := oraclekeeper.NewKeeper(
@@ -296,7 +298,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey
 	return msg
 }
 
-func setupValidators(t *testing.T) (TestInput, sdk.Handler) {
+func setupValidators(t *testing.T) TestInput {
 	input := CreateTestInput(t)
 	sh := staking.NewHandler(input.StakingKeeper)
 
@@ -312,7 +314,7 @@ func setupValidators(t *testing.T) (TestInput, sdk.Handler) {
 
 	staking.EndBlocker(input.Ctx, input.StakingKeeper)
 
-	return input, sh
+	return input
 }
 
 // FundAccount is a utility function that funds an account by minting and

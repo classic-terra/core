@@ -58,6 +58,6 @@ func (parser MsgParser) Parse(contractAddr sdk.AccAddress, wasmMsg wasmvmtypes.C
 }
 
 // ParseCustom implements custom parser
-func (parser MsgParser) ParseCustom(contractAddr sdk.AccAddress, data json.RawMessage) (sdk.Msg, error) {
+func (parser MsgParser) ParseCustom(_ sdk.AccAddress, _ json.RawMessage) (sdk.Msg, error) {
 	return nil, nil
 }

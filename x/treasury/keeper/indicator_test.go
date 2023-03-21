@@ -10,7 +10,7 @@ import (
 )
 
 func TestFeeRewardsForEpoch(t *testing.T) {
-	input, _ := setupValidators(t)
+	input := setupValidators(t)
 
 	taxAmount := sdk.NewInt(1000).MulRaw(core.MicroUnit)
 
@@ -37,7 +37,7 @@ func TestFeeRewardsForEpoch(t *testing.T) {
 }
 
 func TestSeigniorageRewardsForEpoch(t *testing.T) {
-	input, _ := setupValidators(t)
+	input := setupValidators(t)
 
 	amt := sdk.NewInt(1000)
 	sdrRate := sdk.NewDec(10)
@@ -63,7 +63,7 @@ func TestSeigniorageRewardsForEpoch(t *testing.T) {
 }
 
 func TestMiningRewardsForEpoch(t *testing.T) {
-	input, _ := setupValidators(t)
+	input := setupValidators(t)
 
 	amt := sdk.NewInt(1000).MulRaw(core.MicroUnit)
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)

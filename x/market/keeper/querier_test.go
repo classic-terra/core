@@ -45,7 +45,7 @@ func TestQuerySwap(t *testing.T) {
 
 	// recursive query
 	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(10)).String()
-	res, err := querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: core.MicroLunaDenom})
+	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: core.MicroLunaDenom})
 	require.Error(t, err)
 
 	// overflow query
@@ -55,7 +55,7 @@ func TestQuerySwap(t *testing.T) {
 	require.Error(t, err)
 
 	// valid query
-	res, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: core.MicroSDRDenom})
+	res, err := querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: core.MicroSDRDenom})
 	require.NoError(t, err)
 
 	require.Equal(t, core.MicroSDRDenom, res.ReturnCoin.Denom)
@@ -64,7 +64,6 @@ func TestQuerySwap(t *testing.T) {
 }
 
 func TestQueryMintPoolDelta(t *testing.T) {
-
 	input := CreateTestInput(t)
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.MarketKeeper)

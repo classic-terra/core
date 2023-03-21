@@ -225,18 +225,19 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	// set tax amount
 	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
 	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	// must pass with tax
 	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedTax))))
 	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -294,7 +295,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -351,7 +351,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesExec() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -575,18 +574,19 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesMultiSendLunaTax() {
 	// set tax amount
 	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, expectedTax)))
 	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	// must pass with tax
 	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, expectedTax.Add(expectedTax))))
 	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContractLunaTax() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -650,7 +650,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContractLunaTax() {
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContractLunaTax() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -713,7 +712,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContractLunaTax() {
 }
 
 func (suite *AnteTestSuite) TestEnsureMempoolFeesExecLunaTax() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

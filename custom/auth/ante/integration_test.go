@@ -3,7 +3,6 @@ package ante_test
 import (
 	"fmt"
 
-	"github.com/classic-terra/core/custom/auth/ante"
 	customante "github.com/classic-terra/core/custom/auth/ante"
 	core "github.com/classic-terra/core/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
@@ -123,7 +122,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
-		tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(5, 1)) //50%
+		tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(5, 1)) // 50%
 
 		feeCollector := ak.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 		burnModule := ak.GetModuleAccount(suite.ctx, treasurytypes.BurnModuleName)
@@ -136,7 +135,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 				FeegrantKeeper:     suite.app.FeeGrantKeeper,
 				OracleKeeper:       suite.app.OracleKeeper,
 				TreasuryKeeper:     suite.app.TreasuryKeeper,
-				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
+				SigGasConsumer:     customante.DefaultSigVerificationGasConsumer,
 				SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 				IBCChannelKeeper:   *suite.app.IBCKeeper,
 				DistributionKeeper: dk,
@@ -145,7 +144,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		suite.Require().NoError(err)
 
 		fmt.Printf("CASE = %s \n", c.name)
-		suite.ctx = suite.ctx.WithBlockHeight(ante.TaxPowerUpgradeHeight)
+		suite.ctx = suite.ctx.WithBlockHeight(customante.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

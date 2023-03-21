@@ -18,14 +18,8 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
 	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -40,76 +34,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/classic-terra/core/app/keepers"
 	terraappparams "github.com/classic-terra/core/app/params"
-	v2 "github.com/classic-terra/core/app/upgrades/v2"
 
-	customauth "github.com/classic-terra/core/custom/auth"
+	// upgrades
+	"github.com/classic-terra/core/app/upgrades"
+	v2 "github.com/classic-terra/core/app/upgrades/v2"
+	v3 "github.com/classic-terra/core/app/upgrades/v3"
+
 	customante "github.com/classic-terra/core/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/custom/auth/client/rest"
-	customauthsim "github.com/classic-terra/core/custom/auth/simulation"
 	customauthtx "github.com/classic-terra/core/custom/auth/tx"
-	customauthz "github.com/classic-terra/core/custom/authz"
-	custombank "github.com/classic-terra/core/custom/bank"
-	customcrisis "github.com/classic-terra/core/custom/crisis"
-	customdistr "github.com/classic-terra/core/custom/distribution"
-	customevidence "github.com/classic-terra/core/custom/evidence"
-	customfeegrant "github.com/classic-terra/core/custom/feegrant"
-	customgov "github.com/classic-terra/core/custom/gov"
-	custommint "github.com/classic-terra/core/custom/mint"
-	customparams "github.com/classic-terra/core/custom/params"
-	customslashing "github.com/classic-terra/core/custom/slashing"
-	customstaking "github.com/classic-terra/core/custom/staking"
-	customupgrade "github.com/classic-terra/core/custom/upgrade"
 	core "github.com/classic-terra/core/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/classic-terra/core/x/market"
-	markettypes "github.com/classic-terra/core/x/market/types"
-	"github.com/classic-terra/core/x/oracle"
-	oracletypes "github.com/classic-terra/core/x/oracle/types"
-	"github.com/classic-terra/core/x/treasury"
-	treasuryclient "github.com/classic-terra/core/x/treasury/client"
-	treasurytypes "github.com/classic-terra/core/x/treasury/types"
-	"github.com/classic-terra/core/x/vesting"
-
-	"github.com/classic-terra/core/app/keepers"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/client/docs/statik"
@@ -121,65 +66,8 @@ var (
 	// DefaultNodeHome defines default home directories for terrad
 	DefaultNodeHome string
 
-	// ModuleBasics = The ModuleBasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
-		customauth.AppModuleBasic{},
-		customauthz.AppModuleBasic{},
-		genutil.AppModuleBasic{},
-		custombank.AppModuleBasic{},
-		capability.AppModuleBasic{},
-		customstaking.AppModuleBasic{},
-		custommint.AppModuleBasic{},
-		customdistr.AppModuleBasic{},
-		customgov.NewAppModuleBasic(
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
-			treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
-		),
-		customparams.AppModuleBasic{},
-		customcrisis.AppModuleBasic{},
-		customslashing.AppModuleBasic{},
-		customfeegrant.AppModuleBasic{},
-		ibc.AppModuleBasic{},
-		ica.AppModuleBasic{},
-		customupgrade.AppModuleBasic{},
-		customevidence.AppModuleBasic{},
-		transfer.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		oracle.AppModuleBasic{},
-		market.AppModuleBasic{},
-		treasury.AppModuleBasic{},
-		wasm.AppModuleBasic{},
-	)
-
-	// module account permissions
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil, // just added to enable align fee
-		treasurytypes.BurnModuleName:   {authtypes.Burner},
-		minttypes.ModuleName:           {authtypes.Minter},
-		markettypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
-		oracletypes.ModuleName:         nil,
-		distrtypes.ModuleName:          nil,
-		treasurytypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:            nil,
-	}
-
-	// module accounts that are allowed to receive tokens
-	allowedReceivingModAcc = map[string]bool{
-		oracletypes.ModuleName:       true,
-		treasurytypes.BurnModuleName: true,
-	}
+	// Upgrades defines upgrades to be applied to the network
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade}
 )
 
 // Verify app interface at compile time
@@ -191,7 +79,7 @@ var (
 // TerraApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type TerraApp struct { // nolint: golint
+type TerraApp struct {
 	*baseapp.BaseApp
 	keepers.AppKeepers
 
@@ -263,87 +151,14 @@ func NewTerraApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	app.mm = module.NewManager(
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
-		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
-		ibc.NewAppModule(app.IBCKeeper),
-		ica.NewAppModule(nil, &app.ICAHostKeeper),
-		params.NewAppModule(app.ParamsKeeper),
-		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		transfer.NewAppModule(app.TransferKeeper),
-		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
-		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
-		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-	)
+	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName,
-		capabilitytypes.ModuleName,
-		minttypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		oracletypes.ModuleName,
-		genutiltypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		ibchost.ModuleName,
-		ibctransfertypes.ModuleName,
-		icatypes.ModuleName,
-		treasurytypes.ModuleName,
-		markettypes.ModuleName,
-		wasm.ModuleName,
-	)
-
-	app.mm.SetOrderEndBlockers(
-		upgradetypes.ModuleName,
-		capabilitytypes.ModuleName,
-		minttypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		oracletypes.ModuleName,
-		genutiltypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		ibchost.ModuleName,
-		ibctransfertypes.ModuleName,
-		icatypes.ModuleName,
-		treasurytypes.ModuleName,
-		markettypes.ModuleName,
-		wasm.ModuleName,
-	)
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -351,30 +166,7 @@ func NewTerraApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	// NOTE: Treasury must occur after bank module so that initial supply is properly set
-	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		govtypes.ModuleName,
-		markettypes.ModuleName,
-		oracletypes.ModuleName,
-		treasurytypes.ModuleName,
-		wasm.ModuleName,
-		authz.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		minttypes.ModuleName,
-		crisistypes.ModuleName,
-		ibchost.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		ibctransfertypes.ModuleName,
-		icatypes.ModuleName,
-		feegrant.ModuleName,
-	)
+	app.mm.SetOrderInitGenesis(orderInitGenesis()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
@@ -386,34 +178,14 @@ func NewTerraApp(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
-	app.sm = module.NewSimulationManager(
-		customauth.NewAppModule(appCodec, app.AccountKeeper, customauthsim.RandomGenesisAccounts),
-		// TODO - uncomment when v0.43.0 fix the simulation bug
-		// authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		custombank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		params.NewAppModule(app.ParamsKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
-		ibc.NewAppModule(app.IBCKeeper),
-		transfer.NewAppModule(app.TransferKeeper),
-		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
-		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
-		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-	)
+	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
 
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
-	app.MountKVStores(app.AppKeepers.GetKVStoreKey())
-	app.MountTransientStores(app.AppKeepers.GetTransientStoreKey())
-	app.MountMemoryStores(app.AppKeepers.GetMemoryStoreKey())
+	app.MountKVStores(app.GetKVStoreKey())
+	app.MountTransientStores(app.GetTransientStoreKey())
+	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -430,6 +202,7 @@ func NewTerraApp(
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 			IBCChannelKeeper:   *app.IBCKeeper,
 			DistributionKeeper: app.DistrKeeper,
+			GovKeeper:          app.GovKeeper,
 		},
 	)
 	if err != nil {
@@ -635,8 +408,15 @@ func GetMaccPerms() map[string][]string {
 }
 
 func (app *TerraApp) setupUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v2.UpgradeName,
-		v2.CreateV2UpgradeHandler(app.mm, app.configurator),
-	)
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				app.BaseApp,
+				&app.AppKeepers,
+			),
+		)
+	}
 }

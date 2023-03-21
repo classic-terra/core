@@ -76,7 +76,7 @@ func TestLegacyQuerySwap(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err := querier(input.Ctx, []string{types.QuerySwap}, query)
+	_, err = querier(input.Ctx, []string{types.QuerySwap}, query)
 	require.Error(t, err)
 
 	// overflow query
@@ -104,7 +104,7 @@ func TestLegacyQuerySwap(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = querier(input.Ctx, []string{types.QuerySwap}, query)
+	res, err := querier(input.Ctx, []string{types.QuerySwap}, query)
 	require.NoError(t, err)
 
 	var swapCoin sdk.Coin
@@ -116,7 +116,6 @@ func TestLegacyQuerySwap(t *testing.T) {
 }
 
 func TestLegacyQueryMintPool(t *testing.T) {
-
 	input := CreateTestInput(t)
 
 	poolDelta := sdk.NewDecWithPrec(17, 1)

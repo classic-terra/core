@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"encoding/hex"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
@@ -9,8 +10,6 @@ import (
 	"github.com/classic-terra/core/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"testing"
 )
 
 func TestAggregateVoteHash(t *testing.T) {
@@ -23,7 +22,7 @@ func TestAggregateVoteHash(t *testing.T) {
 	aggregateVoteHashRes, err := types.AggregateVoteHashFromHexString(hexStr)
 	require.NoError(t, err)
 	require.Equal(t, aggregateVoteHash, aggregateVoteHashRes)
-	require.True(t, aggregateVoteHash.Equal(aggregateVoteHash))
+	require.Equal(t, aggregateVoteHash, aggregateVoteHash)
 	require.True(t, types.AggregateVoteHash([]byte{}).Empty())
 
 	got, _ := yaml.Marshal(&aggregateVoteHash)

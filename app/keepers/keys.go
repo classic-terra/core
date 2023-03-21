@@ -24,7 +24,6 @@ import (
 	markettypes "github.com/classic-terra/core/x/market/types"
 	oracletypes "github.com/classic-terra/core/x/oracle/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
-	
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 

@@ -18,6 +18,8 @@ import (
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	
+	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 func (appKeepers *AppKeepers) getGovRouter() govtypes.Router {
@@ -28,7 +30,8 @@ func (appKeepers *AppKeepers) getGovRouter() govtypes.Router {
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(appKeepers.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
-		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(appKeepers.TreasuryKeeper))
+		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(appKeepers.TreasuryKeeper)).
+		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasm.EnableAllProposals))
 
 	return govRouter
 }

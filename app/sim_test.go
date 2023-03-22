@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/cosmos/cosmos-sdk/codec"
 	terraapp "github.com/classic-terra/core/app"
 	"github.com/classic-terra/core/app/helpers"
 
@@ -18,8 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 func init() {
@@ -116,7 +120,8 @@ func TestAppStateDeterminism(t *testing.T) {
 			app := terraapp.NewTerraApp(
 				logger, db, nil, true, map[int64]bool{}, terraapp.DefaultNodeHome,
 				simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-				simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt())
+				simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt(),
+			)
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -127,7 +132,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
+				AppStateFn(app.AppCodec(), app.SimulationManager()),
 				simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				simapp.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
@@ -151,4 +156,16 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 		}
 	}
+}
+
+// AppStateFn returns the initial application state using a genesis or the simulation parameters.
+// It panics if the user provides files for both of them.
+// If a file is not given for the genesis or the sim params, it creates a randomized one.
+func AppStateFn(codec codec.Codec, manager *module.SimulationManager) simtypes.AppStateFn {
+	// quick hack to setup app state genesis with our app modules
+	simapp.ModuleBasics = terraapp.ModuleBasics
+	if simapp.FlagGenesisTimeValue == 0 { // always set to have a block time
+		simapp.FlagGenesisTimeValue = time.Now().Unix()
+	}
+	return simapp.AppStateFn(codec, manager)
 }

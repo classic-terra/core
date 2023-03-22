@@ -133,6 +133,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:			nil,
+		wasm.ModuleName:                {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -274,7 +275,6 @@ func orderInitGenesis() []string {
 		markettypes.ModuleName,
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
-		wasmtypes.ModuleName,
 		authz.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -286,5 +286,6 @@ func orderInitGenesis() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		feegrant.ModuleName,
+		wasmtypes.ModuleName,
 	}
 }

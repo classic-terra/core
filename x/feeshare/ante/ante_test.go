@@ -25,7 +25,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	feeshareante "github.com/classic-terra/core/x/feeshare/ante"
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	wasmconfig "github.com/classic-terra/core/x/wasm/config"
@@ -35,11 +34,10 @@ import (
 type AnteTestSuite struct {
 	suite.Suite
 
-	app         *terraapp.TerraApp
-	anteHandler sdk.AnteHandler
-	ctx         sdk.Context
-	clientCtx   client.Context
-	txBuilder   client.TxBuilder
+	app       *terraapp.TerraApp
+	ctx       sdk.Context
+	clientCtx client.Context
+	txBuilder client.TxBuilder
 }
 
 // returns context and app with params set on account keeper
@@ -235,7 +233,7 @@ func (suite *AnteTestSuite) TestFeeSharePayout() {
 
 	fsk := suite.app.FeeShareKeeper
 	bk := suite.app.BankKeeper
-	mfd := feeshareante.NewFeeSharePayoutDecorator(bk, fsk)
+	mfd := ante.NewFeeSharePayoutDecorator(bk, fsk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// Set the blockheight past the tax height block

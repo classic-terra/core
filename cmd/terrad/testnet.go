@@ -310,7 +310,7 @@ func initGenFiles(
 	// set gov in the genesis state
 	var govGenState govtypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.VotingParams.VotingPeriod = time.Minute * 5
+	govGenState.VotingParams.VotingPeriod = time.Second * 30
 	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")

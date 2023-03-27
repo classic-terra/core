@@ -414,7 +414,7 @@ func (app *TerraApp) setupUpgradeHandlers() {
 			upgrade.UpgradeName,
 			upgrade.CreateUpgradeHandler(
 				app.mm,
-				app.configurator, &app.FeeShareKeeper,
+				app.configurator,
 				app.BaseApp,
 				&app.AppKeepers,
 			),

@@ -206,6 +206,7 @@ func simulationModules(
 
 func orderBeginBlockers() []string {
 	return []string{
+		feesharetypes.ModuleName,
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -232,6 +233,7 @@ func orderBeginBlockers() []string {
 
 func orderEndBlockers() []string {
 	return []string{
+		feesharetypes.ModuleName,
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,

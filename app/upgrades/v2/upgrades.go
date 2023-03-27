@@ -1,18 +1,20 @@
 package v2
 
 import (
+	"github.com/classic-terra/core/app/keepers"
+	"github.com/classic-terra/core/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 )
 
 func CreateV2UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
-	fskeeper *feesharekeeper.Keeper,
+	_ upgrades.BaseAppParamManager,
+	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// treasury store migration
@@ -23,7 +25,7 @@ func CreateV2UpgradeHandler(
 			DeveloperShares: sdk.NewDecWithPrec(50, 2), // = 50%
 			AllowedDenoms:   []string{"uluna"},
 		}
-		fskeeper.SetParams(ctx, newFeeShareParams)
+		appKeepers.FeeShareKeeper.SetParams(ctx, newFeeShareParams)
 
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}

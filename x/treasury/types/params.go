@@ -21,6 +21,7 @@ var (
 	KeyWindowLong              = []byte("WindowLong")
 	KeyWindowProbation         = []byte("WindowProbation")
 	KeyBurnTaxSplit            = []byte("BurnTaxSplit")
+	KeyMinInitialDepositRatio  = []byte("MinInitialDepositRatio")
 )
 
 // Default parameter values
@@ -45,6 +46,7 @@ var (
 	DefaultTaxRate                 = sdk.NewDecWithPrec(1, 3)   // 0.1%
 	DefaultRewardWeight            = sdk.NewDecWithPrec(5, 2)   // 5%
 	DefaultBurnTaxSplit            = sdk.NewDecWithPrec(1, 1)   // 10% goes to community pool, 90% burn
+	DefaultMinInitialDepositRatio  = sdk.ZeroDec()              // 0% min initial deposit
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -60,6 +62,7 @@ func DefaultParams() Params {
 		WindowLong:              DefaultWindowLong,
 		WindowProbation:         DefaultWindowProbation,
 		BurnTaxSplit:            DefaultBurnTaxSplit,
+		MinInitialDepositRatio:  DefaultMinInitialDepositRatio,
 	}
 }
 
@@ -76,7 +79,6 @@ func (p Params) String() string {
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of treasury module's parameters.
-// nolint
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyTaxPolicy, &p.TaxPolicy, validateTaxPolicy),
@@ -87,6 +89,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyWindowLong, &p.WindowLong, validateWindowLong),
 		paramstypes.NewParamSetPair(KeyWindowProbation, &p.WindowProbation, validateWindowProbation),
 		paramstypes.NewParamSetPair(KeyBurnTaxSplit, &p.BurnTaxSplit, validateBurnTaxSplit),
+		paramstypes.NewParamSetPair(KeyMinInitialDepositRatio, &p.MinInitialDepositRatio, validateMinInitialDepositRatio),
 	}
 }
 
@@ -244,6 +247,23 @@ func validateBurnTaxSplit(i interface{}) error {
 
 	if v.IsNegative() {
 		return fmt.Errorf("burn tax split must be positive: %s", v)
+	}
+
+	return nil
+}
+
+func validateMinInitialDepositRatio(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid paramater type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("min initial deposit ratio must be positive: %s", v)
+	}
+
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min initial deposit ratio must less than or equal 1.0: %s", v)
 	}
 
 	return nil

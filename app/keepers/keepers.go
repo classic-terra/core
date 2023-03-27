@@ -81,7 +81,7 @@ type AppKeepers struct {
 	CrisisKeeper     crisiskeeper.Keeper
 	UpgradeKeeper    upgradekeeper.Keeper
 	ParamsKeeper     paramskeeper.Keeper
-	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the appKeepers, so we can SetRouter on it correctly
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
@@ -203,6 +203,15 @@ func NewAppKeepers(
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
 		distrtypes.ModuleName)
 
+	appKeepers.FeeShareKeeper = feesharekeeper.NewKeeper(
+		appKeepers.keys[feesharetypes.StoreKey],
+		appCodec,
+		appKeepers.GetSubspace(feesharetypes.ModuleName),
+		appKeepers.BankKeeper,
+		appKeepers.WasmKeeper,
+		authtypes.FeeCollectorName,
+	)
+
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[wasmtypes.StoreKey],
@@ -215,15 +224,6 @@ func NewAppKeepers(
 		wasmtypes.DefaultFeatures,
 		homePath,
 		wasmConfig,
-	)
-
-	appKeepers.FeeShareKeeper = feesharekeeper.NewKeeper(
-		appKeepers.keys[feesharetypes.StoreKey],
-		appCodec,
-		appKeepers.GetSubspace(feesharetypes.ModuleName),
-		appKeepers.BankKeeper,
-		appKeepers.WasmKeeper,
-		authtypes.FeeCollectorName,
 	)
 
 	// register wasm msg parser & querier

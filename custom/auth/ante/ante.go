@@ -10,6 +10,7 @@ import (
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -23,6 +24,7 @@ type HandlerOptions struct {
 	SigGasConsumer     cosmosante.SignatureVerificationGasConsumer
 	IBCChannelKeeper   channelkeeper.Keeper
 	DistributionKeeper distributionkeeper.Keeper
+	GovKeeper          govkeeper.Keeper
 	FeeShareKeeper     feehshareante.FeeShareKeeper
 }
 
@@ -77,5 +79,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCChannelKeeper),
+		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 	), nil
 }

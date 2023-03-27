@@ -5,6 +5,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	feesharettypes "github.com/classic-terra/core/x/feeshare/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -14,6 +15,7 @@ type TreasuryKeeper interface {
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
 	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
+	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
 }
 
 // OracleKeeper for feeder validation
@@ -36,4 +38,8 @@ type FeeShareKeeper interface {
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	GetFeePool(ctx sdk.Context) distributiontypes.FeePool
+}
+
+type GovKeeper interface {
+	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
 }

@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // cosmos proto currently uses this
 	"github.com/stretchr/testify/assert"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -34,7 +34,7 @@ func TestDispatchSubMsgSuccessCase(t *testing.T) {
 	_, _, fred := keyPubAddr()
 
 	// upload code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	codeID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)
@@ -129,6 +129,7 @@ func TestDispatchSubMsgSuccessCase(t *testing.T) {
 	}, module.Attributes[0])
 }
 
+// go test -v -run ^TestDispatchSubMsgErrorHandling$ github.com/classic-terra/core/x/wasm/keeper
 func TestDispatchSubMsgErrorHandling(t *testing.T) {
 	fundedDenom := core.MicroLunaDenom
 	fundedAmount := 1_000_000
@@ -145,13 +146,13 @@ func TestDispatchSubMsgErrorHandling(t *testing.T) {
 	_, uploader := createFakeFundedAccount(ctx, accKeeper, bankKeeper, contractStart.Add(contractStart...))
 
 	// upload code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	reflectID, err := keeper.StoreCode(ctx, uploader, reflectCode)
 	require.NoError(t, err)
 
 	// create hackatom contract for testing (for infinite loop)
-	hackatomCode, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	hackatomCode, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 	hackatomID, err := keeper.StoreCode(ctx, uploader, hackatomCode)
 	require.NoError(t, err)
@@ -274,14 +275,14 @@ func TestDispatchSubMsgErrorHandling(t *testing.T) {
 			submsgID: 5,
 			msg:      validBankSend,
 			// note we charge another 40k for the reply call
-			resultAssertions: []assertion{assertReturnedEvents(5), assertGasUsed(134000, 137000)},
+			resultAssertions: []assertion{assertReturnedEvents(5), assertGasUsed(138000, 141000)},
 		},
 		"not enough tokens": {
 			submsgID:    6,
 			msg:         invalidBankSend,
 			subMsgError: true,
 			// uses less gas than the send tokens (cost of bank transfer)
-			resultAssertions: []assertion{assertGasUsed(100000, 101500), assertErrorString("insufficient funds")},
+			resultAssertions: []assertion{assertGasUsed(100300, 101800), assertErrorString("insufficient funds")},
 		},
 		"out of gas panic with no gas limit": {
 			submsgID:        7,
@@ -294,7 +295,7 @@ func TestDispatchSubMsgErrorHandling(t *testing.T) {
 			msg:      validBankSend,
 			gasLimit: &subGasLimit,
 			// uses same gas as call without limit
-			resultAssertions: []assertion{assertReturnedEvents(5), assertGasUsed(134000, 137000)},
+			resultAssertions: []assertion{assertReturnedEvents(5), assertGasUsed(138000, 141000)},
 		},
 		"not enough tokens with limit": {
 			submsgID:    16,
@@ -302,7 +303,7 @@ func TestDispatchSubMsgErrorHandling(t *testing.T) {
 			subMsgError: true,
 			gasLimit:    &subGasLimit,
 			// uses same gas as call without limit
-			resultAssertions: []assertion{assertGasUsed(100000, 101500), assertErrorString("insufficient funds")},
+			resultAssertions: []assertion{assertGasUsed(100400, 101900), assertErrorString("insufficient funds")},
 		},
 		"out of gas caught with gas limit": {
 			submsgID:    17,
@@ -401,7 +402,7 @@ func TestDispatchSubMsgConditionalReplyOn(t *testing.T) {
 	_, _, fred := keyPubAddr()
 
 	// upload code
-	reflectCode, err := ioutil.ReadFile("./testdata/reflect.wasm")
+	reflectCode, err := os.ReadFile("./testdata/reflect.wasm")
 	require.NoError(t, err)
 	codeID, err := keeper.StoreCode(ctx, creator, reflectCode)
 	require.NoError(t, err)
@@ -468,7 +469,7 @@ func TestDispatchSubMsgConditionalReplyOn(t *testing.T) {
 		},
 	}
 
-	var id uint64 = 0
+	var id uint64
 	for name, tc := range cases {
 		id++
 		t.Run(name, func(t *testing.T) {

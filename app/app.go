@@ -43,7 +43,11 @@ import (
 
 	"github.com/classic-terra/core/app/keepers"
 	terraappparams "github.com/classic-terra/core/app/params"
+
+	// upgrades
+	"github.com/classic-terra/core/app/upgrades"
 	v2 "github.com/classic-terra/core/app/upgrades/v2"
+	v3 "github.com/classic-terra/core/app/upgrades/v3"
 
 	customante "github.com/classic-terra/core/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/custom/auth/client/rest"
@@ -58,8 +62,13 @@ import (
 
 const appName = "TerraApp"
 
-// DefaultNodeHome defines default home directories for terrad
-var DefaultNodeHome string
+var (
+	// DefaultNodeHome defines default home directories for terrad
+	DefaultNodeHome string
+
+	// Upgrades defines upgrades to be applied to the network
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade}
+)
 
 // Verify app interface at compile time
 var (
@@ -70,7 +79,7 @@ var (
 // TerraApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type TerraApp struct { // nolint: golint
+type TerraApp struct {
 	*baseapp.BaseApp
 	keepers.AppKeepers
 
@@ -194,6 +203,7 @@ func NewTerraApp(
 			IBCChannelKeeper:   app.IBCKeeper.ChannelKeeper,
 			DistributionKeeper: app.DistrKeeper,
 			FeeShareKeeper:     app.FeeShareKeeper,
+			GovKeeper:          app.GovKeeper,
 		},
 	)
 	if err != nil {
@@ -398,10 +408,16 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
-// initParamsKeeper init params keeper and its subspaces
 func (app *TerraApp) setupUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v2.UpgradeName,
-		v2.CreateV2UpgradeHandler(app.mm, app.configurator, &app.FeeShareKeeper),
-	)
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator, &app.FeeShareKeeper,
+				app.BaseApp,
+				&app.AppKeepers,
+			),
+		)
+	}
 }

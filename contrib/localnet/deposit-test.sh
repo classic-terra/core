@@ -2,7 +2,7 @@
 
 #
 # start network
-TESTNET_NVAL=6 TESTNET_VOTING_PERIOD=40s make clean localnet-start
+make clean localnet-start
 
 #
 # convenience
@@ -40,7 +40,7 @@ $TERRAD tx gov deposit 1 10000000uluna --from node1 --keyring-backend test --cha
 
 #
 # loop from 0 to 5 to vote yes
-for i in {0..5}; do
+for i in {0..6}; do
     # check if docker for node i is running
     if [[ $(docker ps -a | grep terradnode$i | wc -l) -eq 1 ]]; then
 		sleep 5
@@ -50,7 +50,7 @@ done
 
 #
 # wait for proposal to pass
-for i in {0..6}; do
+for i in {0..7}; do
     STATUS=$($TERRAD q gov proposal 1 --chain-id $CHAIN_ID --home $NODE1_HOME -o json | jq -r .status)
     echo $STATUS
     if [ "$STATUS" = "PROPOSAL_STATUS_PASSED" ]; then

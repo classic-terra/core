@@ -46,7 +46,7 @@ jobs:
             go.sum
       - name: start localnet
         run: |
-          TESTNET_NVAL=6 make clean localnet-start
+          make clean localnet-start
         if: env.GIT_DIFF
       - name: test liveness
         run: |
@@ -74,5 +74,5 @@ jobs:
       - name: test upgrade
         run: |
           chmod +x -R ./contrib/updates
-          ./contrib/updates/upgrade-test.sh
+          ./contrib/updates/upgrade-test.sh 7
         if: env.GIT_DIFF

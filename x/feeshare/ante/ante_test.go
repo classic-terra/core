@@ -253,7 +253,6 @@ func (suite *AnteTestSuite) TestFeeSharePayout() {
 		Coins:      sdk.NewCoins(sdk.NewCoin("utoken", sdk.NewInt(100))),
 	}
 
-
 	require.NoError(suite.txBuilder.SetMsgs(msg))
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	require.NoError(err)

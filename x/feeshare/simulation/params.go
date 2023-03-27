@@ -1,7 +1,5 @@
 package simulation
 
-
-
 import (
 	"fmt"
 	"math/rand" //#nosec G404

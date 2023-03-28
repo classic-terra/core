@@ -4,7 +4,7 @@
 SOFTWARE_UPGRADE_NAME=$(ls -td -- ./app/upgrades/* | head -n 1 | cut -d'/' -f4)
 NODE1_HOME=node1/terrad
 BINARY_OLD="docker exec terradnode1 ./terrad"
-TESTNET_NVAL=$1
+TESTNET_NVAL=${1:-7}
 
 # sleep to wait for localnet to come up
 sleep 10

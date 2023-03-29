@@ -61,6 +61,8 @@ import (
 	customstaking "github.com/classic-terra/core/custom/staking"
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 
+	"github.com/classic-terra/core/x/feeshare"
+	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 	"github.com/classic-terra/core/x/market"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	"github.com/classic-terra/core/x/oracle"
@@ -117,6 +119,7 @@ var (
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		feeshare.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -175,6 +178,7 @@ func appModules(
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		feeshare.NewAppModule(app.FeeShareKeeper, app.AccountKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
@@ -205,12 +209,14 @@ func simulationModules(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		feeshare.NewAppModule(app.FeeShareKeeper, app.AccountKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
 func orderBeginBlockers() []string {
 	return []string{
+		feesharetypes.ModuleName,
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -238,6 +244,7 @@ func orderBeginBlockers() []string {
 
 func orderEndBlockers() []string {
 	return []string{
+		feesharetypes.ModuleName,
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -265,6 +272,7 @@ func orderEndBlockers() []string {
 
 func orderInitGenesis() []string {
 	return []string{
+		feesharetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,

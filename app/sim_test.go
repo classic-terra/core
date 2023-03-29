@@ -26,6 +26,17 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+       return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+}
+
+// fauxMerkleModeOpt is a BaseApp option function to enable faux Merkle Tree mode for faster sim speed
+func fauxMerkleModeOpt() func(*baseapp.BaseApp) {
+	return func (app *baseapp.BaseApp)  { app.SetFauxMerkleMode() }
+}
+
 func init() {
 	simapp.GetSimulatorFlags()
 }
@@ -51,7 +62,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := terraapp.NewTerraApp(
 		logger, db, nil, true, map[int64]bool{},
 		terraapp.DefaultNodeHome, simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-		simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt())
+		simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt(), fauxMerkleModeOpt())
 
 	// Run randomized simulation:w
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -78,12 +89,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	if config.Commit {
 		simapp.PrintStats(db)
 	}
-}
-
-// interBlockCacheOpt returns a BaseApp option function that sets the persistent
-// inter-block write-through cache.
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -120,7 +125,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			app := terraapp.NewTerraApp(
 				logger, db, nil, true, map[int64]bool{}, terraapp.DefaultNodeHome,
 				simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-				simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt(),
+				simapp.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt(), fauxMerkleModeOpt(),
 			)
 
 			fmt.Printf(

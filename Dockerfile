@@ -6,9 +6,8 @@ ARG source=.
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
 # with some changes to support our toolchain, etc
-RUN set -eux; apk add --no-cache ca-certificates build-base;
+RUN set -eux; apk add --no-cache ca-certificates build-base cmake;
 
-RUN apk add git cmake
 # NOTE: add these to run with LEDGER_ENABLED=true
 # RUN apk add libusb-dev linux-headers
 
@@ -16,7 +15,7 @@ WORKDIR /code
 COPY ${source} /code/
 
 # Install mimalloc
-RUN git clone --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install
+RUN git clone -b v2.0.0 --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install
 ENV MIMALLOC_RESERVE_HUGE_OS_PAGES=4
 
 # Cosmwasm - download correct libwasmvm version and verify checksum

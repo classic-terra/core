@@ -45,7 +45,7 @@ while true; do
     fi
 done
 
-sleep 20
+sleep 40
 
 # check all nodes are online after upgrade
 for (( i=0; i<$TESTNET_NVAL; i++ )); do
@@ -53,10 +53,12 @@ for (( i=0; i<$TESTNET_NVAL; i++ )); do
         docker exec terradnode$i ./terrad status --home "node$i/terrad"
         if [[ "${PIPESTATUS[0]}" != "0" ]]; then
             echo "node$i is not online"
+            docker logs terradnode$i
             exit 1
         fi
     else
         echo "terradnode$i is not running"
+        docker logs terradnode$i
         exit 1
     fi
 done

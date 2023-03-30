@@ -1,7 +1,7 @@
 # docker build . -t cosmwasm/wasmd:latest
 # docker run --rm -it cosmwasm/wasmd:latest /bin/sh
 FROM golang:1.18-alpine3.17 AS go-builder
-ARG source=.
+ARG version=v1.1.0
 
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
@@ -14,6 +14,7 @@ RUN apk add git cmake
 
 RUN git clone https://github.com/classic-terra/core.git && mv core /code
 WORKDIR /code
+RUN git checkout $version
 
 # Install mimalloc
 RUN git clone --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install
@@ -33,7 +34,7 @@ FROM ubuntu:22.04
 
 RUN DEBIAN_FRONTEND=noninteractive ; \
     apt-get update ; \
-    apt-get install -y wget lz4 aria2 curl jq ip nmap; \
+    apt-get install -y wget lz4 aria2 curl jq ip net-tools; \
     apt-get clean ; \
     mkdir /terra ; \
     groupadd -r terra ; \

@@ -15,6 +15,9 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bu
 TESTNET_NVAL := $(if $(TESTNET_NVAL),$(TESTNET_NVAL),7)
 TESTNET_CHAINID := $(if $(TESTNET_CHAINID),$(TESTNET_CHAINID),localterra)
 
+#OPERATOR ARGS
+NODE_VERSION := $(if $(NODE_VERSION),$(NODE_VERSION),alpine3.17)
+
 ifneq ($(OS),Windows_NT)
   UNAME_S = $(shell uname -s)
 endif
@@ -291,7 +294,7 @@ build-operator-img-core:
 	docker-compose -f contrib/terra-operator/docker-compose.build.yml build core --no-cache
 
 build-operator-img-node:
-	@if ! docker image inspect public.ecr.aws/p5q2r9h7/core:alpine3.17 &>/dev/null ; then make build-operator-img-core ; fi
+	@if ! docker image inspect public.ecr.aws/classic-terra/core:${NODE_VERSION} &>/dev/null ; then make build-operator-img-core ; fi
 	docker-compose -f contrib/terra-operator/docker-compose.build.yml build node --no-cache
 
 .PHONY: build-operator-img-all build-operator-img-core build-operator-img-node

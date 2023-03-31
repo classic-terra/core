@@ -12,9 +12,11 @@ DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
 #TESTNET PARAMETERS
-TESTNET_NVAL := $(if $(TESTNET_NVAL),$(TESTNET_NVAL),4)
-TESTNET_CHAINID := $(if $(TESTNET_CHAINID),$(TESTNET_CHAINID),localnet-1)
-TESTNET_VOTING_PERIOD := $(if $(TESTNET_VOTING_PERIOD),$(TESTNET_VOTING_PERIOD),86400s)
+TESTNET_NVAL := $(if $(TESTNET_NVAL),$(TESTNET_NVAL),7)
+TESTNET_CHAINID := $(if $(TESTNET_CHAINID),$(TESTNET_CHAINID),localterra)
+
+#OPERATOR ARGS
+NODE_VERSION := $(if $(NODE_VERSION),$(NODE_VERSION),alpine3.17)
 
 #OPERATOR ARGS
 NODE_VERSION := $(if $(NODE_VERSION),$(NODE_VERSION),alpine3.17)
@@ -254,7 +256,7 @@ proto-check-breaking:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally
+# Run a 7-node testnet locally by default
 localnet-start: localnet-stop build-linux
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-env 2>/dev/null),$(info found image classic-terra/terrad-env),$(MAKE) -C contrib/localnet terrad-env)
 	if ! [ -f build/node0/terrad/config/genesis.json ]; then $(DOCKER) run --platform linux/amd64 --rm \
@@ -265,24 +267,23 @@ localnet-start: localnet-stop build-linux
 		-v /etc/shadow:/etc/shadow:ro \
 		classic-terra/terrad-env testnet --chain-id ${TESTNET_CHAINID} --v ${TESTNET_NVAL} -o . --starting-ip-address 192.168.10.2 --keyring-backend=test; \
 	fi
-	for i in $$(seq 0 5); do \
-		echo $$i; \
-		jq '.app_state.gov.voting_params.voting_period = "${TESTNET_VOTING_PERIOD}"' build/node$$i/terrad/config/genesis.json > build/node$$i/terrad/config/genesis.json.tmp; \
-		mv build/node$$i/terrad/config/genesis.json.tmp build/node$$i/terrad/config/genesis.json; \
-	done
 	docker-compose up -d
 
 localnet-start-upgrade: localnet-upgrade-stop build-linux
 	$(MAKE) -C contrib/updates build-cosmovisor-linux BUILDDIR=$(BUILDDIR)
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-upgrade-env 2>/dev/null),$(info found image classic-terra/terrad-upgrade-env),$(MAKE) -C contrib/localnet terrad-upgrade-env)
-	bash contrib/updates/prepare_cosmovisor.sh $(BUILDDIR)
+	bash contrib/updates/prepare_cosmovisor.sh $(BUILDDIR) ${TESTNET_NVAL} ${TESTNET_CHAINID}
 	docker-compose -f ./contrib/updates/docker-compose.yml up -d
 
 localnet-upgrade-stop:
 	docker-compose -f ./contrib/updates/docker-compose.yml down
+	rm -rf build/node*
+	rm -rf build/gentxs
 
 localnet-stop:
 	docker-compose down
+	rm -rf build/node*
+	rm -rf build/gentxs
 
 .PHONY: localnet-start localnet-stop
 

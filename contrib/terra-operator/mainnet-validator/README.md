@@ -43,3 +43,10 @@ environment:
 ```
 
 Setting CONTINUE=false will start node again
+
+## No brainer guide
+
+```bash
+terrad init moniker --chain-id columbus-5
+cd contrib/terra-operator/mainnet-validator && docker compose up -d
+```

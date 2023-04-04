@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mainnet:
+    image: public.ecr.aws/classic-terra/mainnet:v1.1.0-arch-base
+    container_name: columbus-5
+    restart: always
+    environment:
+      - CONTINUE=false
+    ports:
+      - 26657:26657
+      - 26656:26656
+    volumes:
+      - ./data:/terra/data
+      - ~/.terra:/terra/.terra

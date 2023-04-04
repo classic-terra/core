@@ -15,13 +15,26 @@ services:
     image: public.ecr.aws/classic-terra/core:v1.1.0-ubuntu22.04
     build:
       context: .
-      dockerfile: Dockerfile.ubuntu
+      dockerfile: core/Dockerfile.ubuntu
       args:
         version: v1.1.0
       platforms:
         - "linux/amd64"
       labels:
         - "description=Contains the terrad binary in ubuntu"
+
+  arch-core: 
+    image: public.ecr.aws/classic-terra/core:v1.1.0-arch-base
+    build:
+      context: .
+      dockerfile: core/Dockerfile.arch
+      args:
+        version: v1.1.0
+      platforms:
+        - "linux/amd64"
+      labels:
+        - "description=Contains the terrad binary in archlinux base"
+
   node:
     image: public.ecr.aws/classic-terra/node:alpine3.17
     build: 

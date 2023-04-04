@@ -1,0 +1,24 @@
+ARG base_image=public.ecr.aws/classic-terra/core
+ARG version=v1.1.0-arch-base
+
+FROM ${base_image}:${version}
+
+ENV TERRAD_P2P_LADDR=tcp://0.0.0.0:26656
+ENV TERRAD_RPC_LADDR=tcp://0.0.0.0:26657
+ENV TERRAD_GRPC_ENABLE=false
+ENV TERRAD_GRPC_WEB_ENABLE=false
+ENV TERRAD_P2P_MAX_NUM_INBOUND_PEERS=200
+ENV TERRAD_P2P_MAX_NUM_OUTBOUND_PEERS=50
+ENV TERRAD_TX_INDEX_INDEXER=null
+
+RUN mkdir /terra/data && mkdir /terra/.terra
+
+# Download genesis for columbus-5, put it in here for caching
+RUN wget https://columbus-genesis.s3.ap-northeast-1.amazonaws.com/columbus-5-genesis.json
+
+# Addrbook json, put it in here for caching
+RUN wget https://www.dropbox.com/s/bina9qfqkbsko6f/addrbook.json
+
+COPY --chown=terra:terra ./entrypoint.sh /entrypoint.sh
+
+CMD ["/entrypoint.sh"]

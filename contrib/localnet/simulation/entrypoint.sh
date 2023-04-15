@@ -15,7 +15,7 @@ for i in $(seq 0 3); do
 done
 
 # tx_send
-# sh $SIMULATION_FOLDER/tx_send.sh
+sh $SIMULATION_FOLDER/tx_send.sh
 
 echo "DONE TX SEND SIMULATION (1/5)"
 

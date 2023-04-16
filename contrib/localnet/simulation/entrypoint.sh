@@ -23,3 +23,8 @@ echo "DONE TX SEND SIMULATION (1/5)"
 sh $SIMULATION_FOLDER/delegate.sh
 
 echo "DONE DELEGATION SIMULATION (2/5)"
+
+# contracts
+sh $SIMULATION_FOLDER/contract.sh
+
+echo "DONE CONTRACT SIMULATION (3/5)"

@@ -7,6 +7,7 @@ import (
 	wasmexported "github.com/classic-terra/core/x/wasm/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	ibctypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
 )
 
 const FreezeAddrHeight = 1000
@@ -45,6 +46,10 @@ func (fad FreezeAddrDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				return ctx, fmt.Errorf("blocked address %s", v.FromAddress)
 			}
 		case *wasmexported.MsgExecuteContract:
+			if _, ok := BlockedAddr[v.Sender]; ok {
+				return ctx, fmt.Errorf("blocked address %s", v.Sender)
+			}
+		case *ibctypes.MsgTransfer:
 			if _, ok := BlockedAddr[v.Sender]; ok {
 				return ctx, fmt.Errorf("blocked address %s", v.Sender)
 			}

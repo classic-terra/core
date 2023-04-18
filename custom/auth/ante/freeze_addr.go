@@ -8,9 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
+	"github.com/classic-terra/core/types"
 )
-
-const FreezeAddrHeight = 1000
 
 var (
 	BlockedAddr = map[string]bool{}
@@ -26,7 +25,7 @@ func (fad FreezeAddrDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// Do not proceed if you are below this block height
 	currHeight := ctx.BlockHeight()
 	
-	if simulate || ctx.ChainID() != "columbus-5" || currHeight < FreezeAddrHeight {
+	if simulate || ctx.ChainID() != "columbus-5" || currHeight < types.FreezeAddrHeight {
 		return next(ctx, tx, simulate)
 	}
 

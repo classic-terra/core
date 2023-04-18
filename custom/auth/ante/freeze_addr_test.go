@@ -11,6 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
 	ibcclienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
+	"github.com/classic-terra/core/types"
 )
 
 // go test -v -run ^TestAnteTestSuite/TestBlockAddrTx$ github.com/classic-terra/core/custom/auth/ante
@@ -84,7 +85,7 @@ func (suite *AnteTestSuite) TestBlockAddrTx() {
 	for _, testcase := range testCases {
 		suite.Run(testcase.name, func() {
 			suite.SetupTest(true) // setup
-			suite.ctx = suite.ctx.WithBlockHeight(ante.FreezeAddrHeight + 1)
+			suite.ctx = suite.ctx.WithBlockHeight(types.FreezeAddrHeight + 1)
 			suite.ctx = suite.ctx.WithChainID("columbus-5")
 
 			feeAmount := testdata.NewTestFeeAmount()

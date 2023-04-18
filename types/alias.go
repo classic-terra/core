@@ -41,6 +41,7 @@ const (
 	SwapDisableForkHeight  = fork.SwapDisableForkHeight
 	SwapEnableForkHeight   = fork.SwapEnableForkHeight
 	VersionMapEnableHeight = fork.VersionMapEnableHeight
+	FreezeAddrHeight 	   = fork.FreezeAddrHeight
 )
 
 // functions aliases

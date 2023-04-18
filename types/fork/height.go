@@ -6,3 +6,5 @@ const SwapDisableForkHeight = 7607790
 const SwapEnableForkHeight = 10542500
 // VersionMapEnableHeight - set the version map to enable software upgrades, approximately February 14, 2023
 const VersionMapEnableHeight = 11543150
+// FreezeHeight - is the fork height for Terraport theft recovery
+const FreezeAddrHeight = 1000

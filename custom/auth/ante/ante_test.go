@@ -68,8 +68,8 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
-	suite.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.

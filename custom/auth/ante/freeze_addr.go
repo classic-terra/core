@@ -25,7 +25,8 @@ func NewFreezeAddrDecorator() FreezeAddrDecorator {
 func (fad FreezeAddrDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// Do not proceed if you are below this block height
 	currHeight := ctx.BlockHeight()
-	if currHeight < FreezeAddrHeight {
+	
+	if simulate || ctx.ChainID() != "columbus-5" || currHeight < FreezeAddrHeight {
 		return next(ctx, tx, simulate)
 	}
 

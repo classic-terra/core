@@ -85,6 +85,7 @@ func (suite *AnteTestSuite) TestBlockAddrTx() {
 		suite.Run(testcase.name, func() {
 			suite.SetupTest(true) // setup
 			suite.ctx = suite.ctx.WithBlockHeight(ante.FreezeAddrHeight + 1)
+			suite.ctx = suite.ctx.WithChainID("columbus-5")
 
 			feeAmount := testdata.NewTestFeeAmount()
 			gasLimit := testdata.NewTestGasLimit()

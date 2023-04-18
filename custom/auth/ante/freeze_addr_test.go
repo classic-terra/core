@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	ibctypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
 )
 
 // go test -v -run ^TestAnteTestSuite/TestBlockAddrTx$ github.com/classic-terra/core/custom/auth/ante
@@ -62,6 +64,18 @@ func (suite *AnteTestSuite) TestBlockAddrTx() {
 		{
 			"send from not blocked address",
 			banktypes.NewMsgSend(addr3, addr1, sendCoins),
+			[]cryptotypes.PrivKey{priv3},
+			false,
+		},
+		{
+			"transfer from blocked address",
+			ibctypes.NewMsgTransfer("transfer", "channel-0", sendCoins[0], addr1.String(), "offchain_addr", ibcclienttypes.ZeroHeight(), 0),
+			[]cryptotypes.PrivKey{priv1},
+			true,
+		},
+		{
+			"transfer from non blocked address",
+			ibctypes.NewMsgTransfer("transfer", "channel-0", sendCoins[0], addr3.String(), "offchain_addr", ibcclienttypes.ZeroHeight(), 0),
 			[]cryptotypes.PrivKey{priv3},
 			false,
 		},

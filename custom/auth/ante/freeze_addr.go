@@ -3,12 +3,12 @@ package ante
 import (
 	"fmt"
 
+	"github.com/classic-terra/core/types"
 	marketexported "github.com/classic-terra/core/x/market/exported"
 	wasmexported "github.com/classic-terra/core/x/wasm/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
-	"github.com/classic-terra/core/types"
 )
 
 var (
@@ -24,7 +24,7 @@ func NewFreezeAddrDecorator() FreezeAddrDecorator {
 func (fad FreezeAddrDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// Do not proceed if you are below this block height
 	currHeight := ctx.BlockHeight()
-	
+
 	if simulate || ctx.ChainID() != "columbus-5" || currHeight < types.FreezeAddrHeight {
 		return next(ctx, tx, simulate)
 	}
@@ -46,6 +46,10 @@ func (fad FreezeAddrDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				return ctx, fmt.Errorf("blocked address %s", v.FromAddress)
 			}
 		case *wasmexported.MsgExecuteContract:
+			if _, ok := BlockedAddr[v.Sender]; ok {
+				return ctx, fmt.Errorf("blocked address %s", v.Sender)
+			}
+		case *wasmexported.MsgInstantiateContract:
 			if _, ok := BlockedAddr[v.Sender]; ok {
 				return ctx, fmt.Errorf("blocked address %s", v.Sender)
 			}

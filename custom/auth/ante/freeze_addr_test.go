@@ -2,6 +2,7 @@ package ante_test
 
 import (
 	"github.com/classic-terra/core/custom/auth/ante"
+	"github.com/classic-terra/core/types"
 	core "github.com/classic-terra/core/types"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	wasmtypes "github.com/classic-terra/core/x/wasm/types"
@@ -11,7 +12,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
 	ibcclienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
-	"github.com/classic-terra/core/types"
 )
 
 // go test -v -run ^TestAnteTestSuite/TestBlockAddrTx$ github.com/classic-terra/core/custom/auth/ante
@@ -59,6 +59,12 @@ func (suite *AnteTestSuite) TestBlockAddrTx() {
 		{
 			"execute contract from blocked address",
 			wasmtypes.NewMsgExecuteContract(addr1, nil, nil, sendCoins),
+			[]cryptotypes.PrivKey{priv1},
+			true,
+		},
+		{
+			"instantiate contract from blocked address",
+			wasmtypes.NewMsgInstantiateContract(addr1, nil, 0, nil, sendCoins),
 			[]cryptotypes.PrivKey{priv1},
 			true,
 		},

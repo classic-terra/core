@@ -1,10 +1,14 @@
 #!/bin/sh
 
 export HOME=${HOME:-~/.terra}
-export TESTNET_FOLDER=${TESTNET_FOLDER:-build}
-export SIMULATION_FOLDER=${SIMULATION_FOLDER:-contrib/localnet/simulation}
+export SIMULATION_FOLDER=$(dirname $(realpath "$0"))
+export TESTNET_FOLDER=$(echo $SIMULATION_FOLDER | sed 's|\(.*core\).*|\1|')/build
 export KEYRING_BACKEND=test
 export CHAIN_ID=${CHAIN_ID:-localterra}
+
+if [ ! -d "$HOME" ]; then
+    terrad init test0 --chain-id $CHAIN_ID --home $HOME
+fi
 
 # initialize keys
 for i in $(seq 0 3); do
@@ -14,6 +18,9 @@ for i in $(seq 0 3); do
     # Add new account
     echo $mnemonic | terrad keys add $keyname --keyring-backend $KEYRING_BACKEND --home $HOME --recover
 done
+
+# copy genesis.json to $HOME
+cp $TESTNET_FOLDER/node0/terrad/config/genesis.json $HOME/config/genesis.json
 
 # tx_send
 sh $SIMULATION_FOLDER/tx_send.sh

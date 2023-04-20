@@ -1,66 +1,69 @@
 #!/bin/sh
 
-SCRIPT=$(realpath "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-CONTRACTPATH=${SCRIPTPATH}/misc/cw721_base.wasm
+CONTRACTPATH=${SIMULATION_FOLDER}/misc/cw721_base.wasm
 
-for j in $(seq 0 4); do
+# create two contracts only
+for j in $(seq 0 1); do
 
-	echo "node $j ..."
+	echo "key test$j ..."
 
-	# val stores contract
+	# stores contract
 	echo "... stores a wasm"
-	folder="${TESTNET_FOLDER}"/node$j/
-	val_addr_name=$(basename $folder)
-	val_addr=$(terrad keys show $val_addr_name -a --home ${folder}terrad --keyring-backend $KEYRING_BACKEND)
-	out=$(terrad tx wasm store ${CONTRACTPATH} --from ${val_addr_name} --broadcast-mode block --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home ${folder}terrad --keyring-backend $KEYRING_BACKEND -y)
+	addr=$(terrad keys show test$j -a --home $HOME --keyring-backend $KEYRING_BACKEND)
+	out=$(terrad tx wasm store ${CONTRACTPATH} --from test$j --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
 	code=$(echo $out | jq -r '.code')
 	if [ "$code" != "0" ]; then
 		echo "... Could not store NFT binary" >&2
 		exit $code
 	fi
-	id=$(echo $out | jq -r '.logs[0].events[] | select(.type == "store_code") | .attributes[] | select(.key == "code_id") | .value')
+	sleep 10
+	txhash=$(echo $out | jq -r '.txhash')
+	id=$(terrad q tx $txhash -o json --node $(sh $SIMULATION_FOLDER/next_node.sh) | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
 
-	# val instantiates contract
+	# instantiates contract
 	echo "... instantiates contract"
-	msg='{"name":"BaseNFT","symbol":"BASE","minter":"'$val_addr'"}'
-	out=$(terrad tx wasm instantiate $id "$msg" --from ${val_addr_name} --broadcast-mode block --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home ${folder}terrad --keyring-backend $KEYRING_BACKEND -y)
+	msg='{"name":"BaseNFT","symbol":"BASE","minter":"'$addr'"}'
+	out=$(terrad tx wasm instantiate $id "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
 	code=$(echo $out | jq -r '.code')
 	if [ "$code" != "0" ]; then
 		echo "... Could not instantiate NFT contract" >&2
 		exit $code
 	fi
-	contract_addr=$(echo $out | jq -r '.logs[0].events[0].attributes[] | select(.key=="contract_address").value')
+	sleep 10
+	txhash=$(echo $out | jq -r '.txhash')
+	contract_addr=$(terrad q tx $txhash -o json --node $(sh $SIMULATION_FOLDER/next_node.sh) | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
 
-	# val mints some tokens
+	# mints some tokens
 	echo "... mints tokens"
-	for i in $(seq 0 4); do
+	for i in $(seq 0 3); do
 		echo "	- token id: "$i
-		msg='{"mint":{"token_id":"'$i'","owner":"'$val_addr'"}}'
-		out=$(terrad tx wasm execute $contract_addr "$msg" --from ${val_addr_name} --broadcast-mode block --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home ${folder}terrad --keyring-backend $KEYRING_BACKEND -y)
+		msg='{"mint":{"token_id":"'$i'","owner":"'$addr'"}}'
+		out=$(terrad tx wasm execute $contract_addr "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
 		code=$(echo $out | jq -r '.code')
 		if [ "$code" != "0" ]; then
 			echo "... Could not mint tokens from contract" $contract_addr >&2
 			exit $code
 		fi
+
+		sleep 10
 	done
 
-	# val sends token to other nodes
+	# sends token to other nodes
 	echo "... send tokens"
-	for i in $(seq 0 4); do
-		peer_folder="${TESTNET_FOLDER}"/node$i/
-		peer_val_addr_name=$(basename $peer_folder)
-		peer_val_addr=$(terrad keys show $peer_val_addr_name -a --home ${peer_folder}terrad --keyring-backend $KEYRING_BACKEND)
-		if [ "$peer_val_addr" = "$val_addr" ]; then
+	for i in $(seq 0 3); do
+		peer_addr=$(terrad keys show test$i -a --home $HOME --keyring-backend $KEYRING_BACKEND)
+		if [ "$peer_addr" = "$addr" ]; then
 			continue
 		fi
-		msg='{"transfer_nft":{"recipient":"'$peer_val_addr'","token_id":"'$i'"}}'
-		out=$(terrad tx wasm execute $contract_addr "$msg" --from $val_addr_name --broadcast-mode block --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home ${folder}terrad --keyring-backend $KEYRING_BACKEND -y)
+		msg='{"transfer_nft":{"recipient":"'$peer_addr'","token_id":"'$i'"}}'
+		out=$(terrad tx wasm execute $contract_addr "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
 		code=$(echo $out | jq -r '.code')
 		if [ "$code" != "0" ]; then
-			echo "... Could not transfer NFT id $i from $val_addr to $peer_val_addr (contract: $contract_addr)" >&2
+			echo "... Could not transfer NFT id $i from $addr to $peer_addr (contract: $contract_addr)" >&2
 			exit $code
 		fi
+
+		sleep 10
 	done
 
 done

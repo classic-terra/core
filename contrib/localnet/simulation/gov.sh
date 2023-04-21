@@ -2,13 +2,14 @@
 
 echo "Submitting text prop from key test0"
 
-DEPOSIT_DENOM=$(cat $HOME/config/genesis.json | jq -r '.app_state.gov.deposit_params.min_deposit[0].denom')
-DEPOSIT_AMNT=$(cat $HOME/config/genesis.json | jq -r '.app_state.gov.deposit_params.min_deposit[0].amount')
+DEPOSIT_DENOM=$(cat $NODE_HOME/config/genesis.json | jq -r '.app_state.gov.deposit_params.min_deposit[0].denom')
+DEPOSIT_AMNT=$(cat $NODE_HOME/config/genesis.json | jq -r '.app_state.gov.deposit_params.min_deposit[0].amount')
 
-out=$(terrad tx gov submit-proposal --from test0 --type text --title "Proposal" --description "This is a proposal" --deposit ${DEPOSIT_AMNT}${DEPOSIT_DENOM} --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
+out=$(terrad tx gov submit-proposal --from test0 --type text --title "Proposal" --description "This is a proposal" --deposit ${DEPOSIT_AMNT}${DEPOSIT_DENOM} --gas auto --gas-adjustment 2.3 --fees 20000000uluna --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $NODE_HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
 code=$(echo $out | jq -r '.code')
 if [ "$code" != "0" ]; then
 	echo "... Could not submit prop" >&2
+	echo $out >&2
 	exit $code
 fi
 sleep 10
@@ -21,10 +22,11 @@ for j in $(seq 0 3); do
 
 	echo "submitting vote from test$j for prop $id..."
 
-	out=$(terrad tx gov vote $id yes --from test$j --output json --gas auto --gas-adjustment 2.3 --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
+	out=$(terrad tx gov vote $id yes --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $NODE_HOME --keyring-backend $KEYRING_BACKEND -y --node $(sh $SIMULATION_FOLDER/next_node.sh))
 	code=$(echo $out | jq -r '.code')
 	if [ "$code" != "0" ]; then
 		echo "... Could not vote"
+		echo $out >&2
 		exit $code
 	fi
 

@@ -2,7 +2,8 @@
 # during one of simulation, the node that receives transaction died, probably due to having to handle too much.
 # this script is to choose the next node for transaction to use
 
-RPC=("http://localhost:26657" "http://localhost:26660" "http://localhost:26662" "http://localhost:26664" "http://localhost:26666" "http://localhost:26668" "http://localhost:26670")
+RPC=($(jq -r --arg chain_id "$CHAIN_ID" '.[$chain_id].rpcs[]' $SIMULATION_FOLDER/network/network.json))
+TOTAL_NODE=${#RPC[@]}
 
 retry=0
 while true; do
@@ -11,7 +12,7 @@ while true; do
         exit 1
     fi
 
-    NODE=${RPC[$((RANDOM % 7))]}
+    NODE=${RPC[$((RANDOM % TOTAL_NODE))]}
 
     # check if chosen node is alive
     curl -s $NODE/status &> /dev/null
@@ -21,5 +22,6 @@ while true; do
         exit 0
     else
         retry=$((retry + 1))
+        sleep 5
     fi
 done

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-export NODE_HOME=${NODE_HOME:-~/.terra}
 export SIMULATION_FOLDER=$(dirname $(realpath "$0"))
 export TESTNET_FOLDER=$(echo $SIMULATION_FOLDER | sed 's|\(.*core\).*|\1|')/build
+export NODE_HOME=${NODE_HOME:-$TESTNET_FOLDER/.terra}
 export KEYRING_BACKEND=test
 export CHAIN_ID=${CHAIN_ID:-localterra}
 
@@ -14,11 +14,11 @@ fi
 
 # initialize keys
 for i in $(seq 0 3); do
-    # check if test$i exists
-    terrad keys show test$i --keyring-backend $KEYRING_BACKEND --home $NODE_HOME >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        echo "y" | terrad keys delete test$i --keyring-backend $KEYRING_BACKEND --home $NODE_HOME
-    fi
+    # delete all keys
+    keys=$(terrad keys list -n --keyring-backend $KEYRING_BACKEND --home $NODE_HOME)
+    for key in $keys; do
+        echo "y" | terrad keys delete $key --keyring-backend $KEYRING_BACKEND --home $NODE_HOME
+    done
 
     key=$(jq ".keys[$i] | tostring" $SIMULATION_FOLDER/network/$CHAIN_ID/keys.json )
     keyname=$(echo $key | jq -r 'fromjson | ."keyring-keyname"')
@@ -32,12 +32,28 @@ if [ "$CHAIN_ID" = "localterra" ]; then
     # copy genesis.json to $NODE_HOME
     cp $TESTNET_FOLDER/node0/terrad/config/genesis.json $NODE_HOME/config/genesis.json
 
-    # tx_send
-    # need better design to send transaction for all kind of network
-    sh $SIMULATION_FOLDER/tx_send.sh
+    # add validator addresses
+    # delete all keys
+    keys=$(terrad keys list -n --keyring-backend $KEYRING_BACKEND --home $NODE_HOME)
+    for key in $keys; do
+        echo "y" | terrad keys delete $key --keyring-backend $KEYRING_BACKEND --home $NODE_HOME
+    done
 
-    echo "DONE TX SEND SIMULATION (1/5)"
+    for folder in "${TESTNET_FOLDER}"/node*/
+    do
+        position=$(basename $folder)
+        position=${position:4}
+        mnemonic=$(jq -r '.secret' ${folder}terrad/key_seed.json)
+
+        # Add new account
+        echo $mnemonic | terrad keys add test$position --keyring-backend $KEYRING_BACKEND --home $NODE_HOME --recover
+    done
 fi
+
+# tx_send
+sh $SIMULATION_FOLDER/tx_send.sh
+
+echo "DONE TX SEND SIMULATION (1/5)"
 
 # create-validator
 sh $SIMULATION_FOLDER/create-validator.sh

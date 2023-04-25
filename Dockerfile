@@ -20,10 +20,10 @@ RUN git clone --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdi
 ENV MIMALLOC_RESERVE_HUGE_OS_PAGES=4
 
 # Cosmwasm - download correct libwasmvm version and verify checksum
-RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) \
-    && wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 5) \
+    && wget https://github.com/classic-terra/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
     -O /lib/libwasmvm_muslc.a \
-    && wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt \
+    && wget https://github.com/classic-terra/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt \
     && sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
 
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file

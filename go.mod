@@ -123,6 +123,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+	github.com/CosmWasm/wasmvm => github.com/classic-terra/wasmvm v0.16.8-beta5
 	github.com/aws/aws-sdk-go v1.25.48 => github.com/aws/aws-sdk-go v1.33.0
 	github.com/aws/aws-sdk-go v1.27.0 => github.com/aws/aws-sdk-go v1.33.0
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0

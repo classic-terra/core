@@ -2,6 +2,7 @@ package keepers
 
 import (
 	"path/filepath"
+
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v4/modules/apps/transfer/keeper"
@@ -43,6 +44,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	terrawasm "github.com/classic-terra/core/wasmbinding"
 
 	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
@@ -225,7 +227,9 @@ func NewAppKeepers(
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
 	}
-	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,token_factory"
+	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1"
+
+	wasmOpts = append(terrawasm.RegisterCustomPlugins(&appKeepers.MarketKeeper, &appKeepers.OracleKeeper, &appKeepers.TreasuryKeeper), wasmOpts...)
 
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,

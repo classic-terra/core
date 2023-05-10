@@ -7,6 +7,7 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	//	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/classic-terra/core/wasmbinding/bindings"
@@ -62,7 +63,7 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 }
 
 // swap wraps around performing market swap
-func (m *CustomMessenger) swap(ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *markettypes.MsgSwap) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) swap(ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *bindings.Swap) ([]sdk.Event, [][]byte, error) {
 	res, err := PerformSwap(m.marketKeeper, ctx, contractAddr, contractMsg)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "perform swap")
@@ -82,7 +83,7 @@ func (m *CustomMessenger) swap(ctx sdk.Context, contractAddr sdk.AccAddress, con
 }
 
 // PerformSwap performs market swap
-func PerformSwap(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *markettypes.MsgSwap) (*markettypes.MsgSwapResponse, error) {
+func PerformSwap(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *bindings.Swap) (*markettypes.MsgSwapResponse, error) {
 	if contractMsg == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "market swap msg was null"}
 	}
@@ -112,7 +113,7 @@ func PerformSwap(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAd
 }
 
 // swap wraps around performing market swap
-func (m *CustomMessenger) swapSend(ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *markettypes.MsgSwapSend) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) swapSend(ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *bindings.SwapSend) ([]sdk.Event, [][]byte, error) {
 	res, err := PerformSwapSend(m.marketKeeper, ctx, contractAddr, contractMsg)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "perform swap send")
@@ -132,7 +133,7 @@ func (m *CustomMessenger) swapSend(ctx sdk.Context, contractAddr sdk.AccAddress,
 }
 
 // PerformSwapSend performs market swap
-func PerformSwapSend(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *markettypes.MsgSwapSend) (*markettypes.MsgSwapSendResponse, error) {
+func PerformSwapSend(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, contractMsg *bindings.SwapSend) (*markettypes.MsgSwapSendResponse, error) {
 	if contractMsg == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "market swap send msg was null"}
 	}

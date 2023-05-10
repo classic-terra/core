@@ -6,7 +6,7 @@ UPGRADE_HEIGHT=20
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
-SOFTWARE_UPGRADE_NAME=$(ls -td -- ./app/upgrades/* | head -n 1 | cut -d'/' -f4)
+SOFTWARE_UPGRADE_NAME="v3"
 
 # underscore so that go tool will not take gocache into account
 mkdir -p _build/gocache

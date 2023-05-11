@@ -102,7 +102,21 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM alpine:${ALPINE_VERSION} as terra-core
 
+RUN apk update && apk add wget lz4 aria2 curl jq gawk coreutils "zlib>1.2.12-r2" "libssl1.1>1.1.1q-r0"
+
 COPY --from=builder-stage-2 /go/bin/terrad /usr/local/bin/terrad
+
+RUN addgroup -g 1000 terra && \
+    adduser -u 1000 -G terra -D -h /app terra
+
+# rest server
+EXPOSE 1317
+# grpc server
+EXPOSE 9090
+# tendermint p2p
+EXPOSE 26656
+# tendermint rpc
+EXPOSE 26657
 
 WORKDIR /app
 

@@ -69,12 +69,7 @@ func (m *CustomMessenger) swap(ctx sdk.Context, contractAddr sdk.AccAddress, con
 		return nil, nil, sdkerrors.Wrap(err, "perform swap")
 	}
 
-	bz, err := json.Marshal(
-		markettypes.MsgSwapResponse{
-			SwapCoin: res.SwapCoin,
-			SwapFee:  res.SwapFee,
-		},
-	)
+	bz, err := json.Marshal(res)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "error marshal swap response")
 	}
@@ -90,12 +85,7 @@ func PerformSwap(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAd
 
 	msgServer := marketkeeper.NewMsgServerImpl(*f)
 
-	addr, err := parseAddress(contractAddr.String())
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "cannot verify sender address")
-	}
-
-	msgSwap := markettypes.NewMsgSwap(addr, contractMsg.OfferCoin, contractMsg.AskDenom)
+	msgSwap := markettypes.NewMsgSwap(contractAddr, contractMsg.OfferCoin, contractMsg.AskDenom)
 
 	if err := msgSwap.ValidateBasic(); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed validating MsgSwap")
@@ -106,6 +96,7 @@ func PerformSwap(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAd
 		sdk.WrapSDKContext(ctx),
 		msgSwap,
 	)
+
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "swapping")
 	}
@@ -119,12 +110,7 @@ func (m *CustomMessenger) swapSend(ctx sdk.Context, contractAddr sdk.AccAddress,
 		return nil, nil, sdkerrors.Wrap(err, "perform swap send")
 	}
 
-	bz, err := json.Marshal(
-		markettypes.MsgSwapSendResponse{
-			SwapCoin: res.SwapCoin,
-			SwapFee:  res.SwapFee,
-		},
-	)
+	bz, err := json.Marshal(res)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "error marshal swap send response")
 	}
@@ -140,17 +126,12 @@ func PerformSwapSend(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.A
 
 	msgServer := marketkeeper.NewMsgServerImpl(*f)
 
-	addr, err := parseAddress(contractAddr.String())
+	toAddr, err := sdk.AccAddressFromBech32(contractMsg.ToAddress)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "swap send - cannot verify sender address")
+		return nil, err
 	}
 
-	toAddr, err := parseAddress(contractMsg.ToAddress)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "swap send - cannot verify receiver address")
-	}
-
-	msgSwapSend := markettypes.NewMsgSwapSend(addr, toAddr, contractMsg.OfferCoin, contractMsg.AskDenom)
+	msgSwapSend := markettypes.NewMsgSwapSend(contractAddr, toAddr, contractMsg.OfferCoin, contractMsg.AskDenom)
 
 	if err := msgSwapSend.ValidateBasic(); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed validating MsgSwapSend")
@@ -161,6 +142,7 @@ func PerformSwapSend(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.A
 		sdk.WrapSDKContext(ctx),
 		msgSwapSend,
 	)
+
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "swapping and sending")
 	}

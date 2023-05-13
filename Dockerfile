@@ -89,7 +89,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -ldflags " \
             -w -s -linkmode=external -extldflags \
             '-L/go/src/mimalloc/build -lmimalloc -Wl,-z,muldefs -static' \
-            -X github.com/cosmos/cosmos-sdk/version.Name='terrad' \
+            -X github.com/cosmos/cosmos-sdk/version.Name='terra' \
             -X github.com/cosmos/cosmos-sdk/version.AppName='terrad' \
             -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
             -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \

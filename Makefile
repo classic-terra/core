@@ -10,7 +10,7 @@ SIMAPP = ./app
 HTTPS_GIT := https://github.com/classic-terra/core.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
-GO_VERSION ?= "1.18"
+GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 
 #TESTNET PARAMETERS
 TESTNET_NVAL := $(if $(TESTNET_NVAL),$(TESTNET_NVAL),7)

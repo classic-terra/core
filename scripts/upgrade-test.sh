@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
-OLD_VERSION=v1.1.0
+OLD_VERSION=v2.0.1
 UPGRADE_HEIGHT=20
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
-SOFTWARE_UPGRADE_NAME="v3"
+SOFTWARE_UPGRADE_NAME="v4"
 
 # underscore so that go tool will not take gocache into account
 mkdir -p _build/gocache

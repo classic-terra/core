@@ -138,7 +138,8 @@ build-linux-with-shared-library:
 
 build-release: build-release-amd64 build-release-arm64
 
-build-release-amd64: go.sum $(BUILDDIR)/
+build-release-amd64: go.sum
+	mkdir -p $(BUILDDIR)/release
 	$(DOCKER) buildx create --name core-builder || true
 	$(DOCKER) buildx use core-builder
 	$(DOCKER) buildx build \
@@ -158,7 +159,8 @@ build-release-amd64: go.sum $(BUILDDIR)/
 	rm $(BUILDDIR)/release/terrad
 	$(DOCKER) rm -f core-builder
 
-build-release-arm64: go.sum $(BUILDDIR)/
+build-release-arm64: go.sum
+	mkdir -p $(BUILDDIR)/release
 	$(DOCKER) buildx create --name core-builder || true
 	$(DOCKER) buildx use core-builder 
 	$(DOCKER) buildx build \

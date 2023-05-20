@@ -1,0 +1,114 @@
+Title: Guidelines for Gas and Transaction Fee Calculation in dApp Development
+
+Introduction
+
+The issue with the "auto" gas calculation method
+Importance of separating gas and tax computations
+Gas Calculation and Transaction Fee
+ Gas Calculation Process
+- Invocation of estimateFee() or estimateGas() directly
+- Adding the 0.5% burn tax component
+- Example code snippet for transaction fee calculation
+
+ Gas Total Calculation
+- Estimated gas calculation using simulatedGas and gasAdjustment
+- Calculation of gasTotal using estimatedGas and gasPrice
+
+Simulating Transactions
+
+Description of simulating transactions for gas estimation
+LCD endpoint API documentation for simulation
+Recommended workaround for a bug in the simulate API
+Obtaining Gas Prices
+
+API endpoint for retrieving current gasPrices for Terra denominations
+Example API endpoint for gasPrices
+Burn Tax Calculation
+
+Calculation of taxTotal using txAmount, taxRate, and taxCap
+API endpoints for retrieving current taxRate and taxCap for uluna
+Transaction Fee Calculation
+
+Calculation of txFee using gasTotal and taxTotal
+Importance of consistency in denom units (uluna) when calculating fees
+Notes
+
+List of gas fees for different Terra denominations
+Proposal to increase the Burn Tax by 0.5%
+Details of the proposal and governance process
+
+
+
+//The issue for most dApp developers is that the gas calculations are hidden from them by using the recommended "auto" gas calculation method.
+
+Instead of using the "auto" method, it is now necessary for dApp developers to separate out the gas computation and tax computations by invoking estimateFee() or estimateGas() directly, and then adding the 0.5% burn tax component (based on the value of the transaction being performed) in order to arrive at the correct transaction fee.
+
+This result can then be passed as the transaction fee parameter to the transaction:
+import { Fee }  from '@terra-rebels/terra.js';
+
+const msgs = [ new MsgSend( ... ), new MsgSwap( ... ), ]; // messages
+const fee = new Fee(estimatedGas, { uluna: txFee });
+
+const tx = await wallet.createAndSignTx({ msgs, fee });
+ 
+The general mechanism for the calculation of the total transaction fee to be specified with a transaction, when the burn tax is active, is as follows:
+
+estimatedGas = simulatedGas * gasAdjustment
+
+gasTotal = estimatedGas * gasPrice
+
+You can simulate a transaction in order to estimate the required total gas for that transaction type as described in the following LCD endpoint API documentation:
+
+https://fcd.terrarebels.net/swagger  -> /cosmos/tx/v1beta1/simulate
+
+The API endpoint for the above is:
+
+https://lcd.terrarebels.net/cosmos/tx/v1beta1/simulate
+
+This endpoint only accepts a HTTP POST request method.
+
+Please note that there is a bug in the simulate API such that it incorrectly simulates an amount of gas that is too low for certain transactions after the introduction of the Terra Classic burn tax.
+
+The recommended workaround is to increase the gas adjustment value (see SDK references above) to 5 (the gas adjustment is just a multiplier to the gas value returned by the LCD simulate API).
+
+This means more gas than necessary will be consumed, but will ensure the tx will not fail due to lack of gas.
+
+The current gasPrices for different Terra denominations can be obtained from the following API endpoint: 
+https://fcd.terrarebels.net/v1/txs/gas_prices
+
+
+The burn tax must also be accounted for as follows:
+
+taxTotal= min((txAmount * taxRate), taxCap)
+
+The current taxRate can be obtained from:
+
+https://lcd.terrarebels.net/terra/treasury/v1beta1/tax_rate
+
+The current taxCap for uluna can be obtained from the following API:
+
+https://lcd.terrarebels.net/terra/treasury/v1beta1/tax_caps/uluna
+
+Finally, the tx fee can be calculated as:
+
+txFee = gasTotal + taxTotal
+
+It is important to ensure consistency of denom units in uluna (micro luna) when calculating gasTotal, taxTotal, and txFee. 
+
+
+
+
+
+
+Notes: 
+
+ Gas fees : 
+
+{"uluna":"28.325","usdr":"0.52469","uusd":"0.75","ukrw":"850.0","umnt":"2142.855","ueur":"0.625","ucny":"4.9","ujpy":"81.85","ugbp":"0.55","uinr":"54.4","ucad":"0.95","uchf":"0.7","uaud":"0.95","usgd":"1.0","uthb":"23.1","usek":"6.25","unok":"6.25","udkk":"4.5","uidr":"10900.0","uphp":"38.0","uhkd":"5.85","umyr":"3.0","utwd":"20.0"}
+
+
+
+
+Document prepared by Raider
+
+

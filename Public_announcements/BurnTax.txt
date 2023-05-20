@@ -1,0 +1,11 @@
+Proposal to Increase Burn Tax: (From 0.2% to 0.5%)
+
+Proposal 11515, put forth by the community, aims to increase the Burn Tax from 0.2% to 0.5%. This proposal aims to align incentives within the Terra Classic ecosystem and has garnered significant support. As a reflection of this support, it passed governance on 17/5/23, as can be seen in the link below.
+
+Link to the 11515 proposal: https://station.terrarebels.net/proposal/11515.
+
+For a detailed description, please refer to the provided link: https://classic-agora.terra.money/t/new-economic-policy-for-terra-classic-set-of-4-proposals-to-align-incentives/50415.
+
+Based on the current speed of the blockchain, it is anticipated that the proposal upgrade will be live at the block height (12,902,400) on the estimated date (23-May) and time (10pm UTC). Please update the tax before the specified date to ensure a smooth implementation of the new economic policy. Some guidelines to follow:
+
+Thank you for your continued participation and support.

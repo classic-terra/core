@@ -19,7 +19,7 @@ import (
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into
-func TestQuerySwap(t *testing.T) {
+func QuerySwap(t *testing.T, contractDir string) {
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -27,7 +27,7 @@ func TestQuerySwap(t *testing.T) {
 	FundAccount(t, ctx, app, actor)
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
+	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
 	require.NotEmpty(t, contractAddr)
 
 	// setup swap environment
@@ -55,7 +55,7 @@ func TestQuerySwap(t *testing.T) {
 }
 
 // go test -v -run ^TestQueryExchangeRates$ github.com/classic-terra/core/wasmbinding/test
-func TestQueryExchangeRates(t *testing.T) {
+func QueryExchangeRates(t *testing.T, contractDir string) {
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -63,7 +63,7 @@ func TestQueryExchangeRates(t *testing.T) {
 	FundAccount(t, ctx, app, actor)
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
+	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
 	require.NotEmpty(t, contractAddr)
 
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
@@ -83,7 +83,7 @@ func TestQueryExchangeRates(t *testing.T) {
 }
 
 // go test -v -run ^TestQueryTaxRate$ github.com/classic-terra/core/wasmbinding/test
-func TestQueryTaxRate(t *testing.T) {
+func QueryTaxRate(t *testing.T, contractDir string) {
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -91,7 +91,7 @@ func TestQueryTaxRate(t *testing.T) {
 	FundAccount(t, ctx, app, actor)
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
+	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
 	require.NotEmpty(t, contractAddr)
 
 	query := bindings.TerraQuery{
@@ -105,7 +105,7 @@ func TestQueryTaxRate(t *testing.T) {
 }
 
 // go test -v -run ^TestQueryTaxCap$ github.com/classic-terra/core/wasmbinding/test
-func TestQueryTaxCap(t *testing.T) {
+func QueryTaxCap(t *testing.T, contractDir string) {
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -113,7 +113,7 @@ func TestQueryTaxCap(t *testing.T) {
 	FundAccount(t, ctx, app, actor)
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
+	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
 	require.NotEmpty(t, contractAddr)
 
 	query := bindings.TerraQuery{

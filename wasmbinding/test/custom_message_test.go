@@ -19,7 +19,9 @@ import (
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
-func TestSwap(t *testing.T) {
+func Swap(t *testing.T, contractDir string) {
+	t.Helper()
+
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -27,7 +29,7 @@ func TestSwap(t *testing.T) {
 	FundAccount(t, ctx, app, actor)
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
+	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
 	require.NotEmpty(t, contractAddr)
 
 	// setup swap environment
@@ -67,7 +69,7 @@ func TestSwap(t *testing.T) {
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
 // 1666 usdr is sent to trader
-func TestSwapSend(t *testing.T) {
+func SwapSend(t *testing.T, contractDir string) {
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -75,7 +77,7 @@ func TestSwapSend(t *testing.T) {
 	FundAccount(t, ctx, app, actor)
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
+	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
 	require.NotEmpty(t, contractAddr)
 
 	// setup swap environment

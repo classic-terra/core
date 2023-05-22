@@ -27,17 +27,17 @@ func CreateTestInput(t *testing.T) (*app.TerraApp, sdk.Context) {
 	return app, ctx
 }
 
-func InstantiateReflectContract(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk.AccAddress) sdk.AccAddress {
+func InstantiateContract(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk.AccAddress, contractDir string) sdk.AccAddress {
 	t.Helper()
 
 	wasmKeeper := app.WasmKeeper
 
-	codeId := storeReflectCode(t, ctx, app, addr)
+	codeId := storeReflectCode(t, ctx, app, addr, contractDir)
 
 	cInfo := wasmKeeper.GetCodeInfo(ctx, codeId)
 	require.NotNil(t, cInfo)
 
-	contractAddr := instantiateReflectContract(t, ctx, app, addr, codeId)
+	contractAddr := instantiateContract(t, ctx, app, addr, codeId)
 
 	// check if contract is instantiated
 	info := wasmKeeper.GetContractInfo(ctx, contractAddr)
@@ -54,10 +54,10 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 	return key, pub, addr
 }
 
-func storeReflectCode(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk.AccAddress) uint64 {
+func storeReflectCode(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk.AccAddress, contractDir string) uint64 {
 	t.Helper()
 
-	wasmCode, err := os.ReadFile("../testdata/terra_reflect.wasm")
+	wasmCode, err := os.ReadFile(contractDir)
 	require.NoError(t, err)
 
 	codeId, _, err := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper).Create(ctx, addr, wasmCode, &wasmtypes.AllowEverybody)
@@ -66,12 +66,12 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk
 	return codeId
 }
 
-func instantiateReflectContract(t *testing.T, ctx sdk.Context, app *app.TerraApp, funder sdk.AccAddress, codeId uint64) sdk.AccAddress {
+func instantiateContract(t *testing.T, ctx sdk.Context, app *app.TerraApp, funder sdk.AccAddress, codeId uint64) sdk.AccAddress {
 	t.Helper()
 
 	initMsgBz := []byte("{}")
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
-	addr, _, err := contractKeeper.Instantiate(ctx, codeId, funder, funder, initMsgBz, "demo contract", nil)
+	addr, _, err := contractKeeper.Instantiate(ctx, codeId, funder, funder, initMsgBz, nil)
 	require.NoError(t, err)
 
 	return addr

@@ -1,3 +1,4 @@
+//go:build exclude
 package keeper_test
 
 // import (

@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	feesharettypes "github.com/classic-terra/core/x/feeshare/types"
+//	feesharettypes "github.com/classic-terra/core/x/feeshare/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -30,10 +30,10 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
-type FeeShareKeeper interface {
+/*type FeeShareKeeper interface {
 	GetParams(ctx sdk.Context) (params feesharettypes.Params)
 	GetFeeShare(ctx sdk.Context, contract sdk.Address) (feesharettypes.FeeShare, bool)
-}
+}*/
 
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error

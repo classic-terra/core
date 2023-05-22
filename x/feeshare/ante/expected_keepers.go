@@ -1,3 +1,4 @@
+//go:build exclude
 package ante
 
 // Used for the ante handler so we can properly send 50% of fees to dAPP developers via x/feeshare module

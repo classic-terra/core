@@ -1,3 +1,4 @@
+//go:build exclude
 package ante_test
 
 import (

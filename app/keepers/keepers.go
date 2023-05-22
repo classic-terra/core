@@ -46,8 +46,8 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/wasmbinding"
 
-	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
-	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
+	//feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
+	//feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 	marketkeeper "github.com/classic-terra/core/x/market/keeper"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/x/oracle/keeper"
@@ -80,7 +80,7 @@ type AppKeepers struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	OracleKeeper     oraclekeeper.Keeper
-	FeeShareKeeper   feesharekeeper.Keeper
+	//FeeShareKeeper   feesharekeeper.Keeper
 	MarketKeeper     marketkeeper.Keeper
 	TreasuryKeeper   treasurykeeper.Keeper
 	WasmKeeper       wasmkeeper.Keeper
@@ -214,14 +214,15 @@ func NewAppKeepers(
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
 		distrtypes.ModuleName)
 
-	appKeepers.FeeShareKeeper = feesharekeeper.NewKeeper(
+	// After WASM upgrade
+	/*appKeepers.FeeShareKeeper = feesharekeeper.NewKeeper(
 		appKeepers.keys[feesharetypes.StoreKey],
 		appCodec,
 		appKeepers.GetSubspace(feesharetypes.ModuleName),
 		appKeepers.BankKeeper,
 		appKeepers.WasmKeeper,
 		authtypes.FeeCollectorName,
-	)
+	)*/
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -283,7 +284,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
-	paramsKeeper.Subspace(feesharetypes.ModuleName)
+//	paramsKeeper.Subspace(feesharetypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 
 	return paramsKeeper

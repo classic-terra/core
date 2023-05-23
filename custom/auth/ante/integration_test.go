@@ -138,7 +138,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 				TreasuryKeeper:     suite.app.TreasuryKeeper,
 				SigGasConsumer:     customante.DefaultSigVerificationGasConsumer,
 				SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
-				IBCChannelKeeper:   *suite.app.IBCKeeper,
+				IBCKeeper:          *suite.app.IBCKeeper,
 				DistributionKeeper: dk,
 				FeeShareKeeper:     fsk,
 			},

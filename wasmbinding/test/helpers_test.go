@@ -71,7 +71,7 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, app *app.TerraApp
 
 	initMsgBz := []byte("{}")
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
-	addr, _, err := contractKeeper.Instantiate(ctx, codeId, funder, funder, initMsgBz, "demo contract", nil)
+	addr, _, err := contractKeeper.Instantiate(ctx, codeId, funder, funder, initMsgBz, nil)
 	require.NoError(t, err)
 
 	return addr

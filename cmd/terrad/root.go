@@ -35,8 +35,9 @@ import (
 	"github.com/classic-terra/core/app/params"
 	authcustomcli "github.com/classic-terra/core/custom/auth/client/cli"
 	core "github.com/classic-terra/core/types"
-	
+
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // NewRootCmd creates a new root command for terrad. It is called once in the
@@ -50,7 +51,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	sdkConfig.SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
 	sdkConfig.SetBech32PrefixForValidator(core.Bech32PrefixValAddr, core.Bech32PrefixValPub)
 	sdkConfig.SetBech32PrefixForConsensusNode(core.Bech32PrefixConsAddr, core.Bech32PrefixConsPub)
-	sdkConfig.SetAddressVerifier(core.AddressVerifier)
+	sdkConfig.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 	sdkConfig.Seal()
 
 	initClientCtx := client.Context{}.
@@ -220,7 +221,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// TODO: We want to parse legacy wasm options from app.toml in [wasm] section here or not?
 	var wasmOpts []wasm.Option
 

@@ -2,29 +2,10 @@ package main
 
 import (
 	"fmt"
-//	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	//	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
-
-const (
-	defaultMemoryCacheSize    uint32 = 100 // in MiB
-	defaultSmartQueryGasLimit uint64 = 3_000_000
-	defaultContractDebugMode         = false
-)
-
-
-type WasmConfig struct {
-	// SimulationGasLimit is the max gas to be used in a tx simulation call.
-	// When not set the consensus max block gas is used instead
-	SimulationGasLimit *uint64 `mapstructure:"simulation_gas_limit"`
-	// SmartQueryGasLimit is the max gas to be used in a smart query contract call
-	SmartQueryGasLimit uint64 `mapstructure:"query_gas_limit"`
-	// MemoryCacheSize in MiB not bytes
-	MemoryCacheSize uint32 `mapstructure:"memory_cache_size"`
-	// ContractDebugMode log what contract print
-	ContractDebugMode bool
-}
 
 // TerraAppConfig terra specify app config
 type TerraAppConfig struct {
@@ -32,17 +13,8 @@ type TerraAppConfig struct {
 	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
 }
 
-// DefaultWasmConfig returns the default settings for WasmConfig
-func DefaultWasmConfig() WasmConfig {
-	return WasmConfig{
-		SmartQueryGasLimit: defaultSmartQueryGasLimit,
-		MemoryCacheSize:    defaultMemoryCacheSize,
-		ContractDebugMode:  defaultContractDebugMode,
-	}
-}
-
 // ConfigTemplate toml snippet for app.toml
-func WasmConfigTemplate(c WasmConfig) string {
+func WasmConfigTemplate(c wasmtypes.WasmConfig) string {
 	simGasLimit := `# simulation_gas_limit =`
 	if c.SimulationGasLimit != nil {
 		simGasLimit = fmt.Sprintf(`simulation_gas_limit = %d`, *c.SimulationGasLimit)
@@ -70,7 +42,7 @@ memory_cache_size = %d
 
 // DefaultConfigTemplate toml snippet with default values for app.toml
 func DefaultWasmConfigTemplate() string {
-	return WasmConfigTemplate(DefaultWasmConfig())
+	return WasmConfigTemplate(wasmtypes.DefaultWasmConfig())
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -95,8 +67,8 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.MinGasPrices = "0uluna"
 
 	terraAppConfig := TerraAppConfig{
-		Config:     *srvCfg,
-		Wasm: wasmtypes.DefaultWasmConfig(),
+		Config: *srvCfg,
+		Wasm:   wasmtypes.DefaultWasmConfig(),
 	}
 
 	terraAppTemplate := serverconfig.DefaultConfigTemplate + DefaultWasmConfigTemplate()

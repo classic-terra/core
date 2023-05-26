@@ -18,7 +18,7 @@ import (
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
@@ -40,10 +40,14 @@ func (appKeepers *AppKeepers) getIBCRouter() *porttypes.Router {
 	transferIBCModule := transfer.NewIBCModule(appKeepers.TransferKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
 
+	// Create fee enabled wasm ibc Stack
+	wasmStack := wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper)
+
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		AddRoute(wasm.ModuleName, wasmStack)
 
 	return ibcRouter
 }

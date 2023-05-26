@@ -16,6 +16,7 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -194,6 +195,11 @@ func NewTerraApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+
 	anteHandler, err := customante.NewAnteHandler(
 		customante.HandlerOptions{
 			AccountKeeper:      app.AccountKeeper,
@@ -203,10 +209,12 @@ func NewTerraApp(
 			TreasuryKeeper:     app.TreasuryKeeper,
 			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
-			IBCChannelKeeper:   *app.IBCKeeper,
+			IBCKeeper:          *app.IBCKeeper,
 			DistributionKeeper: app.DistrKeeper,
 			FeeShareKeeper:     app.FeeShareKeeper,
 			GovKeeper:          app.GovKeeper,
+			WasmConfig:         wasmConfig,
+			TXCounterStoreKey:  app.GetKey(wasm.StoreKey),
 		},
 	)
 	if err != nil {
@@ -219,6 +227,12 @@ func NewTerraApp(
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
+		}
+
+		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+		// Initialize pinned codes in wasmvm as they are not persisted there
+		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
 

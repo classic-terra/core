@@ -61,6 +61,9 @@ import (
 	customstaking "github.com/classic-terra/core/custom/staking"
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/x/feeshare"
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 	"github.com/classic-terra/core/x/market"
@@ -71,9 +74,6 @@ import (
 	treasuryclient "github.com/classic-terra/core/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	"github.com/classic-terra/core/x/vesting"
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/client/docs/statik"
@@ -135,7 +135,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:			nil,
+		icatypes.ModuleName:            nil,
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 

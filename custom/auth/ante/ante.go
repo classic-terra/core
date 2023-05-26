@@ -2,9 +2,12 @@ package ante
 
 import (
 	ibcante "github.com/cosmos/ibc-go/v4/modules/core/ante"
-	channelkeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	feehshareante "github.com/classic-terra/core/x/feeshare/ante"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -22,10 +25,12 @@ type HandlerOptions struct {
 	TreasuryKeeper     TreasuryKeeper
 	SignModeHandler    signing.SignModeHandler
 	SigGasConsumer     cosmosante.SignatureVerificationGasConsumer
-	IBCChannelKeeper   channelkeeper.Keeper
+	IBCKeeper          ibckeeper.Keeper
 	DistributionKeeper distributionkeeper.Keeper
 	GovKeeper          govkeeper.Keeper
 	FeeShareKeeper     feehshareante.FeeShareKeeper
+	WasmConfig         wasmtypes.WasmConfig
+	TXCounterStoreKey  storetypes.StoreKey
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -63,6 +68,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	return sdk.ChainAnteDecorators(
 		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
+		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
 		cosmosante.NewRejectExtensionOptionsDecorator(),
 		NewSpammingPreventionDecorator(options.OracleKeeper), // spamming prevention
 		cosmosante.NewValidateBasicDecorator(),
@@ -78,7 +85,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewAnteDecorator(&options.IBCChannelKeeper),
+		ibcante.NewAnteDecorator(&options.IBCKeeper),
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 	), nil
 }

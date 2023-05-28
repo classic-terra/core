@@ -70,7 +70,6 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 				BaseDenom:     contractQuery.ExchangeRates.BaseDenom,
 				ExchangeRates: items,
 			})
-
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}

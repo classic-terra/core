@@ -96,7 +96,6 @@ func PerformSwap(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAd
 		sdk.WrapSDKContext(ctx),
 		msgSwap,
 	)
-
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "swapping")
 	}
@@ -142,7 +141,6 @@ func PerformSwapSend(f *marketkeeper.Keeper, ctx sdk.Context, contractAddr sdk.A
 		sdk.WrapSDKContext(ctx),
 		msgSwapSend,
 	)
-
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "swapping and sending")
 	}

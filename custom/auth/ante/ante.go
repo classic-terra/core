@@ -7,7 +7,6 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	feehshareante "github.com/classic-terra/core/x/feeshare/ante"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -29,8 +28,8 @@ type HandlerOptions struct {
 	DistributionKeeper distributionkeeper.Keeper
 	GovKeeper          govkeeper.Keeper
 	FeeShareKeeper     feehshareante.FeeShareKeeper
-	WasmConfig         wasmtypes.WasmConfig
-	TXCounterStoreKey  storetypes.StoreKey
+	WasmConfig         *wasmtypes.WasmConfig
+	TXCounterStoreKey  sdk.StoreKey
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -59,6 +58,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	if options.FeeShareKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "fee share keeper is required for ante builder")
+	}
+	if options.WasmConfig == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "wasm config is required for ante builder")
+	}
+	if options.TXCounterStoreKey == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "tx counter key is required for ante builder")
 	}
 
 	sigGasConsumer := options.SigGasConsumer

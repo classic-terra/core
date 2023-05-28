@@ -94,7 +94,7 @@ var (
 		customdistr.AppModuleBasic{},
 		customgov.NewAppModuleBasic(
 			append(
-				wasmclient.ProposalHandlers, //nolint:staticcheck
+				wasmclient.ProposalHandlers,
 				paramsclient.ProposalHandler,
 				distrclient.ProposalHandler,
 				upgradeclient.ProposalHandler,

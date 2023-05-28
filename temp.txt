@@ -1,0 +1,6 @@
+./_build/new/terrad tx wasm store wasmbinding/testdata/terra_reflect.wasm --from test --home mytestnet --chain-id test --keyring-backend test --gas-adjustment 2.5 --gas auto
+./_build/new/terrad tx wasm instantiate 1 '{}' --from test --home mytestnet --chain-id test --keyring-backend test --gas-adjustment 2.5 --gas auto --no-admin
+
+terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au
+
+./_build/new/terrad q wasm contract-state smart terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au '{"chain":{"request":{"custom":{"exchange_rates":{"base_denom":"uluna","quote_denoms":["uusd"]}}}}}'

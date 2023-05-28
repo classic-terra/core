@@ -213,7 +213,7 @@ func NewTerraApp(
 			DistributionKeeper: app.DistrKeeper,
 			FeeShareKeeper:     app.FeeShareKeeper,
 			GovKeeper:          app.GovKeeper,
-			WasmConfig:         wasmConfig,
+			WasmConfig:         &wasmConfig,
 			TXCounterStoreKey:  app.GetKey(wasm.StoreKey),
 		},
 	)

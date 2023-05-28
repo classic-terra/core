@@ -252,10 +252,10 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
 	msg := &wasmtypes.MsgInstantiateContract{
 		Sender: addr1.String(),
-		Admin: addr1.String(),
-		CodeID: 0, 
-		Msg: []byte{},
-		Funds: sendCoins,
+		Admin:  addr1.String(),
+		CodeID: 0,
+		Msg:    []byte{},
+		Funds:  sendCoins,
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
@@ -308,10 +308,10 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	sendAmount := int64(1000000)
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
 	msg := &wasmtypes.MsgExecuteContract{
-		Sender: addr1.String(),
+		Sender:   addr1.String(),
 		Contract: addr1.String(),
-		Msg: []byte{},
-		Funds: sendCoins,
+		Msg:      []byte{},
+		Funds:    sendCoins,
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
@@ -601,10 +601,10 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContractLunaTax() {
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, sendAmount))
 	msg := &wasmtypes.MsgInstantiateContract{
 		Sender: addr1.String(),
-		Admin: addr1.String(),
+		Admin:  addr1.String(),
 		CodeID: 0,
-		Msg: []byte{},
-		Funds: sendCoins,
+		Msg:    []byte{},
+		Funds:  sendCoins,
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()
@@ -663,10 +663,10 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContractLunaTax() {
 	sendAmount := int64(1000000)
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, sendAmount))
 	msg := &wasmtypes.MsgExecuteContract{
-		Sender: addr1.String(),
+		Sender:   addr1.String(),
 		Contract: addr1.String(),
-		Msg: []byte{},
-		Funds: sendCoins,
+		Msg:      []byte{},
+		Funds:    sendCoins,
 	}
 
 	feeAmount := testdata.NewTestFeeAmount()

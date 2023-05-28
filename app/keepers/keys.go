@@ -21,7 +21,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	oracletypes "github.com/classic-terra/core/x/oracle/types"
@@ -47,7 +47,7 @@ func (appKeepers *AppKeepers) GenerateKeys() {
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
-		wasmtypes.StoreKey,
+		wasm.StoreKey,
 		authzkeeper.StoreKey,
 		feegrant.StoreKey,
 		feesharetypes.StoreKey,

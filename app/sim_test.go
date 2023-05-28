@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/cosmos/cosmos-sdk/codec"
 	terraapp "github.com/classic-terra/core/app"
 	"github.com/classic-terra/core/app/helpers"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -21,20 +21,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
-       return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // fauxMerkleModeOpt is a BaseApp option function to enable faux Merkle Tree mode for faster sim speed
 func fauxMerkleModeOpt() func(*baseapp.BaseApp) {
-	return func (app *baseapp.BaseApp)  { app.SetFauxMerkleMode() }
+	return func(app *baseapp.BaseApp) { app.SetFauxMerkleMode() }
 }
 
 func init() {

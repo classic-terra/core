@@ -19,7 +19,7 @@ import (
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
-func Swap(t *testing.T, contractDir string) {
+func Swap(t *testing.T, contractDir string, executeFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error) {
 	t.Helper()
 
 	actor := RandomAccountAddress()
@@ -53,7 +53,7 @@ func Swap(t *testing.T, contractDir string) {
 		},
 	}
 
-	err := executeCustom(t, ctx, app, contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
+	err := executeFunc(t, ctx, app, contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
 	require.NoError(t, err)
 
 	// check result after swap
@@ -69,7 +69,7 @@ func Swap(t *testing.T, contractDir string) {
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
 // 1666 usdr is sent to trader
-func SwapSend(t *testing.T, contractDir string) {
+func SwapSend(t *testing.T, contractDir string, executeFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error) {
 	actor := RandomAccountAddress()
 	app, ctx := CreateTestInput(t)
 
@@ -101,7 +101,7 @@ func SwapSend(t *testing.T, contractDir string) {
 		},
 	}
 
-	err := executeCustom(t, ctx, app, contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
+	err := executeFunc(t, ctx, app, contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
 	require.NoError(t, err)
 
 	// check result after swap
@@ -148,5 +148,45 @@ func executeCustom(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sd
 
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
 	_, err = contractKeeper.Execute(ctx, contract, sender, reflectBz, coins)
+	return err
+}
+
+type customSwap struct {
+	Swap *bindings.Swap `json:"swap"`
+}
+
+type customSwapSend struct {
+	SwapSend *bindings.SwapSend `json:"swap_send"`
+}
+
+func executeOldBindings(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error {
+	t.Helper()
+
+	var reflectBz []byte
+	switch {
+	case msg.Swap != nil:
+		customSwap := customSwap{
+			Swap: msg.Swap,
+		}
+		var err error
+		reflectBz, err = json.Marshal(customSwap)
+		require.NoError(t, err)
+	case msg.SwapSend != nil:
+		customSwapSend := customSwapSend{
+			SwapSend: msg.SwapSend,
+		}
+		var err error
+		reflectBz, err = json.Marshal(customSwapSend)
+		require.NoError(t, err)
+	}
+
+	// no funds sent if amount is 0
+	var coins sdk.Coins
+	if !funds.Amount.IsNil() {
+		coins = sdk.Coins{funds}
+	}
+
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
+	_, err := contractKeeper.Execute(ctx, contract, sender, reflectBz, coins)
 	return err
 }

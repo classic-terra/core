@@ -60,8 +60,8 @@ import (
 	customslashing "github.com/classic-terra/core/custom/slashing"
 	customstaking "github.com/classic-terra/core/custom/staking"
 	customupgrade "github.com/classic-terra/core/custom/upgrade"
+	customwasm "github.com/classic-terra/core/custom/wasm"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/x/feeshare"
@@ -77,6 +77,8 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/client/docs/statik"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 var (
@@ -118,7 +120,7 @@ var (
 		oracle.AppModuleBasic{},
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
-		wasm.AppModuleBasic{},
+		customwasm.AppModuleBasic{},
 		feeshare.AppModuleBasic{},
 	)
 

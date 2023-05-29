@@ -25,10 +25,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
-	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
+	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 )
 
 var emptyWasmOpts []wasm.Option
@@ -247,10 +247,10 @@ func (suite *AnteTestSuite) TestFeeSharePayout() {
 
 	// Create msg for tx
 	msg := &wasmtypes.MsgExecuteContract{
-		Sender:     addr1.String(),
-		Contract:   addr1.String(),
-		Msg: []byte(`{"send":{}}`),
-		Funds:      sdk.NewCoins(sdk.NewCoin("utoken", sdk.NewInt(100))),
+		Sender:   addr1.String(),
+		Contract: addr1.String(),
+		Msg:      []byte(`{"send":{}}`),
+		Funds:    sdk.NewCoins(sdk.NewCoin("utoken", sdk.NewInt(100))),
 	}
 
 	require.NoError(suite.txBuilder.SetMsgs(msg))

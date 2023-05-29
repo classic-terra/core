@@ -13,6 +13,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm/client/cli"
+	feeutils "github.com/classic-terra/core/custom/auth/client/utils"
 )
 
 const (
@@ -54,6 +55,9 @@ func ExecuteContractCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			
+			// Generate transaction factory for gas simulation
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			msg, err := parseExecuteArgs(args[0], args[1], clientCtx.GetFromAddress(), cmd.Flags())
 			if err != nil {
@@ -62,7 +66,23 @@ func ExecuteContractCmd() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			
+			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
+				// estimate tax and gas
+				stdFee, err := feeutils.ComputeFeesWithCmd(clientCtx, cmd.Flags(), &msg)
+				if err != nil {
+					return err
+				}
+
+				// override gas and fees
+				txf = txf.
+					WithFees(stdFee.Amount.String()).
+					WithGas(stdFee.Gas).
+					WithSimulateAndExecute(false).
+					WithGasPrices("")
+			}
+			
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, &msg)
 		},
 		SilenceUsage: true,
 	}

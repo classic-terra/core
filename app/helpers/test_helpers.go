@@ -188,6 +188,7 @@ func genesisStateWithValSet(t *testing.T,
 		defaultStParams.MaxEntries,
 		defaultStParams.HistoricalEntries,
 		appparams.BondDenom,
+		defaultStParams.MinCommissionRate,
 	)
 
 	// set validators and delegations

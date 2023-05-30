@@ -13,6 +13,7 @@ const (
 	TERRA_RENOVATED_BINDINGS_DIR = "../testdata/old/bindings_tester.wasm"
 )
 
+// go test -v -run ^TestBindingsAll$ github.com/classic-terra/core/wasmbinding/test
 func TestBindingsAll(t *testing.T) {
 	cases := []struct {
 		name        string

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/classic-terra/core/custom/auth/ante"
 	treasurykeeper "github.com/classic-terra/core/x/treasury/keeper"
 
@@ -76,8 +74,6 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 	if err != nil {
 		return nil, nil, err
 	}
-
-	fmt.Println("hello")
 
 	for _, sdkMsg := range sdkMsgs {
 

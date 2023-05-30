@@ -231,8 +231,11 @@ func NewAppKeepers(
 	supportedFeatures := "iterator,staking,stargate,terra,cosmwasm_1_1"
 
 	wasmMsgHandler := customwasmkeeper.NewMessageHandler(bApp.MsgServiceRouter(), appKeepers.IBCKeeper.ChannelKeeper, scopedWasmKeeper, appKeepers.BankKeeper, appKeepers.TreasuryKeeper, appKeepers.AccountKeeper, appCodec, appKeepers.TransferKeeper)
-	wasmOpts = append(terrawasm.RegisterCustomPlugins(&appKeepers.MarketKeeper, &appKeepers.OracleKeeper, &appKeepers.TreasuryKeeper), wasmOpts...)
-	wasmOpts = append(wasmOpts, wasmkeeper.WithMessageHandler(wasmMsgHandler))
+	// the first slice will replace all default msh handler with custom one
+	wasmOpts = append([]wasmkeeper.Option{wasmkeeper.WithMessageHandler(wasmMsgHandler)}, wasmOpts...)
+	// the second slice will add custom querier and message handler decorator
+	// this order must be uphold else error will be thrown
+	wasmOpts = append(wasmOpts, terrawasm.RegisterCustomPlugins(&appKeepers.MarketKeeper, &appKeepers.OracleKeeper, &appKeepers.TreasuryKeeper)...)
 
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,

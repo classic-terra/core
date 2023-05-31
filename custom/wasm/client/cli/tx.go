@@ -55,7 +55,7 @@ func ExecuteContractCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			
+
 			// Generate transaction factory for gas simulation
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
@@ -66,7 +66,7 @@ func ExecuteContractCmd() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			
+
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas
 				stdFee, err := feeutils.ComputeFeesWithCmd(clientCtx, cmd.Flags(), &msg)
@@ -81,7 +81,7 @@ func ExecuteContractCmd() *cobra.Command {
 					WithSimulateAndExecute(false).
 					WithGasPrices("")
 			}
-			
+
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, &msg)
 		},
 		SilenceUsage: true,

@@ -36,6 +36,8 @@ done
 
 # keep track of block_height
 NIL_BLOCK=0
+LAST_BLOCK=0
+SAME_BLOCK=0
 while true; do 
     BLOCK_HEIGHT=$($BINARY_OLD status --home $NODE1_HOME | jq '.SyncInfo.latest_block_height' -r)
     # if BLOCK_HEIGHT is empty
@@ -49,6 +51,20 @@ while true; do
     fi
 
     # if block height is not nil
+    # if block height is same as last block height
+    if [[ $BLOCK_HEIGHT -eq $LAST_BLOCK ]]; then
+        # if 5 same blocks in a row, exit
+        if [[ $SAME_BLOCK -ge 5 ]]; then
+            echo "ERROR: 5 same blocks in a row"
+            break
+        fi
+        SAME_BLOCK=$((SAME_BLOCK + 1))
+    else
+        # update LAST_BLOCK and reset SAME_BLOCK
+        LAST_BLOCK=$BLOCK_HEIGHT
+        SAME_BLOCK=0
+    fi
+
     if [[ $BLOCK_HEIGHT -ge $UPGRADE_HEIGHT ]]; then
         # assuming running only 1 terrad
         echo "UPGRADE REACHED, CONTINUING NEW CHAIN"

@@ -1,42 +1,39 @@
-package wasmbinding
+package wasmbinding_test
 
 import (
 	"encoding/json"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/classic-terra/core/app"
 	core "github.com/classic-terra/core/types"
 	"github.com/classic-terra/core/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/x/market/types"
-	"github.com/stretchr/testify/require"
 )
 
 // go test -v -run ^TestSwap$ github.com/classic-terra/core/wasmbinding/test
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
-func TestSwap(t *testing.T) {
-	actor := RandomAccountAddress()
-	app, ctx := CreateTestInput(t)
+func (s *WasmTestSuite) Swap(contractDir string, executeFunc func(contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error) {
+	s.SetupTest()
+	actor := s.RandomAccountAddress()
 
 	// fund
-	FundAccount(t, ctx, app, actor)
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000000000)))
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
-	require.NotEmpty(t, contractAddr)
+	contractAddr := s.InstantiateContract(actor, contractDir)
+	s.Require().NotEmpty(contractAddr)
 
 	// setup swap environment
 	// Set Oracle Price
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	app.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroSDRDenom, lunaPriceInSDR)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
-	actorBeforeSwap := app.BankKeeper.GetAllBalances(ctx, actor)
-	contractBeforeSwap := app.BankKeeper.GetAllBalances(ctx, contractAddr)
+	actorBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, actor)
+	contractBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, contractAddr)
 
 	// Calculate expected swapped SDR
 	expectedSwappedSDR := sdk.NewDec(1000).Mul(lunaPriceInSDR)
@@ -51,15 +48,15 @@ func TestSwap(t *testing.T) {
 		},
 	}
 
-	err := executeCustom(t, ctx, app, contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
-	require.NoError(t, err)
+	err := executeFunc(contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
+	s.Require().NoError(err)
 
 	// check result after swap
-	actorAfterSwap := app.BankKeeper.GetAllBalances(ctx, actor)
-	contractAfterSwap := app.BankKeeper.GetAllBalances(ctx, contractAddr)
+	actorAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, actor)
+	contractAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, contractAddr)
 
-	require.Equal(t, actorBeforeSwap.AmountOf(core.MicroLunaDenom).Sub(sdk.NewInt(1000)), actorAfterSwap.AmountOf(core.MicroLunaDenom))
-	require.Equal(t, contractBeforeSwap.AmountOf(core.MicroSDRDenom).Add(expectedSwappedSDR.TruncateInt()), contractAfterSwap.AmountOf(core.MicroSDRDenom))
+	s.Require().Equal(actorBeforeSwap.AmountOf(core.MicroLunaDenom).Sub(sdk.NewInt(1000)), actorAfterSwap.AmountOf(core.MicroLunaDenom))
+	s.Require().Equal(contractBeforeSwap.AmountOf(core.MicroSDRDenom).Add(expectedSwappedSDR.TruncateInt()), contractAfterSwap.AmountOf(core.MicroSDRDenom))
 }
 
 // go test -v -run ^TestSwapSend$ github.com/classic-terra/core/wasmbinding/test
@@ -67,23 +64,23 @@ func TestSwap(t *testing.T) {
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
 // 1666 usdr is sent to trader
-func TestSwapSend(t *testing.T) {
-	actor := RandomAccountAddress()
-	app, ctx := CreateTestInput(t)
+func (s *WasmTestSuite) SwapSend(contractDir string, executeFunc func(contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error) {
+	s.SetupTest()
+	actor := s.RandomAccountAddress()
 
 	// fund
-	FundAccount(t, ctx, app, actor)
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000000000)))
 
 	// instantiate reflect contract
-	contractAddr := InstantiateReflectContract(t, ctx, app, actor)
-	require.NotEmpty(t, contractAddr)
+	contractAddr := s.InstantiateContract(actor, contractDir)
+	s.Require().NotEmpty(contractAddr)
 
 	// setup swap environment
 	// Set Oracle Price
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	app.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroSDRDenom, lunaPriceInSDR)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
-	actorBeforeSwap := app.BankKeeper.GetAllBalances(ctx, actor)
+	actorBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, actor)
 
 	// Calculate expected swapped SDR
 	expectedSwappedSDR := sdk.NewDec(1000).Mul(lunaPriceInSDR)
@@ -99,15 +96,15 @@ func TestSwapSend(t *testing.T) {
 		},
 	}
 
-	err := executeCustom(t, ctx, app, contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
-	require.NoError(t, err)
+	err := executeFunc(contractAddr, actor, msg, sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)))
+	s.Require().NoError(err)
 
 	// check result after swap
-	actorAfterSwap := app.BankKeeper.GetAllBalances(ctx, actor)
+	actorAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, actor)
 	expectedActorAfterSwap := actorBeforeSwap.Sub(sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000)))
 	expectedActorAfterSwap = expectedActorAfterSwap.Add(sdk.NewCoin(core.MicroSDRDenom, expectedSwappedSDR.TruncateInt()))
 
-	require.Equal(t, expectedActorAfterSwap, actorAfterSwap)
+	s.Require().Equal(expectedActorAfterSwap, actorAfterSwap)
 }
 
 type ReflectExec struct {
@@ -123,11 +120,9 @@ type ReflectSubMsgs struct {
 	Msgs []wasmvmtypes.SubMsg `json:"msgs"`
 }
 
-func executeCustom(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error {
-	t.Helper()
-
+func (s *WasmTestSuite) executeCustom(contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error {
 	customBz, err := json.Marshal(msg)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 	reflectMsg := ReflectExec{
 		ReflectMsg: &ReflectMsgs{
 			Msgs: []wasmvmtypes.CosmosMsg{{
@@ -136,7 +131,7 @@ func executeCustom(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sd
 		},
 	}
 	reflectBz, err := json.Marshal(reflectMsg)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	// no funds sent if amount is 0
 	var coins sdk.Coins
@@ -144,7 +139,45 @@ func executeCustom(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sd
 		coins = sdk.Coins{funds}
 	}
 
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
-	_, err = contractKeeper.Execute(ctx, contract, sender, reflectBz, coins)
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper)
+	_, err = contractKeeper.Execute(s.Ctx, contract, sender, reflectBz, coins)
+	return err
+}
+
+type customSwap struct {
+	Swap *bindings.Swap `json:"swap"`
+}
+
+type customSwapSend struct {
+	SwapSend *bindings.SwapSend `json:"swap_send"`
+}
+
+func (s *WasmTestSuite) executeOldBindings(contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error {
+	var reflectBz []byte
+	switch {
+	case msg.Swap != nil:
+		customSwap := customSwap{
+			Swap: msg.Swap,
+		}
+		var err error
+		reflectBz, err = json.Marshal(customSwap)
+		s.Require().NoError(err)
+	case msg.SwapSend != nil:
+		customSwapSend := customSwapSend{
+			SwapSend: msg.SwapSend,
+		}
+		var err error
+		reflectBz, err = json.Marshal(customSwapSend)
+		s.Require().NoError(err)
+	}
+
+	// no funds sent if amount is 0
+	var coins sdk.Coins
+	if !funds.Amount.IsNil() {
+		coins = sdk.Coins{funds}
+	}
+
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper)
+	_, err := contractKeeper.Execute(s.Ctx, contract, sender, reflectBz, coins)
 	return err
 }

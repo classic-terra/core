@@ -1,91 +1,61 @@
-package wasmbinding
+package wasmbinding_test
 
 import (
 	"os"
 	"testing"
-	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/app"
-	testhelpers "github.com/classic-terra/core/app/helpers"
-	core "github.com/classic-terra/core/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	apptesting "github.com/classic-terra/core/app/testing"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func CreateTestInput(t *testing.T) (*app.TerraApp, sdk.Context) {
-	t.Helper()
-
-	app := testhelpers.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now().UTC()})
-	return app, ctx
+type WasmTestSuite struct {
+	apptesting.KeeperTestHelper
 }
 
-func InstantiateReflectContract(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk.AccAddress) sdk.AccAddress {
-	t.Helper()
+func TestWasmTestSuite(t *testing.T) {
+	suite.Run(t, new(WasmTestSuite))
+}
 
-	wasmKeeper := app.WasmKeeper
+func (s *WasmTestSuite) SetupTest() {
+	s.Setup(s.T())
+}
 
-	codeId := storeReflectCode(t, ctx, app, addr)
+func (s *WasmTestSuite) InstantiateContract(addr sdk.AccAddress, contractDir string) sdk.AccAddress {
+	wasmKeeper := s.App.WasmKeeper
 
-	cInfo := wasmKeeper.GetCodeInfo(ctx, codeId)
-	require.NotNil(t, cInfo)
+	codeId := s.storeReflectCode(addr, contractDir)
 
-	contractAddr := instantiateReflectContract(t, ctx, app, addr, codeId)
+	cInfo := wasmKeeper.GetCodeInfo(s.Ctx, codeId)
+	s.Require().NotNil(cInfo)
+
+	contractAddr := s.instantiateContract(addr, codeId)
 
 	// check if contract is instantiated
-	info := wasmKeeper.GetContractInfo(ctx, contractAddr)
-	require.NotNil(t, info)
+	info := wasmKeeper.GetContractInfo(s.Ctx, contractAddr)
+	s.Require().NotNil(info)
 
 	return contractAddr
 }
 
-// we need to make this deterministic (same every test run), as content might affect gas costs
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := ed25519.GenPrivKey()
-	pub := key.PubKey()
-	addr := sdk.AccAddress(pub.Address())
-	return key, pub, addr
-}
+func (s *WasmTestSuite) storeReflectCode(addr sdk.AccAddress, contractDir string) uint64 {
+	wasmCode, err := os.ReadFile(contractDir)
+	s.Require().NoError(err)
 
-func storeReflectCode(t *testing.T, ctx sdk.Context, app *app.TerraApp, addr sdk.AccAddress) uint64 {
-	t.Helper()
-
-	wasmCode, err := os.ReadFile("../testdata/terra_reflect.wasm")
-	require.NoError(t, err)
-
-	codeId, _, err := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper).Create(ctx, addr, wasmCode, &wasmtypes.AllowEverybody)
-	require.NoError(t, err)
+	codeId, _, err := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper).Create(s.Ctx, addr, wasmCode, &wasmtypes.AllowEverybody)
+	s.Require().NoError(err)
 
 	return codeId
 }
 
-func instantiateReflectContract(t *testing.T, ctx sdk.Context, app *app.TerraApp, funder sdk.AccAddress, codeId uint64) sdk.AccAddress {
-	t.Helper()
-
+func (s *WasmTestSuite) instantiateContract(funder sdk.AccAddress, codeId uint64) sdk.AccAddress {
 	initMsgBz := []byte("{}")
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
-	addr, _, err := contractKeeper.Instantiate(ctx, codeId, funder, funder, initMsgBz, nil)
-	require.NoError(t, err)
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper)
+	addr, _, err := contractKeeper.Instantiate(s.Ctx, codeId, funder, funder, initMsgBz, nil)
+	s.Require().NoError(err)
 
 	return addr
-}
-
-func RandomAccountAddress() sdk.AccAddress {
-	_, _, addr := keyPubAddr()
-	return addr
-}
-
-func FundAccount(t *testing.T, ctx sdk.Context, app *app.TerraApp, acct sdk.AccAddress) {
-	t.Helper()
-	err := simapp.FundAccount(app.BankKeeper, ctx, acct, sdk.NewCoins(
-		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(10000000000)),
-	))
-	require.NoError(t, err)
 }

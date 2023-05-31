@@ -170,6 +170,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 	}
 
 	taxes := sdk.Coins{}
+
 	for _, coin := range principal {
 		// Originally only a stability tax on UST.  Changed to tax Luna as well after TaxPowerUpgradeHeight
 		if (coin.Denom == core.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && currHeight < TaxPowerUpgradeHeight {

@@ -44,6 +44,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	customwasmkeeper "github.com/classic-terra/core/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/wasmbinding"
 
 	feesharekeeper "github.com/classic-terra/core/x/feeshare/keeper"
@@ -229,7 +230,12 @@ func NewAppKeepers(
 	}
 	supportedFeatures := "iterator,staking,stargate,terra,cosmwasm_1_1"
 
-	wasmOpts = append(terrawasm.RegisterCustomPlugins(&appKeepers.MarketKeeper, &appKeepers.OracleKeeper, &appKeepers.TreasuryKeeper), wasmOpts...)
+	wasmMsgHandler := customwasmkeeper.NewMessageHandler(bApp.MsgServiceRouter(), appKeepers.IBCKeeper.ChannelKeeper, scopedWasmKeeper, appKeepers.BankKeeper, appKeepers.TreasuryKeeper, appKeepers.AccountKeeper, appCodec, appKeepers.TransferKeeper)
+	// the first slice will replace all default msh handler with custom one
+	wasmOpts = append([]wasmkeeper.Option{wasmkeeper.WithMessageHandler(wasmMsgHandler)}, wasmOpts...)
+	// the second slice will add custom querier and message handler decorator
+	// this order must be uphold else error will be thrown
+	wasmOpts = append(wasmOpts, terrawasm.RegisterCustomPlugins(&appKeepers.MarketKeeper, &appKeepers.OracleKeeper, &appKeepers.TreasuryKeeper)...)
 
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,

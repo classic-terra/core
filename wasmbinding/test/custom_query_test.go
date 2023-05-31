@@ -1,39 +1,36 @@
-package wasmbinding
+package wasmbinding_test
 
 import (
 	"encoding/json"
-	"testing"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	"github.com/classic-terra/core/app"
 	core "github.com/classic-terra/core/types"
 	"github.com/classic-terra/core/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/x/market/types"
 	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 // go test -v -run ^TestQuerySwap$ github.com/classic-terra/core/wasmbinding/test
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into
-func QuerySwap(t *testing.T, contractDir string, queryFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
-	actor := RandomAccountAddress()
-	app, ctx := CreateTestInput(t)
+func (s *WasmTestSuite) QuerySwap(contractDir string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
+	s.SetupTest()
+	actor := s.RandomAccountAddress()
 
 	// fund
-	FundAccount(t, ctx, app, actor)
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000000000)))
 
 	// instantiate reflect contract
-	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
-	require.NotEmpty(t, contractAddr)
+	contractAddr := s.InstantiateContract(actor, contractDir)
+	s.Require().NotEmpty(contractAddr)
 
 	// setup swap environment
 	// Set Oracle Price
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	app.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroSDRDenom, lunaPriceInSDR)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
 	// Calculate expected swapped SDR
 	expectedSwappedSDR := sdk.NewDec(1000).Mul(lunaPriceInSDR)
@@ -49,25 +46,25 @@ func QuerySwap(t *testing.T, contractDir string, queryFunc func(t *testing.T, ct
 	}
 
 	resp := bindings.SwapQueryResponse{}
-	queryFunc(t, ctx, app, contractAddr, query, &resp)
+	queryFunc(contractAddr, query, &resp)
 
-	require.Equal(t, expectedSwappedSDR.TruncateInt().String(), resp.Receive.Amount)
+	s.Require().Equal(expectedSwappedSDR.TruncateInt().String(), resp.Receive.Amount)
 }
 
 // go test -v -run ^TestQueryExchangeRates$ github.com/classic-terra/core/wasmbinding/test
-func QueryExchangeRates(t *testing.T, contractDir string, queryFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
-	actor := RandomAccountAddress()
-	app, ctx := CreateTestInput(t)
+func (s *WasmTestSuite) QueryExchangeRates(contractDir string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
+	s.SetupTest()
+	actor := s.RandomAccountAddress()
 
 	// fund
-	FundAccount(t, ctx, app, actor)
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000000000)))
 
 	// instantiate reflect contract
-	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
-	require.NotEmpty(t, contractAddr)
+	contractAddr := s.InstantiateContract(actor, contractDir)
+	s.Require().NotEmpty(contractAddr)
 
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	app.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroSDRDenom, lunaPriceInSDR)
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
 	query := bindings.TerraQuery{
 		ExchangeRates: &bindings.ExchangeRateQueryParams{
@@ -77,44 +74,44 @@ func QueryExchangeRates(t *testing.T, contractDir string, queryFunc func(t *test
 	}
 
 	resp := bindings.ExchangeRatesQueryResponse{}
-	queryFunc(t, ctx, app, contractAddr, query, &resp)
+	queryFunc(contractAddr, query, &resp)
 
-	require.Equal(t, lunaPriceInSDR, sdk.MustNewDecFromStr(resp.ExchangeRates[0].ExchangeRate))
+	s.Require().Equal(lunaPriceInSDR, sdk.MustNewDecFromStr(resp.ExchangeRates[0].ExchangeRate))
 }
 
 // go test -v -run ^TestQueryTaxRate$ github.com/classic-terra/core/wasmbinding/test
-func QueryTaxRate(t *testing.T, contractDir string, queryFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
-	actor := RandomAccountAddress()
-	app, ctx := CreateTestInput(t)
+func (s *WasmTestSuite) QueryTaxRate(contractDir string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
+	s.SetupTest()
+	actor := s.RandomAccountAddress()
 
 	// fund
-	FundAccount(t, ctx, app, actor)
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000000000)))
 
 	// instantiate reflect contract
-	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
-	require.NotEmpty(t, contractAddr)
+	contractAddr := s.InstantiateContract(actor, contractDir)
+	s.Require().NotEmpty(contractAddr)
 
 	query := bindings.TerraQuery{
 		TaxRate: &struct{}{},
 	}
 
 	resp := bindings.TaxRateQueryResponse{}
-	queryFunc(t, ctx, app, contractAddr, query, &resp)
+	queryFunc(contractAddr, query, &resp)
 
-	require.Equal(t, treasurytypes.DefaultTaxRate, sdk.MustNewDecFromStr(resp.Rate))
+	s.Require().Equal(treasurytypes.DefaultTaxRate, sdk.MustNewDecFromStr(resp.Rate))
 }
 
 // go test -v -run ^TestQueryTaxCap$ github.com/classic-terra/core/wasmbinding/test
-func QueryTaxCap(t *testing.T, contractDir string, queryFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
-	actor := RandomAccountAddress()
-	app, ctx := CreateTestInput(t)
+func (s *WasmTestSuite) QueryTaxCap(contractDir string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
+	s.SetupTest()
+	actor := s.RandomAccountAddress()
 
 	// fund
-	FundAccount(t, ctx, app, actor)
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 1000000000)))
 
 	// instantiate reflect contract
-	contractAddr := InstantiateContract(t, ctx, app, actor, contractDir)
-	require.NotEmpty(t, contractAddr)
+	contractAddr := s.InstantiateContract(actor, contractDir)
+	s.Require().NotEmpty(contractAddr)
 
 	query := bindings.TerraQuery{
 		TaxCap: &treasurytypes.QueryTaxCapParams{
@@ -123,9 +120,9 @@ func QueryTaxCap(t *testing.T, contractDir string, queryFunc func(t *testing.T, 
 	}
 
 	resp := bindings.TaxCapQueryResponse{}
-	queryFunc(t, ctx, app, contractAddr, query, &resp)
+	queryFunc(contractAddr, query, &resp)
 
-	require.Equal(t, treasurytypes.DefaultTaxPolicy.Cap.Amount.String(), resp.Cap)
+	s.Require().Equal(treasurytypes.DefaultTaxPolicy.Cap.Amount.String(), resp.Cap)
 }
 
 type ReflectQuery struct {
@@ -140,11 +137,9 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{}) {
-	t.Helper()
-
+func (s *WasmTestSuite) queryCustom(contract sdk.AccAddress, request bindings.TerraQuery, response interface{}) {
 	msgBz, err := json.Marshal(request)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	query := ReflectQuery{
 		Chain: &ChainRequest{
@@ -152,15 +147,15 @@ func queryCustom(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.
 		},
 	}
 	queryBz, err := json.Marshal(query)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
-	resBz, err := app.WasmKeeper.QuerySmart(ctx, contract, queryBz)
-	require.NoError(t, err)
+	resBz, err := s.App.WasmKeeper.QuerySmart(s.Ctx, contract, queryBz)
+	s.Require().NoError(err)
 	var resp ChainResponse
 	err = json.Unmarshal(resBz, &resp)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 	err = json.Unmarshal(resp.Data, response)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 }
 
 // old bindings contract query
@@ -182,9 +177,7 @@ type swapQueryMsg struct {
 	AskDenom  string           `json:"ask_denom"`
 }
 
-func queryOldBindings(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{}) {
-	t.Helper()
-
+func (s *WasmTestSuite) queryOldBindings(contract sdk.AccAddress, request bindings.TerraQuery, response interface{}) {
 	var msgBz []byte
 	switch {
 	case request.Swap != nil:
@@ -199,32 +192,32 @@ func queryOldBindings(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract
 		}
 		var err error
 		msgBz, err = json.Marshal(query)
-		require.NoError(t, err)
+		s.Require().NoError(err)
 	case request.ExchangeRates != nil:
 		query := bindingsTesterExchangeRatesQueryMsg{
 			ExchangeRates: request.ExchangeRates,
 		}
 		var err error
 		msgBz, err = json.Marshal(query)
-		require.NoError(t, err)
+		s.Require().NoError(err)
 	case request.TaxRate != nil:
 		query := bindingsTesterTaxRateQueryMsg{
 			TaxRate: struct{}{},
 		}
 		var err error
 		msgBz, err = json.Marshal(query)
-		require.NoError(t, err)
+		s.Require().NoError(err)
 	case request.TaxCap != nil:
 		query := bindingsTesterTaxCapQueryMsg{
 			TaxCap: request.TaxCap,
 		}
 		var err error
 		msgBz, err = json.Marshal(query)
-		require.NoError(t, err)
+		s.Require().NoError(err)
 	}
 
-	resBz, err := app.WasmKeeper.QuerySmart(ctx, contract, msgBz)
-	require.NoError(t, err)
+	resBz, err := s.App.WasmKeeper.QuerySmart(s.Ctx, contract, msgBz)
+	s.Require().NoError(err)
 	err = json.Unmarshal(resBz, response)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 }

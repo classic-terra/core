@@ -1,9 +1,6 @@
-package wasmbinding
+package wasmbinding_test
 
 import (
-	"testing"
-
-	"github.com/classic-terra/core/app"
 	"github.com/classic-terra/core/wasmbinding/bindings"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,49 +10,50 @@ const (
 	TERRA_RENOVATED_BINDINGS_DIR = "../testdata/old/bindings_tester.wasm"
 )
 
-func TestBindingsAll(t *testing.T) {
+// go test -v -run ^TestWasmTestSuite/TestBindingsAll$ github.com/classic-terra/core/wasmbinding/test
+func (s *WasmTestSuite) TestBindingsAll() {
 	cases := []struct {
 		name        string
 		dir         string
-		executeFunc func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error
-		queryFunc   func(t *testing.T, ctx sdk.Context, app *app.TerraApp, contract sdk.AccAddress, request bindings.TerraQuery, response interface{})
+		executeFunc func(contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.TerraMsg, funds sdk.Coin) error
+		queryFunc   func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})
 	}{
 		{
 			name:        "Terra",
 			dir:         TERRA_BINDINGS_DIR,
-			executeFunc: executeCustom,
-			queryFunc:   queryCustom,
+			executeFunc: s.executeCustom,
+			queryFunc:   s.queryCustom,
 		},
 		{
 			name:        "Old Terra bindings",
 			dir:         TERRA_RENOVATED_BINDINGS_DIR,
-			executeFunc: executeOldBindings,
-			queryFunc:   queryOldBindings,
+			executeFunc: s.executeOldBindings,
+			queryFunc:   s.queryOldBindings,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
+		s.Run(tc.name, func() {
 			// Msg
-			t.Run("TestSwap", func(t *testing.T) {
-				Swap(t, tc.dir, tc.executeFunc)
+			s.Run("TestSwap", func() {
+				s.Swap(tc.dir, tc.executeFunc)
 			})
-			t.Run("TestSwapSend", func(t *testing.T) {
-				SwapSend(t, tc.dir, tc.executeFunc)
+			s.Run("TestSwapSend", func() {
+				s.SwapSend(tc.dir, tc.executeFunc)
 			})
 
 			// Query
-			t.Run("TestQuerySwap", func(t *testing.T) {
-				QuerySwap(t, tc.dir, tc.queryFunc)
+			s.Run("TestQuerySwap", func() {
+				s.QuerySwap(tc.dir, tc.queryFunc)
 			})
-			t.Run("TestQueryExchangeRates", func(t *testing.T) {
-				QueryExchangeRates(t, tc.dir, tc.queryFunc)
+			s.Run("TestQueryExchangeRates", func() {
+				s.QueryExchangeRates(tc.dir, tc.queryFunc)
 			})
-			t.Run("TestQueryTaxRate", func(t *testing.T) {
-				QueryTaxRate(t, tc.dir, tc.queryFunc)
+			s.Run("TestQueryTaxRate", func() {
+				s.QueryTaxRate(tc.dir, tc.queryFunc)
 			})
-			t.Run("TestQueryTaxCap", func(t *testing.T) {
-				QueryTaxCap(t, tc.dir, tc.queryFunc)
+			s.Run("TestQueryTaxCap", func() {
+				s.QueryTaxCap(tc.dir, tc.queryFunc)
 			})
 		})
 	}

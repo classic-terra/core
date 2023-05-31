@@ -9,7 +9,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	terraapp "github.com/classic-terra/core/app"
-	"github.com/classic-terra/core/app/helpers"
+	helpers "github.com/classic-terra/core/app/testing"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/stretchr/testify/require"

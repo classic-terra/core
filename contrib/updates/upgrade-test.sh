@@ -76,6 +76,11 @@ while true; do
     fi
 done
 
+if [[ $SAME_BLOCK -ge 5 ]]; then
+    docker logs terradnode0
+    exit 1
+fi
+
 sleep 40
 
 # check all nodes are online after upgrade

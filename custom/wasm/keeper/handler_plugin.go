@@ -76,7 +76,6 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 	}
 
 	for _, sdkMsg := range sdkMsgs {
-
 		// Charge tax on result msg
 		taxes := ante.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
 		if !taxes.IsZero() {

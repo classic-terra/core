@@ -8,6 +8,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/classic-terra/core/app"
 	appparams "github.com/classic-terra/core/app/params"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -17,6 +18,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -35,6 +37,29 @@ var emptyWasmOpts []wasm.Option
 
 // EmptyBaseAppOptions is a stub implementing AppOptions
 type EmptyBaseAppOptions struct{}
+
+type KeeperTestHelper struct {
+	suite.Suite
+
+	App         *app.TerraApp
+	Ctx         sdk.Context
+	QueryHelper *baseapp.QueryServiceTestHelper
+	TestAccs    []sdk.AccAddress
+}
+
+func (s *KeeperTestHelper) Setup(t *testing.T) {
+	s.App = SetupApp(s.T())
+	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "doxchain-1", Time: time.Now().UTC()})
+	s.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: s.App.GRPCQueryRouter(),
+		Ctx:             s.Ctx,
+	}
+
+	s.TestAccs = make([]sdk.AccAddress, 3)
+	for i := range s.TestAccs {
+		s.TestAccs[i] = s.RandomAccountAddress()
+	}
+}
 
 // Get implements AppOptions
 func (ao EmptyBaseAppOptions) Get(o string) interface{} {
@@ -64,7 +89,7 @@ type EmptyAppOptions struct{}
 
 func (EmptyAppOptions) Get(o string) interface{} { return nil }
 
-func Setup(t *testing.T, isCheckTx bool) *app.TerraApp {
+func SetupApp(t *testing.T) *app.TerraApp {
 	t.Helper()
 
 	privVal := NewPV()
@@ -224,14 +249,20 @@ func genesisStateWithValSet(t *testing.T,
 	return genesisState
 }
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func (s *KeeperTestHelper) KeyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
 }
 
-func RandomAccountAddress() sdk.AccAddress {
-	_, _, addr := keyPubAddr()
+func (s *KeeperTestHelper) RandomAccountAddress() sdk.AccAddress {
+	_, _, addr := s.KeyPubAddr()
 	return addr
+}
+
+// FundAcc funds target address with specified amount.
+func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	s.Require().NoError(err)
 }

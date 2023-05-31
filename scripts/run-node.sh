@@ -7,6 +7,9 @@ BINARY=$1
 # check DENOM is set. If not, set to uluna
 DENOM=${2:-uluna}
 
+COMMISSION_RATE=0.01
+COMMISSION_MAX_RATE=0.02
+
 SED_BINARY=sed
 # check if this is OS X
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -61,7 +64,7 @@ $SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME/config/app.toml
 $SED_BINARY -i 's/swagger = false/swagger = true/' $HOME/config/app.toml
 
 # Sign genesis transaction
-$BINARY gentx $KEY "1000000${DENOM}" --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME
+$BINARY gentx $KEY "1000000${DENOM}" --commission-rate=$COMMISSION_RATE --commission-max-rate=$COMMISSION_MAX_RATE --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME
 
 # Collect genesis tx
 $BINARY collect-gentxs --home $HOME

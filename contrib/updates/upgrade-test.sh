@@ -34,8 +34,20 @@ for (( i=0; i<$TESTNET_NVAL; i++ )); do
 done
 
 # keep track of block_height
+NIL_BLOCK=0
 while true; do 
     BLOCK_HEIGHT=$($BINARY_OLD status --home $NODE1_HOME | jq '.SyncInfo.latest_block_height' -r)
+    # if BLOCK_HEIGHT is empty
+    if [[ -z $BLOCK_HEIGHT ]]; then
+        # if 5 nil blocks in a row, exit
+        if [[ $NIL_BLOCK -ge 5 ]]; then
+            echo "ERROR: 5 nil blocks in a row"
+            break
+        fi
+        NIL_BLOCK=$((NIL_BLOCK + 1))
+    fi
+
+    # if block height is not nil
     if [[ $BLOCK_HEIGHT -ge $UPGRADE_HEIGHT ]]; then
         # assuming running only 1 terrad
         echo "UPGRADE REACHED, CONTINUING NEW CHAIN"

@@ -51,7 +51,6 @@ import (
 	v2 "github.com/classic-terra/core/v2/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v2/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v2/app/upgrades/v4"
-	v4_1 "github.com/classic-terra/core/v2/app/upgrades/v4.1"
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/v2/custom/auth/client/rest"
@@ -62,6 +61,8 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v2/client/docs/statik"
+	
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 const appName = "TerraApp"
@@ -71,7 +72,7 @@ var (
 	DefaultNodeHome string
 
 	// Upgrades defines upgrades to be applied to the network
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade, v4_1.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
 )
 
 // Verify app interface at compile time
@@ -293,7 +294,14 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 
 // EndBlocker application updates every end block
 func (app *TerraApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+
+	if ctx.ChainID() == core.RebelsChainID && ctx.BlockHeight() == core.RebelsV4HotFixHeight {
+		wasmKeeper := app.WasmKeeper
+		wasmMigrator := wasmkeeper.NewMigrator(wasmKeeper)
+		wasmMigrator.Migrate2to2(ctx)
+	}
 	return app.mm.EndBlock(ctx, req)
+
 }
 
 // InitChainer application update at chain initialization

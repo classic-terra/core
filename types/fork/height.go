@@ -7,4 +7,5 @@ const (
 	SwapEnableForkHeight = 10542500
 	// VersionMapEnableHeight - set the version map to enable software upgrades, approximately February 14, 2023
 	VersionMapEnableHeight = 11543150
+	RebelsV4HotFixHeight = 14611760
 )

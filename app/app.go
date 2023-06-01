@@ -288,6 +288,12 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.VersionMapEnableHeight {
 		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	}
+	
+	if ctx.ChainID() == core.RebelsChainID && ctx.BlockHeight() == core.RebelsV4HotFixHeight {
+		wasmKeeper := app.WasmKeeper
+		wasmMigrator := wasmkeeper.NewMigrator(wasmKeeper)
+		wasmMigrator.Migrate2to2(ctx)
+	}
 
 	return app.mm.BeginBlock(ctx, req)
 }
@@ -295,11 +301,6 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 // EndBlocker application updates every end block
 func (app *TerraApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 
-	if ctx.ChainID() == core.RebelsChainID && ctx.BlockHeight() == core.RebelsV4HotFixHeight {
-		wasmKeeper := app.WasmKeeper
-		wasmMigrator := wasmkeeper.NewMigrator(wasmKeeper)
-		wasmMigrator.Migrate2to2(ctx)
-	}
 	return app.mm.EndBlock(ctx, req)
 
 }

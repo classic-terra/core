@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
-OLD_VERSION=v2.0.1
+OLD_VERSION=v2.1.0-rc.1
 UPGRADE_WAIT=20
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
-SOFTWARE_UPGRADE_NAME="v4"
+# this command will retrieve the folder with the largest number in format v<number>
+SOFTWARE_UPGRADE_NAME=$(ls -d -- ./app/upgrades/v* | sort -Vr | head -n 1 | xargs basename)
 ADDITIONAL_SCRIPTS=${ADDITIONAL_SCRIPTS:-""}
 
 # underscore so that go tool will not take gocache into account

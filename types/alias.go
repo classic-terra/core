@@ -38,9 +38,11 @@ const (
 	Bech32PrefixConsPub    = util.Bech32PrefixConsPub
 	ColumbusChainID        = "columbus-5"
 	BombayChainID          = "bombay-12"
+	RebelsChainID          = "rebels-2"
 	SwapDisableForkHeight  = fork.SwapDisableForkHeight
 	SwapEnableForkHeight   = fork.SwapEnableForkHeight
 	VersionMapEnableHeight = fork.VersionMapEnableHeight
+	RebelsV4HotFixHeight   = fork.RebelsV4HotFixHeight
 )
 
 // functions aliases

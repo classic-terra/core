@@ -27,7 +27,7 @@ if [ -z "$BINARY" ]; then
 fi
 
 HOME_DIR=mytestnet
-CHAIN_ID="test"
+CHAIN_ID="localterra"
 KEYRING="test"
 KEY="test0"
 KEY1="test1"

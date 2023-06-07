@@ -149,6 +149,11 @@
         "rename": {
           "Params": "WasmParams"
         }
+      },
+      "tags": {
+        "rename": {
+          "Query": "Wasm"
+        }
       }
     },
     {

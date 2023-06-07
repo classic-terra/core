@@ -1411,7 +1411,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Wasm
+        - TerraWasm
   /terra/wasm/v1beta1/codes/{code_id}/byte_code:
     get:
       deprecated: true
@@ -1459,7 +1459,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Wasm
+        - TerraWasm
   /terra/wasm/v1beta1/contracts/{contract_address}:
     get:
       deprecated: true
@@ -1525,7 +1525,7 @@ paths:
           required: true
           type: string
       tags:
-        - Wasm
+        - TerraWasm
   /terra/wasm/v1beta1/contracts/{contract_address}/store:
     get:
       deprecated: true
@@ -1576,7 +1576,7 @@ paths:
           type: string
           format: byte
       tags:
-        - Wasm
+        - TerraWasm
   /terra/wasm/v1beta1/contracts/{contract_address}/store/raw:
     get:
       deprecated: true
@@ -1628,7 +1628,7 @@ paths:
           type: string
           format: byte
       tags:
-        - Wasm
+        - TerraWasm
   /terra/wasm/v1beta1/params:
     get:
       deprecated: true
@@ -1679,7 +1679,7 @@ paths:
                       type: string
                       format: byte
       tags:
-        - Wasm
+        - TerraWasm
   /cosmos/auth/v1beta1/accounts:
     get:
       summary: Accounts returns all the existing accounts
@@ -24467,7 +24467,7 @@ paths:
           required: false
           type: boolean
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/code/{code_id}:
     get:
       summary: Code gets the binary code and metadata for a singe wasm code
@@ -24723,7 +24723,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/code/{code_id}/contracts:
     get:
       summary: ContractsByCode lists all smart contracts for a code id
@@ -25012,7 +25012,7 @@ paths:
           required: false
           type: boolean
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/codes/params:
     get:
       summary: Params gets the module params
@@ -25269,7 +25269,7 @@ paths:
                           "value": "1.212s"
                         }
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/codes/pinned:
     get:
       summary: PinnedCodes gets the pinned code ids
@@ -25553,7 +25553,7 @@ paths:
           required: false
           type: boolean
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/contract/{address}:
     get:
       summary: ContractInfo gets the contract meta data
@@ -25802,7 +25802,7 @@ paths:
           required: true
           type: string
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/contract/{address}/history:
     get:
       summary: ContractHistory gets the contract code history
@@ -26117,7 +26117,7 @@ paths:
           required: false
           type: boolean
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/contract/{address}/raw/{query_data}:
     get:
       summary: RawContractState gets single key from the raw store data of a contract
@@ -26336,7 +26336,7 @@ paths:
           type: string
           format: byte
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/contract/{address}/smart/{query_data}:
     get:
       summary: SmartContractState get smart query result from the contract
@@ -26556,7 +26556,7 @@ paths:
           type: string
           format: byte
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/contract/{address}/state:
     get:
       summary: AllContractState gets all raw store data for a single contract
@@ -26854,7 +26854,7 @@ paths:
           required: false
           type: boolean
       tags:
-        - Query
+        - Wasm
   /cosmwasm/wasm/v1/contracts/creator/{creator_address}:
     get:
       summary: ContractsByCreator gets the contracts by creator
@@ -27143,7 +27143,7 @@ paths:
           required: false
           type: boolean
       tags:
-        - Query
+        - Wasm
   /ibc/core/channel/v1/channels:
     get:
       summary: Channels queries all the IBC channels of a chain.

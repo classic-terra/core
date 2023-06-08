@@ -71,6 +71,9 @@ var (
 
 	// Upgrades defines upgrades to be applied to the network
 	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
+
+	// Forks defines forks to be applied to the network
+	Forks = []upgrades.Fork{}
 )
 
 // Verify app interface at compile time
@@ -244,6 +247,7 @@ func (app *TerraApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	BeginBlockForks(ctx, app)
 	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapDisableForkHeight { // Make min spread to one to disable swap
 		params := app.MarketKeeper.GetParams(ctx)
 		params.MinStabilitySpread = sdk.OneDec()

@@ -1,8 +1,8 @@
 ---
 swagger: "2.0"
 info:
-  version: "3.0"
-  title: "Terra-Lite for Terra"
+  version: "2.1.0"
+  title: "Terra-Lite for Terra Classic"
   description: A REST interface for state queries, transaction generation and broadcasting.
 tags:
   - name: Transactions

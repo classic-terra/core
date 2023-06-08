@@ -3,7 +3,7 @@
   "info": {
     "title": "Terra-Lite for Terra",
     "description": "A REST interface for state queries, legacy transactions",
-    "version": "4.0.0"
+    "version": "2.1.0"
   },
   "apis": [
     {

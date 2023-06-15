@@ -1,11 +1,10 @@
 package wasm
 
 import (
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -34,19 +33,17 @@ func (AppModuleBasic) RegisterRESTRoutes(cliCtx client.Context, rtr *mux.Router)
 
 // RegisterInterfaces implements InterfaceModule
 func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	
 	// register canonical wasm types
 	types.RegisterInterfaces(registry)
-	
+
 	// register legacy wasm msgs (to be used in archives)
 	registry.RegisterInterface("terra.wasm.v1beta1.MsgInstantiateContract", (*sdk.Msg)(nil), &wasmlegacy.MsgInstantiateContract{})
 	registry.RegisterInterface("terra.wasm.v1beta1.MsgExecuteContract", (*sdk.Msg)(nil), &wasmlegacy.MsgExecuteContract{})
-	registry.RegisterInterface("terra.wasm.v1beta1.MsgStoreCode", (*sdk.Msg)(nil),&wasmlegacy.MsgStoreCode{})
-	registry.RegisterInterface("terra.wasm.v1beta1.MsgExecuteContract", (*sdk.Msg)(nil),&wasmlegacy.MsgMigrateCode{})
-	registry.RegisterInterface("terra.wasm.v1beta1.MsgMigrateCode", (*sdk.Msg)(nil),&wasmlegacy.MsgMigrateContract{})
-	registry.RegisterInterface("terra.wasm.v1beta1.MsgUpdateContractAdmin", (*sdk.Msg)(nil),&wasmlegacy.MsgUpdateContractAdmin{})
-	registry.RegisterInterface("terra.wasm.v1beta1.MsgClearContractAdmin", (*sdk.Msg)(nil),&wasmlegacy.MsgClearContractAdmin{})
-
+	registry.RegisterInterface("terra.wasm.v1beta1.MsgStoreCode", (*sdk.Msg)(nil), &wasmlegacy.MsgStoreCode{})
+	registry.RegisterInterface("terra.wasm.v1beta1.MsgExecuteContract", (*sdk.Msg)(nil), &wasmlegacy.MsgMigrateCode{})
+	registry.RegisterInterface("terra.wasm.v1beta1.MsgMigrateCode", (*sdk.Msg)(nil), &wasmlegacy.MsgMigrateContract{})
+	registry.RegisterInterface("terra.wasm.v1beta1.MsgUpdateContractAdmin", (*sdk.Msg)(nil), &wasmlegacy.MsgUpdateContractAdmin{})
+	registry.RegisterInterface("terra.wasm.v1beta1.MsgClearContractAdmin", (*sdk.Msg)(nil), &wasmlegacy.MsgClearContractAdmin{})
 }
 
 // GetTxCmd returns the root tx command for the wasm module.

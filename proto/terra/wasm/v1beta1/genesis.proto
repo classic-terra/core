@@ -6,15 +6,6 @@ import "terra/wasm/v1beta1/wasm.proto";
 
 option go_package = "github.com/classic-terra/core/v2/custom/wasm/types/legacy";
 
-// GenesisState defines the oracle module's genesis state.
-message GenesisState {
-  Params            params           = 1 [(gogoproto.nullable) = false];
-  uint64            last_code_id     = 2 [(gogoproto.customname) = "LastCodeID"];
-  uint64            last_instance_id = 3 [(gogoproto.customname) = "LastInstanceID"];
-  repeated Code     codes            = 4 [(gogoproto.nullable) = false];
-  repeated Contract contracts        = 5 [(gogoproto.nullable) = false];
-}
-
 // Model is a struct that holds a KV pair
 message Model {
   bytes key   = 1;

@@ -7,20 +7,17 @@ import (
 	bytes "bytes"
 	encoding_json "encoding/json"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-
-	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ = proto.Marshal
-	_ = fmt.Errorf
-	_ = math.Inf
-)
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -29,7 +26,7 @@ var (
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // CodeInfo is data for the uploaded contract WASM code
-type CodeInfo struct {
+type LegacyCodeInfo struct {
 	// CodeID is the sequentially increasing unique identifier
 	CodeID uint64 `protobuf:"varint,1,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty" yaml:"code_id"`
 	// CodeHash is the unique identifier created by wasmvm
@@ -38,20 +35,18 @@ type CodeInfo struct {
 	Creator string `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty" yaml:"creator"`
 }
 
-func (m *CodeInfo) Reset()         { *m = CodeInfo{} }
-func (m *CodeInfo) String() string { return proto.CompactTextString(m) }
-func (*CodeInfo) ProtoMessage()    {}
-func (*CodeInfo) Descriptor() ([]byte, []int) {
+func (m *LegacyCodeInfo) Reset()         { *m = LegacyCodeInfo{} }
+func (m *LegacyCodeInfo) String() string { return proto.CompactTextString(m) }
+func (*LegacyCodeInfo) ProtoMessage()    {}
+func (*LegacyCodeInfo) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2bd5d0123068c880, []int{0}
 }
-
-func (m *CodeInfo) XXX_Unmarshal(b []byte) error {
+func (m *LegacyCodeInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
-func (m *CodeInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *LegacyCodeInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CodeInfo.Marshal(b, m, deterministic)
+		return xxx_messageInfo_LegacyCodeInfo.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -61,36 +56,33 @@ func (m *CodeInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-
-func (m *CodeInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CodeInfo.Merge(m, src)
+func (m *LegacyCodeInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LegacyCodeInfo.Merge(m, src)
 }
-
-func (m *CodeInfo) XXX_Size() int {
+func (m *LegacyCodeInfo) XXX_Size() int {
 	return m.Size()
 }
-
-func (m *CodeInfo) XXX_DiscardUnknown() {
-	xxx_messageInfo_CodeInfo.DiscardUnknown(m)
+func (m *LegacyCodeInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_LegacyCodeInfo.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CodeInfo proto.InternalMessageInfo
+var xxx_messageInfo_LegacyCodeInfo proto.InternalMessageInfo
 
-func (m *CodeInfo) GetCodeID() uint64 {
+func (m *LegacyCodeInfo) GetCodeID() uint64 {
 	if m != nil {
 		return m.CodeID
 	}
 	return 0
 }
 
-func (m *CodeInfo) GetCodeHash() []byte {
+func (m *LegacyCodeInfo) GetCodeHash() []byte {
 	if m != nil {
 		return m.CodeHash
 	}
 	return nil
 }
 
-func (m *CodeInfo) GetCreator() string {
+func (m *LegacyCodeInfo) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
@@ -98,7 +90,7 @@ func (m *CodeInfo) GetCreator() string {
 }
 
 // ContractInfo stores a WASM contract instance
-type ContractInfo struct {
+type LegacyContractInfo struct {
 	// Address is the address of the contract
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
 	// Creator is the contract creator address
@@ -111,20 +103,18 @@ type ContractInfo struct {
 	InitMsg encoding_json.RawMessage `protobuf:"bytes,5,opt,name=init_msg,json=initMsg,proto3,casttype=encoding/json.RawMessage" json:"init_msg,omitempty" yaml:"init_msg"`
 }
 
-func (m *ContractInfo) Reset()         { *m = ContractInfo{} }
-func (m *ContractInfo) String() string { return proto.CompactTextString(m) }
-func (*ContractInfo) ProtoMessage()    {}
-func (*ContractInfo) Descriptor() ([]byte, []int) {
+func (m *LegacyContractInfo) Reset()         { *m = LegacyContractInfo{} }
+func (m *LegacyContractInfo) String() string { return proto.CompactTextString(m) }
+func (*LegacyContractInfo) ProtoMessage()    {}
+func (*LegacyContractInfo) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2bd5d0123068c880, []int{1}
 }
-
-func (m *ContractInfo) XXX_Unmarshal(b []byte) error {
+func (m *LegacyContractInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
-func (m *ContractInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *LegacyContractInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ContractInfo.Marshal(b, m, deterministic)
+		return xxx_messageInfo_LegacyContractInfo.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -134,50 +124,47 @@ func (m *ContractInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-
-func (m *ContractInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ContractInfo.Merge(m, src)
+func (m *LegacyContractInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LegacyContractInfo.Merge(m, src)
 }
-
-func (m *ContractInfo) XXX_Size() int {
+func (m *LegacyContractInfo) XXX_Size() int {
 	return m.Size()
 }
-
-func (m *ContractInfo) XXX_DiscardUnknown() {
-	xxx_messageInfo_ContractInfo.DiscardUnknown(m)
+func (m *LegacyContractInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_LegacyContractInfo.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ContractInfo proto.InternalMessageInfo
+var xxx_messageInfo_LegacyContractInfo proto.InternalMessageInfo
 
-func (m *ContractInfo) GetAddress() string {
+func (m *LegacyContractInfo) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *ContractInfo) GetCreator() string {
+func (m *LegacyContractInfo) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *ContractInfo) GetAdmin() string {
+func (m *LegacyContractInfo) GetAdmin() string {
 	if m != nil {
 		return m.Admin
 	}
 	return ""
 }
 
-func (m *ContractInfo) GetCodeID() uint64 {
+func (m *LegacyContractInfo) GetCodeID() uint64 {
 	if m != nil {
 		return m.CodeID
 	}
 	return 0
 }
 
-func (m *ContractInfo) GetInitMsg() encoding_json.RawMessage {
+func (m *LegacyContractInfo) GetInitMsg() encoding_json.RawMessage {
 	if m != nil {
 		return m.InitMsg
 	}
@@ -185,50 +172,50 @@ func (m *ContractInfo) GetInitMsg() encoding_json.RawMessage {
 }
 
 func init() {
-	proto.RegisterType((*CodeInfo)(nil), "terra.wasm.v1beta1.CodeInfo")
-	proto.RegisterType((*ContractInfo)(nil), "terra.wasm.v1beta1.ContractInfo")
+	proto.RegisterType((*LegacyCodeInfo)(nil), "terra.wasm.v1beta1.LegacyCodeInfo")
+	proto.RegisterType((*LegacyContractInfo)(nil), "terra.wasm.v1beta1.LegacyContractInfo")
 }
 
 func init() { proto.RegisterFile("terra/wasm/v1beta1/wasm.proto", fileDescriptor_2bd5d0123068c880) }
 
 var fileDescriptor_2bd5d0123068c880 = []byte{
-	// 403 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x31, 0x8f, 0xd3, 0x30,
-	0x14, 0x80, 0xeb, 0xd2, 0x6b, 0x7b, 0x56, 0x05, 0xa7, 0xe8, 0x86, 0x08, 0x41, 0x52, 0x79, 0x40,
-	0x1d, 0x8e, 0x58, 0x05, 0x31, 0x70, 0x63, 0x8e, 0x81, 0x43, 0xba, 0x25, 0x6c, 0x2c, 0x27, 0xd7,
-	0x36, 0x8e, 0x51, 0x63, 0x9f, 0x6c, 0xdf, 0x9d, 0xfa, 0x2f, 0xd8, 0x59, 0x10, 0xbf, 0x86, 0xb1,
-	0x23, 0x53, 0x84, 0xd2, 0x85, 0x39, 0x23, 0x13, 0x8a, 0x93, 0x48, 0x61, 0x42, 0x6c, 0xcf, 0xef,
-	0xfb, 0xfc, 0xde, 0xd3, 0xd3, 0x83, 0x4f, 0x1d, 0x37, 0x86, 0xe0, 0x7b, 0x62, 0x0b, 0x7c, 0xb7,
-	0xde, 0x70, 0x47, 0xd6, 0xfe, 0x91, 0xdc, 0x18, 0xed, 0x74, 0x10, 0x78, 0x9c, 0xf8, 0x4c, 0x87,
-	0x1f, 0x9f, 0x0a, 0x2d, 0xb4, 0xc7, 0xb8, 0x89, 0x5a, 0x13, 0x7d, 0x03, 0x70, 0x7e, 0xa1, 0x19,
-	0xbf, 0x54, 0x1f, 0x75, 0xf0, 0x0a, 0xce, 0xa8, 0x66, 0xfc, 0x5a, 0xb2, 0x10, 0x2c, 0xc1, 0x6a,
-	0x92, 0x3e, 0xa9, 0xca, 0x78, 0xea, 0xf1, 0x9b, 0xba, 0x8c, 0x1f, 0xee, 0x48, 0xb1, 0x3d, 0x47,
-	0x9d, 0x82, 0xb2, 0x69, 0x13, 0x5d, 0xb2, 0x60, 0x0d, 0x8f, 0x7d, 0x2e, 0x27, 0x36, 0x0f, 0xc7,
-	0x4b, 0xb0, 0x5a, 0xa4, 0xa7, 0x75, 0x19, 0x9f, 0x0c, 0xf4, 0x06, 0xa1, 0x6c, 0xde, 0xc4, 0x6f,
-	0x89, 0xcd, 0x83, 0x33, 0x38, 0xa3, 0x86, 0x13, 0xa7, 0x4d, 0xf8, 0x60, 0x09, 0x56, 0xc7, 0x69,
-	0x30, 0xa8, 0xdf, 0x02, 0x94, 0xf5, 0x0a, 0xfa, 0x32, 0x86, 0x8b, 0x0b, 0xad, 0x9c, 0x21, 0xd4,
-	0xf9, 0x41, 0xcf, 0xe0, 0x8c, 0x30, 0x66, 0xb8, 0xb5, 0x7e, 0xd0, 0xbf, 0xbe, 0x77, 0x00, 0x65,
-	0xbd, 0x32, 0x6c, 0x36, 0xfe, 0x67, 0xb3, 0xe0, 0x19, 0x3c, 0x22, 0xac, 0x90, 0xaa, 0x1b, 0xec,
-	0xa4, 0x2e, 0xe3, 0x45, 0x5f, 0xb9, 0x90, 0x0a, 0x65, 0x2d, 0x1e, 0x2e, 0x6b, 0xf2, 0x1f, 0xcb,
-	0x7a, 0x07, 0xe7, 0x52, 0x49, 0x77, 0x5d, 0x58, 0x11, 0x1e, 0xf9, 0x5d, 0xe1, 0xba, 0x8c, 0x1f,
-	0xb5, 0x76, 0x4f, 0xd0, 0xef, 0x32, 0x0e, 0xb9, 0xa2, 0x9a, 0x49, 0x25, 0xf0, 0x27, 0xab, 0x55,
-	0x92, 0x91, 0xfb, 0x2b, 0x6e, 0x2d, 0x11, 0x3c, 0x9b, 0x35, 0xda, 0x95, 0x15, 0xe7, 0x93, 0x5f,
-	0x5f, 0x63, 0x90, 0xbe, 0xff, 0x5e, 0x45, 0x60, 0x5f, 0x45, 0xe0, 0x67, 0x15, 0x81, 0xcf, 0x87,
-	0x68, 0xb4, 0x3f, 0x44, 0xa3, 0x1f, 0x87, 0x68, 0xf4, 0xe1, 0xb5, 0x90, 0x2e, 0xbf, 0xdd, 0x24,
-	0x54, 0x17, 0x98, 0x6e, 0x89, 0xb5, 0x92, 0x3e, 0x6f, 0x0f, 0x87, 0x6a, 0xc3, 0xf1, 0xdd, 0x0b,
-	0x4c, 0x6f, 0xad, 0xd3, 0x45, 0x7b, 0x47, 0x6e, 0x77, 0xc3, 0x2d, 0xde, 0x72, 0x41, 0xe8, 0x6e,
-	0x33, 0xf5, 0xe7, 0xf1, 0xf2, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x67, 0x1a, 0xc6, 0xa6, 0x69,
-	0x02, 0x00, 0x00,
+	// 407 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x31, 0x6f, 0xd4, 0x30,
+	0x14, 0xc7, 0xcf, 0xc7, 0xf5, 0xae, 0xb5, 0xaa, 0x52, 0x59, 0x1d, 0x22, 0x04, 0xc9, 0xc9, 0x03,
+	0xba, 0xa1, 0x9c, 0x75, 0x20, 0x06, 0x3a, 0x06, 0x06, 0x8a, 0xe8, 0x12, 0x36, 0x96, 0xca, 0x67,
+	0x1b, 0xc7, 0xe8, 0x62, 0x57, 0xb6, 0xdb, 0xea, 0xbe, 0x05, 0x1f, 0x01, 0x36, 0x3e, 0x0a, 0x63,
+	0x47, 0xa6, 0x08, 0xe5, 0x16, 0xe6, 0x8c, 0x4c, 0x28, 0x4e, 0x22, 0x85, 0x09, 0x75, 0x7b, 0xf6,
+	0xef, 0xa7, 0xf7, 0x9e, 0xfe, 0x7a, 0xf0, 0x89, 0x17, 0xd6, 0x52, 0x72, 0x4b, 0x5d, 0x41, 0x6e,
+	0x56, 0x6b, 0xe1, 0xe9, 0x2a, 0x3c, 0x96, 0x57, 0xd6, 0x78, 0x83, 0x50, 0xc0, 0xcb, 0xf0, 0xd3,
+	0xe1, 0x47, 0x27, 0xd2, 0x48, 0x13, 0x30, 0x69, 0xaa, 0xd6, 0xc4, 0xdf, 0x01, 0x3c, 0x7a, 0x2f,
+	0x24, 0x65, 0xdb, 0xd7, 0x86, 0x8b, 0x73, 0xfd, 0xc9, 0xa0, 0x97, 0x70, 0xc6, 0x0c, 0x17, 0x97,
+	0x8a, 0x47, 0x60, 0x0e, 0x16, 0x93, 0xf4, 0x71, 0x55, 0x26, 0xd3, 0x80, 0xdf, 0xd4, 0x65, 0x72,
+	0xb4, 0xa5, 0xc5, 0xe6, 0x0c, 0x77, 0x0a, 0xce, 0xa6, 0x4d, 0x75, 0xce, 0xd1, 0x0a, 0x1e, 0x84,
+	0xbf, 0x9c, 0xba, 0x3c, 0x1a, 0xcf, 0xc1, 0xe2, 0x30, 0x3d, 0xa9, 0xcb, 0xe4, 0x78, 0xa0, 0x37,
+	0x08, 0x67, 0xfb, 0x4d, 0xfd, 0x96, 0xba, 0x1c, 0x9d, 0xc2, 0x19, 0xb3, 0x82, 0x7a, 0x63, 0xa3,
+	0x07, 0x73, 0xb0, 0x38, 0x48, 0xd1, 0xa0, 0x7f, 0x0b, 0x70, 0xd6, 0x2b, 0xf8, 0xdb, 0x18, 0xa2,
+	0x7e, 0x55, 0xed, 0x2d, 0x65, 0x3e, 0xac, 0x7b, 0x0a, 0x67, 0x94, 0x73, 0x2b, 0x9c, 0x0b, 0xeb,
+	0xfe, 0xd3, 0xa4, 0x03, 0x38, 0xeb, 0x95, 0xe1, 0xc8, 0xf1, 0x7f, 0x47, 0xa2, 0xa7, 0x70, 0x8f,
+	0xf2, 0x42, 0xe9, 0x6e, 0xbd, 0xe3, 0xba, 0x4c, 0x0e, 0xfb, 0xce, 0x85, 0xd2, 0x38, 0x6b, 0xf1,
+	0x30, 0xb2, 0xc9, 0x3d, 0x22, 0x7b, 0x07, 0xf7, 0x95, 0x56, 0xfe, 0xb2, 0x70, 0x32, 0xda, 0x0b,
+	0x89, 0x91, 0xba, 0x4c, 0x1e, 0xb6, 0x76, 0x4f, 0xf0, 0x9f, 0x32, 0x89, 0x84, 0x66, 0x86, 0x2b,
+	0x2d, 0xc9, 0x67, 0x67, 0xf4, 0x32, 0xa3, 0xb7, 0x17, 0xc2, 0x39, 0x2a, 0x45, 0x36, 0x6b, 0xb4,
+	0x0b, 0x27, 0xcf, 0x26, 0xbf, 0xbf, 0x26, 0x20, 0xfd, 0xf0, 0xa3, 0x8a, 0xc1, 0x5d, 0x15, 0x83,
+	0x5f, 0x55, 0x0c, 0xbe, 0xec, 0xe2, 0xd1, 0xdd, 0x2e, 0x1e, 0xfd, 0xdc, 0xc5, 0xa3, 0x8f, 0xaf,
+	0xa4, 0xf2, 0xf9, 0xf5, 0x7a, 0xc9, 0x4c, 0x41, 0xd8, 0x86, 0x3a, 0xa7, 0xd8, 0xb3, 0xf6, 0x88,
+	0x98, 0xb1, 0x82, 0xdc, 0x3c, 0x27, 0xec, 0xda, 0x79, 0x53, 0xb4, 0x37, 0xe5, 0xb7, 0x57, 0xc2,
+	0x91, 0x4d, 0x48, 0x7b, 0x3d, 0x0d, 0xa7, 0xf2, 0xe2, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xed,
+	0x5e, 0x7e, 0xf3, 0x75, 0x02, 0x00, 0x00,
 }
 
-func (this *ContractInfo) Equal(that interface{}) bool {
+func (this *LegacyContractInfo) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*ContractInfo)
+	that1, ok := that.(*LegacyContractInfo)
 	if !ok {
-		that2, ok := that.(ContractInfo)
+		that2, ok := that.(LegacyContractInfo)
 		if ok {
 			that1 = &that2
 		} else {
@@ -257,8 +244,7 @@ func (this *ContractInfo) Equal(that interface{}) bool {
 	}
 	return true
 }
-
-func (m *CodeInfo) Marshal() (dAtA []byte, err error) {
+func (m *LegacyCodeInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -268,12 +254,12 @@ func (m *CodeInfo) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CodeInfo) MarshalTo(dAtA []byte) (int, error) {
+func (m *LegacyCodeInfo) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CodeInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *LegacyCodeInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -300,7 +286,7 @@ func (m *CodeInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ContractInfo) Marshal() (dAtA []byte, err error) {
+func (m *LegacyContractInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -310,12 +296,12 @@ func (m *ContractInfo) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ContractInfo) MarshalTo(dAtA []byte) (int, error) {
+func (m *LegacyContractInfo) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ContractInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *LegacyContractInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -367,8 +353,7 @@ func encodeVarintWasm(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-
-func (m *CodeInfo) Size() (n int) {
+func (m *LegacyCodeInfo) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -388,7 +373,7 @@ func (m *CodeInfo) Size() (n int) {
 	return n
 }
 
-func (m *ContractInfo) Size() (n int) {
+func (m *LegacyContractInfo) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -419,12 +404,10 @@ func (m *ContractInfo) Size() (n int) {
 func sovWasm(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-
 func sozWasm(x uint64) (n int) {
 	return sovWasm(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
-func (m *CodeInfo) Unmarshal(dAtA []byte) error {
+func (m *LegacyCodeInfo) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -447,10 +430,10 @@ func (m *CodeInfo) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CodeInfo: wiretype end group for non-group")
+			return fmt.Errorf("proto: LegacyCodeInfo: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CodeInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: LegacyCodeInfo: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -559,8 +542,7 @@ func (m *CodeInfo) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
-func (m *ContractInfo) Unmarshal(dAtA []byte) error {
+func (m *LegacyContractInfo) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -583,10 +565,10 @@ func (m *ContractInfo) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ContractInfo: wiretype end group for non-group")
+			return fmt.Errorf("proto: LegacyContractInfo: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ContractInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: LegacyContractInfo: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -759,7 +741,6 @@ func (m *ContractInfo) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func skipWasm(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

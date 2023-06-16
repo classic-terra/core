@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
 )
 
 // ensure Msg interface compliance at compile time
@@ -45,7 +47,7 @@ func NewMsgStoreCode(sender sdk.AccAddress, wasmByteCode []byte) *MsgStoreCode {
 }
 
 // Route implements sdk.Msg
-func (msg MsgStoreCode) Route() string { return RouterKey }
+func (msg MsgStoreCode) Route() string { return wasm.RouterKey }
 
 // Type implements sdk.Msg
 func (msg MsgStoreCode) Type() string { return TypeMsgStoreCode }
@@ -94,7 +96,7 @@ func NewMsgMigrateCode(codeID uint64, sender sdk.AccAddress, wasmByteCode []byte
 }
 
 // Route implements sdk.Msg
-func (msg MsgMigrateCode) Route() string { return RouterKey }
+func (msg MsgMigrateCode) Route() string { return wasm.RouterKey }
 
 // Type implements sdk.Msg
 func (msg MsgMigrateCode) Type() string { return TypeMsgMigrateCode }
@@ -150,7 +152,7 @@ func NewMsgInstantiateContract(sender, admin sdk.AccAddress, codeID uint64, init
 
 // Route implements sdk.Msg
 func (msg MsgInstantiateContract) Route() string {
-	return RouterKey
+	return wasm.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -214,7 +216,7 @@ func NewMsgExecuteContract(sender sdk.AccAddress, contract sdk.AccAddress, execM
 
 // Route implements sdk.Msg
 func (msg MsgExecuteContract) Route() string {
-	return RouterKey
+	return wasm.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -276,7 +278,7 @@ func NewMsgMigrateContract(admin, contract sdk.AccAddress, newCodeID uint64, mig
 
 // Route implements sdk.Msg
 func (msg MsgMigrateContract) Route() string {
-	return RouterKey
+	return wasm.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -337,7 +339,7 @@ func NewMsgUpdateContractAdmin(admin, newAdmin, contract sdk.AccAddress) *MsgUpd
 
 // Route implements sdk.Msg
 func (msg MsgUpdateContractAdmin) Route() string {
-	return RouterKey
+	return wasm.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -389,7 +391,7 @@ func NewMsgClearContractAdmin(admin, contract sdk.AccAddress) *MsgClearContractA
 
 // Route implements sdk.Msg
 func (msg MsgClearContractAdmin) Route() string {
-	return RouterKey
+	return wasm.RouterKey
 }
 
 // Type implements sdk.Msg

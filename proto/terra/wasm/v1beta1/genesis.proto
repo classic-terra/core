@@ -14,12 +14,12 @@ message Model {
 
 // Code struct encompasses CodeInfo and CodeBytes
 message Code {
-  CodeInfo code_info  = 1 [(gogoproto.nullable) = false];
+  LegacyCodeInfo code_info  = 1 [(gogoproto.nullable) = false];
   bytes    code_bytes = 2;
 }
 
 // Contract struct encompasses ContractAddress, ContractInfo, and ContractState
 message Contract {
-  ContractInfo   contract_info  = 1 [(gogoproto.nullable) = false];
+  LegacyContractInfo   contract_info  = 1 [(gogoproto.nullable) = false];
   repeated Model contract_store = 2 [(gogoproto.nullable) = false];
 }

@@ -6,10 +6,6 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -18,14 +14,15 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ = proto.Marshal
-	_ = fmt.Errorf
-	_ = math.Inf
-)
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -45,11 +42,9 @@ func (*QueryFeeSharesRequest) ProtoMessage()    {}
 func (*QueryFeeSharesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{0}
 }
-
 func (m *QueryFeeSharesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryFeeSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryFeeSharesRequest.Marshal(b, m, deterministic)
@@ -62,15 +57,12 @@ func (m *QueryFeeSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-
 func (m *QueryFeeSharesRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryFeeSharesRequest.Merge(m, src)
 }
-
 func (m *QueryFeeSharesRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryFeeSharesRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryFeeSharesRequest.DiscardUnknown(m)
 }
@@ -99,11 +91,9 @@ func (*QueryFeeSharesResponse) ProtoMessage()    {}
 func (*QueryFeeSharesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{1}
 }
-
 func (m *QueryFeeSharesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryFeeSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryFeeSharesResponse.Marshal(b, m, deterministic)
@@ -116,15 +106,12 @@ func (m *QueryFeeSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-
 func (m *QueryFeeSharesResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryFeeSharesResponse.Merge(m, src)
 }
-
 func (m *QueryFeeSharesResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryFeeSharesResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryFeeSharesResponse.DiscardUnknown(m)
 }
@@ -157,11 +144,9 @@ func (*QueryFeeShareRequest) ProtoMessage()    {}
 func (*QueryFeeShareRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{2}
 }
-
 func (m *QueryFeeShareRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryFeeShareRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryFeeShareRequest.Marshal(b, m, deterministic)
@@ -174,15 +159,12 @@ func (m *QueryFeeShareRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-
 func (m *QueryFeeShareRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryFeeShareRequest.Merge(m, src)
 }
-
 func (m *QueryFeeShareRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryFeeShareRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryFeeShareRequest.DiscardUnknown(m)
 }
@@ -208,11 +190,9 @@ func (*QueryFeeShareResponse) ProtoMessage()    {}
 func (*QueryFeeShareResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{3}
 }
-
 func (m *QueryFeeShareResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryFeeShareResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryFeeShareResponse.Marshal(b, m, deterministic)
@@ -225,15 +205,12 @@ func (m *QueryFeeShareResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-
 func (m *QueryFeeShareResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryFeeShareResponse.Merge(m, src)
 }
-
 func (m *QueryFeeShareResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryFeeShareResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryFeeShareResponse.DiscardUnknown(m)
 }
@@ -248,7 +225,8 @@ func (m *QueryFeeShareResponse) GetFeeshare() FeeShare {
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-type QueryParamsRequest struct{}
+type QueryParamsRequest struct {
+}
 
 func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
@@ -256,11 +234,9 @@ func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{4}
 }
-
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
@@ -273,15 +249,12 @@ func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-
 func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
 }
-
 func (m *QueryParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
 }
@@ -300,11 +273,9 @@ func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{5}
 }
-
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
@@ -317,15 +288,12 @@ func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-
 func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
 }
-
 func (m *QueryParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
 }
@@ -354,11 +322,9 @@ func (*QueryDeployerFeeSharesRequest) ProtoMessage()    {}
 func (*QueryDeployerFeeSharesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{6}
 }
-
 func (m *QueryDeployerFeeSharesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryDeployerFeeSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryDeployerFeeSharesRequest.Marshal(b, m, deterministic)
@@ -371,15 +337,12 @@ func (m *QueryDeployerFeeSharesRequest) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-
 func (m *QueryDeployerFeeSharesRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryDeployerFeeSharesRequest.Merge(m, src)
 }
-
 func (m *QueryDeployerFeeSharesRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryDeployerFeeSharesRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryDeployerFeeSharesRequest.DiscardUnknown(m)
 }
@@ -416,11 +379,9 @@ func (*QueryDeployerFeeSharesResponse) ProtoMessage()    {}
 func (*QueryDeployerFeeSharesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{7}
 }
-
 func (m *QueryDeployerFeeSharesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryDeployerFeeSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryDeployerFeeSharesResponse.Marshal(b, m, deterministic)
@@ -433,15 +394,12 @@ func (m *QueryDeployerFeeSharesResponse) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-
 func (m *QueryDeployerFeeSharesResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryDeployerFeeSharesResponse.Merge(m, src)
 }
-
 func (m *QueryDeployerFeeSharesResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryDeployerFeeSharesResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryDeployerFeeSharesResponse.DiscardUnknown(m)
 }
@@ -477,11 +435,9 @@ func (*QueryWithdrawerFeeSharesRequest) ProtoMessage()    {}
 func (*QueryWithdrawerFeeSharesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{8}
 }
-
 func (m *QueryWithdrawerFeeSharesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryWithdrawerFeeSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryWithdrawerFeeSharesRequest.Marshal(b, m, deterministic)
@@ -494,15 +450,12 @@ func (m *QueryWithdrawerFeeSharesRequest) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-
 func (m *QueryWithdrawerFeeSharesRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryWithdrawerFeeSharesRequest.Merge(m, src)
 }
-
 func (m *QueryWithdrawerFeeSharesRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryWithdrawerFeeSharesRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryWithdrawerFeeSharesRequest.DiscardUnknown(m)
 }
@@ -539,11 +492,9 @@ func (*QueryWithdrawerFeeSharesResponse) ProtoMessage()    {}
 func (*QueryWithdrawerFeeSharesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4e589d86998f9341, []int{9}
 }
-
 func (m *QueryWithdrawerFeeSharesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryWithdrawerFeeSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryWithdrawerFeeSharesResponse.Marshal(b, m, deterministic)
@@ -556,15 +507,12 @@ func (m *QueryWithdrawerFeeSharesResponse) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-
 func (m *QueryWithdrawerFeeSharesResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryWithdrawerFeeSharesResponse.Merge(m, src)
 }
-
 func (m *QueryWithdrawerFeeSharesResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryWithdrawerFeeSharesResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryWithdrawerFeeSharesResponse.DiscardUnknown(m)
 }
@@ -650,10 +598,8 @@ var fileDescriptor_4e589d86998f9341 = []byte{
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ context.Context
-	_ grpc.ClientConn
-)
+var _ context.Context
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
@@ -747,24 +693,21 @@ type QueryServer interface {
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
-type UnimplementedQueryServer struct{}
+type UnimplementedQueryServer struct {
+}
 
 func (*UnimplementedQueryServer) FeeShares(ctx context.Context, req *QueryFeeSharesRequest) (*QueryFeeSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FeeShares not implemented")
 }
-
 func (*UnimplementedQueryServer) FeeShare(ctx context.Context, req *QueryFeeShareRequest) (*QueryFeeShareResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FeeShare not implemented")
 }
-
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-
 func (*UnimplementedQueryServer) DeployerFeeShares(ctx context.Context, req *QueryDeployerFeeSharesRequest) (*QueryDeployerFeeSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployerFeeShares not implemented")
 }
-
 func (*UnimplementedQueryServer) WithdrawerFeeShares(ctx context.Context, req *QueryWithdrawerFeeSharesRequest) (*QueryWithdrawerFeeSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawerFeeShares not implemented")
 }
@@ -1278,7 +1221,6 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-
 func (m *QueryFeeSharesRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1430,11 +1372,9 @@ func (m *QueryWithdrawerFeeSharesResponse) Size() (n int) {
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
 func (m *QueryFeeSharesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1521,7 +1461,6 @@ func (m *QueryFeeSharesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryFeeSharesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1642,7 +1581,6 @@ func (m *QueryFeeSharesResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryFeeShareRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1725,7 +1663,6 @@ func (m *QueryFeeShareRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryFeeShareResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1809,7 +1746,6 @@ func (m *QueryFeeShareResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1860,7 +1796,6 @@ func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1944,7 +1879,6 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryDeployerFeeSharesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2063,7 +1997,6 @@ func (m *QueryDeployerFeeSharesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryDeployerFeeSharesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2182,7 +2115,6 @@ func (m *QueryDeployerFeeSharesResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryWithdrawerFeeSharesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2301,7 +2233,6 @@ func (m *QueryWithdrawerFeeSharesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryWithdrawerFeeSharesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2420,7 +2351,6 @@ func (m *QueryWithdrawerFeeSharesResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func skipQuery(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

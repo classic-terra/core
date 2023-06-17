@@ -62,6 +62,7 @@ import (
 	customupgrade "github.com/classic-terra/core/v2/custom/upgrade"
 	customwasm "github.com/classic-terra/core/v2/custom/wasm"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/x/market"
@@ -75,8 +76,6 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v2/client/docs/statik"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 var (

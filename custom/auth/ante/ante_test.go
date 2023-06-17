@@ -24,11 +24,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	terraapp "github.com/classic-terra/core/v2/app"
-	feesharetypes "github.com/classic-terra/core/v2/x/feeshare/types"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
+	terraapp "github.com/classic-terra/core/app"
+	treasurytypes "github.com/classic-terra/core/x/treasury/types"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -56,7 +54,6 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
-	app.FeeShareKeeper.SetParams(ctx, feesharetypes.DefaultParams())
 
 	return app, ctx
 }

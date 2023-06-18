@@ -8,6 +8,6 @@ const (
 	IBCEnableForkHeight = 10542500
 	// VersionMapEnableHeight - set the version map to enable software upgrades, approximately February 14, 2023
 	VersionMapEnableHeight = 11543150
-	// JusticeAndTruthHeight - Re-enable swaps, mock Sam Bankman-Fried
+	// JusticeAndTruthHeight - Re-enable swaps, mock Sam Bankman-Fried, pursue decentralized money.
 	JusticeAndTruthHeight = 13469420
 )

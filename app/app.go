@@ -264,11 +264,7 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
 		}
 	}
-	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapEnableForkHeight { // Re-enable
-		// Enable swap
-		params := app.MarketKeeper.GetParams(ctx)
-		params.MinStabilitySpread = sdk.NewDecWithPrec(1, 2)
-		app.MarketKeeper.SetParams(ctx, params)
+	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.IBCEnableForkHeight { // Re-enable IBC Channels
 
 		// Enable IBC Channels
 		channelIDs := []string{
@@ -290,6 +286,13 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
 	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.VersionMapEnableHeight {
 		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	}
+
+	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.JusticeAndTruthHeight { // Re-enable Swaps
+		// Enable swap
+		params := app.MarketKeeper.GetParams(ctx)
+		params.MinStabilitySpread = sdk.NewDecWithPrec(1, 2)
+		app.MarketKeeper.SetParams(ctx, params)
 	}
 
 	return app.mm.BeginBlock(ctx, req)

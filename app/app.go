@@ -265,7 +265,12 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
 		}
 	}
-	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapEnableForkHeight { // Re-enable IBCs
+	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapEnableForkHeight { // Re-enable
+		// Enable swap
+		params := app.MarketKeeper.GetParams(ctx)
+		params.MinStabilitySpread = sdk.NewDecWithPrec(1, 2)
+		app.MarketKeeper.SetParams(ctx, params)
+
 		// Enable IBC Channels
 		channelIDs := []string{
 			"channel-1",  // Osmosis

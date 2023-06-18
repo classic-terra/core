@@ -47,7 +47,7 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
-func (s *KeeperTestHelper) Setup(t *testing.T) {
+func (s *KeeperTestHelper) Setup() {
 	s.App = SetupApp(s.T())
 	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "doxchain-1", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
@@ -87,7 +87,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 
 type EmptyAppOptions struct{}
 
-func (EmptyAppOptions) Get(o string) interface{} { return nil }
+func (EmptyAppOptions) Get(_ string) interface{} { return nil }
 
 func SetupApp(t *testing.T) *app.TerraApp {
 	t.Helper()

@@ -21,18 +21,18 @@ func TestWasmTestSuite(t *testing.T) {
 }
 
 func (s *WasmTestSuite) SetupTest() {
-	s.Setup(s.T())
+	s.Setup()
 }
 
 func (s *WasmTestSuite) InstantiateContract(addr sdk.AccAddress, contractDir string) sdk.AccAddress {
 	wasmKeeper := s.App.WasmKeeper
 
-	codeId := s.storeReflectCode(addr, contractDir)
+	codeID := s.storeReflectCode(addr, contractDir)
 
-	cInfo := wasmKeeper.GetCodeInfo(s.Ctx, codeId)
+	cInfo := wasmKeeper.GetCodeInfo(s.Ctx, codeID)
 	s.Require().NotNil(cInfo)
 
-	contractAddr := s.instantiateContract(addr, codeId)
+	contractAddr := s.instantiateContract(addr, codeID)
 
 	// check if contract is instantiated
 	info := wasmKeeper.GetContractInfo(s.Ctx, contractAddr)
@@ -45,16 +45,16 @@ func (s *WasmTestSuite) storeReflectCode(addr sdk.AccAddress, contractDir string
 	wasmCode, err := os.ReadFile(contractDir)
 	s.Require().NoError(err)
 
-	codeId, _, err := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper).Create(s.Ctx, addr, wasmCode, &wasmtypes.AllowEverybody)
+	codeID, _, err := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper).Create(s.Ctx, addr, wasmCode, &wasmtypes.AllowEverybody)
 	s.Require().NoError(err)
 
-	return codeId
+	return codeID
 }
 
-func (s *WasmTestSuite) instantiateContract(funder sdk.AccAddress, codeId uint64) sdk.AccAddress {
+func (s *WasmTestSuite) instantiateContract(funder sdk.AccAddress, codeID uint64) sdk.AccAddress {
 	initMsgBz := []byte("{}")
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(s.App.WasmKeeper)
-	addr, _, err := contractKeeper.Instantiate(s.Ctx, codeId, funder, funder, initMsgBz, "label", nil)
+	addr, _, err := contractKeeper.Instantiate(s.Ctx, codeID, funder, funder, initMsgBz, "label", nil)
 	s.Require().NoError(err)
 
 	return addr

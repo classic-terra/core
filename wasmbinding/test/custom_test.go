@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	TERRA_BINDINGS_DIR           = "../testdata/terra_reflect.wasm"
-	TERRA_RENOVATED_BINDINGS_DIR = "../testdata/old/bindings_tester.wasm"
+	TerraBindingsDir          = "../testdata/terra_reflect.wasm"
+	TerraRenovatedBindingsDir = "../testdata/old/bindings_tester.wasm"
 )
 
 // go test -v -run ^TestWasmTestSuite/TestBindingsAll$ github.com/classic-terra/core/v2/wasmbinding/test
@@ -20,13 +20,13 @@ func (s *WasmTestSuite) TestBindingsAll() {
 	}{
 		{
 			name:        "Terra",
-			dir:         TERRA_BINDINGS_DIR,
+			dir:         TerraBindingsDir,
 			executeFunc: s.executeCustom,
 			queryFunc:   s.queryCustom,
 		},
 		{
 			name:        "Old Terra bindings",
-			dir:         TERRA_RENOVATED_BINDINGS_DIR,
+			dir:         TerraRenovatedBindingsDir,
 			executeFunc: s.executeOldBindings,
 			queryFunc:   s.queryOldBindings,
 		},

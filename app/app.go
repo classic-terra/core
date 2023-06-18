@@ -141,7 +141,6 @@ func NewTerraApp(
 		legacyAmino,
 		maccPerms,
 		allowedReceivingModAcc,
-		app.ModuleAccountAddrs(),
 		skipUpgradeHeights,
 		homePath,
 		invCheckPeriod,

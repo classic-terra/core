@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"

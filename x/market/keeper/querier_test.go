@@ -3,11 +3,12 @@ package keeper
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/x/market/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestQueryParams(t *testing.T) {

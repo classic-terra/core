@@ -8,22 +8,22 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	terraapp "github.com/classic-terra/core/v2/app"
-	helpers "github.com/classic-terra/core/v2/app/testing"
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/libs/rand"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	terraapp "github.com/classic-terra/core/v2/app"
+	helpers "github.com/classic-terra/core/v2/app/testing"
 )
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent

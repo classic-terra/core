@@ -2,15 +2,11 @@ package wasmbinding
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	//	"github.com/cosmos/cosmos-sdk/baseapp"
-	//	"github.com/cosmos/cosmos-sdk/codec"
 
 	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
-	// tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
 )
 
 func RegisterCustomPlugins(

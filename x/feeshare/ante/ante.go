@@ -1,11 +1,12 @@
 package ante
 
 import (
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	feeshare "github.com/classic-terra/core/v2/x/feeshare/types"
 )
 

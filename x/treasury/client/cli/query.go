@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

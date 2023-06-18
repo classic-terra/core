@@ -1,10 +1,12 @@
 package v3
 
 import (
+	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
+
+	store "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/classic-terra/core/v2/app/upgrades"
 	feesharetypes "github.com/classic-terra/core/v2/x/feeshare/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 )
 
 const UpgradeName = "v4"

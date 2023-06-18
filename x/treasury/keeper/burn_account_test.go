@@ -3,8 +3,9 @@ package keeper
 import (
 	"testing"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func TestBurnCoinsFromBurnAccount(t *testing.T) {

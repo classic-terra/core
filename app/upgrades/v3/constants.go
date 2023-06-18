@@ -1,8 +1,9 @@
 package v3
 
 import (
-	"github.com/classic-terra/core/v2/app/upgrades"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/classic-terra/core/v2/app/upgrades"
 )
 
 const UpgradeName = "v3"

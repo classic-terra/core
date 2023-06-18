@@ -1,10 +1,10 @@
 package rest
 
 import (
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
-
-	"github.com/gorilla/mux"
 )
 
 // RestDenom is the wildcard part of the request path

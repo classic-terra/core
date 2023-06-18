@@ -5,21 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	customauth "github.com/classic-terra/core/v2/custom/auth"
-	custombank "github.com/classic-terra/core/v2/custom/bank"
-	customdistr "github.com/classic-terra/core/v2/custom/distribution"
-	customparams "github.com/classic-terra/core/v2/custom/params"
-	customstaking "github.com/classic-terra/core/v2/custom/staking"
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/market"
-	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
-	"github.com/classic-terra/core/v2/x/oracle"
-	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
-	"github.com/classic-terra/core/v2/x/treasury/types"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"
@@ -47,6 +32,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	customauth "github.com/classic-terra/core/v2/custom/auth"
+	custombank "github.com/classic-terra/core/v2/custom/bank"
+	customdistr "github.com/classic-terra/core/v2/custom/distribution"
+	customparams "github.com/classic-terra/core/v2/custom/params"
+	customstaking "github.com/classic-terra/core/v2/custom/staking"
+	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/x/market"
+	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	"github.com/classic-terra/core/v2/x/oracle"
+	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
+	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 const faucetAccountName = "faucet"

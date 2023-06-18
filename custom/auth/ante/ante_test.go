@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/suite"
-
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -27,8 +27,6 @@ import (
 	terraapp "github.com/classic-terra/core/v2/app"
 	feesharetypes "github.com/classic-terra/core/v2/x/feeshare/types"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.

@@ -3,11 +3,12 @@ package ante
 import (
 	"fmt"
 
-	core "github.com/classic-terra/core/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	core "github.com/classic-terra/core/v2/types"
 )
 
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal

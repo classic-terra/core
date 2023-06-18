@@ -2,11 +2,10 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/x/market/types"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ApplySwapToPool updates each pool with offerCoin and askCoin taken from swap operation,

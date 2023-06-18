@@ -5,6 +5,8 @@ package v039
 import (
 	"errors"
 
+	"github.com/tendermint/tendermint/crypto/sr25519"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -13,8 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
 	v039auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v039"
-
-	"github.com/tendermint/tendermint/crypto/sr25519"
 )
 
 type (

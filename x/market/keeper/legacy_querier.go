@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/x/market/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/classic-terra/core/v2/x/market/types"
 )
 
 // NewLegacyQuerier is the module level router for state queries

@@ -1,11 +1,12 @@
 package v3
 
 import (
-	"github.com/classic-terra/core/v2/app/keepers"
-	"github.com/classic-terra/core/v2/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	"github.com/classic-terra/core/v2/app/keepers"
+	"github.com/classic-terra/core/v2/app/upgrades"
 )
 
 func CreateV3UpgradeHandler(

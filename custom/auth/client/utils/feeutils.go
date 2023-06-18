@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	wasmexported "github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,10 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	wasmexported "github.com/CosmWasm/wasmd/x/wasm"
 	marketexported "github.com/classic-terra/core/v2/x/market/exported"
 	treasuryexported "github.com/classic-terra/core/v2/x/treasury/exported"
 )

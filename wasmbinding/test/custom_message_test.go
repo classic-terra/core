@@ -3,10 +3,11 @@ package wasmbinding_test
 import (
 	"encoding/json"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"

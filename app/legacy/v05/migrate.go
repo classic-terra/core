@@ -29,13 +29,12 @@ import (
 
 	v039authcustom "github.com/classic-terra/core/v2/custom/auth/legacy/v039"
 	v040authcustom "github.com/classic-terra/core/v2/custom/auth/legacy/v040"
+	v043authz "github.com/classic-terra/core/v2/custom/authz/legacy/v043"
 	v036distrcustom "github.com/classic-terra/core/v2/custom/distribution/legacy/v036"
 	v036govcustom "github.com/classic-terra/core/v2/custom/gov/legacy/v036"
 	v043govcustom "github.com/classic-terra/core/v2/custom/gov/legacy/v043"
 	v036paramscustom "github.com/classic-terra/core/v2/custom/params/legacy/v036"
 	v038upgradecustom "github.com/classic-terra/core/v2/custom/upgrade/legacy/v038"
-
-	v043authz "github.com/classic-terra/core/v2/custom/authz/legacy/v043"
 	v04market "github.com/classic-terra/core/v2/x/market/legacy/v04"
 	v05market "github.com/classic-terra/core/v2/x/market/legacy/v05"
 	v04msgauth "github.com/classic-terra/core/v2/x/msgauth/legacy/v04"

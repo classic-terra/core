@@ -3,10 +3,10 @@ package v05
 import (
 	"sort"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v04treasury "github.com/classic-terra/core/v2/x/treasury/legacy/v04"
 	v05treasury "github.com/classic-terra/core/v2/x/treasury/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Migrate accepts exported v0.4 x/treasury and

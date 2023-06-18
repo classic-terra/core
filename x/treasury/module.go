@@ -6,13 +6,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/classic-terra/core/v2/x/treasury/keeper"
-	"github.com/classic-terra/core/v2/x/treasury/simulation"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,6 +20,8 @@ import (
 
 	"github.com/classic-terra/core/v2/x/treasury/client/cli"
 	"github.com/classic-terra/core/v2/x/treasury/client/rest"
+	"github.com/classic-terra/core/v2/x/treasury/keeper"
+	"github.com/classic-terra/core/v2/x/treasury/simulation"
 	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 

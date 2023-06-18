@@ -1,11 +1,12 @@
 package treasury
 
 import (
-	"github.com/classic-terra/core/v2/x/treasury/keeper"
-	"github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/classic-terra/core/v2/x/treasury/keeper"
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func NewProposalHandler(k keeper.Keeper) govtypes.Handler {

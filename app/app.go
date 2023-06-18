@@ -8,10 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
@@ -19,8 +21,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	// unnamed import of statik for swagger UI support
+	_ "github.com/classic-terra/core/v2/client/docs/statik"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,22 +47,15 @@ import (
 
 	"github.com/classic-terra/core/v2/app/keepers"
 	terraappparams "github.com/classic-terra/core/v2/app/params"
-
 	// upgrades
 	"github.com/classic-terra/core/v2/app/upgrades"
 	v2 "github.com/classic-terra/core/v2/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v2/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v2/app/upgrades/v4"
-
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/v2/custom/auth/client/rest"
 	customauthtx "github.com/classic-terra/core/v2/custom/auth/tx"
 	core "github.com/classic-terra/core/v2/types"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/classic-terra/core/v2/client/docs/statik"
 )
 
 const appName = "TerraApp"

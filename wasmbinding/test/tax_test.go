@@ -5,8 +5,10 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	customante "github.com/classic-terra/core/v2/custom/auth/ante"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 )
 
 // go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v2/wasmbinding/test

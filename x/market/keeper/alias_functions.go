@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/x/market/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/classic-terra/core/v2/x/market/types"
 )
 
 // GetMarketAccount returns market ModuleAccount

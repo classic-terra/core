@@ -3,12 +3,12 @@ package cli
 import (
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/spf13/cobra"
 
 	feeutils "github.com/classic-terra/core/v2/custom/auth/client/utils"
 	"github.com/classic-terra/core/v2/x/market/types"

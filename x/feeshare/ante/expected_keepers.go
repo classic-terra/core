@@ -3,8 +3,9 @@ package ante
 // Used for the ante handler so we can properly send 50% of fees to dAPP developers via x/feeshare module
 
 import (
-	revtypes "github.com/classic-terra/core/v2/x/feeshare/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	revtypes "github.com/classic-terra/core/v2/x/feeshare/types"
 )
 
 type BankKeeper interface {

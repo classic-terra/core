@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/classic-terra/core/v2/app"
 	appparams "github.com/classic-terra/core/v2/app/params"
 	"github.com/classic-terra/core/v2/x/feeshare"
 	"github.com/classic-terra/core/v2/x/feeshare/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type GenesisTestSuite struct {

@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	core "github.com/classic-terra/core/v2/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	core "github.com/classic-terra/core/v2/types"
 )
 
 // GetEpoch returns current epoch of (current block height + cumulated block height of past chains)

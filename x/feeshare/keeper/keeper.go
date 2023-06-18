@@ -3,15 +3,16 @@ package keeper
 import (
 	"fmt"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/tendermint/tendermint/libs/log"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	revtypes "github.com/classic-terra/core/v2/x/feeshare/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	revtypes "github.com/classic-terra/core/v2/x/feeshare/types"
 )
 
 // Keeper of this module maintains collections of feeshares for contracts

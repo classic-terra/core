@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/classic-terra/core/v2/x/oracle"
 	"github.com/classic-terra/core/v2/x/oracle/keeper"
 	"github.com/classic-terra/core/v2/x/oracle/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestExportInitGenesis(t *testing.T) {

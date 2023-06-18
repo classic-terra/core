@@ -1,6 +1,7 @@
 package keepers
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm"
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
@@ -9,8 +10,6 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 
-	"github.com/classic-terra/core/v2/x/treasury"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -19,7 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/classic-terra/core/v2/x/treasury"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func (appKeepers *AppKeepers) getGovRouter() govtypes.Router {

@@ -6,11 +6,11 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/classic-terra/core/v2/x/oracle/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+
+	"github.com/classic-terra/core/v2/x/oracle/types"
 )
 
 func registerQueryRoutes(cliCtx client.Context, rtr *mux.Router) {

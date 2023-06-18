@@ -5,11 +5,12 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // go test -v -run ^TestQuerySwap$ github.com/classic-terra/core/v2/wasmbinding/test

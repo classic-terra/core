@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/x/treasury/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 // TaxPolicy defines constraints for TaxRate

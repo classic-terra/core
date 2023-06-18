@@ -1,6 +1,9 @@
 package app
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
@@ -8,6 +11,9 @@ import (
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+
+	// unnamed import of statik for swagger UI support
+	_ "github.com/classic-terra/core/v2/client/docs/statik"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -45,7 +51,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	terraappparams "github.com/classic-terra/core/v2/app/params"
-
 	customauth "github.com/classic-terra/core/v2/custom/auth"
 	customauthsim "github.com/classic-terra/core/v2/custom/auth/simulation"
 	customauthz "github.com/classic-terra/core/v2/custom/authz"
@@ -61,9 +66,6 @@ import (
 	customstaking "github.com/classic-terra/core/v2/custom/staking"
 	customupgrade "github.com/classic-terra/core/v2/custom/upgrade"
 	customwasm "github.com/classic-terra/core/v2/custom/wasm"
-
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/x/feeshare"
 	feesharetypes "github.com/classic-terra/core/v2/x/feeshare/types"
 	"github.com/classic-terra/core/v2/x/market"
@@ -74,11 +76,6 @@ import (
 	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	"github.com/classic-terra/core/v2/x/vesting"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/classic-terra/core/v2/client/docs/statik"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 var (

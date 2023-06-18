@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/spf13/cobra"
+
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func ProposalAddBurnTaxExemptionAddressCmd() *cobra.Command {

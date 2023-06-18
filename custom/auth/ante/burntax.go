@@ -1,11 +1,12 @@
 package ante
 
 import (
-	treasury "github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	treasury "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 // TaxPowerUpgradeHeight is when taxes are allowed to go into effect

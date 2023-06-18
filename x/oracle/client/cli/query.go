@@ -6,11 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/classic-terra/core/v2/x/oracle/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/classic-terra/core/v2/x/oracle/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

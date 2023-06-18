@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
-
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+
+	"github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func registerQueryRoute(clientCtx client.Context, r *mux.Router) {

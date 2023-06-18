@@ -3,8 +3,6 @@ package types_test
 import (
 	"testing"
 
-	"github.com/classic-terra/core/v2/custom/auth"
-	"github.com/classic-terra/core/v2/x/vesting/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -16,6 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+
+	"github.com/classic-terra/core/v2/custom/auth"
+	"github.com/classic-terra/core/v2/x/vesting/types"
 )
 
 // ModuleBasics nolint

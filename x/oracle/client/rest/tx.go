@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/gorilla/mux"
+	"github.com/classic-terra/core/v2/x/oracle/types"
 )
 
 func registerTxHandlers(cliCtx client.Context, rtr *mux.Router) {

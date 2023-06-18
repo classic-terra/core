@@ -1,6 +1,7 @@
 package keepers
 
 import (
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
@@ -21,7 +22,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	feesharetypes "github.com/classic-terra/core/v2/x/feeshare/types"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"

@@ -1,23 +1,16 @@
 package ante_test
 
 import (
-	// "fmt"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	// core "github.com/terra-money/core/types"
-	// treasury "github.com/terra-money/core/x/treasury/types"
-
 	// "github.com/cosmos/cosmos-sdk/types/query"
 	// cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	// "github.com/cosmos/cosmos-sdk/x/auth/types"
 	// minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/classic-terra/core/v2/custom/auth/ante"
 )
 
 func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {

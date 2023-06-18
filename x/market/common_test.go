@@ -3,10 +3,10 @@ package market
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/x/market/keeper"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var randomPrice = sdk.NewDec(1700)

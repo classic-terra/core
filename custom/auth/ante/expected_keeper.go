@@ -3,9 +3,9 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	feesharettypes "github.com/classic-terra/core/v2/x/feeshare/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TreasuryKeeper for tax charging & recording

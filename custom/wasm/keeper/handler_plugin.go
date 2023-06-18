@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
-
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,8 +13,8 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v2/custom/auth/ante"
+	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 )
 
 // msgEncoder is an extension point to customize encodings

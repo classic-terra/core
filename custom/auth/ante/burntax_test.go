@@ -12,6 +12,7 @@ import (
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -32,6 +33,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	tk := suite.app.TreasuryKeeper
 	bk := suite.app.BankKeeper
 	dk := suite.app.DistrKeeper
+	ak := suite.app.AccountKeeper
 	mfd := ante.NewBurnTaxFeeDecorator(suite.app.AccountKeeper, tk, bk, dk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
@@ -80,14 +82,14 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	_, err = antehandler(suite.ctx, tx, false)
 	require.NoError(err)
 
-	communityPoolAfter := dk.GetFeePool(suite.ctx).CommunityPool
+	distributionAccountAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(suite.ctx, ak.GetModuleAddress(distributiontypes.ModuleName))...)
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
 	if burnSplitRate.IsPositive() {
 		splitTaxesDecCoins := burnTax.MulDec(burnSplitRate)
 
 		// expected: community pool 50%
-		require.Equal(communityPoolAfter, splitTaxesDecCoins)
+		require.Equal(distributionAccountAfter, splitTaxesDecCoins)
 
 		fmt.Printf("BurnSplitRate %v, splitTaxes %v\n", burnSplitRate, splitTaxesDecCoins)
 		burnTax = burnTax.Sub(splitTaxesDecCoins)
@@ -111,9 +113,9 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	require.True(amountFeeAfter.Empty())
 
 	fmt.Printf(
-		"After: TotalSupply %v, Community %v, FeeCollector %v\n",
+		"After: TotalSupply %v, DistributionAccount %v, FeeCollector %v\n",
 		totalSupplyAfter,
-		communityPoolAfter,
+		distributionAccountAfter,
 		amountFeeAfter,
 	)
 }

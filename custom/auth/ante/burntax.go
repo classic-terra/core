@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // TaxPowerUpgradeHeight is when taxes are allowed to go into effect
@@ -66,10 +67,11 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 				taxes = taxes.Sub(communityDeltaCoins)
 
-				if err = btfd.distrKeeper.FundCommunityPool(
+				if err = btfd.bankKeeper.SendCoinsFromModuleToModule(
 					ctx,
+					types.FeeCollectorName,
+					distributiontypes.ModuleName,
 					communityDeltaCoins,
-					btfd.accountKeeper.GetModuleAddress(types.FeeCollectorName),
 				); err != nil {
 					return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 				}

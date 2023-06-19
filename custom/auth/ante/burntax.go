@@ -6,7 +6,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // TaxPowerUpgradeHeight is when taxes are allowed to go into effect
@@ -53,6 +52,11 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// Compute taxes again.
 		taxes := FilterMsgAndComputeTax(ctx, btfd.treasuryKeeper, msgs...)
 
+		// check tx fee including taxes
+		if !feeTx.GetFee().IsAllGTE(taxes) {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+
 		// Record tax proceeds
 		if !taxes.IsZero() {
 			burnSplitRate := btfd.treasuryKeeper.GetBurnSplitRate(ctx)
@@ -66,15 +70,6 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 				}
 
 				taxes = taxes.Sub(communityDeltaCoins)
-
-				if err = btfd.bankKeeper.SendCoinsFromModuleToModule(
-					ctx,
-					types.FeeCollectorName,
-					distributiontypes.ModuleName,
-					communityDeltaCoins,
-				); err != nil {
-					return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-				}
 			}
 
 			if !taxes.IsZero() {

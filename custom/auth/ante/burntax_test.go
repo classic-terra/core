@@ -13,7 +13,6 @@ import (
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -83,7 +82,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	_, err = antehandler(suite.ctx, tx, false)
 	require.NoError(err)
 
-	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(suite.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))...)
+	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(suite.ctx, ak.GetModuleAddress(types.FeeCollectorName))...)
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
 	if burnSplitRate.IsPositive() {

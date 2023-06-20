@@ -10,7 +10,6 @@ import (
 
 	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -72,9 +71,8 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
 	require.NoError(err)
 	fmt.Printf(
-		"Before: TotalSupply %v, Community %v, FeeCollector %v\n",
+		"Before: TotalSupply %v, FeeCollector %v\n",
 		totalSupplyBefore,
-		dk.GetFeePool(suite.ctx).CommunityPool,
 		amountFeeBefore,
 	)
 
@@ -82,21 +80,20 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	_, err = antehandler(suite.ctx, tx, false)
 	require.NoError(err)
 
+	// burn the burn account
+	tk.BurnCoinsFromBurnAccount(suite.ctx)
+
 	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(suite.ctx, ak.GetModuleAddress(types.FeeCollectorName))...)
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
 	if burnSplitRate.IsPositive() {
-		splitTaxesDecCoins := burnTax.MulDec(burnSplitRate)
+		distributionDeltaCoins := burnTax.MulDec(burnSplitRate)
 
 		// expected: community pool 50%
-		require.Equal(feeCollectorAfter, splitTaxesDecCoins)
-
-		fmt.Printf("BurnSplitRate %v, splitTaxes %v\n", burnSplitRate, splitTaxesDecCoins)
-		burnTax = burnTax.Sub(splitTaxesDecCoins)
+		fmt.Printf("BurnSplitRate %v, DistributionDeltaCoins %v\n", burnSplitRate, distributionDeltaCoins)
+		require.Equal(feeCollectorAfter, distributionDeltaCoins)
+		burnTax = burnTax.Sub(distributionDeltaCoins)
 	}
-
-	// burn the burn account
-	tk.BurnCoinsFromBurnAccount(suite.ctx)
 
 	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{})
 	require.NoError(err)
@@ -108,15 +105,10 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 		)
 	}
 
-	amountFeeAfter := bk.GetAllBalances(suite.ctx, ak.GetModuleAddress(treasurytypes.BurnModuleName))
-	// expected: fee collector = 0
-	require.True(amountFeeAfter.Empty())
-
 	fmt.Printf(
-		"After: TotalSupply %v, FeeCollectorAfter %v, BurnMoudleAccount %v\n",
+		"After: TotalSupply %v, FeeCollector %v\n",
 		totalSupplyAfter,
 		feeCollectorAfter,
-		amountFeeAfter,
 	)
 }
 

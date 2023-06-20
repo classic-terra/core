@@ -33,7 +33,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	bk := suite.app.BankKeeper
 	dk := suite.app.DistrKeeper
 	ak := suite.app.AccountKeeper
-	mfd := ante.NewBurnTaxFeeDecorator(suite.app.AccountKeeper, tk, bk, dk)
+	mfd := ante.NewBurnTaxFeeDecorator(ak, tk, bk, dk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// Set the blockheight past the tax height block
@@ -62,7 +62,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 
 	// Send taxes to fee collector to simulate DeductFeeDecorator antehandler
 	taxes := suite.DeductFees(sendAmount)
-	feeCollector := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
+	feeCollector := ak.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 	// expected: fee collector = taxes
 	amountFeeBefore := bk.GetAllBalances(suite.ctx, feeCollector.GetAddress())

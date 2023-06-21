@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug fixes
 * (wasm) [#259](https://github.com/classic-terra/core/pull/259) add legacy wasm types
-* revert "feat(feeshare): Developer Incentives (#144)" (#268) 
+* [#268](https://github.com/classic-terra/core/pull/268) revert "feat(feeshare): Developer Incentives (#144)"
 
 ## [v2.1.1](https://github.com/classic-terra/core/releases/tag/v2.1.1) - Jun 10, 2023
 ### State Machine Breaking

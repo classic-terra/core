@@ -31,7 +31,8 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 # Changelog
-## [Unreleased]
+## [v2.1.2](https://github.com/classic-terra/core/releases/tag/v2.1.2) 
+
 ### Bug fixes
 * (wasm) [#259](https://github.com/classic-terra/core/pull/259) add legacy wasm types
 

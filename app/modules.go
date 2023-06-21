@@ -1,11 +1,13 @@
 package app
 
 import (
-	transfer "github.com/cosmos/ibc-go/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
+	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v4/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -42,38 +44,38 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	terraappparams "github.com/classic-terra/core/app/params"
+	terraappparams "github.com/classic-terra/core/v2/app/params"
 
-	customauth "github.com/classic-terra/core/custom/auth"
-	customauthsim "github.com/classic-terra/core/custom/auth/simulation"
-	customauthz "github.com/classic-terra/core/custom/authz"
-	custombank "github.com/classic-terra/core/custom/bank"
-	customcrisis "github.com/classic-terra/core/custom/crisis"
-	customdistr "github.com/classic-terra/core/custom/distribution"
-	customevidence "github.com/classic-terra/core/custom/evidence"
-	customfeegrant "github.com/classic-terra/core/custom/feegrant"
-	customgov "github.com/classic-terra/core/custom/gov"
-	custommint "github.com/classic-terra/core/custom/mint"
-	customparams "github.com/classic-terra/core/custom/params"
-	customslashing "github.com/classic-terra/core/custom/slashing"
-	customstaking "github.com/classic-terra/core/custom/staking"
-	customupgrade "github.com/classic-terra/core/custom/upgrade"
+	customauth "github.com/classic-terra/core/v2/custom/auth"
+	customauthsim "github.com/classic-terra/core/v2/custom/auth/simulation"
+	customauthz "github.com/classic-terra/core/v2/custom/authz"
+	custombank "github.com/classic-terra/core/v2/custom/bank"
+	customcrisis "github.com/classic-terra/core/v2/custom/crisis"
+	customdistr "github.com/classic-terra/core/v2/custom/distribution"
+	customevidence "github.com/classic-terra/core/v2/custom/evidence"
+	customfeegrant "github.com/classic-terra/core/v2/custom/feegrant"
+	customgov "github.com/classic-terra/core/v2/custom/gov"
+	custommint "github.com/classic-terra/core/v2/custom/mint"
+	customparams "github.com/classic-terra/core/v2/custom/params"
+	customslashing "github.com/classic-terra/core/v2/custom/slashing"
+	customstaking "github.com/classic-terra/core/v2/custom/staking"
+	customupgrade "github.com/classic-terra/core/v2/custom/upgrade"
+	customwasm "github.com/classic-terra/core/v2/custom/wasm"
 
-	"github.com/classic-terra/core/x/feeshare"
-	feesharetypes "github.com/classic-terra/core/x/feeshare/types"
-	"github.com/classic-terra/core/x/market"
-	markettypes "github.com/classic-terra/core/x/market/types"
-	"github.com/classic-terra/core/x/oracle"
-	oracletypes "github.com/classic-terra/core/x/oracle/types"
-	"github.com/classic-terra/core/x/treasury"
-	treasuryclient "github.com/classic-terra/core/x/treasury/client"
-	treasurytypes "github.com/classic-terra/core/x/treasury/types"
-	"github.com/classic-terra/core/x/vesting"
-	"github.com/classic-terra/core/x/wasm"
-	wasmtypes "github.com/classic-terra/core/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v2/x/market"
+	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	"github.com/classic-terra/core/v2/x/oracle"
+	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v2/x/treasury"
+	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v2/x/vesting"
 
 	// unnamed import of statik for swagger UI support
-	_ "github.com/classic-terra/core/client/docs/statik"
+	_ "github.com/classic-terra/core/v2/client/docs/statik"
 )
 
 var (
@@ -90,20 +92,24 @@ var (
 		custommint.AppModuleBasic{},
 		customdistr.AppModuleBasic{},
 		customgov.NewAppModuleBasic(
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
-			treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
+			append(
+				wasmclient.ProposalHandlers,
+				paramsclient.ProposalHandler,
+				distrclient.ProposalHandler,
+				upgradeclient.ProposalHandler,
+				upgradeclient.CancelProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler,
+				ibcclientclient.UpgradeProposalHandler,
+				treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
+				treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
+			)...,
 		),
 		customparams.AppModuleBasic{},
 		customcrisis.AppModuleBasic{},
 		customslashing.AppModuleBasic{},
 		customfeegrant.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		ica.AppModuleBasic{},
 		customupgrade.AppModuleBasic{},
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -111,8 +117,7 @@ var (
 		oracle.AppModuleBasic{},
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
-		wasm.AppModuleBasic{},
-		feeshare.AppModuleBasic{},
+		customwasm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -128,6 +133,8 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:            nil,
+		wasm.ModuleName:                {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -162,14 +169,14 @@ func appModules(
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		ica.NewAppModule(nil, &app.ICAHostKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		transfer.NewAppModule(app.TransferKeeper),
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
-		feeshare.NewAppModule(app.FeeShareKeeper, app.AccountKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
@@ -199,14 +206,12 @@ func simulationModules(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
-		feeshare.NewAppModule(app.FeeShareKeeper, app.AccountKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
 func orderBeginBlockers() []string {
 	return []string{
-		feesharetypes.ModuleName,
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -225,6 +230,7 @@ func orderBeginBlockers() []string {
 		paramstypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
 		treasurytypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
@@ -233,7 +239,6 @@ func orderBeginBlockers() []string {
 
 func orderEndBlockers() []string {
 	return []string{
-		feesharetypes.ModuleName,
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -252,6 +257,7 @@ func orderEndBlockers() []string {
 		paramstypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
 		treasurytypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
@@ -260,7 +266,6 @@ func orderEndBlockers() []string {
 
 func orderInitGenesis() []string {
 	return []string{
-		feesharetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -271,7 +276,6 @@ func orderInitGenesis() []string {
 		markettypes.ModuleName,
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
-		wasmtypes.ModuleName,
 		authz.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -281,6 +285,8 @@ func orderInitGenesis() []string {
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
 		feegrant.ModuleName,
+		wasmtypes.ModuleName,
 	}
 }

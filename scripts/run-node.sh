@@ -1,9 +1,17 @@
 #!/bin/bash
 
+BINARY=$1
+CONTINUE=${CONTINUE:-"false"}
+HOME_DIR=mytestnet
+
+if [ "$CONTINUE" == "true" ]; then
+    $BINARY start --home $HOME
+    exit 0
+fi
+
 rm -rf mytestnet
 pkill terrad
 
-BINARY=$1
 # check DENOM is set. If not, set to uluna
 DENOM=${2:-uluna}
 
@@ -11,6 +19,9 @@ export TERRAD_P2P_LADDR=tcp://0.0.0.0:2000
 export TERRAD_RPC_LADDR=tcp://0.0.0.0:1000
 export TERRAD_API_ENABLE=true
 export TERRAD_API_SWAGGER=true
+
+COMMISSION_RATE=0.01
+COMMISSION_MAX_RATE=0.02
 
 SED_BINARY=sed
 # check if this is OS X
@@ -31,10 +42,9 @@ if [ -z "$BINARY" ]; then
     BINARY=build/terrad
 fi
 
-HOME_DIR=mytestnet
-CHAIN_ID="test"
+CHAIN_ID="localterra"
 KEYRING="test"
-KEY="test"
+KEY="test0"
 KEY1="test1"
 KEY2="test2"
 
@@ -62,7 +72,7 @@ update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","a
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 
 # Sign genesis transaction
-$BINARY gentx $KEY "1000000${DENOM}" --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME_DIR
+$BINARY gentx $KEY "1000000${DENOM}" --commission-rate=$COMMISSION_RATE --commission-max-rate=$COMMISSION_MAX_RATE --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME_DIR
 
 # Collect genesis tx
 $BINARY collect-gentxs --home $HOME_DIR

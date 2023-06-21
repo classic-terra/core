@@ -27,24 +27,22 @@ import (
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
 
-	v039authcustom "github.com/classic-terra/core/custom/auth/legacy/v039"
-	v040authcustom "github.com/classic-terra/core/custom/auth/legacy/v040"
-	v036distrcustom "github.com/classic-terra/core/custom/distribution/legacy/v036"
-	v036govcustom "github.com/classic-terra/core/custom/gov/legacy/v036"
-	v043govcustom "github.com/classic-terra/core/custom/gov/legacy/v043"
-	v036paramscustom "github.com/classic-terra/core/custom/params/legacy/v036"
-	v038upgradecustom "github.com/classic-terra/core/custom/upgrade/legacy/v038"
+	v039authcustom "github.com/classic-terra/core/v2/custom/auth/legacy/v039"
+	v040authcustom "github.com/classic-terra/core/v2/custom/auth/legacy/v040"
+	v036distrcustom "github.com/classic-terra/core/v2/custom/distribution/legacy/v036"
+	v036govcustom "github.com/classic-terra/core/v2/custom/gov/legacy/v036"
+	v043govcustom "github.com/classic-terra/core/v2/custom/gov/legacy/v043"
+	v036paramscustom "github.com/classic-terra/core/v2/custom/params/legacy/v036"
+	v038upgradecustom "github.com/classic-terra/core/v2/custom/upgrade/legacy/v038"
 
-	v043authz "github.com/classic-terra/core/custom/authz/legacy/v043"
-	v04market "github.com/classic-terra/core/x/market/legacy/v04"
-	v05market "github.com/classic-terra/core/x/market/legacy/v05"
-	v04msgauth "github.com/classic-terra/core/x/msgauth/legacy/v04"
-	v04oracle "github.com/classic-terra/core/x/oracle/legacy/v04"
-	v05oracle "github.com/classic-terra/core/x/oracle/legacy/v05"
-	v04treasury "github.com/classic-terra/core/x/treasury/legacy/v04"
-	v05treasury "github.com/classic-terra/core/x/treasury/legacy/v05"
-	v04wasm "github.com/classic-terra/core/x/wasm/legacy/v04"
-	v05wasm "github.com/classic-terra/core/x/wasm/legacy/v05"
+	v043authz "github.com/classic-terra/core/v2/custom/authz/legacy/v043"
+	v04market "github.com/classic-terra/core/v2/x/market/legacy/v04"
+	v05market "github.com/classic-terra/core/v2/x/market/legacy/v05"
+	v04msgauth "github.com/classic-terra/core/v2/x/msgauth/legacy/v04"
+	v04oracle "github.com/classic-terra/core/v2/x/oracle/legacy/v04"
+	v05oracle "github.com/classic-terra/core/v2/x/oracle/legacy/v05"
+	v04treasury "github.com/classic-terra/core/v2/x/treasury/legacy/v04"
+	v05treasury "github.com/classic-terra/core/v2/x/treasury/legacy/v05"
 )
 
 func migrateGenutil(oldGenState v039genutil.GenesisState) *types.GenesisState {
@@ -282,18 +280,20 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		appState[v05treasury.ModuleName] = v05Codec.MustMarshalJSON(v05treasury.Migrate(treasuryGenState))
 	}
 
-	if appState[v04wasm.ModuleName] != nil {
-		// unmarshal relative source genesis application state
-		var wasmGenState v04wasm.GenesisState
-		v04Codec.MustUnmarshalJSON(appState[v04wasm.ModuleName], &wasmGenState)
+	/*
+		if appState[v04wasm.ModuleName] != nil {
+			// unmarshal relative source genesis application state
+			var wasmGenState v04wasm.GenesisState
+			v04Codec.MustUnmarshalJSON(appState[v04wasm.ModuleName], &wasmGenState)
 
-		// delete deprecated x/wasm genesis state
-		delete(appState, v04wasm.ModuleName)
+			// delete deprecated x/wasm genesis state
+			delete(appState, v04wasm.ModuleName)
 
-		// Migrate relative source genesis application state and marshal it into
-		// the respective key.
-		appState[v05wasm.ModuleName] = v05Codec.MustMarshalJSON(v05wasm.Migrate(wasmGenState))
-	}
+			// Migrate relative source genesis application state and marshal it into
+			// the respective key.
+			appState[v05wasm.ModuleName] = v05Codec.MustMarshalJSON(v05wasm.Migrate(wasmGenState))
+		}
+	*/
 
 	return appState
 }

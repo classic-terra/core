@@ -6,25 +6,43 @@ import (
 )
 
 const (
+	ColumbusLunaSwapFeeHeight = int64(5_100_000)
+	BombayLunaSwapFeeHeight   = int64(6_200_000)
+	ColumbusOracleFixHeight   = int64(5_701_000)
+	BombayOracleFixHeight     = int64(7_000_000)
+	// v0.5.20
 	// SwapDisableHeight - make min spread to 100% to disable swap
-	SwapDisableHeight = 7_607_790
-	// TaxPowerUpgradeHeight is when taxes are allowed to go into effect
+	SwapDisableHeight = int64(7_607_790)
+	// v0.5.21
+	// BurnTaxUpgradeHeight is when taxes are allowed to go into effect
 	// This will still need a parameter change proposal, but can be activated
 	// anytime after this height
-	TaxPowerUpgradeHeight = 9_346_889
+	BurnTaxUpgradeHeight = int64(9_346_889)
+	// v0.5.23
 	// IbcEnableHeight - renable IBC only, block height is approximately December 5th, 2022
-	IbcEnableHeight = 10_542_500
+	IbcEnableHeight = int64(10_542_500)
+	// v1.0.5
 	// VersionMapEnableHeight - set the version map to enable software upgrades, approximately February 14, 2023
-	VersionMapEnableHeight = 11_543_150
+	VersionMapEnableHeight = int64(11_543_150)
 )
 
-func IsBeforeTaxPowerUpgradeHeight(ctx sdk.Context) bool {
-	currHeight := ctx.BlockHeight()
-	// TODO: There's no columbus check condition because of test failures
-	return currHeight < TaxPowerUpgradeHeight
+func IsBeforeLunaSwapFeeHeight(ctx sdk.Context) bool {
+	return (ctx.ChainID() == types.ColumbusChainID && ctx.BlockHeight() < ColumbusLunaSwapFeeHeight) ||
+		(ctx.ChainID() == types.BombayChainID && ctx.BlockHeight() < BombayLunaSwapFeeHeight)
 }
 
-func IsAfterPowerUpgradeHeight(ctx sdk.Context) bool {
+func IsBeforeOracleFixHeight(ctx sdk.Context) bool {
+	return (ctx.ChainID() == types.ColumbusChainID && ctx.BlockHeight() < ColumbusOracleFixHeight) ||
+		(ctx.ChainID() == types.BombayChainID && ctx.BlockHeight() < BombayOracleFixHeight)
+}
+
+func IsBeforeBurnTaxUpgradeHeight(ctx sdk.Context) bool {
 	currHeight := ctx.BlockHeight()
-	return ctx.ChainID() == types.ColumbusChainID && currHeight >= TaxPowerUpgradeHeight
+	// TODO: There's no ChainID check condition because of test failures
+	return currHeight < BurnTaxUpgradeHeight
+}
+
+func IsAfterBurnTaxUpgradeHeight(ctx sdk.Context) bool {
+	currHeight := ctx.BlockHeight()
+	return ctx.ChainID() == types.ColumbusChainID && currHeight >= BurnTaxUpgradeHeight
 }

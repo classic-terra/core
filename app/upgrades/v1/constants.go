@@ -12,7 +12,7 @@ var DisableSwapFork = upgrades.Fork{
 }
 
 var IbcEnableFork = upgrades.Fork{
-	UpgradeName:    "v1.0.4",
+	UpgradeName:    "v0.5.23",
 	UpgradeHeight:  fork.IbcEnableHeight,
 	BeginForkLogic: runForkLogicIbcEnable,
 }

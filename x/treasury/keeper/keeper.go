@@ -127,7 +127,7 @@ func (k Keeper) SetTaxCap(ctx sdk.Context, denom string, cap sdk.Int) {
 // GetTaxCap gets the tax cap denominated in integer units of the reference {denom}
 func (k Keeper) GetTaxCap(ctx sdk.Context, denom string) sdk.Int {
 	// Allow tax cap for uluna
-	if denom == core.MicroLunaDenom && fork.IsAfterPowerUpgradeHeight(ctx) {
+	if denom == core.MicroLunaDenom && fork.IsAfterBurnTaxUpgradeHeight(ctx) {
 		return sdk.ZeroInt()
 	}
 

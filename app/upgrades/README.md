@@ -6,16 +6,19 @@ that each upgrade implements. These then get included in the application
 app.go to run the upgrade.
 
 ## Upgrade History
-* Initial release (v1)
-  * (soft-fork) v0.5.20 - Disable swap and IBC
-  * (soft-fork) v1.0.4 - Enable IBC
-  * (soft-fork) v1.0.5 - Set module version map for enabling software upgrades
-* Upgrade: v2
-  * (treasury) Tax exemption list, burn tax split
-* Upgrade: v3
-  * (treasury) Minimum initial deposit
-* Upgrade: v4
-  * (staking) Minimum commision rate
+### v1
+__NOTE__: initial version without upgrade handler
+* (soft-fork) v0.5.20 - Disable swap and IBC [#760](https://github.com/terra-money/classic-core/pull/760)
+* (soft-fork) v0.5.21 - Burn Tax and allow Luna to be taxed
+* (soft-fork) v0.5.22 - Limit validator power to 20% [cosmos-sdk/pull/104](https://github.com/terra-money/cosmos-sdk/pull/104)
+* (soft-fork) v0.5.23 - Enable IBC
+* (soft-fork) v1.0.5 - Set module version map for enabling software upgrades
+### v2
+* (treasury) Tax exemption list, burn tax split
+### v3
+* (treasury) Minimum initial deposit
+### v4
+* (staking) Minimum commision rate
 
 ## Upgrade types
 

@@ -29,9 +29,8 @@ func NewBurnTaxFeeDecorator(accountKeeper cosmosante.AccountKeeper, treasuryKeep
 
 // AnteHandle handles msg tax fee checking
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// Do not proceed if you are below this block height
-	// ChainID check is required to test burn tax in the testnet
-	if fork.IsBeforeTaxPowerUpgradeHeight(ctx) {
+	// Do not proceed if you are below BurnTaxUpgradeHeight block height
+	if fork.IsBeforeBurnTaxUpgradeHeight(ctx) {
 		return next(ctx, tx, simulate)
 	}
 

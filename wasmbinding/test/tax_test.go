@@ -19,7 +19,7 @@ func (s *WasmTestSuite) TestTax() {
 	toAddress := s.TestAccs[1]
 	// fund an account
 	s.FundAcc(payer, sdk.NewCoins(sdk.NewInt64Coin("uluna", 1000000000)))
-	s.Ctx = s.Ctx.WithBlockHeight(fork.TaxPowerUpgradeHeight + 1)
+	s.Ctx = s.Ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight + 1)
 
 	// instantiate reflect contract
 	contractAddr := s.InstantiateContract(payer, TerraBindingsPath)

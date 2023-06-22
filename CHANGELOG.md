@@ -97,7 +97,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [ebba05](https://github.com/classic-terra/core/commit/ebba0521fec4fc5655d90c0b3fdb2dbb2ec8d11f) Added Z's fix for the feeutils.go
 * (x/auth) [7fe446](https://github.com/classic-terra/core/commit/7fe4468fab7a767b8779e093d671a69f26b19781) allow uluna to be taxed
 
-## [v1.0.4](https://github.com/terra-money/classic-core/releases/tag/v0.5.23) - 2022-12-07
+## [v0.5.23](https://github.com/terra-money/classic-core/releases/tag/v0.5.23) - 2022-12-07
 
 ### State Machine Breaking
 * [#800](https://github.com/terra-money/classic-core/pull/800) Tax and Burn

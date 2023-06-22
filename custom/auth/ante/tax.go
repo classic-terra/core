@@ -175,8 +175,8 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 	taxes := sdk.Coins{}
 
 	for _, coin := range principal {
-		// Originally only a stability tax on UST.  Changed to tax Luna as well after TaxPowerUpgradeHeight
-		if (coin.Denom == types.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && fork.IsBeforeTaxPowerUpgradeHeight(ctx) {
+		// Originally only a stability tax on UST.  Changed to tax Luna as well after BurnTaxUpgradeHeight
+		if (coin.Denom == types.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && fork.IsBeforeBurnTaxUpgradeHeight(ctx) {
 			continue
 		}
 		if coin.Denom == sdk.DefaultBondDenom {

@@ -149,7 +149,7 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		)
 		suite.Require().NoError(err)
 
-		suite.ctx = suite.ctx.WithBlockHeight(customante.TaxPowerUpgradeHeight)
+		suite.ctx = suite.ctx.WithBlockHeight(core.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

@@ -71,7 +71,7 @@ var (
 	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
 
 	// Forks defines forks to be applied to the network
-	Forks = v1.Forks
+	Forks = []upgrades.Fork{v1.DisableSwapFork, v1.IbcEnableFork, v1.VersionMapEnableFork}
 )
 
 // Verify app interface at compile time

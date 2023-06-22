@@ -1,17 +1,13 @@
 package ante
 
 import (
+	core "github.com/classic-terra/core/v2/types"
 	treasury "github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// TaxPowerUpgradeHeight is when taxes are allowed to go into effect
-// This will still need a parameter change proposal, but can be activated
-// anytime after this height
-const TaxPowerUpgradeHeight = 9346889
 
 // BurnTaxFeeDecorator will immediately burn the collected Tax
 type BurnTaxFeeDecorator struct {
@@ -34,8 +30,8 @@ func NewBurnTaxFeeDecorator(accountKeeper cosmosante.AccountKeeper, treasuryKeep
 // AnteHandle handles msg tax fee checking
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// Do not proceed if you are below this block height
-	currHeight := ctx.BlockHeight()
-	if currHeight < TaxPowerUpgradeHeight {
+	// ChainID check is required to test burn tax in the testnet
+	if core.IsAfterPowerUpgradeHeight(ctx) {
 		return next(ctx, tx, simulate)
 	}
 

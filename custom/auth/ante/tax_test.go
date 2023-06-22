@@ -883,7 +883,7 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 		tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(5, 1))
 
 		fmt.Printf("CASE = %s \n", c.name)
-		suite.ctx = suite.ctx.WithBlockHeight(ante.TaxPowerUpgradeHeight)
+		suite.ctx = suite.ctx.WithBlockHeight(core.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

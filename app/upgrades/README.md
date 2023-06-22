@@ -5,15 +5,17 @@ migrations, and hard forks) It also defines upgrade & hard fork structs,
 that each upgrade implements. These then get included in the application
 app.go to run the upgrade.
 
-## Version History
-
-* v1 - Initial release
-  * v1.0.0 - Disable swap
-  * v1.0.5 - Enable swap
-  * v1.1.0 - Set module version
-* v2 - Set new FeeShare params
-* v3 - 
-* v4 - Upgrade comos-sdk to v0.45.13 and migrate staking params
+## Upgrade History
+* Initial release (v1)
+  * (soft-fork) v0.5.20 - Disable swap and IBC
+  * (soft-fork) v1.0.4 - Enable IBC
+  * (soft-fork) v1.0.5 - Set module version map for enabling software upgrades
+* Upgrade: v2
+  * (treasury) Tax exemption list, burn tax split
+* Upgrade: v3
+  * (treasury) Minimum initial deposit
+* Upgrade: v4
+  * (staking) Minimum commision rate
 
 ## Upgrade types
 

@@ -11,7 +11,7 @@ import (
 	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 )
 
-func RunForkLogic_1_0_0(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.Manager) {
+func runForkLogic1_0_0(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.Manager) {
 	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapDisableForkHeight { // Make min spread to one to disable swap
 		params := keppers.MarketKeeper.GetParams(ctx)
 		params.MinStabilitySpread = sdk.OneDec()
@@ -35,7 +35,7 @@ func RunForkLogic_1_0_0(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.
 	}
 }
 
-func RunForkLogic_1_0_5(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.Manager) {
+func runForkLogic1_0_5(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.Manager) {
 	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapEnableForkHeight { // Re-enable IBCs
 		// Enable IBC Channels
 		channelIDs := []string{
@@ -55,7 +55,7 @@ func RunForkLogic_1_0_5(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.
 	}
 }
 
-func RunForkLogic_1_1_0(ctx sdk.Context, keppers *keepers.AppKeepers, mm *module.Manager) {
+func runForkLogic1_1_0(ctx sdk.Context, keppers *keepers.AppKeepers, mm *module.Manager) {
 	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
 	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.VersionMapEnableHeight {
 		keppers.UpgradeKeeper.SetModuleVersionMap(ctx, mm.GetVersionMap())

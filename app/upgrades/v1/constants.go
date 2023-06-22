@@ -13,7 +13,7 @@ var (
 	// triggered.
 	UpgradeHeights = []int64{core.SwapDisableForkHeight, core.SwapEnableForkHeight, core.VersionMapEnableHeight}
 	// ForkLogicFuncs defines the set of functions that are run at the beginning
-	ForkLogicFuncs = []upgrades.ForkLogicFunc{RunForkLogic_1_0_0, RunForkLogic_1_0_5, RunForkLogic_1_1_0}
+	ForkLogicFuncs = []upgrades.ForkLogicFunc{runForkLogic1_0_0, runForkLogic1_0_5, runForkLogic1_1_0}
 )
 
 var Forks = []upgrades.Fork{}

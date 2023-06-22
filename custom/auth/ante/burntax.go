@@ -1,7 +1,7 @@
 package ante
 
 import (
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/types/fork"
 	treasury "github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,7 +31,7 @@ func NewBurnTaxFeeDecorator(accountKeeper cosmosante.AccountKeeper, treasuryKeep
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// Do not proceed if you are below this block height
 	// ChainID check is required to test burn tax in the testnet
-	if core.IsAfterPowerUpgradeHeight(ctx) {
+	if fork.IsBeforeTaxPowerUpgradeHeight(ctx) {
 		return next(ctx, tx, simulate)
 	}
 

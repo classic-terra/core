@@ -2,23 +2,23 @@ package v1
 
 import (
 	"github.com/classic-terra/core/v2/app/upgrades"
-	"github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/types/fork"
 )
 
 var DisableSwapFork = upgrades.Fork{
 	UpgradeName:    "v0.5.20",
-	UpgradeHeight:  types.SwapDisableHeight,
+	UpgradeHeight:  fork.SwapDisableHeight,
 	BeginForkLogic: runForkLogicSwapDisable,
 }
 
 var IbcEnableFork = upgrades.Fork{
 	UpgradeName:    "v1.0.4",
-	UpgradeHeight:  types.IbcEnableHeight,
+	UpgradeHeight:  fork.IbcEnableHeight,
 	BeginForkLogic: runForkLogicIbcEnable,
 }
 
 var VersionMapEnableFork = upgrades.Fork{
 	UpgradeName:    "v1.0.5",
-	UpgradeHeight:  types.VersionMapEnableHeight,
+	UpgradeHeight:  fork.VersionMapEnableHeight,
 	BeginForkLogic: runForkLogicVersionMapEnable,
 }

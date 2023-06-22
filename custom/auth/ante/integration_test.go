@@ -6,6 +6,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/types/fork"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -120,7 +121,6 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		ak := suite.app.AccountKeeper
 		bk := suite.app.BankKeeper
 		dk := suite.app.DistrKeeper
-		fsk := suite.app.FeeShareKeeper
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
@@ -142,14 +142,13 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 				SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 				IBCKeeper:          *suite.app.IBCKeeper,
 				DistributionKeeper: dk,
-				FeeShareKeeper:     fsk,
 				WasmConfig:         &wasmConfig,
 				TXCounterStoreKey:  suite.app.GetKey(wasmtypes.StoreKey),
 			},
 		)
 		suite.Require().NoError(err)
 
-		suite.ctx = suite.ctx.WithBlockHeight(core.TaxPowerUpgradeHeight)
+		suite.ctx = suite.ctx.WithBlockHeight(fork.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

@@ -10,6 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/types/fork"
 	marketexported "github.com/classic-terra/core/v2/x/market/exported"
 	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
 )
@@ -175,7 +176,7 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 
 	for _, coin := range principal {
 		// Originally only a stability tax on UST.  Changed to tax Luna as well after TaxPowerUpgradeHeight
-		if (coin.Denom == types.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && types.IsBeforeTaxPowerUpgradeHeight(ctx) {
+		if (coin.Denom == types.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && fork.IsBeforeTaxPowerUpgradeHeight(ctx) {
 			continue
 		}
 		if coin.Denom == sdk.DefaultBondDenom {

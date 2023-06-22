@@ -15,6 +15,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/types/fork"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 )
 
@@ -883,7 +884,7 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 		tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(5, 1))
 
 		fmt.Printf("CASE = %s \n", c.name)
-		suite.ctx = suite.ctx.WithBlockHeight(core.TaxPowerUpgradeHeight)
+		suite.ctx = suite.ctx.WithBlockHeight(fork.TaxPowerUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

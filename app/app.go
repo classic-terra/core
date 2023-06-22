@@ -19,9 +19,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -48,6 +45,7 @@ import (
 
 	// upgrades
 	"github.com/classic-terra/core/v2/app/upgrades"
+	v1 "github.com/classic-terra/core/v2/app/upgrades/v1"
 	v2 "github.com/classic-terra/core/v2/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v2/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v2/app/upgrades/v4"
@@ -73,7 +71,7 @@ var (
 	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
 
 	// Forks defines forks to be applied to the network
-	Forks = []upgrades.Fork{}
+	Forks = v1.Forks
 )
 
 // Verify app interface at compile time
@@ -248,50 +246,6 @@ func (app *TerraApp) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block
 func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	BeginBlockForks(ctx, app)
-	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapDisableForkHeight { // Make min spread to one to disable swap
-		params := app.MarketKeeper.GetParams(ctx)
-		params.MinStabilitySpread = sdk.OneDec()
-		app.MarketKeeper.SetParams(ctx, params)
-
-		// Disable IBC Channels
-		channelIDs := []string{
-			"channel-1",  // Osmosis
-			"channel-49", // Crescent
-			"channel-20", // Juno
-		}
-		for _, channelID := range channelIDs {
-			channel, found := app.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, channelID)
-			if !found {
-				panic(fmt.Sprintf("%s not found", channelID))
-			}
-
-			channel.State = ibcchanneltypes.CLOSED
-			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
-		}
-	}
-	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.SwapEnableForkHeight { // Re-enable IBCs
-		// Enable IBC Channels
-		channelIDs := []string{
-			"channel-1",  // Osmosis
-			"channel-49", // Crescent
-			"channel-20", // Juno
-		}
-		for _, channelID := range channelIDs {
-			channel, found := app.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, channelID)
-			if !found {
-				panic(fmt.Sprintf("%s not found", channelID))
-			}
-
-			channel.State = ibcchanneltypes.OPEN
-			app.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, channelID, channel)
-		}
-	}
-
-	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
-	if ctx.ChainID() == core.ColumbusChainID && ctx.BlockHeight() == core.VersionMapEnableHeight {
-		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
-	}
-
 	return app.mm.BeginBlock(ctx, req)
 }
 

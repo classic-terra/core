@@ -260,7 +260,7 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 		panic(err)
 	}
 	if ctx.ChainID() == core.ColumbusChainID {
-		panic("Must use v1.0.x for importing the columbus genesis (https://github.com/classic-terra/core/v2/releases/)")
+		panic("Must use v1.0.x for importing the columbus genesis (https://github.com/classic-terra/core/releases/)")
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)

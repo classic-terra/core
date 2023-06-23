@@ -69,7 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (build) [#101](https://github.com/classic-terra/core/pull/101) Upgrade test
 * (ante) [#103 #113 #134](https://github.com/classic-terra/core/pull/103) Add burn tax split logic
-* (ante) [#107 #137 #149](https://github.com/classic-terra/core/pull/107) Burn Tax Whitelist
+* (ante) [#107 #137 #149](https://github.com/classic-terra/core/pull/107) Burn Tax Exemption list
 * (app) [#128](https://github.com/classic-terra/core/pull/128) Panic at InitChainer for the Columbus mainnet
 
 ### Improvements

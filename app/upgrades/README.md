@@ -47,9 +47,6 @@ type Fork struct {
  UpgradeHeight int64
 
  // Function that runs some custom state transition code at the beginning of a fork.
- BeginForkLogic ForkLogicFunc
+ BeginForkLogic func(ctx sdk.Context, keppers *keepers.AppKeepers, mm *module.Manager)
 }
-
-// ForkLogicFunc defines a function that is run at the beginning of a fork.
-type ForkLogicFunc = func(ctx sdk.Context, keppers *keepers.AppKeepers, mm *module.Manager)
 ```

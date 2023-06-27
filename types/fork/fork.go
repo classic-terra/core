@@ -37,12 +37,5 @@ func IsBeforeOracleFixHeight(ctx sdk.Context) bool {
 }
 
 func IsBeforeBurnTaxUpgradeHeight(ctx sdk.Context) bool {
-	currHeight := ctx.BlockHeight()
-	// TODO: There's no ChainID check condition because of test failures
-	return currHeight < BurnTaxUpgradeHeight
-}
-
-func IsAfterBurnTaxUpgradeHeight(ctx sdk.Context) bool {
-	currHeight := ctx.BlockHeight()
-	return ctx.ChainID() == types.ColumbusChainID && currHeight >= BurnTaxUpgradeHeight
+	return (ctx.ChainID() == types.ColumbusChainID && ctx.BlockHeight() < BurnTaxUpgradeHeight)
 }

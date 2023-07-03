@@ -1,0 +1,47 @@
+#!/bin/sh
+
+BINARY=_build/old/terrad
+CONTRACTPATH="scripts/wasm/contracts/old_anc_token.wasm"
+KEYRING_BACKEND="test"
+HOME=mytestnet
+CHAIN_ID=localterra
+
+# upload old contracts
+echo "... stores a wasm"
+addr=$($BINARY keys show test0 -a --home $HOME --keyring-backend $KEYRING_BACKEND)
+out=$($BINARY tx wasm store ${CONTRACTPATH} --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 100000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
+code=$(echo $out | jq -r '.code')
+if [ "$code" != "0" ]; then
+    echo "... Could not store binary" >&2
+    echo $out >&2
+    exit $code
+fi
+sleep 10
+txhash=$(echo $out | jq -r '.txhash')
+id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+
+# instantiates contract
+echo "... instantiates contract"
+msg=$(jq -n '
+{
+    "decimals":8,
+    "initial_balances":[
+        {
+            "address":"'$addr'",
+            "amount":"1000000000000000000000000000"
+        }
+    ],
+    "name":"Anchor Token",
+    "symbol":"ANC",
+} | @json')
+echo $msg
+out=$($BINARY tx wasm instantiate $id "$msg" --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
+code=$(echo $out | jq -r '.code')
+if [ "$code" != "0" ]; then
+    echo "... Could not instantiate contract" >&2
+    echo $out >&2
+    exit $code
+fi
+sleep 10
+txhash=$(echo $out | jq -r '.txhash')
+contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')

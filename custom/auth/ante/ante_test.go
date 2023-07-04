@@ -28,6 +28,7 @@ import (
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -55,6 +56,9 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
+	app.WasmKeeper.SetParams(ctx, wasmtypes.DefaultParams())
+	app.WasmKeeper.PeekAutoIncrementID(ctx, wasmtypes.KeyLastCodeID)
+	app.WasmKeeper.PeekAutoIncrementID(ctx, wasmtypes.KeyLastInstanceID)
 
 	return app, ctx
 }

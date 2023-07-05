@@ -34,7 +34,7 @@ type Keeper struct {
 	stakingKeeper types.StakingKeeper
 	distrKeeper   types.DistributionKeeper
 	oracleKeeper  types.OracleKeeper
-	wasmKeeper    wasmkeeper.Keeper
+	wasmKeeper    *wasmkeeper.Keeper
 
 	distributionModuleName string
 }
@@ -48,7 +48,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey,
 	oracleKeeper types.OracleKeeper,
 	stakingKeeper types.StakingKeeper,
 	distrKeeper types.DistributionKeeper,
-	wasmKeeper wasmkeeper.Keeper,
+	wasmKeeper *wasmkeeper.Keeper,
 	distributionModuleName string,
 ) Keeper {
 	// ensure treasury module account is set

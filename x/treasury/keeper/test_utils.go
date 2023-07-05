@@ -318,7 +318,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		oracleKeeper,
 		stakingKeeper,
 		distrKeeper,
-		wasmKeeper,
+		&wasmKeeper,
 		distrtypes.ModuleName,
 	)
 

@@ -28,12 +28,12 @@ msg=$(jq -n '
     "initial_balances":[
         {
             "address":"'$addr'",
-            "amount":"1000000000000000000000000000"
+            "amount":"1000000000"
         }
     ],
     "name":"Anchor Token",
-    "symbol":"ANC",
-} | @json')
+    "symbol":"ANC"
+}')
 echo $msg
 out=$($BINARY tx wasm instantiate $id "$msg" --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
 code=$(echo $out | jq -r '.code')

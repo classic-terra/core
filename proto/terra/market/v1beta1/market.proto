@@ -21,4 +21,9 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  bytes  max_supply_coin = 3 [
+    (gogoproto.moretags)   = "yaml:\"max_supply_coin\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable)   = false
+  ];
 }

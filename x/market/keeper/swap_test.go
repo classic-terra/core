@@ -75,13 +75,13 @@ func TestComputeInternalSwap(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		offerCoin := sdk.NewDecCoin(core.MicroSDRDenom, lunaPriceInSDR.MulInt64(rand.Int63()+1).TruncateInt())
-		retCoin, err := input.MarketKeeper.ComputeInternalSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
+		retCoin, err := input.MarketKeeper.ComputeInternalSwap(input.Ctx, offerCoin, core.MicroLunaDenom, false)
 		require.NoError(t, err)
 		require.Equal(t, offerCoin.Amount.Quo(lunaPriceInSDR), retCoin.Amount)
 	}
 
 	offerCoin := sdk.NewDecCoin(core.MicroSDRDenom, lunaPriceInSDR.QuoInt64(2).TruncateInt())
-	_, err := input.MarketKeeper.ComputeInternalSwap(input.Ctx, offerCoin, core.MicroLunaDenom)
+	_, err := input.MarketKeeper.ComputeInternalSwap(input.Ctx, offerCoin, core.MicroLunaDenom, false)
 	require.Error(t, err)
 }
 

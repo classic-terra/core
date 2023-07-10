@@ -22,7 +22,7 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 
 	// In case swapping Terra to Luna, the terra swap pool(offer) must be increased and the luna swap pool(ask) must be decreased
 	if offerCoin.Denom != core.MicroLunaDenom && askCoin.Denom == core.MicroLunaDenom {
-		offerBaseCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom)
+		offerBaseCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom, true)
 		if err != nil {
 			return err
 		}
@@ -32,7 +32,7 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 
 	// In case swapping Luna to Terra, the luna swap pool(offer) must be increased and the terra swap pool(ask) must be decreased
 	if offerCoin.Denom == core.MicroLunaDenom && askCoin.Denom != core.MicroLunaDenom {
-		askBaseCoin, err := k.ComputeInternalSwap(ctx, askCoin, core.MicroSDRDenom)
+		askBaseCoin, err := k.ComputeInternalSwap(ctx, askCoin, core.MicroSDRDenom, true)
 		if err != nil {
 			return err
 		}
@@ -54,15 +54,15 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	if offerCoin.Denom == askDenom {
 		return sdk.DecCoin{}, sdk.ZeroDec(), sdkerrors.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
-
+	var okVSupply = (offerCoin.Denom == core.MicroLunaDenom)
 	// Swap offer coin to base denom for simplicity of swap process
-	baseOfferDecCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom)
+	baseOfferDecCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom, okVSupply)
 	if err != nil {
 		return sdk.DecCoin{}, sdk.Dec{}, err
 	}
 
 	// Get swap amount based on the oracle price
-	retDecCoin, err = k.ComputeInternalSwap(ctx, baseOfferDecCoin, askDenom)
+	retDecCoin, err = k.ComputeInternalSwap(ctx, baseOfferDecCoin, askDenom, false)
 	if err != nil {
 		return sdk.DecCoin{}, sdk.Dec{}, err
 	}
@@ -127,13 +127,19 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 		spread = minSpread
 	}
 
+	var errSup = k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(retDecCoin.Denom, retDecCoin.Amount.TruncateInt()))
+
+	if errSup != nil {
+		return sdk.DecCoin{}, sdk.ZeroDec(), errSup
+	}
+
 	return retDecCoin, spread, nil
 }
 
 // ComputeInternalSwap returns the amount of asked DecCoin should be returned for a given offerCoin at the effective
 // exchange rate registered with the oracle.
 // Different from ComputeSwap, ComputeInternalSwap does not charge a spread as its use is system internal.
-func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askDenom string) (sdk.DecCoin, error) {
+func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askDenom string, notCheckSupply bool) (sdk.DecCoin, error) {
 	if offerCoin.Denom == askDenom {
 		return offerCoin, nil
 	}
@@ -151,6 +157,16 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
 	if retAmount.LTE(sdk.ZeroDec()) {
 		return sdk.DecCoin{}, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, offerCoin.String())
+	}
+	var ok = "nao"
+	if notCheckSupply {
+		ok = "sim"
+	}
+	if !notCheckSupply {
+		var errSup = k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(askDenom, retAmount.TruncateInt()))
+		if errSup != nil {
+			return sdk.DecCoin{}, sdkerrors.Wrap(errSup, " --- de onde "+ok+"  - "+offerCoin.Denom)
+		}
 	}
 
 	return sdk.NewDecCoinFromDec(askDenom, retAmount), nil
@@ -180,5 +196,36 @@ func (k Keeper) simulateSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom strin
 	}
 
 	retCoin, _ := swapCoin.TruncateDecimal()
+	var errSup = k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(retCoin.Denom, retCoin.Amount))
+	if errSup != nil {
+		return sdk.Coin{}, errSup
+	}
 	return retCoin, nil
+}
+func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
+
+	var ok, amount = isExists(coin.Denom, k.GetMaxSupplyCoin(ctx))
+	var totalSupply = k.BankKeeper.GetSupply(ctx, coin.Denom)
+	if ok {
+		if (totalSupply.Amount.Int64() + coin.Amount.TruncateInt().Int64()) > amount.Int64() {
+			//var decoin = sdk.NewDecCoin(retDecCoin.Denom, amount)
+			return sdkerrors.Wrap(types.ErrZeroSwapCoin, "The value to be minted exceeded the maximum supply value "+amount.String()+coin.Denom)
+		}
+	} else {
+		return sdkerrors.Wrap(types.ErrZeroSwapCoin, "maximum supply not configured for currency "+coin.Denom)
+	}
+	return nil
+}
+func isExists(demom string, coins []sdk.Coin) (result bool, amount sdk.Int) {
+	result = false
+
+	for _, coin := range coins {
+		if coin.Denom == demom {
+			amount = coin.Amount
+			result = true
+			break
+		}
+	}
+
+	return result, amount
 }

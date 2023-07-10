@@ -12,6 +12,7 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -32,7 +33,9 @@ type Params struct {
 	BasePool           github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=base_pool,json=basePool,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_pool" yaml:"base_pool"`
 	PoolRecoveryPeriod uint64                                 `protobuf:"varint,2,opt,name=pool_recovery_period,json=poolRecoveryPeriod,proto3" json:"pool_recovery_period,omitempty" yaml:"pool_recovery_period"`
 	MinStabilitySpread github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=min_stability_spread,json=minStabilitySpread,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_stability_spread" yaml:"min_stability_spread"`
+    MaxSupplyCoin   []github_com_cosmos_cosmos_sdk_types.Coin  `protobuf:"bytes,4,opt,name=max_supply_coin,json=maxSupplyCoin,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"max_supply_coin" yaml:"max_supply_coin"`
 }
+
 
 func (m *Params) Reset()      { *m = Params{} }
 func (*Params) ProtoMessage() {}
@@ -137,9 +140,22 @@ func (this *Params) Equal(that interface{}) bool {
 	if !this.MinStabilitySpread.Equal(that1.MinStabilitySpread) {
 		return false
 	}
+	// if !this.MaxSupplyCoin.Equal(that1.MaxSupplyCoin) {
+	// 	return false
+	// }
+	// result := isExists(id, products)
 	return true
 }
-
+// func isExists(id github_com_cosmos_cosmos_sdk_types.Coin, coins []github_com_cosmos_cosmos_sdk_types.Coin) (result bool) {
+// 	result = false
+// 	for _, coin := range coins {
+// 		if coin.Id == id {
+// 			result = true
+// 			break
+// 		}
+// 	}
+// 	return result
+// }
 func (m *Params) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -170,6 +186,7 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
+	
 	if m.PoolRecoveryPeriod != 0 {
 		i = encodeVarintMarket(dAtA, i, uint64(m.PoolRecoveryPeriod))
 		i--

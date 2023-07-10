@@ -44,4 +44,6 @@ if [ "$code" != "0" ]; then
 fi
 sleep 10
 txhash=$(echo $out | jq -r '.txhash')
-contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
+PRE_UPGRADE_CONTRACT_ADDR=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
+
+export PRE_UPGRADE_CONTRACT_ADDR

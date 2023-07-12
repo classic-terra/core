@@ -36,7 +36,10 @@ if [ "$code" != "0" ]; then
 fi
 sleep 10
 txhash=$(echo $out | jq -r '.txhash')
-id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+# commented out on purpose
+# we wanna use the first id to instantiate
+# a contract from
+# id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
 echo "CODE = $id"
 echo ""
 
@@ -64,6 +67,6 @@ if [ "$code" != "0" ]; then
 fi
 sleep 10
 txhash=$(echo $out | jq -r '.txhash')
-PRE_UPGRADE_CONTRACT_ADDR=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
 
+PRE_UPGRADE_CONTRACT_ADDR=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
 export PRE_UPGRADE_CONTRACT_ADDR

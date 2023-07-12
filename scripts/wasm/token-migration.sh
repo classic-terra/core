@@ -9,6 +9,7 @@ CHAIN_ID=localterra
 # upload old contracts
 echo "... stores a wasm"
 addr=$($BINARY keys show test0 -a --home $HOME --keyring-backend $KEYRING_BACKEND)
+addr2=$($BINARY keys show test1 -a --home $HOME --keyring-backend $KEYRING_BACKEND)
 out=$($BINARY tx wasm store ${CONTRACTPATH} --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 100000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
 code=$(echo $out | jq -r '.code')
 if [ "$code" != "0" ]; then
@@ -19,6 +20,25 @@ fi
 sleep 10
 txhash=$(echo $out | jq -r '.txhash')
 id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+echo "CODE = $id"
+echo ""
+
+# upload old contracts
+echo "... stores a second wasm"
+addr=$($BINARY keys show test0 -a --home $HOME --keyring-backend $KEYRING_BACKEND)
+addr2=$($BINARY keys show test1 -a --home $HOME --keyring-backend $KEYRING_BACKEND)
+out=$($BINARY tx wasm store ${CONTRACTPATH} --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 100000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
+code=$(echo $out | jq -r '.code')
+if [ "$code" != "0" ]; then
+    echo "... Could not store binary" >&2
+    echo $out >&2
+    exit $code
+fi
+sleep 10
+txhash=$(echo $out | jq -r '.txhash')
+id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+echo "CODE = $id"
+echo ""
 
 # instantiates contract
 echo "... instantiates contract"

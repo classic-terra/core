@@ -25,12 +25,12 @@ func (k Keeper) PoolRecoveryPeriod(ctx sdk.Context) (res uint64) {
 	return
 }
 
-func (k Keeper) GetMaxSupplyCoin(ctx sdk.Context) (res []sdk.Coin) {
+func (k Keeper) GetMaxSupplyCoin(ctx sdk.Context) (res sdk.Coins) {
 	k.paramSpace.Get(ctx, types.KeyMaxSupplyCoin, &res)
 	return
 }
 
-func (k Keeper) SetMaxSupplyCoin(ctx sdk.Context, maxSupplyCoin []sdk.Coin) {
+func (k Keeper) SetMaxSupplyCoin(ctx sdk.Context, maxSupplyCoin sdk.Coins) {
 	k.paramSpace.Set(ctx, types.KeyMaxSupplyCoin, maxSupplyCoin)
 }
 

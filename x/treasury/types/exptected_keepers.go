@@ -25,7 +25,7 @@ type BankKeeper interface {
 
 // MarketKeeper expected market keeper
 type MarketKeeper interface {
-	ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askDenom string, notCheckSupply bool) (sdk.DecCoin, error)
+	ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askDenom string) (sdk.DecCoin, error)
 }
 
 // StakingKeeper expected keeper for staking module

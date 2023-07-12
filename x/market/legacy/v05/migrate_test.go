@@ -33,28 +33,29 @@ func TestMigrate(t *testing.T) {
 			BasePool:           sdk.NewDec(1000000),
 			PoolRecoveryPeriod: int64(10000),
 			MinStabilitySpread: sdk.NewDecWithPrec(2, 2),
-			MaxSupplyCoin: []sdk.Coin{
-				{Denom: "uluna", Amount: sdk.NewInt(10000000000)},
-				{Denom: "usdr", Amount: sdk.NewInt(500000000)},
-				{Denom: "uusd", Amount: sdk.NewInt(500000000)},
-				{Denom: "ukrw", Amount: sdk.NewInt(500000000)},
-				{Denom: "umnt", Amount: sdk.NewInt(500000000)},
-				{Denom: "ueur", Amount: sdk.NewInt(500000000)},
-				{Denom: "ucny", Amount: sdk.NewInt(500000000)},
-				{Denom: "ujpy", Amount: sdk.NewInt(500000000)},
-				{Denom: "ugbp", Amount: sdk.NewInt(500000000)},
-				{Denom: "uinr", Amount: sdk.NewInt(500000000)},
+			//ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
+			MaxSupplyCoin: sdk.Coins{
+				{Denom: "uaud", Amount: sdk.NewInt(500000000)},
 				{Denom: "ucad", Amount: sdk.NewInt(500000000)},
 				{Denom: "uchf", Amount: sdk.NewInt(500000000)},
-				{Denom: "uaud", Amount: sdk.NewInt(500000000)},
+				{Denom: "ucny", Amount: sdk.NewInt(500000000)},
+				{Denom: "udkk", Amount: sdk.NewInt(500000000)},
+				{Denom: "ueur", Amount: sdk.NewInt(500000000)},
+				{Denom: "ugbp", Amount: sdk.NewInt(500000000)},
+				{Denom: "uhkd", Amount: sdk.NewInt(500000000)},
+				{Denom: "uidr", Amount: sdk.NewInt(500000000)},
+				{Denom: "uinr", Amount: sdk.NewInt(500000000)},
+				{Denom: "ujpy", Amount: sdk.NewInt(500000000)},
+				{Denom: "ukrw", Amount: sdk.NewInt(500000000)},
+				{Denom: "uluna", Amount: sdk.NewInt(10000000000)},
+				{Denom: "umnt", Amount: sdk.NewInt(500000000)},
+				{Denom: "unok", Amount: sdk.NewInt(500000000)},
+				{Denom: "uphp", Amount: sdk.NewInt(500000000)},
+				{Denom: "usdr", Amount: sdk.NewInt(500000000)},
+				{Denom: "usek", Amount: sdk.NewInt(500000000)},
 				{Denom: "usgd", Amount: sdk.NewInt(500000000)},
 				{Denom: "uthb", Amount: sdk.NewInt(500000000)},
-				{Denom: "usek", Amount: sdk.NewInt(500000000)},
-				{Denom: "unok", Amount: sdk.NewInt(500000000)},
-				{Denom: "udkk", Amount: sdk.NewInt(500000000)},
-				{Denom: "uidr", Amount: sdk.NewInt(500000000)},
-				{Denom: "uphp", Amount: sdk.NewInt(500000000)},
-				//{Denom: "uhkd", Amount: sdk.NewInt(500000000)},
+				{Denom: "uusd", Amount: sdk.NewInt(500000000)},
 			},
 		},
 	}
@@ -80,43 +81,7 @@ func TestMigrate(t *testing.T) {
 		  "pool_recovery_period": "10000",
 		  "max_supply_coin": [
 			{
-			  "Denom": "uluna",
-			  "Amount": "10000000000"
-			},
-			{
-			  "Denom": "usdr",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "uusd",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "ukrw",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "umnt",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "ueur",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "ucny",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "ujpy",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "ugbp",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "uinr",
+			  "Denom": "uaud",
 			  "Amount": "500000000"
 			},
 			{
@@ -128,7 +93,63 @@ func TestMigrate(t *testing.T) {
 			  "Amount": "500000000"
 			},
 			{
-			  "Denom": "uaud",
+			  "Denom": "ucny",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "udkk",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "ueur",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "ugbp",
+			  "Amount": "500000000"
+			},
+			{
+				"Denom": "uhkd",
+				"Amount": "500000000"
+			},
+			{
+			  "Denom": "uidr",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "uinr",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "ujpy",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "ukrw",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "uluna",
+			  "Amount": "10000000000"
+			},
+			{
+			  "Denom": "umnt",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "unok",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "uphp",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "usdr",
+			  "Amount": "500000000"
+			},
+			{
+			  "Denom": "usek",
 			  "Amount": "500000000"
 			},
 			{
@@ -140,23 +161,7 @@ func TestMigrate(t *testing.T) {
 			  "Amount": "500000000"
 			},
 			{
-			  "Denom": "usek",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "unok",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "udkk",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "uidr",
-			  "Amount": "500000000"
-			},
-			{
-			  "Denom": "uphp",
+			  "Denom": "uusd",
 			  "Amount": "500000000"
 			}
 		  ]

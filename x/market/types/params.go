@@ -27,28 +27,29 @@ var (
 	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
 	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)
-	DefaultMaxSupplyCoin      = []sdk.Coin{
-		{Denom: "uluna", Amount: sdk.NewInt(10000000000)},
-		{Denom: "usdr", Amount: sdk.NewInt(500000000)},
-		{Denom: "uusd", Amount: sdk.NewInt(500000000)},
-		{Denom: "ukrw", Amount: sdk.NewInt(500000000)},
-		{Denom: "umnt", Amount: sdk.NewInt(500000000)},
-		{Denom: "ueur", Amount: sdk.NewInt(500000000)},
-		{Denom: "ucny", Amount: sdk.NewInt(500000000)},
-		{Denom: "ujpy", Amount: sdk.NewInt(500000000)},
-		{Denom: "ugbp", Amount: sdk.NewInt(500000000)},
-		{Denom: "uinr", Amount: sdk.NewInt(500000000)},
+	//ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
+	DefaultMaxSupplyCoin = sdk.Coins{
+		{Denom: "uaud", Amount: sdk.NewInt(500000000)},
 		{Denom: "ucad", Amount: sdk.NewInt(500000000)},
 		{Denom: "uchf", Amount: sdk.NewInt(500000000)},
-		{Denom: "uaud", Amount: sdk.NewInt(500000000)},
+		{Denom: "ucny", Amount: sdk.NewInt(500000000)},
+		{Denom: "udkk", Amount: sdk.NewInt(500000000)},
+		{Denom: "ueur", Amount: sdk.NewInt(500000000)},
+		{Denom: "ugbp", Amount: sdk.NewInt(500000000)},
+		{Denom: "uhkd", Amount: sdk.NewInt(500000000)},
+		{Denom: "uidr", Amount: sdk.NewInt(500000000)},
+		{Denom: "uinr", Amount: sdk.NewInt(500000000)},
+		{Denom: "ujpy", Amount: sdk.NewInt(500000000)},
+		{Denom: "ukrw", Amount: sdk.NewInt(500000000)},
+		{Denom: "uluna", Amount: sdk.NewInt(10000000000)},
+		{Denom: "umnt", Amount: sdk.NewInt(500000000)},
+		{Denom: "unok", Amount: sdk.NewInt(500000000)},
+		{Denom: "uphp", Amount: sdk.NewInt(500000000)},
+		{Denom: "usdr", Amount: sdk.NewInt(500000000)},
+		{Denom: "usek", Amount: sdk.NewInt(500000000)},
 		{Denom: "usgd", Amount: sdk.NewInt(500000000)},
 		{Denom: "uthb", Amount: sdk.NewInt(500000000)},
-		{Denom: "usek", Amount: sdk.NewInt(500000000)},
-		{Denom: "unok", Amount: sdk.NewInt(500000000)},
-		{Denom: "udkk", Amount: sdk.NewInt(500000000)},
-		{Denom: "uidr", Amount: sdk.NewInt(500000000)},
-		{Denom: "uphp", Amount: sdk.NewInt(500000000)},
-		//{Denom: "uhkd", Amount: sdk.NewInt(500000000)},
+		{Denom: "uusd", Amount: sdk.NewInt(500000000)},
 	}
 )
 
@@ -146,14 +147,13 @@ func validateMinStabilitySpread(i interface{}) error {
 	return nil
 }
 func validateMaxSupplyCoin(i interface{}) error {
-	_, ok := i.([]sdk.Coin)
+	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-
-	// if v[0].IsNegative() {
-	// 	return fmt.Errorf("min spread must be positive or zero: %s", v)
-	// }
+	if !v.IsValid() {
+		return fmt.Errorf("invalid max supply: %s", v)
+	}
 
 	return nil
 }

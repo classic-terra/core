@@ -26,7 +26,7 @@ func (k Keeper) alignCoins(ctx sdk.Context, coins sdk.DecCoins, denom string) (a
 	alignedAmt = sdk.ZeroDec()
 	for _, coinReward := range coins {
 		if coinReward.Denom != denom {
-			swappedReward, err := k.marketKeeper.ComputeInternalSwap(ctx, coinReward, denom, false)
+			swappedReward, err := k.marketKeeper.ComputeInternalSwap(ctx, coinReward, denom)
 			if err != nil {
 				continue
 			}

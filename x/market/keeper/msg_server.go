@@ -7,6 +7,7 @@ import (
 
 	"github.com/classic-terra/core/v2/x/market/types"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type msgServer struct {
@@ -67,6 +68,11 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
+	var errSup = k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(swapDecCoin.Denom, swapDecCoin.Amount.TruncateInt()))
+
+	if errSup != nil {
+		return nil, errSup
+	}
 	// Charge a spread if applicable; the spread is burned
 	var feeDecCoin sdk.DecCoin
 	if spread.IsPositive() {
@@ -149,4 +155,37 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		SwapCoin: swapCoin,
 		SwapFee:  feeCoin,
 	}, nil
+}
+func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
+
+	var ok, amount = isExists(coin.Denom, k.GetMaxSupplyCoin(ctx))
+	var totalSupply = k.BankKeeper.GetSupply(ctx, coin.Denom)
+	if ok {
+
+		if totalSupply.Amount.Add(coin.Amount.TruncateInt()).GT(amount) {
+			return sdkerrors.Wrap(types.ErrZeroSwapCoin, "The value to be minted exceeded the maximum supply value "+amount.String()+coin.Denom)
+
+		}
+		// if (totalSupply.Amount.Int64() + coin.Amount.TruncateInt().Int64()) > amount.Int64() {
+		// 	//var decoin = sdk.NewDecCoin(retDecCoin.Denom, amount)
+		// 	return sdkerrors.Wrap(types.ErrZeroSwapCoin, "The value to be minted exceeded the maximum supply value "+amount.String()+coin.Denom)
+
+		// }
+	} else {
+		return sdkerrors.Wrap(types.ErrZeroSwapCoin, "maximum supply not configured for currency "+coin.Denom)
+	}
+	return nil
+}
+func isExists(demom string, coins sdk.Coins) (result bool, amount sdk.Int) {
+	result = false
+
+	for _, coin := range coins {
+		if coin.Denom == demom {
+			amount = coin.Amount
+			result = true
+			break
+		}
+	}
+
+	return result, amount
 }

@@ -13,9 +13,10 @@ const (
 type (
 	// Params market parameters
 	Params struct {
-		BasePool           sdk.Dec `json:"base_pool" yaml:"base_pool"`
-		PoolRecoveryPeriod int64   `json:"pool_recovery_period" yaml:"pool_recovery_period"`
-		MinStabilitySpread sdk.Dec `json:"min_spread" yaml:"min_spread"`
+		BasePool           sdk.Dec   `json:"base_pool" yaml:"base_pool"`
+		PoolRecoveryPeriod int64     `json:"pool_recovery_period" yaml:"pool_recovery_period"`
+		MinStabilitySpread sdk.Dec   `json:"min_spread" yaml:"min_spread"`
+		MaxSupplyCoin      sdk.Coins `json:"max_supply_coin" yaml:"max_supply_coin"`
 	}
 
 	// GenesisState is the struct representation of the export genesis

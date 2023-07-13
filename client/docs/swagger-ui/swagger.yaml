@@ -55119,6 +55119,9 @@ definitions:
       min_stability_spread:
         type: string
         format: byte
+      max_supply_coin:
+        type: string
+        format: byte
     description: Params defines the parameters for the market module.
   terra.market.v1beta1.QueryParamsResponse:
     type: object

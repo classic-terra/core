@@ -25,6 +25,15 @@ func (k Keeper) PoolRecoveryPeriod(ctx sdk.Context) (res uint64) {
 	return
 }
 
+func (k Keeper) GetMaxSupplyCoin(ctx sdk.Context) (res sdk.Coins) {
+	k.paramSpace.Get(ctx, types.KeyMaxSupplyCoin, &res)
+	return
+}
+
+func (k Keeper) SetMaxSupplyCoin(ctx sdk.Context, maxSupplyCoin sdk.Coins) {
+	k.paramSpace.Set(ctx, types.KeyMaxSupplyCoin, maxSupplyCoin)
+}
+
 // GetParams returns the total set of market parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)

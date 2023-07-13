@@ -19,13 +19,38 @@ var (
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")
 	// Min spread
 	KeyMinStabilitySpread = []byte("MinStabilitySpread")
+	KeyMaxSupplyCoin      = []byte("MaxSupplyCoin")
 )
 
 // Default parameter values
 var (
 	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
-	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
+	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)
+	//ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
+	DefaultMaxSupplyCoin = sdk.Coins{
+		{Denom: "uaud", Amount: sdk.NewInt(500000000)},
+		{Denom: "ucad", Amount: sdk.NewInt(500000000)},
+		{Denom: "uchf", Amount: sdk.NewInt(500000000)},
+		{Denom: "ucny", Amount: sdk.NewInt(500000000)},
+		{Denom: "udkk", Amount: sdk.NewInt(500000000)},
+		{Denom: "ueur", Amount: sdk.NewInt(500000000)},
+		{Denom: "ugbp", Amount: sdk.NewInt(500000000)},
+		{Denom: "uhkd", Amount: sdk.NewInt(500000000)},
+		{Denom: "uidr", Amount: sdk.NewInt(500000000)},
+		{Denom: "uinr", Amount: sdk.NewInt(500000000)},
+		{Denom: "ujpy", Amount: sdk.NewInt(500000000)},
+		{Denom: "ukrw", Amount: sdk.NewInt(500000000)},
+		{Denom: "uluna", Amount: sdk.NewInt(10000000000)},
+		{Denom: "umnt", Amount: sdk.NewInt(500000000)},
+		{Denom: "unok", Amount: sdk.NewInt(500000000)},
+		{Denom: "uphp", Amount: sdk.NewInt(500000000)},
+		{Denom: "usdr", Amount: sdk.NewInt(500000000)},
+		{Denom: "usek", Amount: sdk.NewInt(500000000)},
+		{Denom: "usgd", Amount: sdk.NewInt(500000000)},
+		{Denom: "uthb", Amount: sdk.NewInt(500000000)},
+		{Denom: "uusd", Amount: sdk.NewInt(500000000)},
+	}
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -36,6 +61,7 @@ func DefaultParams() Params {
 		BasePool:           DefaultBasePool,
 		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
 		MinStabilitySpread: DefaultMinStabilitySpread,
+		MaxSupplyCoin:      DefaultMaxSupplyCoin,
 	}
 }
 
@@ -57,6 +83,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyBasePool, &p.BasePool, validateBasePool),
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
+		paramstypes.NewParamSetPair(KeyMaxSupplyCoin, &p.MaxSupplyCoin, validateMaxSupplyCoin),
 	}
 }
 
@@ -71,7 +98,9 @@ func (p Params) Validate() error {
 	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
 		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
 	}
-
+	if len(p.MaxSupplyCoin) == 0 {
+		return fmt.Errorf("max supplay cannot be empty %s", p.MaxSupplyCoin)
+	}
 	return nil
 }
 
@@ -113,6 +142,17 @@ func validateMinStabilitySpread(i interface{}) error {
 
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min spread is too large: %s", v)
+	}
+
+	return nil
+}
+func validateMaxSupplyCoin(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if !v.IsValid() {
+		return fmt.Errorf("invalid max supply: %s", v)
 	}
 
 	return nil

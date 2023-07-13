@@ -54,7 +54,6 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	if offerCoin.Denom == askDenom {
 		return sdk.DecCoin{}, sdk.ZeroDec(), sdkerrors.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
-
 	// Swap offer coin to base denom for simplicity of swap process
 	baseOfferDecCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom)
 	if err != nil {
@@ -180,5 +179,6 @@ func (k Keeper) simulateSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom strin
 	}
 
 	retCoin, _ := swapCoin.TruncateDecimal()
+
 	return retCoin, nil
 }

@@ -15,12 +15,14 @@ import (
 func Migrate(
 	marketGenState v04market.GenesisState,
 ) *v05market.GenesisState {
+
 	return &v05market.GenesisState{
 		TerraPoolDelta: sdk.ZeroDec(),
 		Params: v05market.Params{
 			BasePool:           marketGenState.Params.BasePool,
 			PoolRecoveryPeriod: uint64(marketGenState.Params.PoolRecoveryPeriod),
 			MinStabilitySpread: marketGenState.Params.MinStabilitySpread,
+			MaxSupplyCoin:      marketGenState.Params.MaxSupplyCoin,
 		},
 	}
 }

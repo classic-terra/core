@@ -2,6 +2,7 @@ package wasmbinding_test
 
 import (
 	"encoding/json"
+	"fmt"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
@@ -217,6 +218,31 @@ func (s *WasmTestSuite) queryOldBindings(contract sdk.AccAddress, request bindin
 	}
 
 	resBz, err := s.App.WasmKeeper.QuerySmart(s.Ctx, contract, msgBz)
+	s.Require().NoError(err)
+	err = json.Unmarshal(resBz, response)
+	s.Require().NoError(err)
+}
+
+func (s *WasmTestSuite) queryStargate(contract sdk.AccAddress, request bindings.TerraQuery, response interface{}) {
+	// create query for stargate tester
+	var queryBz []byte
+
+	switch {
+	case request.Swap != nil:
+		var err error
+		request := bindingsTesterSwapQueryMsg{
+			Swap: swapQueryMsg{
+				OfferCoin: wasmvmtypes.NewCoin(request.Swap.OfferCoin.Amount.Uint64(), request.Swap.OfferCoin.Denom),
+				AskDenom:  request.Swap.AskDenom,
+			},
+		}
+		fmt.Printf("request: %+v\n", request)
+
+		queryBz, err = json.Marshal(request)
+		s.Require().NoError(err)
+	}
+
+	resBz, err := s.App.WasmKeeper.QuerySmart(s.Ctx, contract, queryBz)
 	s.Require().NoError(err)
 	err = json.Unmarshal(resBz, response)
 	s.Require().NoError(err)

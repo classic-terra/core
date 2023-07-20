@@ -24,6 +24,9 @@ const (
 	// v1.0.5
 	// VersionMapEnableHeight - set the version map to enable software upgrades, approximately February 14, 2023
 	VersionMapEnableHeight = int64(11_543_150)
+	// v4.1.0
+	// WasmStargateQueryEnableHeight - enable stargate query for wasm
+	WasmStargateQueryEnableHeight = int64(20)
 )
 
 func IsBeforeLunaSwapFeeHeight(ctx sdk.Context) bool {

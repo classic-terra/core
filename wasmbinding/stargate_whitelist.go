@@ -18,7 +18,6 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
-//nolint:staticcheck
 func init() {
 	// market
 	setWhitelistedQuery("/terra.market.v1beta1.Query/Swap", &markettypes.QuerySwapResponse{})

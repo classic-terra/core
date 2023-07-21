@@ -36,8 +36,6 @@ fi
 # install new binary
 if ! command -v _build/new/terrad &> /dev/null
 then
-    go mod edit -replace=github.com/CosmWasm/wasmd=github.com/classic-terra/wasmd@v0.30.1-0.20230710073912-4f35d068eedf
-    go mod tidy
     GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
 fi
 

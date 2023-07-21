@@ -111,8 +111,8 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return bz, nil
 
 		case contractQuery.TaxRate != nil:
-			rate := qp.treasuryKeeper.GetTaxRate(ctx)
-			bz, err := json.Marshal(bindings.TaxRateQueryResponse{Rate: rate.String()})
+			taxRate := qp.treasuryKeeper.GetTaxRate(ctx)
+			bz, err := json.Marshal(bindings.TaxRateQueryResponse{Rate: taxRate.String()})
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}
@@ -120,8 +120,8 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return bz, nil
 
 		case contractQuery.TaxCap != nil:
-			cap := qp.treasuryKeeper.GetTaxCap(ctx, contractQuery.TaxCap.Denom)
-			bz, err := json.Marshal(TaxCapQueryResponse{Cap: cap.String()})
+			taxCap := qp.treasuryKeeper.GetTaxCap(ctx, contractQuery.TaxCap.Denom)
+			bz, err := json.Marshal(TaxCapQueryResponse{Cap: taxCap.String()})
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}

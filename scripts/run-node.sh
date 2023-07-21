@@ -15,6 +15,11 @@ pkill terrad
 # check DENOM is set. If not, set to uluna
 DENOM=${2:-uluna}
 
+export TERRAD_P2P_LADDR=tcp://0.0.0.0:2000
+export TERRAD_RPC_LADDR=tcp://0.0.0.0:1000
+export TERRAD_API_ENABLE=true
+export TERRAD_API_SWAGGER=true
+
 COMMISSION_RATE=0.01
 COMMISSION_MAX_RATE=0.02
 
@@ -65,10 +70,6 @@ update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
 update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
-
-# enable rest server and swagger
-$SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME_DIR/config/app.toml
-$SED_BINARY -i 's/swagger = false/swagger = true/' $HOME_DIR/config/app.toml
 
 # Sign genesis transaction
 $BINARY gentx $KEY "1000000${DENOM}" --commission-rate=$COMMISSION_RATE --commission-max-rate=$COMMISSION_MAX_RATE --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME_DIR

@@ -1,22 +1,21 @@
 # docker build . -t cosmwasm/wasmd:latest
 # docker run --rm -it cosmwasm/wasmd:latest /bin/sh
 FROM golang:1.18-alpine3.17 AS go-builder
-ARG source=.
+ARG version=v1.1.0
 
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
 # with some changes to support our toolchain, etc
-RUN set -eux; apk add --no-cache ca-certificates build-base git;
+RUN set -eux; apk add --no-cache ca-certificates build-base git cmake;
 
-RUN apk add git cmake
 # NOTE: add these to run with LEDGER_ENABLED=true
 # RUN apk add libusb-dev linux-headers
 
-RUN git clone https://github.com/classic-terra/core.git && mv core /code
 WORKDIR /code
+RUN git clone -b $version https://github.com/classic-terra/core.git ./
 
 # Install mimalloc
-RUN git clone --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install
+RUN git clone -b v2.0.0 --depth 1 https://github.com/microsoft/mimalloc; cd mimalloc; mkdir build; cd build; cmake ..; make -j$(nproc); make install
 ENV MIMALLOC_RESERVE_HUGE_OS_PAGES=4
 
 # Cosmwasm - download correct libwasmvm version and verify checksum
@@ -33,7 +32,7 @@ FROM ubuntu:22.04
 
 RUN DEBIAN_FRONTEND=noninteractive ; \
     apt-get update ; \
-    apt-get install -y wget lz4 aria2 curl jq ip nmap; \
+    apt-get install -y wget lz4 aria2 curl jq ip net-tools; \
     apt-get clean ; \
     mkdir /terra ; \
     groupadd -r terra ; \

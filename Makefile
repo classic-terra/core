@@ -19,6 +19,9 @@ TESTNET_CHAINID := $(if $(TESTNET_CHAINID),$(TESTNET_CHAINID),localterra)
 #OPERATOR ARGS
 NODE_VERSION := $(if $(NODE_VERSION),$(NODE_VERSION),alpine3.17)
 
+#OPERATOR ARGS
+NODE_VERSION := $(if $(NODE_VERSION),$(NODE_VERSION),alpine3.17)
+
 ifneq ($(OS),Windows_NT)
   UNAME_S = $(shell uname -s)
 endif

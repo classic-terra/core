@@ -1,5 +1,11 @@
 # syntax=docker/dockerfile:1
 
+# This comes rust-lang/docker-rust-nightly with some changes to support our toolchain, etc
+# https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine/Dockerfile
+RUN set -eux; apk add --no-cache ca-certificates build-base cmake;
+
+# NOTE: add these to run with LEDGER_ENABLED=true
+# RUN apk add libusb-dev linux-headers
 ARG source=./
 ARG GO_VERSION="1.18"
 ARG ALPINE_VERSION="3.17"

@@ -1,18 +1,43 @@
 version: '3.8'
 
 services:
-   core:
-     image: public.ecr.aws/classic-terra/core:alpine3.17
-     build:
+  core:
+    image: public.ecr.aws/classic-terra/core:alpine3.17
+    build:
       context: ../..
       dockerfile: Dockerfile
       platforms:
         - "linux/amd64"
       labels:
         - "description=Contains the terrad binary"
-   node:
-     image: public.ecr.aws/classic-terra/node:alpine3.17
-     build: 
+
+  ubuntu-core: 
+    image: public.ecr.aws/classic-terra/core:v1.1.0-ubuntu22.04
+    build:
+      context: .
+      dockerfile: core/Dockerfile.ubuntu
+      args:
+        version: v1.1.0
+      platforms:
+        - "linux/amd64"
+      labels:
+        - "description=Contains the terrad binary in ubuntu"
+
+  arch-core: 
+    image: public.ecr.aws/classic-terra/core:v1.1.0-arch-base
+    build:
+      context: .
+      dockerfile: core/Dockerfile.arch
+      args:
+        version: v1.1.0
+      platforms:
+        - "linux/amd64"
+      labels:
+        - "description=Contains the terrad binary in archlinux base"
+
+  node:
+    image: public.ecr.aws/classic-terra/node:alpine3.17
+    build: 
       context: .
       dockerfile: Dockerfile
       args:

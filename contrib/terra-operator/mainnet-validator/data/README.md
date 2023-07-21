@@ -1,0 +1,1 @@
+This folder will contain mainnet snapshot from quicksync.io

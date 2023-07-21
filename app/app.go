@@ -45,11 +45,10 @@ import (
 
 	// upgrades
 	"github.com/classic-terra/core/v2/app/upgrades"
-	v1 "github.com/classic-terra/core/v2/app/upgrades/v1"
+	forks "github.com/classic-terra/core/v2/app/upgrades/forks"
 	v2 "github.com/classic-terra/core/v2/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v2/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v2/app/upgrades/v4"
-	v410 "github.com/classic-terra/core/v2/app/upgrades/v410"
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/v2/custom/auth/client/rest"
@@ -72,7 +71,7 @@ var (
 	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
 
 	// Forks defines forks to be applied to the network
-	Forks = []upgrades.Fork{v1.DisableSwapFork, v1.IbcEnableFork, v1.VersionMapEnableFork, v410.EnableWasmStargateQueryFork}
+	Forks = []upgrades.Fork{forks.DisableSwapFork, forks.IbcEnableFork, forks.VersionMapEnableFork}
 )
 
 // Verify app interface at compile time

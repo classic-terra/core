@@ -81,33 +81,3 @@ if [ "$code" != "0" ]; then
 	exit -1
 fi
 echo $res
-
-sleep 5
-
-# upload new contracts
-echo "UPLOAD NEW TOKEN CODE"
-res=$($BINARY tx wasm store ${CONTRACTPATH} --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 100000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
-code=$(echo $out | jq -r '.code')
-if [ "$code" != "0" ]; then
-    echo "... Could not store binary" >&2
-    echo $out >&2
-    exit $code
-fi
-sleep 10
-txhash=$(echo $res | jq -r '.txhash')
-id=$($BINARY q tx $txhash --output json | jq -r '.logs[0].events[] | select(.type == "store_code") | .attributes[] | select(.key == "code_id") | .value')
-echo "CODE = $id"
-echo ""
-
-sleep 5
-
-#echo "MIGRATE"
-#msg=$(jq -n '
-#{
-#    "send": {
-#		"amount": "1",
-#		"contract": "'$receiver'",
-#		"msg": "eyJ0ZXJtIjp7ImFtb3VudCI6IjEwMDAwMCJ9fQ=="
-#	}
-#}')
-#res=$($BINARY tx wasm migrate "$PRE_UPGRADE_CONTRACT_ADDR" "$msg" --from test0 --output json --gas auto --gas-adjustment 2.3 --fees 100000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)

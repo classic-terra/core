@@ -20,13 +20,14 @@ if [ "$code" != "0" ]; then
 fi
 sleep 10
 txhash=$(echo $out | jq -r '.txhash')
-TXHASH+=($txhash)
-id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+echo "$txhash"
+code_id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+echo "code_id $code_id"
 
 # instantiate stargate-tester
 echo "... instantiates contract"
 msg='{}'
-out=$($BINARY tx wasm instantiate $id "$msg" --from test0 --output json --gas auto --gas-adjustment 2.3 --label "stargate-tester" --fees 20000000uluna --no-admin --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
+out=$($BINARY tx wasm instantiate $code_id "$msg" --from test0 --output json --gas auto --gas-adjustment 2.3 --label "stargate-tester" --fees 20000000uluna --no-admin --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
 code=$(echo $out | jq -r '.code')
 if [ "$code" != "0" ]; then
     echo "... Could not instantiate contract" >&2
@@ -35,8 +36,9 @@ if [ "$code" != "0" ]; then
 fi
 sleep 10
 txhash=$(echo $out | jq -r '.txhash')
-TXHASH+=("$txhash")
-contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
+echo "$txhash"
+contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[0].value')
+echo "contract_addr $contract_addr"
 
 # call stargate-tester
 echo "... query tax rate"

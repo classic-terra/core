@@ -31,13 +31,12 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 # Changelog
+
 ## [Unreleased]
 
-### Features
-* (wasm) [#309](https://github.com/classic-terra/core/pull/309) Support WASM stargate queries
+### State Machine Breaking
 
-### Improvements
-* (wasm) [#300](https://github.com/classic-terra/core/pull/300) Add test scripts for token migration
+* (treasury) [#272](https://github.com/classic-terra/core/pull/272) Split the burn tax to the distribution module
 
 ## [v2.1.2](https://github.com/classic-terra/core/releases/tag/v2.1.2) 
 

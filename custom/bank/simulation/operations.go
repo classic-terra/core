@@ -29,13 +29,13 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
-		func(_ *rand.Rand) {
+		func(*rand.Rand) {
 			weightMsgSend = simappparams.DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
-		func(_ *rand.Rand) {
+		func(*rand.Rand) {
 			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
 		},
 	)

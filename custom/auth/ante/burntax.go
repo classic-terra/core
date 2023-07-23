@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"github.com/classic-terra/core/v2/types/fork"
 	treasury "github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,11 +28,6 @@ func NewBurnTaxFeeDecorator(accountKeeper cosmosante.AccountKeeper, treasuryKeep
 
 // AnteHandle handles msg tax fee checking
 func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// Do not proceed if you are below BurnTaxUpgradeHeight block height
-	if fork.IsBeforeBurnTaxUpgradeHeight(ctx) {
-		return next(ctx, tx, simulate)
-	}
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")

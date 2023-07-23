@@ -6,7 +6,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/types/fork"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -148,7 +147,6 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		)
 		suite.Require().NoError(err)
 
-		suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

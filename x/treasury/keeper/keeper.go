@@ -9,7 +9,6 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/types/fork"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -126,11 +125,6 @@ func (k Keeper) SetTaxCap(ctx sdk.Context, denom string, cap sdk.Int) {
 
 // GetTaxCap gets the tax cap denominated in integer units of the reference {denom}
 func (k Keeper) GetTaxCap(ctx sdk.Context, denom string) sdk.Int {
-	// Allow tax cap for uluna
-	if denom == core.MicroLunaDenom && fork.IsBeforeBurnTaxUpgradeHeight(ctx) {
-		return sdk.ZeroInt()
-	}
-
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTaxCapKey(denom))
 	if bz == nil {

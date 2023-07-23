@@ -15,7 +15,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/types/fork"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 )
 
@@ -436,13 +435,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesSendLunaTax() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	// Luna must pass with tax before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
-
-	// Set the blockheight past the burn tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
-
 	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
@@ -496,13 +488,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesSwapSendLunaTax() {
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
-
-	// Luna must pass with tax before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
-
-	// Set the blockheight past the burn tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
 
 	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
@@ -566,13 +551,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesMultiSendLunaTax() {
 
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
-
-	// Luna must pass with tax before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
-
-	// Set the blockheight past the burn tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
 
 	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
@@ -639,13 +617,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesInstantiateContractLunaTax() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	// Luna must pass with tax before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
-
-	// Set the blockheight past the burn tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
-
 	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
@@ -705,13 +676,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesExecuteContractLunaTax() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	// Luna must pass with tax before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
-
-	// Set the blockheight past the burn tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
-
 	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
@@ -766,14 +730,6 @@ func (suite *AnteTestSuite) TestEnsureMempoolFeesExecLunaTax() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	// Luna must pass with tax before the specified tax block height
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored when block height is 1")
-
-	// Set the blockheight past the burn tax height block
-	suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
-
-	// antehandler errors with insufficient fees due to tax
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
@@ -908,7 +864,6 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 		tk.SetBurnSplitRate(suite.ctx, sdk.NewDecWithPrec(5, 1))
 
 		fmt.Printf("CASE = %s \n", c.name)
-		suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

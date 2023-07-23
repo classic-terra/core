@@ -179,7 +179,7 @@ func (*LegacyAminoPubKey) Address() cryptotypes.Address {
 func (*LegacyAminoPubKey) Bytes() []byte { return nil }
 
 // Equals no-lint
-func (*LegacyAminoPubKey) Equals(key cryptotypes.PubKey) bool { return false }
+func (*LegacyAminoPubKey) Equals(_ cryptotypes.PubKey) bool { return false }
 
 // ProtoMessage no-lint
 func (*LegacyAminoPubKey) ProtoMessage() {}
@@ -194,7 +194,7 @@ func (*LegacyAminoPubKey) String() string { return "not implemented" }
 func (*LegacyAminoPubKey) Type() string { return "PubKeyMultisigThreshold" }
 
 // VerifySignature no-lint
-func (*LegacyAminoPubKey) VerifySignature(msg []byte, sig []byte) bool {
+func (*LegacyAminoPubKey) VerifySignature(_ []byte, _ []byte) bool {
 	panic("not implemented")
 }
 

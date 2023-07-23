@@ -45,7 +45,6 @@ import (
 
 	// upgrades
 	"github.com/classic-terra/core/v2/app/upgrades"
-	v1 "github.com/classic-terra/core/v2/app/upgrades/v1"
 	v2 "github.com/classic-terra/core/v2/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v2/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v2/app/upgrades/v4"
@@ -53,7 +52,6 @@ import (
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	customauthrest "github.com/classic-terra/core/v2/custom/auth/client/rest"
 	customauthtx "github.com/classic-terra/core/v2/custom/auth/tx"
-	core "github.com/classic-terra/core/v2/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
@@ -71,7 +69,7 @@ var (
 	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
 
 	// Forks defines forks to be applied to the network
-	Forks = []upgrades.Fork{v1.DisableSwapFork, v1.IbcEnableFork, v1.VersionMapEnableFork}
+	Forks = []upgrades.Fork{}
 )
 
 // Verify app interface at compile time
@@ -142,7 +140,6 @@ func NewTerraApp(
 		legacyAmino,
 		maccPerms,
 		allowedReceivingModAcc,
-		app.ModuleAccountAddrs(),
 		skipUpgradeHeights,
 		homePath,
 		invCheckPeriod,
@@ -258,9 +255,6 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
-	}
-	if ctx.ChainID() == core.ColumbusChainID {
-		panic("Must use v1.0.x for importing the columbus genesis (https://github.com/classic-terra/core/releases/)")
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)

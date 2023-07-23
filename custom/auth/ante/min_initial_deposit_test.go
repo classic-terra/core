@@ -10,6 +10,7 @@ import (
 	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/classic-terra/core/v2/custom/auth/ante"
+	core "github.com/classic-terra/core/v2/types"
 	// core "github.com/terra-money/core/types"
 	// treasury "github.com/terra-money/core/x/treasury/types"
 
@@ -31,7 +32,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	suite.app.GovKeeper.SetDepositParams(suite.ctx, govtypes.DefaultDepositParams())
 	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
-		sdk.NewCoin("uluna", sdk.NewInt(1_000_000)),
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
 	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
 
@@ -71,7 +72,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	suite.app.GovKeeper.SetDepositParams(suite.ctx, govtypes.DefaultDepositParams())
 	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
-		sdk.NewCoin("uluna", sdk.NewInt(1_000_000)),
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
 	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
 
@@ -83,7 +84,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	prop1 := govtypes.NewTextProposal("prop1", "prop1")
 	depositCoins1 := sdk.NewCoins(
-		sdk.NewCoin("uluna", sdk.NewInt(200_000)),
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(200_000)),
 	)
 
 	// create prop tx
@@ -113,7 +114,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	suite.app.GovKeeper.SetDepositParams(suite.ctx, govtypes.DefaultDepositParams())
 	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
-		sdk.NewCoin("uluna", sdk.NewInt(1_000_000)),
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
 	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
 
@@ -125,7 +126,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	prop1 := govtypes.NewTextProposal("prop1", "prop1")
 	depositCoins1 := sdk.NewCoins(
-		sdk.NewCoin("uluna", sdk.NewInt(100_000)),
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(100_000)),
 	)
 
 	// create prop tx

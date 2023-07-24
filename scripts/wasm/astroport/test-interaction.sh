@@ -18,14 +18,14 @@ query_res=""
 query_wasm_old() {
     contract=$1
     query=$2
-    res=$($BINARY query wasm contract-store $contract "$query" --chain-id $CHAIN_ID --home $HOME -o json)
+    res=$($BINARY query wasm contract-store $contract "$query" --chain-id $CHAIN_ID --home $HOME -o json | jq -r '.query_result')
     query_res=$res
 }
 
 query_wasm_new() {
     contract=$1
     query=$2
-    res=$($BINARY query wasm contract-state smart $contract "$query" --chain-id $CHAIN_ID --home $HOME -o json)
+    res=$($BINARY query wasm contract-state smart $contract "$query" --chain-id $CHAIN_ID --home $HOME -o json | jq -r '.data')
     query_res=$res
 }
 
@@ -64,6 +64,8 @@ if [ "$code" != "0" ]; then
     echo $out >&2
     exit $code
 fi
+txhash=$(echo $out | jq -r ."txhash")
+echo $txhash
 
 sleep 10
 
@@ -74,7 +76,7 @@ query=$(jq -n '
 }')
 
 $query_func ${CONTRACT_ADDRESS[3]} "$query"
-proposal_count=$(echo $query_res | jq -r '.query_result.proposal_count')
+proposal_count=$(echo $query_res | jq -r '.proposal_count')
 
 msg=$(jq -n '
 {
@@ -107,7 +109,7 @@ query=$(jq -n '
     }
 }')
 $query_func ${CONTRACT_ADDRESS[3]} "$query"
-end_block=$(echo $query_res | jq -r '.query_result.end_block')
+end_block=$(echo $query_res | jq -r '.end_block')
 while true; do 
     BLOCK_HEIGHT=$($BINARY status | jq '.SyncInfo.latest_block_height' -r)
     echo "BLOCK HEIGHT = $BLOCK_HEIGHT"
@@ -144,5 +146,5 @@ query=$(jq -n '
     }
 }')
 $query_func ${CONTRACT_ADDRESS[3]} "$query"
-status=$(echo $query_res | jq -r '.query_result.status')
+status=$(echo $query_res | jq -r '.status')
 echo $status

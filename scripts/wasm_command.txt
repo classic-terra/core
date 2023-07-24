@@ -1,7 +1,6 @@
 ADDITIONAL_PRE_SCRIPTS=scripts/wasm/wasm-deploy.sh bash scripts/upgrade-test.sh
 ADDITIONAL_PRE_SCRIPTS=scripts/wasm/token-migration.sh ADDITIONAL_AFTER_SCRIPTS=scripts/wasm/token-migration-after.sh bash scripts/upgrade-test.sh
 ADDITIONAL_PRE_SCRIPTS=scripts/wasm/wasm-deploy.sh ADDITIONAL_AFTER_SCRIPTS=scripts/wasm/wasm-tx-check.sh bash scripts/upgrade-test.sh
-ADDITIONAL_PRE_SCRIPTS=scripts/wasm/astroport/assembly-deploy.sh bash scripts/upgrade-test.sh
 FORK=true ADDITIONAL_AFTER_SCRIPTS=scripts/wasm/stargate-after-upgrade.sh bash scripts/upgrade-test.sh
 ADDITIONAL_PRE_SCRIPTS=scripts/wasm/astroport/assembly-deploy.sh bash scripts/upgrade-test.sh
 ADDITIONAL_PRE_SCRIPTS=scripts/wasm/astroport/assembly-deploy.sh,scripts/wasm/astroport/test-interaction.sh ADDITIONAL_AFTER_SCRIPTS=scripts/wasm/astroport/test-interaction-after.sh bash scripts/upgrade-test.sh

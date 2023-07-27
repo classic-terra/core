@@ -103,7 +103,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 	for _, offerCoin := range offerCoins {
-		// percentual = sdk.NewDecWithPrec(30, 2) //30%
+
 		var amount_p = sdk.NewDec(offerCoin.Amount.Int64()).Mul(k.PercentageSupplyMaxDescending(ctx))
 		if !k.HasSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom)) {
 			var ok, amount = k.isExists(ctx, offerCoin.Denom, k.GetMaxSupplyCoin(ctx))

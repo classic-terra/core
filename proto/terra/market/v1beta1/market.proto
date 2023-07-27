@@ -21,12 +21,12 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  bytes  max_supply_coin = 3 [
+  bytes  max_supply_coin = 4 [
     (gogoproto.moretags)   = "yaml:\"max_supply_coin\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable)   = false
   ];
-  bytes percentage_supply_max_descending = 4 [
+  bytes percentage_supply_max_descending = 5 [
     (gogoproto.moretags)   = "yaml:\"percentage_supply_max_descending\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

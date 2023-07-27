@@ -52,7 +52,7 @@ var (
 		{Denom: "uthb", Amount: sdk.NewInt(500000000000)},
 		{Denom: "uusd", Amount: sdk.NewInt(500000000000)},
 	}
-	DefaultPercentageSupplyMaxDescending = sdk.NewDecWithPrec(30, 2) //30%
+	DefaultPercentageSupplyMaxDescending = sdk.NewDecWithPrec(30, 2) // 30%
 )
 
 var _ paramstypes.ParamSet = &Params{}

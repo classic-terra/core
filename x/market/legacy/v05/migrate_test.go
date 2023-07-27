@@ -57,7 +57,7 @@ func TestMigrate(t *testing.T) {
 				{Denom: "uthb", Amount: sdk.NewInt(500000000000)},
 				{Denom: "uusd", Amount: sdk.NewInt(500000000000)},
 			},
-			PercentageSupplyMaxDescending: sdk.NewDecWithPrec(30, 2), //30%,
+			PercentageSupplyMaxDescending: sdk.NewDecWithPrec(30, 2), // 30%
 		},
 	}
 

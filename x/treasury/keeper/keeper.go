@@ -395,7 +395,7 @@ func (k Keeper) HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string)
 	return true
 }
 
-// HasBurnTaxExemptionAddressSmart returns true if a provided address is a
+// HasBurnTaxExemptionAddrSmart returns true if a provided address is a
 // smart contract AND is in the tax exemption list
 func (k Keeper) HasBurnTaxExemptionAddrSmart(ctx sdk.Context, address string) bool {
 	contractAddr, err := sdk.AccAddressFromBech32(address)

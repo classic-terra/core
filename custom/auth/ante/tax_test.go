@@ -1,7 +1,10 @@
 package ante_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"time"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -12,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
@@ -868,6 +872,55 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			expectedFeeAmount: feeAmt * 2,
+		}, {
+			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
+			msgSigner: privs[3],
+			msgCreator: func() []sdk.Msg {
+				sendAmount := int64(1000000)
+				sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
+				// get wasm code for wasm contract create and instantiate
+				wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
+				suite.Require().NoError(err)
+				per := wasmkeeper.NewDefaultPermissionKeeper(suite.app.WasmKeeper)
+				// set wasm default params
+				suite.app.WasmKeeper.SetParams(suite.ctx, wasmtypes.DefaultParams())
+				// wasm create
+				codeId, _, err := per.Create(suite.ctx, addrs[0], wasmCode, nil)
+				suite.Require().NoError(err)
+				// params for contract init
+				r := wasmkeeper.HackatomExampleInitMsg{Verifier: addrs[0], Beneficiary: addrs[0]}
+				bz, err := json.Marshal(r)
+				suite.Require().NoError(err)
+				// change block time for contract instantiate
+				suite.ctx = suite.ctx.WithBlockTime(time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC))
+				// instantiate contract then set the contract address to tax exemption
+				addr, _, err := per.Instantiate(suite.ctx, codeId, addrs[0], nil, bz, "my label", nil)
+				suite.Require().NoError(err)
+				suite.app.TreasuryKeeper.AddBurnTaxExemptionAddress(suite.ctx, addr.String())
+				// instantiate contract then not set to tax exemption
+				addr1, _, err := per.Instantiate(suite.ctx, codeId, addrs[0], nil, bz, "my label", nil)
+				suite.Require().NoError(err)
+
+				var msgs []sdk.Msg
+				// msg and signatures
+				msg1 := &wasmtypes.MsgExecuteContract{
+					Sender:   addrs[0].String(),
+					Contract: addr.String(),
+					Msg:      []byte{},
+					Funds:    sendCoins,
+				}
+				msgs = append(msgs, msg1)
+
+				msg2 := &wasmtypes.MsgExecuteContract{
+					Sender:   addrs[3].String(),
+					Contract: addr1.String(),
+					Msg:      []byte{},
+					Funds:    sendCoins,
+				}
+				msgs = append(msgs, msg2)
+				return msgs
+			},
+			expectedFeeAmount: feeAmt,
 		},
 	}
 

@@ -13,6 +13,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	
+	
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -36,6 +37,7 @@ type Params struct {
     MaxSupplyCoin   github_com_cosmos_cosmos_sdk_types.Coins  `protobuf:"bytes,4,opt,name=max_supply_coin,json=maxSupplyCoin,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"max_supply_coin" yaml:"max_supply_coin"`
 	PercentageSupplyMaxDescending  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=percentage_supply_max_descending,json=percentageSupplyMaxDescending,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"percentage_supply_max_descending" yaml:"percentage_supply_max_descending"`
 }
+
 
 
 func (m *Params) Reset()      { *m = Params{} }
@@ -177,6 +179,7 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
+	
 	
 	if m.PoolRecoveryPeriod != 0 {
 		i = encodeVarintMarket(dAtA, i, uint64(m.PoolRecoveryPeriod))

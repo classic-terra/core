@@ -77,6 +77,32 @@ func (k Keeper) SetTerraPoolDelta(ctx sdk.Context, delta sdk.Dec) {
 	store.Set(types.TerraPoolDeltaKey, bz)
 }
 
+// GetTerraPoolDelta returns the gap between the TerraPool and the TerraBasePool
+func (k Keeper) GetSupplyMaxDescending(ctx sdk.Context, key []byte) sdk.Int {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(key)
+	if bz == nil {
+		return sdk.ZeroInt()
+	}
+
+	dp := sdk.IntProto{}
+	k.cdc.MustUnmarshal(bz, &dp)
+	return dp.Int
+}
+
+// SetTerraPoolDelta updates TerraPoolDelta which is gap between the TerraPool and the BasePool
+func (k Keeper) SetSupplyMaxDescending(ctx sdk.Context, key []byte, delta sdk.Int) {
+	fmt.Println("inclui dados deduzidos supply maximo", delta.String())
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: delta})
+	store.Set(key, bz)
+}
+func (k Keeper) HasSupplyMaxDescending(ctx sdk.Context, key []byte) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(key)
+
+}
+
 // ReplenishPools replenishes each pool(Terra,Luna) to BasePool
 func (k Keeper) ReplenishPools(ctx sdk.Context) {
 	poolDelta := k.GetTerraPoolDelta(ctx)

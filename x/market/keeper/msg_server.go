@@ -102,7 +102,22 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
+	for _, offerCoin := range offerCoins {
+		// percentual = sdk.NewDecWithPrec(30, 2) //30%
+		var amount_p = sdk.NewDec(offerCoin.Amount.Int64()).Mul(k.PercentageSupplyMaxDescending(ctx))
+		if !k.HasSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom)) {
+			var ok, amount = k.isExists(ctx, offerCoin.Denom, k.GetMaxSupplyCoin(ctx))
+			if ok {
+				k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom), amount)
+			} else {
+				return nil, sdkerrors.Wrap(types.ErrZeroSwapCoin, "Need to declare the maximum limit of supply "+offerCoin.Denom)
+			}
 
+		}
+		supplyMaxDescending := k.GetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom))
+		k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom), supplyMaxDescending.Sub(amount_p.TruncateInt()))
+
+	}
 	// Mint asked coins and credit Trader's account
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
 
@@ -158,7 +173,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 }
 func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
 
-	var ok, amount = isExists(coin.Denom, k.GetMaxSupplyCoin(ctx))
+	var ok, amount = k.isExists(ctx, coin.Denom, k.GetMaxSupplyCoin(ctx))
 	var totalSupply = k.BankKeeper.GetSupply(ctx, coin.Denom)
 	if ok {
 
@@ -166,22 +181,27 @@ func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
 			return sdkerrors.Wrap(types.ErrZeroSwapCoin, "The value to be minted exceeded the maximum supply value "+amount.String()+coin.Denom)
 
 		}
-		// if (totalSupply.Amount.Int64() + coin.Amount.TruncateInt().Int64()) > amount.Int64() {
-		// 	//var decoin = sdk.NewDecCoin(retDecCoin.Denom, amount)
-		// 	return sdkerrors.Wrap(types.ErrZeroSwapCoin, "The value to be minted exceeded the maximum supply value "+amount.String()+coin.Denom)
 
-		// }
 	} else {
 		return sdkerrors.Wrap(types.ErrZeroSwapCoin, "maximum supply not configured for currency "+coin.Denom)
 	}
 	return nil
 }
-func isExists(demom string, coins sdk.Coins) (result bool, amount sdk.Int) {
+func (k Keeper) isExists(ctx sdk.Context, demom string, coins sdk.Coins) (result bool, amount sdk.Int) {
 	result = false
 
 	for _, coin := range coins {
 		if coin.Denom == demom {
 			amount = coin.Amount
+			if !k.HasSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+demom)) {
+				k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+demom), coin.Amount)
+			} else {
+				supplyMaxDescending := k.GetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+demom))
+				if coin.Amount.GT(supplyMaxDescending) {
+					amount = supplyMaxDescending
+				}
+			}
+
 			result = true
 			break
 		}

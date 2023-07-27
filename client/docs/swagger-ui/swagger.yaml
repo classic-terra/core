@@ -55122,6 +55122,9 @@ definitions:
       max_supply_coin:
         type: string
         format: byte
+      percentage_supply_max_descending:
+         type: string
+        format: byte
     description: Params defines the parameters for the market module.
   terra.market.v1beta1.QueryParamsResponse:
     type: object

@@ -19,10 +19,11 @@ func Migrate(
 	return &v05market.GenesisState{
 		TerraPoolDelta: sdk.ZeroDec(),
 		Params: v05market.Params{
-			BasePool:           marketGenState.Params.BasePool,
-			PoolRecoveryPeriod: uint64(marketGenState.Params.PoolRecoveryPeriod),
-			MinStabilitySpread: marketGenState.Params.MinStabilitySpread,
-			MaxSupplyCoin:      marketGenState.Params.MaxSupplyCoin,
+			BasePool:                      marketGenState.Params.BasePool,
+			PoolRecoveryPeriod:            uint64(marketGenState.Params.PoolRecoveryPeriod),
+			MinStabilitySpread:            marketGenState.Params.MinStabilitySpread,
+			MaxSupplyCoin:                 marketGenState.Params.MaxSupplyCoin,
+			PercentageSupplyMaxDescending: marketGenState.Params.PercentageSupplyMaxDescending,
 		},
 	}
 }

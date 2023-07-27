@@ -33,6 +33,10 @@ func (k Keeper) GetMaxSupplyCoin(ctx sdk.Context) (res sdk.Coins) {
 func (k Keeper) SetMaxSupplyCoin(ctx sdk.Context, maxSupplyCoin sdk.Coins) {
 	k.paramSpace.Set(ctx, types.KeyMaxSupplyCoin, maxSupplyCoin)
 }
+func (k Keeper) PercentageSupplyMaxDescending(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeyPercentageSupplyMaxDescending, &res)
+	return
+}
 
 // GetParams returns the total set of market parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {

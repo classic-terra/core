@@ -18,8 +18,9 @@ var (
 	// The period required to recover BasePool
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")
 	// Min spread
-	KeyMinStabilitySpread = []byte("MinStabilitySpread")
-	KeyMaxSupplyCoin      = []byte("MaxSupplyCoin")
+	KeyMinStabilitySpread            = []byte("MinStabilitySpread")
+	KeyMaxSupplyCoin                 = []byte("MaxSupplyCoin")
+	KeyPercentageSupplyMaxDescending = []byte("PercentageSupplyMaxDescending")
 )
 
 // Default parameter values
@@ -29,28 +30,29 @@ var (
 	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)
 	//ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
 	DefaultMaxSupplyCoin = sdk.Coins{
-		{Denom: "uaud", Amount: sdk.NewInt(500000000)},
-		{Denom: "ucad", Amount: sdk.NewInt(500000000)},
-		{Denom: "uchf", Amount: sdk.NewInt(500000000)},
-		{Denom: "ucny", Amount: sdk.NewInt(500000000)},
-		{Denom: "udkk", Amount: sdk.NewInt(500000000)},
-		{Denom: "ueur", Amount: sdk.NewInt(500000000)},
-		{Denom: "ugbp", Amount: sdk.NewInt(500000000)},
-		{Denom: "uhkd", Amount: sdk.NewInt(500000000)},
-		{Denom: "uidr", Amount: sdk.NewInt(500000000)},
-		{Denom: "uinr", Amount: sdk.NewInt(500000000)},
-		{Denom: "ujpy", Amount: sdk.NewInt(500000000)},
-		{Denom: "ukrw", Amount: sdk.NewInt(500000000)},
-		{Denom: "uluna", Amount: sdk.NewInt(10000000000)},
-		{Denom: "umnt", Amount: sdk.NewInt(500000000)},
-		{Denom: "unok", Amount: sdk.NewInt(500000000)},
-		{Denom: "uphp", Amount: sdk.NewInt(500000000)},
-		{Denom: "usdr", Amount: sdk.NewInt(500000000)},
-		{Denom: "usek", Amount: sdk.NewInt(500000000)},
-		{Denom: "usgd", Amount: sdk.NewInt(500000000)},
-		{Denom: "uthb", Amount: sdk.NewInt(500000000)},
-		{Denom: "uusd", Amount: sdk.NewInt(500000000)},
+		{Denom: "uaud", Amount: sdk.NewInt(500000000000)},
+		{Denom: "ucad", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uchf", Amount: sdk.NewInt(500000000000)},
+		{Denom: "ucny", Amount: sdk.NewInt(500000000000)},
+		{Denom: "udkk", Amount: sdk.NewInt(500000000000)},
+		{Denom: "ueur", Amount: sdk.NewInt(500000000000)},
+		{Denom: "ugbp", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uhkd", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uidr", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uinr", Amount: sdk.NewInt(500000000000)},
+		{Denom: "ujpy", Amount: sdk.NewInt(500000000000)},
+		{Denom: "ukrw", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uluna", Amount: sdk.NewInt(1000000000000)},
+		{Denom: "umnt", Amount: sdk.NewInt(500000000000)},
+		{Denom: "unok", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uphp", Amount: sdk.NewInt(500000000000)},
+		{Denom: "usdr", Amount: sdk.NewInt(500000000000)},
+		{Denom: "usek", Amount: sdk.NewInt(500000000000)},
+		{Denom: "usgd", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uthb", Amount: sdk.NewInt(500000000000)},
+		{Denom: "uusd", Amount: sdk.NewInt(500000000000)},
 	}
+	DefaultPercentageSupplyMaxDescending = sdk.NewDecWithPrec(30, 2) //30%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -58,10 +60,11 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
 	return Params{
-		BasePool:           DefaultBasePool,
-		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
-		MinStabilitySpread: DefaultMinStabilitySpread,
-		MaxSupplyCoin:      DefaultMaxSupplyCoin,
+		BasePool:                      DefaultBasePool,
+		PoolRecoveryPeriod:            DefaultPoolRecoveryPeriod,
+		MinStabilitySpread:            DefaultMinStabilitySpread,
+		MaxSupplyCoin:                 DefaultMaxSupplyCoin,
+		PercentageSupplyMaxDescending: DefaultPercentageSupplyMaxDescending,
 	}
 }
 
@@ -84,6 +87,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
 		paramstypes.NewParamSetPair(KeyMaxSupplyCoin, &p.MaxSupplyCoin, validateMaxSupplyCoin),
+		paramstypes.NewParamSetPair(KeyPercentageSupplyMaxDescending, &p.PercentageSupplyMaxDescending, validatePercentageSupplyMaxDescending),
 	}
 }
 
@@ -100,6 +104,9 @@ func (p Params) Validate() error {
 	}
 	if len(p.MaxSupplyCoin) == 0 {
 		return fmt.Errorf("max supplay cannot be empty %s", p.MaxSupplyCoin)
+	}
+	if p.PercentageSupplyMaxDescending.IsNegative() {
+		return fmt.Errorf("mint base pool should be positive or zero, is %s", p.PercentageSupplyMaxDescending)
 	}
 	return nil
 }
@@ -153,6 +160,18 @@ func validateMaxSupplyCoin(i interface{}) error {
 	}
 	if !v.IsValid() {
 		return fmt.Errorf("invalid max supply: %s", v)
+	}
+
+	return nil
+}
+func validatePercentageSupplyMaxDescending(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("mint Percentage Supply Max Descending must be positive or zero: %s", v)
 	}
 
 	return nil

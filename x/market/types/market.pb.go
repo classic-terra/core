@@ -34,6 +34,7 @@ type Params struct {
 	PoolRecoveryPeriod uint64                                 `protobuf:"varint,2,opt,name=pool_recovery_period,json=poolRecoveryPeriod,proto3" json:"pool_recovery_period,omitempty" yaml:"pool_recovery_period"`
 	MinStabilitySpread github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=min_stability_spread,json=minStabilitySpread,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_stability_spread" yaml:"min_stability_spread"`
     MaxSupplyCoin   github_com_cosmos_cosmos_sdk_types.Coins  `protobuf:"bytes,4,opt,name=max_supply_coin,json=maxSupplyCoin,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"max_supply_coin" yaml:"max_supply_coin"`
+	PercentageSupplyMaxDescending  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=percentage_supply_max_descending,json=percentageSupplyMaxDescending,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"percentage_supply_max_descending" yaml:"percentage_supply_max_descending"`
 }
 
 
@@ -140,7 +141,9 @@ func (this *Params) Equal(that interface{}) bool {
 	if !this.MinStabilitySpread.Equal(that1.MinStabilitySpread) {
 		return false
 	}
-	
+	if !this.PercentageSupplyMaxDescending.Equal(that1.PercentageSupplyMaxDescending) {
+		return false
+	}
 	return true
 }
 
@@ -188,6 +191,14 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 		i = encodeVarintMarket(dAtA, i, uint64(size))
 	}
+	{
+		size := m.PercentageSupplyMaxDescending.Size()
+		i -= size
+		if _, err := m.PercentageSupplyMaxDescending.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintMarket(dAtA, i, uint64(size))
+	}
 	i--
 	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
@@ -217,6 +228,8 @@ func (m *Params) Size() (n int) {
 		n += 1 + sovMarket(uint64(m.PoolRecoveryPeriod))
 	}
 	l = m.MinStabilitySpread.Size()
+	n += 1 + l + sovMarket(uint64(l))
+	l = m.PercentageSupplyMaxDescending.Size()
 	n += 1 + l + sovMarket(uint64(l))
 	return n
 }
@@ -340,6 +353,39 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.MinStabilitySpread.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PercentageSupplyMaxDescending", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarket
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMarket
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMarket
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PercentageSupplyMaxDescending.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

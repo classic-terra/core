@@ -26,4 +26,9 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable)   = false
   ];
+  bytes percentage_supply_max_descending = 4 [
+    (gogoproto.moretags)   = "yaml:\"percentage_supply_max_descending\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

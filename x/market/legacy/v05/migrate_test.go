@@ -82,88 +82,88 @@ func TestMigrate(t *testing.T) {
 		  "pool_recovery_period": "10000",
 		  "max_supply_coin": [
 			{
-			  "Denom": "uaud",
-			  "Amount": "500000000000"
+			  "denom": "uaud",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "ucad",
-			  "Amount": "500000000000"
+			  "denom": "ucad",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "uchf",
-			  "Amount": "500000000000"
+			  "denom": "uchf",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "ucny",
-			  "Amount": "500000000000"
+			  "denom": "ucny",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "udkk",
-			  "Amount": "500000000000"
+			  "denom": "udkk",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "ueur",
-			  "Amount": "500000000000"
+			  "denom": "ueur",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "ugbp",
-			  "Amount": "500000000000"
+			  "denom": "ugbp",
+			  "amount": "500000000000"
 			},
 			{
-				"Denom": "uhkd",
-				"Amount": "500000000000"
+				"denom": "uhkd",
+				"amount": "500000000000"
 			},
 			{
-			  "Denom": "uidr",
-			  "Amount": "500000000000"
+			  "denom": "uidr",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "uinr",
-			  "Amount": "500000000000"
+			  "denom": "uinr",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "ujpy",
-			  "Amount": "500000000000"
+			  "denom": "ujpy",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "ukrw",
-			  "Amount": "500000000000"
+			  "denom": "ukrw",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "uluna",
-			  "Amount": "1000000000000"
+			  "denom": "uluna",
+			  "amount": "1000000000000"
 			},
 			{
-			  "Denom": "umnt",
-			  "Amount": "500000000000"
+			  "denom": "umnt",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "unok",
-			  "Amount": "500000000000"
+			  "denom": "unok",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "uphp",
-			  "Amount": "500000000000"
+			  "denom": "uphp",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "usdr",
-			  "Amount": "500000000000"
+			  "denom": "usdr",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "usek",
-			  "Amount": "500000000000"
+			  "denom": "usek",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "usgd",
-			  "Amount": "500000000000"
+			  "denom": "usgd",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "uthb",
-			  "Amount": "500000000000"
+			  "denom": "uthb",
+			  "amount": "500000000000"
 			},
 			{
-			  "Denom": "uusd",
-			  "Amount": "500000000000"
+			  "denom": "uusd",
+			  "amount": "500000000000"
 			}
 		  ],
 		  "percentage_supply_max_descending": "0.300000000000000000"

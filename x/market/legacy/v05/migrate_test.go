@@ -166,7 +166,7 @@ func TestMigrate(t *testing.T) {
 			  "Amount": "500000000000"
 			}
 		  ],
-		  "percentage_supply_max_descending": "0.300000000000000000",
+		  "percentage_supply_max_descending": "0.300000000000000000"
 		},
 		"terra_pool_delta": "0.000000000000000000"
 	  }`

@@ -103,7 +103,6 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 	for _, offerCoin := range offerCoins {
-
 		var amount_p = sdk.NewDec(offerCoin.Amount.Int64()).Mul(k.PercentageSupplyMaxDescending(ctx))
 		if !k.HasSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom)) {
 			var ok, amount = k.isExists(ctx, offerCoin.Denom, k.GetMaxSupplyCoin(ctx))
@@ -112,11 +111,9 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 			} else {
 				return nil, sdkerrors.Wrap(types.ErrZeroSwapCoin, "Need to declare the maximum limit of supply "+offerCoin.Denom)
 			}
-
 		}
 		supplyMaxDescending := k.GetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom))
 		k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom), supplyMaxDescending.Sub(amount_p.TruncateInt()))
-
 	}
 	// Mint asked coins and credit Trader's account
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
@@ -172,16 +169,12 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	}, nil
 }
 func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
-
 	var ok, amount = k.isExists(ctx, coin.Denom, k.GetMaxSupplyCoin(ctx))
 	var totalSupply = k.BankKeeper.GetSupply(ctx, coin.Denom)
 	if ok {
-
 		if totalSupply.Amount.Add(coin.Amount.TruncateInt()).GT(amount) {
 			return sdkerrors.Wrap(types.ErrZeroSwapCoin, "The value to be minted exceeded the maximum supply value "+amount.String()+coin.Denom)
-
 		}
-
 	} else {
 		return sdkerrors.Wrap(types.ErrZeroSwapCoin, "maximum supply not configured for currency "+coin.Denom)
 	}
@@ -189,7 +182,6 @@ func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
 }
 func (k Keeper) isExists(ctx sdk.Context, demom string, coins sdk.Coins) (result bool, amount sdk.Int) {
 	result = false
-
 	for _, coin := range coins {
 		if coin.Denom == demom {
 			amount = coin.Amount
@@ -201,11 +193,9 @@ func (k Keeper) isExists(ctx sdk.Context, demom string, coins sdk.Coins) (result
 					amount = supplyMaxDescending
 				}
 			}
-
 			result = true
 			break
 		}
 	}
-
 	return result, amount
 }

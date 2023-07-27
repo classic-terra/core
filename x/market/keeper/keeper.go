@@ -100,7 +100,6 @@ func (k Keeper) SetSupplyMaxDescending(ctx sdk.Context, key []byte, delta sdk.In
 func (k Keeper) HasSupplyMaxDescending(ctx sdk.Context, key []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(key)
-
 }
 
 // ReplenishPools replenishes each pool(Terra,Luna) to BasePool

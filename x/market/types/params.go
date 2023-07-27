@@ -28,7 +28,7 @@ var (
 	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
 	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)
-	//ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
+	// ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
 	DefaultMaxSupplyCoin = sdk.Coins{
 		{Denom: "uaud", Amount: sdk.NewInt(500000000000)},
 		{Denom: "ucad", Amount: sdk.NewInt(500000000000)},
@@ -153,6 +153,7 @@ func validateMinStabilitySpread(i interface{}) error {
 
 	return nil
 }
+
 func validateMaxSupplyCoin(i interface{}) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
@@ -164,6 +165,7 @@ func validateMaxSupplyCoin(i interface{}) error {
 
 	return nil
 }
+
 func validatePercentageSupplyMaxDescending(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {

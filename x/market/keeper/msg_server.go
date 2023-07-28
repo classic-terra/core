@@ -67,6 +67,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
+
 	var errSup = k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(swapDecCoin.Denom, swapDecCoin.Amount.TruncateInt()))
 	if errSup != nil {
 		return nil, errSup
@@ -169,6 +170,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 }
 
 func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
+
 	var ok, amount = k.isExists(ctx, coin.Denom, k.GetMaxSupplyCoin(ctx))
 	var totalSupply = k.BankKeeper.GetSupply(ctx, coin.Denom)
 	if ok {
@@ -178,6 +180,7 @@ func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
 	} else {
 		return sdkerrors.Wrap(types.ErrZeroSwapCoin, "maximum supply not configured for currency "+coin.Denom)
 	}
+
 	return nil
 }
 

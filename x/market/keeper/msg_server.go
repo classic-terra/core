@@ -68,7 +68,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
-	var errSup = k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(swapDecCoin.Denom, swapDecCoin.Amount.TruncateInt()))
+	errSup := k.ValidateSupplyMaximum(ctx, sdk.NewDecCoin(swapDecCoin.Denom, swapDecCoin.Amount.TruncateInt()))
 	if errSup != nil {
 		return nil, errSup
 	}
@@ -103,9 +103,9 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	}
 
 	for _, offerCoin := range offerCoins {
-		var amount_p = sdk.NewDec(offerCoin.Amount.Int64()).Mul(k.PercentageSupplyMaxDescending(ctx))
+		amount_p := sdk.NewDec(offerCoin.Amount.Int64()).Mul(k.PercentageSupplyMaxDescending(ctx))
 		if !k.HasSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom)) {
-			var ok, amount = k.isExists(ctx, offerCoin.Denom, k.GetMaxSupplyCoin(ctx))
+			ok, amount := k.isExists(ctx, offerCoin.Denom, k.GetMaxSupplyCoin(ctx))
 			if ok {
 				k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom), amount)
 			} else {
@@ -171,7 +171,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 
 func (k Keeper) ValidateSupplyMaximum(ctx sdk.Context, coin sdk.DecCoin) error {
 
-	var ok, amount = k.isExists(ctx, coin.Denom, k.GetMaxSupplyCoin(ctx))
+	ok, amount := k.isExists(ctx, coin.Denom, k.GetMaxSupplyCoin(ctx))
 	var totalSupply = k.BankKeeper.GetSupply(ctx, coin.Denom)
 	if ok {
 		if totalSupply.Amount.Add(coin.Amount.TruncateInt()).GT(amount) {

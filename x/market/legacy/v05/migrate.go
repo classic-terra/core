@@ -15,7 +15,6 @@ import (
 func Migrate(
 	marketGenState v04market.GenesisState,
 ) *v05market.GenesisState {
-
 	return &v05market.GenesisState{
 		TerraPoolDelta: sdk.ZeroDec(),
 		Params: v05market.Params{

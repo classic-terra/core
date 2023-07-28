@@ -17,9 +17,7 @@ import (
 )
 
 func TestMigrate(t *testing.T) {
-
 	sdk.GetConfig().SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
-
 	encodingConfig := app.MakeEncodingConfig()
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -32,8 +30,7 @@ func TestMigrate(t *testing.T) {
 		Params: v04market.Params{
 			BasePool:           sdk.NewDec(1000000),
 			PoolRecoveryPeriod: int64(10000),
-			MinStabilitySpread: sdk.NewDecWithPrec(2, 2),
-			//ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
+			MinStabilitySpread: sdk.NewDecWithPrec(2, 2), //ATTENTION: The list of modes must be in alphabetical order, otherwise an error occurs in validateMaxSupplyCoin => !v.IsValid()
 			MaxSupplyCoin: sdk.Coins{
 				{Denom: "uaud", Amount: sdk.NewInt(500000000000)},
 				{Denom: "ucad", Amount: sdk.NewInt(500000000000)},

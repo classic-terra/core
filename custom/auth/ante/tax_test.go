@@ -910,7 +910,7 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 				// set wasm default params
 				suite.app.WasmKeeper.SetParams(suite.ctx, wasmtypes.DefaultParams())
 				// wasm create
-				codeId, _, err := per.Create(suite.ctx, addrs[0], wasmCode, nil)
+				CodeID, _, err := per.Create(suite.ctx, addrs[0], wasmCode, nil)
 				suite.Require().NoError(err)
 				// params for contract init
 				r := wasmkeeper.HackatomExampleInitMsg{Verifier: addrs[0], Beneficiary: addrs[0]}
@@ -919,11 +919,11 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 				// change block time for contract instantiate
 				suite.ctx = suite.ctx.WithBlockTime(time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC))
 				// instantiate contract then set the contract address to tax exemption
-				addr, _, err := per.Instantiate(suite.ctx, codeId, addrs[0], nil, bz, "my label", nil)
+				addr, _, err := per.Instantiate(suite.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
 				suite.Require().NoError(err)
 				suite.app.TreasuryKeeper.AddBurnTaxExemptionAddress(suite.ctx, addr.String())
 				// instantiate contract then not set to tax exemption
-				addr1, _, err := per.Instantiate(suite.ctx, codeId, addrs[0], nil, bz, "my label", nil)
+				addr1, _, err := per.Instantiate(suite.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
 				suite.Require().NoError(err)
 
 				var msgs []sdk.Msg

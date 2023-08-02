@@ -130,10 +130,6 @@ type TestInput struct {
 	OracleKeeper   types.OracleKeeper
 }
 
-type DummyProtocolVersionSetter struct{}
-
-func (s DummyProtocolVersionSetter) SetProtocolVersion(uint64) {}
-
 // CreateTestInput nolint
 func CreateTestInput(t *testing.T) TestInput {
 	sdk.GetConfig().SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)

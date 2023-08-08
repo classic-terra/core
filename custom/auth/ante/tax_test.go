@@ -817,10 +817,11 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 	feeAmt := int64(1000)
 
 	cases := []struct {
-		name              string
-		msgSigner         cryptotypes.PrivKey
-		msgCreator        func() []sdk.Msg
-		expectedFeeAmount int64
+		name           string
+		msgSigner      cryptotypes.PrivKey
+		msgCreator     func() []sdk.Msg
+		minFeeAmount   int64
+		expectProceeds int64
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
@@ -833,7 +834,8 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: 0,
+			minFeeAmount:   0,
+			expectProceeds: 0,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],
@@ -846,7 +848,8 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			expectedFeeAmount: feeAmt,
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
@@ -861,7 +864,8 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			expectedFeeAmount: feeAmt,
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
 			msgSigner: privs[0],
@@ -896,7 +900,8 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: feeAmt * 2,
+			minFeeAmount:   feeAmt * 2,
+			expectProceeds: feeAmt * 2,
 		}, {
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
 			msgSigner: privs[3],
@@ -945,7 +950,8 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 				msgs = append(msgs, msg2)
 				return msgs
 			},
-			expectedFeeAmount: feeAmt,
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
 		},
 	}
 
@@ -982,7 +988,7 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 		}
 
 		// msg and signatures
-		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.expectedFeeAmount))
+		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.minFeeAmount))
 		gasLimit := testdata.NewTestGasLimit()
 		require.NoError(suite.txBuilder.SetMsgs(c.msgCreator()...))
 		suite.txBuilder.SetFeeAmount(feeAmount)
@@ -998,7 +1004,10 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 		// check fee collector
 		feeCollector := ak.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 		amountFee := bk.GetBalance(suite.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
+		require.Equal(amountFee, sdk.NewCoin("usdr", sdk.NewInt(c.minFeeAmount)))
 
-		require.Equal(amountFee, sdk.NewCoin("usdr", sdk.NewInt(c.expectedFeeAmount)))
+		// check tax proceeds
+		taxProceeds := suite.app.TreasuryKeeper.PeekEpochTaxProceeds(suite.ctx)
+		require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin("usdr", sdk.NewInt(c.expectProceeds))))
 	}
 }

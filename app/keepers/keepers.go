@@ -209,7 +209,8 @@ func NewAppKeepers(
 		appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.MarketKeeper, appKeepers.OracleKeeper,
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
-		distrtypes.ModuleName)
+		&appKeepers.WasmKeeper, distrtypes.ModuleName,
+	)
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -223,6 +224,7 @@ func NewAppKeepers(
 	// the second slice will add custom querier and message handler decorator
 	// this order must be uphold else error will be thrown
 	wasmOpts = append(wasmOpts, terrawasm.RegisterCustomPlugins(&appKeepers.MarketKeeper, &appKeepers.OracleKeeper, &appKeepers.TreasuryKeeper)...)
+	wasmOpts = append(wasmOpts, terrawasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec)...)
 
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,

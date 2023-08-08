@@ -150,7 +150,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 
 		case *wasm.MsgExecuteContract:
-			if !tk.HasBurnTaxExemptionAddrSmart(ctx, msg.Contract) {
+			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
 				taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 			}
 

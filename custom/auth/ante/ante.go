@@ -18,6 +18,7 @@ import (
 type HandlerOptions struct {
 	AccountKeeper      cosmosante.AccountKeeper
 	BankKeeper         BankKeeper
+	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
 	FeegrantKeeper     cosmosante.FeegrantKeeper
 	OracleKeeper       OracleKeeper
 	TreasuryKeeper     TreasuryKeeper
@@ -62,13 +63,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "tx counter key is required for ante builder")
 	}
 
-	sigGasConsumer := options.SigGasConsumer
-	if sigGasConsumer == nil {
-		sigGasConsumer = cosmosante.DefaultSigVerificationGasConsumer
-	}
-
 	return sdk.ChainAnteDecorators(
 		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
 		cosmosante.NewRejectExtensionOptionsDecorator(),
@@ -82,8 +79,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewBurnTaxFeeDecorator(options.AccountKeeper, options.TreasuryKeeper, options.BankKeeper, options.DistributionKeeper), // burn tax proceeds
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper),                                                               // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
-		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(&options.IBCKeeper),
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),

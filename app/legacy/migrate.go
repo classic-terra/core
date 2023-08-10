@@ -26,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	legacy05 "github.com/classic-terra/core/v2/app/legacy/v05"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
 )
 
@@ -76,8 +75,9 @@ $ terrad migrate /path/to/genesis.json --chain-id=cosmoshub-4 --genesis-time=201
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
-			// Migrate Terra specific state
-			newGenState := legacy05.Migrate(initialState, clientCtx)
+			// TODO: Migrate Terra specific state
+			// newGenState := legacy05.Migrate(initialState, clientCtx)
+			newGenState := initialState
 
 			var bankGenesis banktypes.GenesisState
 

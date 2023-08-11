@@ -14,6 +14,7 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
@@ -22,10 +23,10 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
-func (appKeepers *AppKeepers) getGovRouter() govtypes.Router {
-	govRouter := govtypes.NewRouter()
+func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
+	govRouter := govv1beta1.NewRouter()
 	govRouter.
-		AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
+		AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(appKeepers.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
@@ -36,7 +37,7 @@ func (appKeepers *AppKeepers) getGovRouter() govtypes.Router {
 	return govRouter
 }
 
-func (appKeepers *AppKeepers) getIBCRouter() *porttypes.Router {
+func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 	transferIBCModule := transfer.NewIBCModule(appKeepers.TransferKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
 

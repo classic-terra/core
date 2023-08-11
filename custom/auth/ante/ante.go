@@ -6,6 +6,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -16,19 +17,20 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper      cosmosante.AccountKeeper
-	BankKeeper         BankKeeper
+	AccountKeeper          cosmosante.AccountKeeper
+	BankKeeper             BankKeeper
 	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
-	FeegrantKeeper     cosmosante.FeegrantKeeper
-	OracleKeeper       OracleKeeper
-	TreasuryKeeper     TreasuryKeeper
-	SignModeHandler    signing.SignModeHandler
-	SigGasConsumer     cosmosante.SignatureVerificationGasConsumer
-	IBCKeeper          ibckeeper.Keeper
-	DistributionKeeper distributionkeeper.Keeper
-	GovKeeper          govkeeper.Keeper
-	WasmConfig         *wasmtypes.WasmConfig
-	TXCounterStoreKey  sdk.StoreKey
+	FeegrantKeeper         cosmosante.FeegrantKeeper
+	OracleKeeper           OracleKeeper
+	TreasuryKeeper         TreasuryKeeper
+	SignModeHandler        signing.SignModeHandler
+	SigGasConsumer         cosmosante.SignatureVerificationGasConsumer
+	TxFeeChecker           cosmosante.TxFeeChecker
+	IBCKeeper              ibckeeper.Keeper
+	DistributionKeeper     distributionkeeper.Keeper
+	GovKeeper              govkeeper.Keeper
+	WasmConfig             *wasmtypes.WasmConfig
+	TXCounterStoreKey      storetypes.StoreKey
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -65,24 +67,23 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	return sdk.ChainAnteDecorators(
 		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
-		cosmosante.NewRejectExtensionOptionsDecorator(),
-		NewSpammingPreventionDecorator(options.OracleKeeper), // spamming prevention
+		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		cosmosante.NewValidateBasicDecorator(),
-		NewTaxFeeDecorator(options.TreasuryKeeper), // mempool gas fee validation & record tax proceeds
+		NewSpammingPreventionDecorator(options.OracleKeeper), // spamming prevention
+		NewTaxFeeDecorator(options.TreasuryKeeper),           // mempool gas fee validation & record tax proceeds
+		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		cosmosante.NewTxTimeoutHeightDecorator(),
 		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),
 		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
 		NewBurnTaxFeeDecorator(options.AccountKeeper, options.TreasuryKeeper, options.BankKeeper, options.DistributionKeeper), // burn tax proceeds
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper),                                                               // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewAnteDecorator(&options.IBCKeeper),
-		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
+		ibcante.NewRedundantRelayDecorator(&options.IBCKeeper),
 	), nil
 }

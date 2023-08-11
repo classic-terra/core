@@ -79,7 +79,9 @@ func (DummyStakingKeeper) TotalBondedTokens(_ sdk.Context) sdk.Int {
 }
 
 // Slash nolint
-func (DummyStakingKeeper) Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) {}
+func (DummyStakingKeeper) Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdk.Int {
+	return sdk.ZeroInt()
+}
 
 // ValidatorsPowerStoreIterator nolint
 func (DummyStakingKeeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {

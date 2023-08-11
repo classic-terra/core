@@ -27,7 +27,7 @@ func (s *WasmTestSuite) TestTax() {
 
 	// make a bank send message
 	coin := sdk.NewInt64Coin("uluna", 10000)
-	taxAmount := coin.Amount.ToDec().Mul(taxRate).TruncateInt()
+	taxAmount := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
 	updateAmt := coin.Amount.Add(taxAmount)
 	updatedCoins := sdk.NewCoins(sdk.NewInt64Coin("uluna", updateAmt.Int64()))
 	reflectMsg := ReflectExec{

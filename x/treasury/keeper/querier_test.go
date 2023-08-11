@@ -143,8 +143,8 @@ func TestQueryIndicators(t *testing.T) {
 	input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, taxProceeds)
 
 	targetIndicators := &types.QueryIndicatorsResponse{
-		TRLYear:  proceedsAmt.ToDec().QuoInt(stakingAmt.MulRaw(2)),
-		TRLMonth: proceedsAmt.ToDec().QuoInt(stakingAmt.MulRaw(2)),
+		TRLYear:  sdk.NewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
+		TRLMonth: sdk.NewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
 	}
 
 	querier := NewQuerier(input.TreasuryKeeper)

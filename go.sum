@@ -67,8 +67,6 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v1.0.0 h1:3aDA67lAykLaG1y3AOjs88dMxC88PgUuHRrLeDnvGIM=
 github.com/ChainSafe/go-schnorrkel v1.0.0/go.mod h1:dpzHYVxLZcp8pjlV+O+UR8K0Hp/z7vcchBSbMBEhCw4=
-github.com/CosmWasm/wasmvm v1.1.2 h1:uvMk0iIJcFFUvdElmV9KQeeqRx7ESspxUrPjfCGki3M=
-github.com/CosmWasm/wasmvm v1.1.2/go.mod h1:ei0xpvomwSdONsxDuONzV7bL1jSET1M8brEx0FCXc+A=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.0/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
@@ -192,6 +190,8 @@ github.com/classic-terra/cosmos-sdk v0.46.11-0.20230810124726-feb1f234c816 h1:oS
 github.com/classic-terra/cosmos-sdk v0.46.11-0.20230810124726-feb1f234c816/go.mod h1:w6WjNfjgSuCDTW9GJ6grPC1MaFmniA1iQecHOJcGXNE=
 github.com/classic-terra/wasmd v0.30.1-0.20230811071638-ee121afe42dd h1:61CancaTe/xGhhnkxWBygLRJNplqQA9b7AV+X8/J670=
 github.com/classic-terra/wasmd v0.30.1-0.20230811071638-ee121afe42dd/go.mod h1:JgGLVVNfPFhd1SAz2H10CfoVFwArsQWvCz/4X9CUNtc=
+github.com/classic-terra/wasmvm v1.1.1-terra.0 h1:jfr+oc0uY6bfL1TyO3m/Yn6kbIZzPQ1GgghzI/EsyE8=
+github.com/classic-terra/wasmvm v1.1.1-terra.0/go.mod h1:ei0xpvomwSdONsxDuONzV7bL1jSET1M8brEx0FCXc+A=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cloudflare/cloudflare-go v0.14.0/go.mod h1:EnwdgGMaFOruiPZRFSgn+TsQ3hQ7C/YWzIGLeu5c304=

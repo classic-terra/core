@@ -111,7 +111,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govtypes.DefaultDepositParams())
+	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
 	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin("uluna", sdk.NewInt(1_000_000)),

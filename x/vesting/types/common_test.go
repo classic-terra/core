@@ -18,17 +18,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-// ModuleBasics nolint
 var ModuleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 )
 
-// MakeTestCodec nolint
 func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
-// MakeEncodingConfig nolint
 func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()

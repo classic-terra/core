@@ -309,8 +309,8 @@ func TestLegacyQueryIndicators(t *testing.T) {
 	input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, taxProceeds)
 
 	targetIndicators := types.IndicatorQueryResponse{
-		TRLYear:  proceedsAmt.ToDec().QuoInt(stakingAmt.MulRaw(2)),
-		TRLMonth: proceedsAmt.ToDec().QuoInt(stakingAmt.MulRaw(2)),
+		TRLYear:  sdk.NewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
+		TRLMonth: sdk.NewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
 	}
 
 	queriedIndicators := getQueriedIndicators(t, input.Ctx, input.Cdc, querier)

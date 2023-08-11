@@ -917,7 +917,7 @@ func (suite *AnteTestSuite) TestTaxExemption() {
 		mfd := ante.NewTaxFeeDecorator(suite.app.TreasuryKeeper)
 		antehandler := sdk.ChainAnteDecorators(
 			mfd,
-			cosmosante.NewDeductFeeDecorator(ak, bk, suite.app.FeeGrantKeeper),
+			cosmosante.NewDeductFeeDecorator(ak, bk, suite.app.FeeGrantKeeper, nil),
 		)
 
 		for i := 0; i < 4; i++ {

@@ -3,7 +3,7 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -34,5 +34,5 @@ type DistrKeeper interface {
 }
 
 type GovKeeper interface {
-	GetDepositParams(ctx sdk.Context) govtypes.DepositParams
+	GetDepositParams(ctx sdk.Context) govv1.DepositParams
 }

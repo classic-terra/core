@@ -9,7 +9,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -17,15 +17,15 @@ import (
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
-	AccountKeeper          cosmosante.AccountKeeper
+	AccountKeeper          ante.AccountKeeper
 	BankKeeper             BankKeeper
-	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
-	FeegrantKeeper         cosmosante.FeegrantKeeper
+	ExtensionOptionChecker ante.ExtensionOptionChecker
+	FeegrantKeeper         ante.FeegrantKeeper
 	OracleKeeper           OracleKeeper
 	TreasuryKeeper         TreasuryKeeper
 	SignModeHandler        signing.SignModeHandler
-	SigGasConsumer         cosmosante.SignatureVerificationGasConsumer
-	TxFeeChecker           cosmosante.TxFeeChecker
+	SigGasConsumer         ante.SignatureVerificationGasConsumer
+	TxFeeChecker           ante.TxFeeChecker
 	IBCKeeper              ibckeeper.Keeper
 	DistributionKeeper     distributionkeeper.Keeper
 	GovKeeper              govkeeper.Keeper
@@ -66,24 +66,28 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	return sdk.ChainAnteDecorators(
-		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
-		cosmosante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
-		cosmosante.NewValidateBasicDecorator(),
-		NewSpammingPreventionDecorator(options.OracleKeeper), // spamming prevention
-		NewTaxFeeDecorator(options.TreasuryKeeper),           // mempool gas fee validation & record tax proceeds
+		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
+		ante.NewValidateBasicDecorator(),
+		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewValidateMemoDecorator(options.AccountKeeper),
+		// SpammingPreventionDecorator prevents spamming oracle vote tx attempts at same height
+		NewSpammingPreventionDecorator(options.OracleKeeper),
+		// MinInitialDepositDecorator prevents submitting governance proposal low initial deposit
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
-		cosmosante.NewTxTimeoutHeightDecorator(),
-		cosmosante.NewValidateMemoDecorator(options.AccountKeeper),
-		cosmosante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		cosmosante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		// TaxFeeDecorator does mempool gas fee validation & record tax proceeds
+		NewTaxFeeDecorator(options.TreasuryKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		// BurnTaxFeeDecorator burns part of tax, this _must_ be placed after DeductFeeDecorator
 		NewBurnTaxFeeDecorator(options.AccountKeeper, options.TreasuryKeeper, options.BankKeeper, options.DistributionKeeper), // burn tax proceeds
-		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper),                                                               // SetPubKeyDecorator must be called before all signature verification decorators
-		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
-		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
-		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
-		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		ante.NewSetPubKeyDecorator(options.AccountKeeper),                                                                     // SetPubKeyDecorator must be called before all signature verification decorators
+		ante.NewValidateSigCountDecorator(options.AccountKeeper),
+		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
+		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewRedundantRelayDecorator(&options.IBCKeeper),
 	), nil
 }

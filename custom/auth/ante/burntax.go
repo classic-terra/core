@@ -59,7 +59,7 @@ func (btfd BurnTaxFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					distributionDeltaCoins = distributionDeltaCoins.Add(sdk.NewCoin(taxCoin.Denom, splitcoinAmount))
 				}
 
-				taxes = taxes.Sub(distributionDeltaCoins)
+				taxes = taxes.Sub(distributionDeltaCoins...)
 			}
 
 			if !taxes.IsZero() {

@@ -60,7 +60,6 @@ func (midd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 
 	msgs := tx.GetMsgs()
 	for _, msg := range msgs {
-
 		if !IsMsgSubmitProposal(msg) {
 			continue
 		}
@@ -69,7 +68,6 @@ func (midd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 		if err != nil {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
 		}
-
 	}
 
 	return next(ctx, tx, simulate)

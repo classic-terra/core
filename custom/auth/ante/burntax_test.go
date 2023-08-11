@@ -101,7 +101,7 @@ func (suite *AnteTestSuite) runSplitTaxTest(burnSplitRate sdk.Dec) {
 	if !burnTax.Empty() {
 		// expected: total supply = tax - split tax
 		require.Equal(
-			sdk.NewDecCoinsFromCoins(totalSupplyBefore.Sub(totalSupplyAfter)...),
+			sdk.NewDecCoinsFromCoins(totalSupplyBefore.Sub(totalSupplyAfter...)...),
 			burnTax,
 		)
 	}

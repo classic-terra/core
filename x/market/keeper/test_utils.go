@@ -49,7 +49,6 @@ import (
 
 const faucetAccountName = "faucet"
 
-// ModuleBasics nolint
 var ModuleBasics = module.NewBasicManager(
 	customauth.AppModuleBasic{},
 	custombank.AppModuleBasic{},
@@ -59,17 +58,17 @@ var ModuleBasics = module.NewBasicManager(
 	oracle.AppModuleBasic{},
 )
 
-// MakeTestCodec nolint
+// MakeTestCodec
 func MakeTestCodec(t *testing.T) codec.Codec {
-	return MakeEncodingConfig(t).Marshaler
+	return MakeEncodingConfig(t).Codec
 }
 
-// MakeEncodingConfig nolint
+// MakeEncodingConfig
 func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
+	codec := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
 
 	std.RegisterInterfaces(interfaceRegistry)
 	std.RegisterLegacyAminoCodec(amino)
@@ -81,7 +80,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 
 	return simparams.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         marshaler,
+		Codec:             codec,
 		TxConfig:          txCfg,
 		Amino:             amino,
 	}
@@ -111,7 +110,6 @@ var (
 	InitCoins  = sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens))
 )
 
-// TestInput nolint
 type TestInput struct {
 	Ctx           sdk.Context
 	Cdc           *codec.LegacyAmino
@@ -121,7 +119,6 @@ type TestInput struct {
 	MarketKeeper  Keeper
 }
 
-// CreateTestInput nolint
 func CreateTestInput(t *testing.T) TestInput {
 	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
 	keyBank := sdk.NewKVStoreKey(banktypes.StoreKey)

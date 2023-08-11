@@ -62,12 +62,10 @@ var ModuleBasics = module.NewBasicManager(
 	market.AppModuleBasic{},
 )
 
-// MakeTestCodec nolint
 func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
-// MakeEncodingConfig nolint
 func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -113,7 +111,6 @@ var (
 	InitCoins  = sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens))
 )
 
-// TestInput nolint
 type TestInput struct {
 	Ctx            sdk.Context
 	Cdc            *codec.LegacyAmino
@@ -126,7 +123,6 @@ type TestInput struct {
 	OracleKeeper   types.OracleKeeper
 }
 
-// CreateTestInput nolint
 func CreateTestInput(t *testing.T) TestInput {
 	sdk.GetConfig().SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
 

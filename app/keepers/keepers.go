@@ -113,10 +113,37 @@ func NewAppKeepers(
 	invCheckPeriod uint,
 	wasmOpts []wasm.Option,
 	appOpts servertypes.AppOptions,
-) AppKeepers {
-	appKeepers := AppKeepers{}
+) *AppKeepers {
+	keys := sdk.NewKVStoreKeys(
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		stakingtypes.StoreKey,
+		minttypes.StoreKey,
+		distrtypes.StoreKey,
+		slashingtypes.StoreKey,
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		ibchost.StoreKey,
+		icahosttypes.StoreKey,
+		upgradetypes.StoreKey,
+		evidencetypes.StoreKey,
+		ibctransfertypes.StoreKey,
+		capabilitytypes.StoreKey,
+		oracletypes.StoreKey,
+		markettypes.StoreKey,
+		treasurytypes.StoreKey,
+		wasm.StoreKey,
+		authzkeeper.StoreKey,
+		feegrant.StoreKey,
+	)
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	appKeepers.GenerateKeys()
+	appKeepers := &AppKeepers{
+		keys:    keys,
+		tkeys:   tkeys,
+		memKeys: memKeys,
+	}
 
 	// init params keeper and subspaces
 	appKeepers.ParamsKeeper = initParamsKeeper(
@@ -136,8 +163,9 @@ func NewAppKeepers(
 		appKeepers.memKeys[capabilitytypes.MemStoreKey],
 	)
 	scopedIBCKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
-	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedICAControllerKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
@@ -378,6 +406,7 @@ func NewAppKeepers(
 
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
 	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
+	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
 	appKeepers.ScopedWasmKeeper = scopedWasmKeeper
 
@@ -385,7 +414,12 @@ func NewAppKeepers(
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+func initParamsKeeper(
+	appCodec codec.BinaryCodec,
+	legacyAmino *codec.LegacyAmino,
+	key,
+	tkey storetypes.StoreKey,
+) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
@@ -414,7 +448,10 @@ func (appKeepers *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspac
 }
 
 // BlacklistedAccAddrs returns all the app's module account addresses black listed for receiving tokens.
-func (appKeepers *AppKeepers) BlacklistedAccAddrs(maccPerms map[string][]string, allowedReceivingModAcc map[string]bool) map[string]bool {
+func (appKeepers *AppKeepers) BlacklistedAccAddrs(
+	maccPerms map[string][]string,
+	allowedReceivingModAcc map[string]bool,
+) map[string]bool {
 	blacklistedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		blacklistedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]

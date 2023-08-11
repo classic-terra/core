@@ -83,7 +83,7 @@ var (
 // capabilities aren't needed for testing.
 type TerraApp struct {
 	*baseapp.BaseApp
-	keepers.AppKeepers
+	*keepers.AppKeepers
 
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -327,6 +327,7 @@ func (app *TerraApp) SimulationManager() *module.SimulationManager {
 // API server.
 func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
+	
 	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)

@@ -108,7 +108,6 @@ func NewAppKeepers(
 	cdc *codec.LegacyAmino,
 	maccPerms map[string][]string,
 	allowedReceivingModAcc map[string]bool,
-	blockedAddress map[string]bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
@@ -335,7 +334,8 @@ func NewAppKeepers(
 		appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.MarketKeeper, appKeepers.OracleKeeper,
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
-		distrtypes.ModuleName)
+		&appKeepers.WasmKeeper, distrtypes.ModuleName,
+	)
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {

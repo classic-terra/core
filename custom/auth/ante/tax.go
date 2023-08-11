@@ -9,8 +9,6 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/types/fork"
 	marketexported "github.com/classic-terra/core/v2/x/market/exported"
 	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
 )
@@ -150,7 +148,9 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 
 		case *wasm.MsgExecuteContract:
-			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
+			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
+				taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
+			}
 
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
@@ -175,10 +175,6 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 	taxes := sdk.Coins{}
 
 	for _, coin := range principal {
-		// Originally only a stability tax on UST.  Changed to tax Luna as well after BurnTaxUpgradeHeight
-		if (coin.Denom == types.MicroLunaDenom || coin.Denom == sdk.DefaultBondDenom) && fork.IsBeforeBurnTaxUpgradeHeight(ctx) {
-			continue
-		}
 		if coin.Denom == sdk.DefaultBondDenom {
 			continue
 		}

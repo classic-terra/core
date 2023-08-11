@@ -15,7 +15,6 @@ import (
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/types/fork"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
@@ -151,7 +150,6 @@ func (suite *AnteTestSuite) TestIntegrationTaxExemption() {
 		)
 		suite.Require().NoError(err)
 
-		suite.ctx = suite.ctx.WithBlockHeight(fork.BurnTaxUpgradeHeight)
 		suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(suite.ctx, addrs[0].String())

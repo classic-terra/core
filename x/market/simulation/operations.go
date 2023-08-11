@@ -34,7 +34,7 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 	var weightMsgSwap int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSwap, &weightMsgSwap, nil,
-		func(_ *rand.Rand) {
+		func(*rand.Rand) {
 			weightMsgSwap = simappparams.DefaultWeightMsgSend
 		},
 	)

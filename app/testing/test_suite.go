@@ -49,7 +49,7 @@ type KeeperTestHelper struct {
 }
 
 func (s *KeeperTestHelper) Setup(t *testing.T) {
-	s.App = SetupApp(s.T())
+	s.App = SetupApp(t)
 	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "doxchain-1", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
@@ -63,7 +63,7 @@ func (s *KeeperTestHelper) Setup(t *testing.T) {
 }
 
 // Get implements AppOptions
-func (ao EmptyBaseAppOptions) Get(o string) interface{} {
+func (ao EmptyBaseAppOptions) Get(_ string) interface{} {
 	return nil
 }
 
@@ -88,7 +88,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 
 type EmptyAppOptions struct{}
 
-func (EmptyAppOptions) Get(o string) interface{} { return nil }
+func (EmptyAppOptions) Get(_ string) interface{} { return nil }
 
 func SetupApp(t *testing.T) *app.TerraApp {
 	t.Helper()

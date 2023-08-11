@@ -47,19 +47,19 @@ func WeightedOperations(
 		weightMsgDelegateFeedConsent          int
 	)
 	appParams.GetOrGenerate(cdc, OpWeightMsgAggregateExchangeRatePrevote, &weightMsgAggregateExchangeRatePrevote, nil,
-		func(_ *rand.Rand) {
+		func(*rand.Rand) {
 			weightMsgAggregateExchangeRatePrevote = simappparams.DefaultWeightMsgSend * 2
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAggregateExchangeRateVote, &weightMsgAggregateExchangeRateVote, nil,
-		func(_ *rand.Rand) {
+		func(*rand.Rand) {
 			weightMsgAggregateExchangeRateVote = simappparams.DefaultWeightMsgSend * 2
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDelegateFeedConsent, &weightMsgDelegateFeedConsent, nil,
-		func(_ *rand.Rand) {
+		func(*rand.Rand) {
 			weightMsgDelegateFeedConsent = simappparams.DefaultWeightMsgSetWithdrawAddress
 		},
 	)

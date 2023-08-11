@@ -125,16 +125,16 @@ func (v MockValidator) GetTokens() sdk.Int {
 func (v MockValidator) GetBondedTokens() sdk.Int {
 	return sdk.TokensFromConsensusPower(v.power, sdk.DefaultPowerReduction)
 }
-func (v MockValidator) GetConsensusPower(sdk.Int) int64           { return v.power }
-func (v *MockValidator) SetConsensusPower(power int64)            { v.power = power }
-func (v MockValidator) GetCommission() sdk.Dec                    { return sdk.ZeroDec() }
-func (v MockValidator) GetMinSelfDelegation() sdk.Int             { return sdk.OneInt() }
-func (v MockValidator) GetDelegatorShares() sdk.Dec               { return sdk.NewDec(v.power) }
-func (v MockValidator) TokensFromShares(sdk.Dec) sdk.Dec          { return sdk.ZeroDec() }
-func (v MockValidator) TokensFromSharesTruncated(sdk.Dec) sdk.Dec { return sdk.ZeroDec() }
-func (v MockValidator) TokensFromSharesRoundUp(sdk.Dec) sdk.Dec   { return sdk.ZeroDec() }
-func (v MockValidator) SharesFromTokens(sdk.Int) (sdk.Dec, error) { return sdk.ZeroDec(), nil }
-func (v MockValidator) SharesFromTokensTruncated(sdk.Int) (sdk.Dec, error) {
+func (v MockValidator) GetConsensusPower(_ sdk.Int) int64           { return v.power }
+func (v *MockValidator) SetConsensusPower(power int64)              { v.power = power }
+func (v MockValidator) GetCommission() sdk.Dec                      { return sdk.ZeroDec() }
+func (v MockValidator) GetMinSelfDelegation() sdk.Int               { return sdk.OneInt() }
+func (v MockValidator) GetDelegatorShares() sdk.Dec                 { return sdk.NewDec(v.power) }
+func (v MockValidator) TokensFromShares(sdk.Dec) sdk.Dec            { return sdk.ZeroDec() }
+func (v MockValidator) TokensFromSharesTruncated(sdk.Dec) sdk.Dec   { return sdk.ZeroDec() }
+func (v MockValidator) TokensFromSharesRoundUp(sdk.Dec) sdk.Dec     { return sdk.ZeroDec() }
+func (v MockValidator) SharesFromTokens(_ sdk.Int) (sdk.Dec, error) { return sdk.ZeroDec(), nil }
+func (v MockValidator) SharesFromTokensTruncated(_ sdk.Int) (sdk.Dec, error) {
 	return sdk.ZeroDec(), nil
 }
 

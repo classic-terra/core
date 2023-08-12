@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 const custom = "custom"
@@ -292,14 +293,14 @@ func TestLegacyQuerySeigniorageProceeds(t *testing.T) {
 func TestLegacyQueryIndicators(t *testing.T) {
 	input := CreateTestInput(t)
 	querier := NewLegacyQuerier(input.TreasuryKeeper, input.Cdc)
-	sh := staking.NewHandler(input.StakingKeeper)
+	sh := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
 
 	stakingAmt := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
 	addr, val := ValAddrs[0], ValPubKeys[0]
 	addr1, val1 := ValAddrs[1], ValPubKeys[1]
-	_, err := sh(input.Ctx, NewTestMsgCreateValidator(addr, val, stakingAmt))
+	_, err := sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr, val, stakingAmt))
 	require.NoError(t, err)
-	_, err = sh(input.Ctx, NewTestMsgCreateValidator(addr1, val1, stakingAmt))
+	_, err = sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, stakingAmt))
 	require.NoError(t, err)
 
 	staking.EndBlocker(input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek)-1), input.StakingKeeper)

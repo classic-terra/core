@@ -188,8 +188,8 @@ github.com/classic-terra/cometbft v0.34.30-0.20230807131935-c57262354b85 h1:aQrT
 github.com/classic-terra/cometbft v0.34.30-0.20230807131935-c57262354b85/go.mod h1:L9shMfbkZ8B+7JlwANEr+NZbBcn+hBpwdbeYvA5rLCw=
 github.com/classic-terra/cosmos-sdk v0.46.11-0.20230810124726-feb1f234c816 h1:oSsoUNbOdSzPlcpJWIr9oewb3pMUtfdLCfKgkHyNELI=
 github.com/classic-terra/cosmos-sdk v0.46.11-0.20230810124726-feb1f234c816/go.mod h1:w6WjNfjgSuCDTW9GJ6grPC1MaFmniA1iQecHOJcGXNE=
-github.com/classic-terra/wasmd v0.30.1-0.20230811071638-ee121afe42dd h1:61CancaTe/xGhhnkxWBygLRJNplqQA9b7AV+X8/J670=
-github.com/classic-terra/wasmd v0.30.1-0.20230811071638-ee121afe42dd/go.mod h1:JgGLVVNfPFhd1SAz2H10CfoVFwArsQWvCz/4X9CUNtc=
+github.com/classic-terra/wasmd v0.30.1-0.20230812115252-b830dc964860 h1:Nahi0Ln//0xqL1g2d+0zy9E+3K8ZcacTpj3eaPmb2uM=
+github.com/classic-terra/wasmd v0.30.1-0.20230812115252-b830dc964860/go.mod h1:dbweV4CpYLy6FKhJdPpcIgKasiYG1l/nDo/JGP6ZIX8=
 github.com/classic-terra/wasmvm v1.1.1-terra.0 h1:jfr+oc0uY6bfL1TyO3m/Yn6kbIZzPQ1GgghzI/EsyE8=
 github.com/classic-terra/wasmvm v1.1.1-terra.0/go.mod h1:ei0xpvomwSdONsxDuONzV7bL1jSET1M8brEx0FCXc+A=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=

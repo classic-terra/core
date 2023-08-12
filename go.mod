@@ -165,7 +165,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.30.1-0.20230811071638-ee121afe42dd
+	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.30.1-0.20230812115252-b830dc964860
 	// For FundCommunityPool
 	github.com/CosmWasm/wasmvm => github.com/classic-terra/wasmvm v1.1.1-terra.0
 	github.com/aws/aws-sdk-go v1.25.48 => github.com/aws/aws-sdk-go v1.33.0

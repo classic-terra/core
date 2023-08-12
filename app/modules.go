@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -234,7 +233,6 @@ func orderBeginBlockers() []string {
 		authz.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
-		vestingtypes.ModuleName,
 		// additional non simd modules
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -265,7 +263,6 @@ func orderEndBlockers() []string {
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
 		// additional non simd modules
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -295,7 +292,6 @@ func orderInitGenesis() []string {
 		authz.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
 		feegrant.ModuleName,
 		// additional non simd modules
 		ibchost.ModuleName,

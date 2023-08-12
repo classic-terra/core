@@ -121,6 +121,7 @@ var (
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
 		customwasm.AppModuleBasic{},
+		ibcfee.AppModuleBasic{},
 	)
 
 	// module account permissions

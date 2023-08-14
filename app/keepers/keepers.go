@@ -168,8 +168,8 @@ func NewAppKeepers(
 	scopedICAControllerKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedIBCFeeKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibcfeetypes.ModuleName)
 	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
-
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
 	appKeepers.CapabilityKeeper.Seal()
@@ -411,6 +411,7 @@ func NewAppKeepers(
 	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
+	appKeepers.ScopedIBCFeeKeeper = scopedIBCFeeKeeper
 	appKeepers.ScopedWasmKeeper = scopedWasmKeeper
 
 	return appKeepers

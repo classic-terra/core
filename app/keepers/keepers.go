@@ -49,8 +49,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	customwasmkeeper "github.com/classic-terra/core/v2/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v2/wasmbinding"
 

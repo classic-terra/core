@@ -1,4 +1,4 @@
-package v3
+package v4
 
 import (
 	"github.com/classic-terra/core/v2/app/upgrades"

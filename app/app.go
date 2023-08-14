@@ -46,6 +46,7 @@ import (
 	v2 "github.com/classic-terra/core/v2/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v2/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v2/app/upgrades/v4"
+	v5 "github.com/classic-terra/core/v2/app/upgrades/v5"
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	customauthtx "github.com/classic-terra/core/v2/custom/auth/tx"
@@ -63,7 +64,7 @@ var (
 	DefaultNodeHome string
 
 	// Upgrades defines upgrades to be applied to the network
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade, v5.Upgrade}
 
 	// Forks defines forks to be applied to the network
 	Forks = []upgrades.Fork{}

@@ -170,7 +170,7 @@ func TestOracleTally(t *testing.T) {
 		}
 	}
 	sort.Sort(ballot)
-	weightedMedian := ballot.WeightedMedianWithAssertion()
+	weightedMedian := ballot.WeightedMedian()
 	standardDeviation := ballot.StandardDeviation(weightedMedian)
 	maxSpread := weightedMedian.Mul(input.OracleKeeper.RewardBand(input.Ctx).QuoInt64(2))
 

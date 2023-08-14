@@ -11,7 +11,7 @@ import (
 // a reasonable spread from the weighted median to the store
 // CONTRACT: pb must be sorted
 func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap map[string]types.Claim) (weightedMedian sdk.Dec) {
-	weightedMedian = pb.WeightedMedianWithAssertion()
+	weightedMedian = pb.WeightedMedian()
 	standardDeviation := pb.StandardDeviation(weightedMedian)
 	rewardSpread := weightedMedian.Mul(rewardBand.QuoInt64(2))
 

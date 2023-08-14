@@ -61,7 +61,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			// make voteMap of Reference Terra to calculate cross exchange rates
 			ballotRT := voteMap[referenceTerra]
 			voteMapRT := ballotRT.ToMap()
-			exchangeRateRT := ballotRT.WeightedMedianWithAssertion()
+			exchangeRateRT := ballotRT.WeightedMedian()
 
 			// Iterate through ballots and update exchange rates; drop if not enough votes have been achieved.
 			for denom, ballot := range voteMap {

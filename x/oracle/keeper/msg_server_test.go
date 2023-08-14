@@ -156,14 +156,14 @@ func setup(t *testing.T) (TestInput, types.MsgServer) {
 	input.OracleKeeper.SetParams(input.Ctx, params)
 	msgServer := NewMsgServerImpl(input.OracleKeeper)
 
-	sh := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
 
 	// Validator created
-	_, err := sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[0], ValPubKeys[0], stakingAmt))
+	_, err := stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[0], ValPubKeys[0], stakingAmt))
 	require.NoError(t, err)
-	_, err = sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[1], ValPubKeys[1], stakingAmt))
+	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[1], ValPubKeys[1], stakingAmt))
 	require.NoError(t, err)
-	_, err = sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], stakingAmt))
+	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], stakingAmt))
 	require.NoError(t, err)
 	staking.EndBlocker(input.Ctx, input.StakingKeeper)
 

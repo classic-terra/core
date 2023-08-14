@@ -20,13 +20,13 @@ func TestRewardBallotWinners(t *testing.T) {
 	addr, val := ValAddrs[0], ValPubKeys[0]
 	addr1, val1 := ValAddrs[1], ValPubKeys[1]
 	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-	sh := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
 	ctx := input.Ctx
 
 	// Validator created
-	_, err := sh.CreateValidator(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	_, err := stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.NoError(t, err)
-	_, err = sh.CreateValidator(ctx, NewTestMsgCreateValidator(addr1, val1, amt))
+	_, err = stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
 	staking.EndBlocker(ctx, input.StakingKeeper)
 

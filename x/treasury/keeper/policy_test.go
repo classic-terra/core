@@ -16,15 +16,15 @@ import (
 
 func TestUpdateTaxRate(t *testing.T) {
 	input := CreateTestInput(t)
-	sh := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
 
 	// Create Validators
 	amt := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
 	addr, val := ValAddrs[0], ValPubKeys[0]
 	addr1, val1 := ValAddrs[1], ValPubKeys[1]
-	_, err := sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr, val, amt))
+	_, err := stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.NoError(t, err)
-	_, err = sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
+	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
 	staking.EndBlocker(input.Ctx, input.StakingKeeper)
 
@@ -48,15 +48,15 @@ func TestUpdateTaxRate(t *testing.T) {
 func TestUpdateRewardWeight(t *testing.T) {
 	input := CreateTestInput(t)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.OneDec())
-	sh := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
 
 	// Create Validators
 	amt := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
 	addr, val := ValAddrs[0], ValPubKeys[0]
 	addr1, val1 := ValAddrs[1], ValPubKeys[1]
-	_, err := sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr, val, amt))
+	_, err := stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.NoError(t, err)
-	_, err = sh.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
+	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
 	staking.EndBlocker(input.Ctx, input.StakingKeeper)
 

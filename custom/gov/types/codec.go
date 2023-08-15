@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -10,10 +11,10 @@ import (
 // governance module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*govv1beta1.Content)(nil), nil)
-	cdc.RegisterConcrete(&govv1beta1.MsgSubmitProposal{}, "gov/MsgSubmitProposal", nil)
-	cdc.RegisterConcrete(&govv1beta1.MsgDeposit{}, "gov/MsgDeposit", nil)
-	cdc.RegisterConcrete(&govv1beta1.MsgVote{}, "gov/MsgVote", nil)
-	cdc.RegisterConcrete(&govv1beta1.MsgVoteWeighted{}, "gov/MsgVoteWeighted", nil)
+	legacy.RegisterAminoMsg(cdc, &govv1beta1.MsgSubmitProposal{}, "gov/MsgSubmitProposal")
+	legacy.RegisterAminoMsg(cdc, &govv1beta1.MsgDeposit{}, "gov/MsgDeposit")
+	legacy.RegisterAminoMsg(cdc, &govv1beta1.MsgVote{}, "gov/MsgVote")
+	legacy.RegisterAminoMsg(cdc, &govv1beta1.MsgVoteWeighted{}, "gov/MsgVoteWeighted")
 	cdc.RegisterConcrete(&govv1beta1.TextProposal{}, "gov/TextProposal", nil)
 }
 

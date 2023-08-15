@@ -30,7 +30,7 @@ func NewAppModuleBasic(proposalHandlers []govclient.ProposalHandler) AppModuleBa
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
 	*v1beta1.ModuleCdc = *customtypes.ModuleCdc
-	*v1.ModuleCdc = *customtypes.ModuleCdc
+	v1.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the gov

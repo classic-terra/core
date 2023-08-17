@@ -191,10 +191,8 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 h1:q763qf9huN11kDQavWs
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/circonus-labs/circonus-gometrics v2.3.1+incompatible/go.mod h1:nmEj6Dob7S7YxXgwXpfOuvO54S+tGdZdw9fuRZt25Ag=
 github.com/circonus-labs/circonusllhist v0.1.3/go.mod h1:kMXHVDlOchFAehlya5ePtbp5jckzBHf4XRpQvBOLI+I=
-github.com/classic-terra/cometbft v0.34.29-terra.0 h1:HnRGt7tijI2n5zSVrg/xh1mYYm4Gb4QFlknq+dRP8Jw=
-github.com/classic-terra/cometbft v0.34.29-terra.0/go.mod h1:L9shMfbkZ8B+7JlwANEr+NZbBcn+hBpwdbeYvA5rLCw=
-github.com/classic-terra/cosmos-sdk v0.46.14-terra.0 h1:EIINmfM6OWUZ1aBe9lMQE9vWNowt2FPVbSja/SHvP2Q=
-github.com/classic-terra/cosmos-sdk v0.46.14-terra.0/go.mod h1:tx+Rr8Fob/HQ8iErtht7Rddu1FrMg2KBQl9anicuxsQ=
+github.com/classic-terra/cosmos-sdk v0.46.14-terra.0.0.20230817113308-e5103362d41a h1:EKFJi9MlB+Zwb/7POoW0Bs5NF4L+5Lfhf6C/6WtDcN0=
+github.com/classic-terra/cosmos-sdk v0.46.14-terra.0.0.20230817113308-e5103362d41a/go.mod h1:9MRixWsgoJ2UmVsCRRePtENFPP3cM+gTC5azEpxgllo=
 github.com/classic-terra/wasmd v0.30.0-terra.3 h1:qruhiaAIRl14UVtHzfh81pr0YmW94QE4+hqivIi9AYg=
 github.com/classic-terra/wasmd v0.30.0-terra.3/go.mod h1:Ug607EsX+EkW3/xOFaP56kZA7WklN+ZrwUEsaJ22xH0=
 github.com/classic-terra/wasmvm v1.1.1-terra.1 h1:qGozlXFlM/3ossnlABwODJr7bEHUdF/nug8Z3c1Dr84=
@@ -212,6 +210,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/kryptology v1.8.0/go.mod h1:RYXOAPdzOGUe3qlSFkMGn58i3xUA8hmxYHksuq+8ciI=
 github.com/coinbase/rosetta-sdk-go v0.7.9 h1:lqllBjMnazTjIqYrOGv8h8jxjg9+hJazIGZr9ZvoCcA=
 github.com/coinbase/rosetta-sdk-go v0.7.9/go.mod h1:0/knutI7XGVqXmmH4OQD8OckFrbQ8yMsUZTG7FXCR2M=
+github.com/cometbft/cometbft v0.34.29 h1:Q4FqMevP9du2pOgryZJHpDV2eA6jg/kMYxBj9ZTY6VQ=
+github.com/cometbft/cometbft v0.34.29/go.mod h1:L9shMfbkZ8B+7JlwANEr+NZbBcn+hBpwdbeYvA5rLCw=
 github.com/cometbft/cometbft-db v0.7.0 h1:uBjbrBx4QzU0zOEnU8KxoDl18dMNgDh+zZRUE0ucsbo=
 github.com/cometbft/cometbft-db v0.7.0/go.mod h1:yiKJIm2WKrt6x8Cyxtq9YTEcIMPcEe4XPxhgX59Fzf0=
 github.com/confio/ics23/go v0.9.0 h1:cWs+wdbS2KRPZezoaaj+qBleXgUk5WOQFMP3CQFGTr4=

@@ -177,12 +177,12 @@ replace (
 	// replace broken goleveldb.
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	// use cometbft
-	github.com/tendermint/tendermint => github.com/classic-terra/cometbft v0.34.29-terra.0
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 )
 
 replace (
 	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.30.0-terra.3
 	github.com/CosmWasm/wasmvm => github.com/classic-terra/wasmvm v1.1.1-terra.1
-	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.46.14-terra.0
+	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.46.14-terra.0.0.20230817113308-e5103362d41a
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 )

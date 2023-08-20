@@ -54,15 +54,22 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		if err != nil {
 			return ctx, err
 		}
-		if !taxes.IsZero() {
-			// Record tax proceeds
-			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
+	}
+
+	if err := fd.checkDeductFee(ctx, feeTx); err != nil {
+		return ctx, err
+	}
+
+	// Burn amount of (tax * tax split rate) from collected fee
+	if !taxes.IsZero() {
+		if err := fd.BurnTaxSplit(ctx, taxes); err != nil {
+			return ctx, err
 		}
 	}
 
-	fee := feeTx.GetFee()
-	if err := fd.checkDeductFee(ctx, tx, fee, taxes); err != nil {
-		return ctx, err
+	// Record tax proceeds
+	if !simulate {
+		fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 	}
 
 	newCtx := ctx.WithPriority(priority)
@@ -70,16 +77,12 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee sdk.Coins, taxes sdk.Coins) error {
-	feeTx, ok := sdkTx.(sdk.FeeTx)
-	if !ok {
-		return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
-
+func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx) error {
 	if addr := fd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
+	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
 	deductFeesFrom := feePayer
@@ -90,7 +93,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee sdk.Coi
 		if fd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			err := fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, sdkTx.GetMsgs())
+			err := fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, feeTx.GetMsgs())
 			if err != nil {
 				return sdkerrors.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
 			}
@@ -107,13 +110,6 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee sdk.Coi
 	// deduct the fees
 	if !fee.IsZero() {
 		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, fee)
-		if err != nil {
-			return err
-		}
-	}
-
-	if !taxes.IsZero() {
-		err := fd.BurnTaxSplit(ctx, taxes)
 		if err != nil {
 			return err
 		}
@@ -186,9 +182,11 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 		}
 	}
 
-	priority := int64(math.MaxInt64)
+	var priority int64
 
-	if !isOracleTx {
+	if isOracleTx {
+		priority = int64(math.MaxInt64)
+	} else {
 		priority = getTxPriority(feeCoins, int64(gas))
 	}
 

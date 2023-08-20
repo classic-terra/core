@@ -108,6 +108,7 @@ func initTendermintConfig() *tmcfg.Config {
 	// these values put a higher strain on node memory
 	// cfg.P2P.MaxNumInboundPeers = 100
 	// cfg.P2P.MaxNumOutboundPeers = 40
+	cfg.Mempool.Version = "v1"
 
 	return cfg
 }

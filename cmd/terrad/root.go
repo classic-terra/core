@@ -97,6 +97,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			serverCtx.Config.Mempool.Version = "v1"
+			if serverCtx.Config.Mempool.Size < 10000 {
+				serverCtx.Config.Mempool.Size = 10000
+			}
+			if serverCtx.Config.Mempool.CacheSize < 20000 {
+				serverCtx.Config.Mempool.CacheSize = 20000
+			}
 			return server.SetCmdServerContext(cmd, serverCtx)
 		},
 	}

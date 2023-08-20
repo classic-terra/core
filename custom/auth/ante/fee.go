@@ -174,11 +174,12 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 			}
 		}
 
+		// Add taxes to required fees
 		requiredFees.Add(taxes...)
 
 		// Check required fees
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-			return 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) +%q(stability)", feeCoins.Add(taxes...), requiredFees.Add(taxes...), requiredFees, taxes)
+			return 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s, required: %s = %s(gas) + %s(stability)", feeCoins, requiredFees, requiredFees.Sub(taxes...), taxes)
 		}
 	}
 

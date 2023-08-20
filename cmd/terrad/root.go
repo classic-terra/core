@@ -91,7 +91,13 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			terraAppTemplate, terraAppConfig := initAppConfig()
 			customTMConfig := initTendermintConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, terraAppTemplate, terraAppConfig, customTMConfig)
+			if err := server.InterceptConfigsPreRunHandler(cmd, terraAppTemplate, terraAppConfig, customTMConfig); err != nil {
+				return err
+			}
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx.Config.Mempool.Version = "v1"
+			return server.SetCmdServerContext(cmd, serverCtx)
 		},
 	}
 

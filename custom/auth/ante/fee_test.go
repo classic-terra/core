@@ -818,45 +818,51 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 }
 
 // go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v2/custom/auth/ante
-func (suite *AnteTestSuite) TestEnsureIBCUntaxed() {
-	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+// TestEnsureIBCUntaxed tests that IBC transactions are not taxed, but fee is still deducted
+func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
+	s.SetupTest(true) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
 	mfd := ante.NewFeeDecorator(
-		suite.app.AccountKeeper,
-		suite.app.BankKeeper,
-		suite.app.FeeGrantKeeper,
-		suite.app.TreasuryKeeper,
+		s.app.AccountKeeper,
+		s.app.BankKeeper,
+		s.app.FeeGrantKeeper,
+		s.app.TreasuryKeeper,
 	)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, account)
+	account := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, account)
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000)))
 
 	// msg and signatures
 	sendAmount := int64(1_000_000)
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.OsmoIbcDenom, sendAmount))
 	msg := banktypes.NewMsgSend(addr1, addr1, sendCoins)
 
-	feeAmount := testdata.NewTestFeeAmount()
+	feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000))
 	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	s.Require().NoError(s.txBuilder.SetMsgs(msg))
+	s.txBuilder.SetFeeAmount(feeAmount)
+	s.txBuilder.SetGasLimit(gasLimit)
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
 
 	// set zero gas prices
-	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins())
+	s.ctx = s.ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 	// Set IsCheckTx to true
-	suite.ctx = suite.ctx.WithIsCheckTx(true)
+	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	// IBC must pass without burn
-	_, err = antehandler(suite.ctx, tx, false)
-	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms")
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on IBC denoms")
+
+	// check if tax proceeds are empty
+	taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
+	s.Require().True(taxProceeds.Empty())
 }

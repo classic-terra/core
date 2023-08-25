@@ -816,3 +816,47 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 		feeCollectorAfter,
 	)
 }
+
+// go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v2/custom/auth/ante
+func (suite *AnteTestSuite) TestEnsureIBCUntaxed() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	mfd := ante.NewFeeDecorator(
+		suite.app.AccountKeeper,
+		suite.app.BankKeeper,
+		suite.app.FeeGrantKeeper,
+		suite.app.TreasuryKeeper,
+	)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	account := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, account)
+
+	// msg and signatures
+	sendAmount := int64(1_000_000)
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.OsmoIbcDenom, sendAmount))
+	msg := banktypes.NewMsgSend(addr1, addr1, sendCoins)
+
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// set zero gas prices
+	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins())
+
+	// Set IsCheckTx to true
+	suite.ctx = suite.ctx.WithIsCheckTx(true)
+
+	// IBC must pass without burn
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NoError(err, "Decorator should not have errored on IBC denoms")
+}

@@ -1,6 +1,9 @@
 package ante
 
 import (
+	"regexp"
+	"strings"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
@@ -9,6 +12,12 @@ import (
 	marketexported "github.com/classic-terra/core/v2/x/market/exported"
 	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
 )
+
+var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
+
+func isIBCDenom(denom string) bool {
+	return IBCRegexp.MatchString(strings.ToLower(denom))
+}
 
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
 func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
@@ -80,6 +89,10 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coi
 
 	for _, coin := range principal {
 		if coin.Denom == sdk.DefaultBondDenom {
+			continue
+		}
+
+		if isIBCDenom(coin.Denom) {
 			continue
 		}
 

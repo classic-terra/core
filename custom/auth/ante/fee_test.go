@@ -10,16 +10,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -704,7 +706,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		require.NoError(err)
 
 		// check fee collector
-		feeCollector := ak.GetModuleAccount(s.ctx, types.FeeCollectorName)
+		feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 		amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
 		require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
 
@@ -768,7 +770,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	feeCollector := ak.GetModuleAccount(s.ctx, types.FeeCollectorName)
+	feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 
 	amountFeeBefore := bk.GetAllBalances(s.ctx, feeCollector.GetAddress())
 
@@ -787,7 +789,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	// burn the burn account
 	tk.BurnCoinsFromBurnAccount(s.ctx)
 
-	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(s.ctx, ak.GetModuleAddress(types.FeeCollectorName))...)
+	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))...)
 	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, msg)
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
@@ -865,4 +867,60 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	// check if tax proceeds are empty
 	taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
 	s.Require().True(taxProceeds.Empty())
+}
+
+// go test -v -run ^TestAnteTestSuite/TestOracleZeroFee$ github.com/classic-terra/core/v2/custom/auth/ante
+func (s *AnteTestSuite) TestOracleZeroFee() {
+	s.SetupTest(true) // setup
+	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+
+	mfd := ante.NewFeeDecorator(
+		s.app.AccountKeeper,
+		s.app.BankKeeper,
+		s.app.FeeGrantKeeper,
+		s.app.TreasuryKeeper,
+	)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	account := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, account)
+	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000)))
+
+	// new val
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(addr1), priv1.PubKey(), stakingtypes.Description{})
+	s.Require().NoError(err)
+	s.app.StakingKeeper.SetValidator(s.ctx, val)
+
+	// msg and signatures
+
+	// MsgAggregateExchangeRatePrevote
+	msg := oracletypes.NewMsgAggregateExchangeRatePrevote(oracletypes.GetAggregateVoteHash("salt", "exchange rates", val.GetOperator()), addr1, val.GetOperator())
+	s.txBuilder.SetMsgs(msg)
+	s.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 0)))
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
+
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err)
+
+	// check fee collector empty
+	balances := s.app.BankKeeper.GetAllBalances(s.ctx, s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName))
+	s.Require().Equal(sdk.Coins{}, balances)
+
+	// MsgAggregateExchangeRateVote
+	msg1 := oracletypes.NewMsgAggregateExchangeRateVote("salt", "exchange rates", addr1, val.GetOperator())
+	s.txBuilder.SetMsgs(msg1)
+	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	s.Require().NoError(err)
+
+	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err)
+
+	// check fee collector empty
+	balances = s.app.BankKeeper.GetAllBalances(s.ctx, s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName))
+	s.Require().Equal(sdk.Coins{}, balances)
 }

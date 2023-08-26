@@ -51,9 +51,6 @@ func (s *StakingTestSuite) TestValidatorVPLimit() {
 		validators[i] = stakingkeeper.TestingUpdateValidator(s.App.StakingKeeper, s.Ctx, validators[i], true)
 	}
 
-	// 20% VP activation logic
-	s.Ctx = s.Ctx.WithBlockHeight(stakingkeeper.DelegatePowerRevertHeight)
-
 	// delegate to a validator over 20% VP
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewInt64Coin("uluna", 2000000)))
 	s.App.DistrKeeper.SetValidatorHistoricalRewards(s.Ctx, valAddrs[0], 1, disttypes.NewValidatorHistoricalRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", sdk.NewInt(1))), 2))

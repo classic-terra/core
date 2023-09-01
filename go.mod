@@ -133,7 +133,7 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.30.0-terra.2
 	github.com/aws/aws-sdk-go v1.25.48 => github.com/aws/aws-sdk-go v1.33.0
 	github.com/aws/aws-sdk-go v1.27.0 => github.com/aws/aws-sdk-go v1.33.0
-	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.45.14-classic
+	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.45.14-classic.0.20230901171908-753a3a8938e4
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf => github.com/docker/docker v1.6.1
 	github.com/ethereum/go-ethereum v1.9.25 => github.com/ethereum/go-ethereum v1.10.9

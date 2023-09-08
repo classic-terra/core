@@ -104,16 +104,17 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 
 	for _, offerCoin := range offerCoins {
 		amountP := sdk.NewDec(offerCoin.Amount.Int64()).Mul(k.PercentageSupplyMaxDescending(ctx))
+		supplyMaxDescending := k.GetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom))
 		if !k.HasSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom)) {
 			ok, amount := k.isExists(ctx, offerCoin.Denom, k.GetMaxSupplyCoin(ctx))
 			if ok {
-				k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom), amount)
+				supplyMaxDescending = amount
 			} else {
 				return nil, sdkerrors.Wrap(types.ErrZeroSwapCoin, "Need to declare the maximum limit of supply "+offerCoin.Denom)
 			}
 		}
-		supplyMaxDescending := k.GetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom))
 		k.SetSupplyMaxDescending(ctx, []byte("SupplyMaxDescending"+offerCoin.Denom), supplyMaxDescending.Sub(amountP.TruncateInt()))
+
 	}
 	// Mint asked coins and credit Trader's account
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()

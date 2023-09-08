@@ -92,7 +92,6 @@ func (k Keeper) GetSupplyMaxDescending(ctx sdk.Context, key []byte) sdk.Int {
 
 // SetTerraPoolDelta updates TerraPoolDelta which is gap between the TerraPool and the BasePool
 func (k Keeper) SetSupplyMaxDescending(ctx sdk.Context, key []byte, delta sdk.Int) {
-	fmt.Println("inclui dados deduzidos supply maximo", delta.String())
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: delta})
 	store.Set(key, bz)

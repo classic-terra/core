@@ -7,6 +7,8 @@ import (
 	core "github.com/classic-terra/core/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	ibcchanneltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 )
@@ -61,4 +63,57 @@ func runForkLogicVersionMapEnable(ctx sdk.Context, keppers *keepers.AppKeepers, 
 	if ctx.ChainID() == core.ColumbusChainID {
 		keppers.UpgradeKeeper.SetModuleVersionMap(ctx, mm.GetVersionMap())
 	}
+}
+
+func forkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
+	var MinCommissionRate = sdk.NewDecWithPrec(5, 2)
+
+	space := keepers.ParamsKeeper.Subspace(stakingtypes.StoreKey)
+	if space.HasKeyTable() {
+		space.Set(ctx, stakingtypes.KeyMinCommissionRate, MinCommissionRate)
+	} else {
+		space.WithKeyTable(types.ParamKeyTable())
+		space.Set(ctx, stakingtypes.KeyMinCommissionRate, MinCommissionRate)
+	}
+
+	keepers.StakingKeeper.IterateValidators(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+		val := validator.(stakingtypes.Validator)
+		rate := val.Commission.Rate
+		maxRate := val.Commission.MaxRate
+
+		if maxRate.LT(MinCommissionRate) {
+			maxRate = MinCommissionRate
+		}
+
+		if rate.LT(MinCommissionRate) {
+			rate = MinCommissionRate
+		}
+
+		val.Commission = stakingtypes.NewCommission(
+			rate,
+			maxRate,
+			val.Commission.MaxChangeRate,
+		)
+
+		keepers.StakingKeeper.SetValidator(ctx, val)
+
+		return false
+
+	})
+
+}
+
+func runForkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
+	if ctx.ChainID() != core.ColumbusChainID {
+		return
+	}
+	runForkLogicFixMinCommission(ctx, keepers, mm)
+
+}
+
+func runForkLogicFixMinCommissionRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
+	if ctx.ChainID() != core.RebelChainID {
+		return
+	}
+	runForkLogicFixMinCommission(ctx, keepers, mm)
 }

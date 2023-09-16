@@ -5,9 +5,9 @@ import (
 
 	"github.com/classic-terra/core/v2/app/keepers"
 	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/x/market/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	ibcchanneltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
@@ -105,12 +105,12 @@ func runForkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, 
 	if ctx.ChainID() != core.ColumbusChainID {
 		return
 	}
-	runForkLogicFixMinCommission(ctx, keepers, mm)
+	forkLogicFixMinCommission(ctx, keepers, mm)
 }
 
 func runForkLogicFixMinCommissionRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
 	if ctx.ChainID() != core.RebelChainID {
 		return
 	}
-	runForkLogicFixMinCommission(ctx, keepers, mm)
+	forkLogicFixMinCommission(ctx, keepers, mm)
 }

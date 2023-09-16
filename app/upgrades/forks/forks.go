@@ -66,7 +66,7 @@ func runForkLogicVersionMapEnable(ctx sdk.Context, keppers *keepers.AppKeepers, 
 }
 
 func forkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
-	var MinCommissionRate = sdk.NewDecWithPrec(5, 2)
+	MinCommissionRate := sdk.NewDecWithPrec(5, 2)
 
 	space := keepers.ParamsKeeper.Subspace(stakingtypes.StoreKey)
 	if space.HasKeyTable() {
@@ -98,9 +98,7 @@ func forkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, mm 
 		keepers.StakingKeeper.SetValidator(ctx, val)
 
 		return false
-
 	})
-
 }
 
 func runForkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
@@ -108,7 +106,6 @@ func runForkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, 
 		return
 	}
 	runForkLogicFixMinCommission(ctx, keepers, mm)
-
 }
 
 func runForkLogicFixMinCommissionRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {

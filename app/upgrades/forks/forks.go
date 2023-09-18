@@ -68,7 +68,11 @@ func runForkLogicVersionMapEnable(ctx sdk.Context, keppers *keepers.AppKeepers, 
 func forkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
 	MinCommissionRate := sdk.NewDecWithPrec(5, 2)
 
-	space := keepers.ParamsKeeper.Subspace(stakingtypes.StoreKey)
+	space, exist := keepers.ParamsKeeper.GetSubspace(stakingtypes.StoreKey)
+	if !exist {
+		panic("staking subspace is not found, breaking the chain anyway so panic")
+	}
+
 	if space.HasKeyTable() {
 		space.Set(ctx, stakingtypes.KeyMinCommissionRate, MinCommissionRate)
 	} else {
@@ -109,7 +113,7 @@ func runForkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, 
 }
 
 func runForkLogicFixMinCommissionRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
-	if ctx.ChainID() != core.RebelChainID {
+	if ctx.ChainID() != "localterra" {
 		return
 	}
 	forkLogicFixMinCommission(ctx, keepers, mm)

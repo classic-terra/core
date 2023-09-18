@@ -113,7 +113,7 @@ func runForkLogicFixMinCommission(ctx sdk.Context, keepers *keepers.AppKeepers, 
 }
 
 func runForkLogicFixMinCommissionRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
-	if ctx.ChainID() != "localterra" {
+	if ctx.ChainID() != core.RebelChainID {
 		return
 	}
 	forkLogicFixMinCommission(ctx, keepers, mm)

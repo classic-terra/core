@@ -3,3 +3,4 @@ Vagrantfile
 
 bin/
 coverage.txt
+scripts/

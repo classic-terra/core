@@ -18,7 +18,7 @@ type Keeper struct {
 	storeKey      storetypes.StoreKey
 	cdc           codec.BinaryCodec
 	paramSpace    paramstypes.Subspace
-	AccountKeeper types.AccountKeeper
+	StakingKeeper types.StakingKeeper
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -26,7 +26,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	paramstore paramstypes.Subspace,
-	accountKeeper types.AccountKeeper,
+	stakingKeeper types.StakingKeeper,
 ) Keeper {
 
 	// set KeyTable if it has not already been set
@@ -38,7 +38,7 @@ func NewKeeper(
 		cdc:           cdc,
 		storeKey:      storeKey,
 		paramSpace:    paramstore,
-		AccountKeeper: accountKeeper,
+		StakingKeeper: stakingKeeper,
 	}
 }
 

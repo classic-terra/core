@@ -34,19 +34,19 @@ type AppModuleBasic struct {
 type AppModule struct {
 	AppModuleBasic
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
+	stakingKeeper types.StakingKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper,
+	stakingKeeper types.StakingKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc},
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
+		stakingKeeper:  stakingKeeper,
 	}
 }
 

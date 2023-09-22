@@ -415,7 +415,7 @@ func NewAppKeepers(
 		appCodec,
 		appKeepers.keys[dyncommtypes.StoreKey],
 		appKeepers.GetSubspace(dyncommtypes.ModuleName),
-		appKeepers.AccountKeeper,
+		appKeepers.StakingKeeper,
 	)
 
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper

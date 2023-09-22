@@ -28,10 +28,6 @@ func NewKeeper(
 	paramstore paramstypes.Subspace,
 	accountKeeper types.AccountKeeper,
 ) Keeper {
-	// ensure market module account is set
-	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
-	}
 
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {

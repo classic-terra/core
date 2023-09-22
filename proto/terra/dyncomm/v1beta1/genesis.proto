@@ -1,0 +1,13 @@
+syntax = "proto3";
+package terra.dyncomm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "terra/dyncomm/v1beta1/dyncomm.proto";
+
+option go_package = "github.com/classic-terra/core/v2/x/dyncomm/types";
+
+// GenesisState defines the dyncomm module's genesis state.
+message GenesisState {
+  // params defines all the paramaters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}

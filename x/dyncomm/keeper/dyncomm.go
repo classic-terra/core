@@ -31,7 +31,7 @@ func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.V
 	factorA := x.Sub(A)
 	quotient := x.Quo(C)
 	factorB := quotient.Add(B)
-	minComm := k.StakingKeeper.MinCommissionRate(ctx)
+	minComm := k.StakingKeeper.MinCommissionRate(ctx).MulInt64(100)
 
 	y := factorA.Mul(factorB)
 	if y.GT(D) {

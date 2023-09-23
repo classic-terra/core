@@ -8,3 +8,13 @@ const (
 	RouterKey    = ModuleName
 	QuerierRoute = ModuleName
 )
+
+var (
+	// Keys for store prefixes
+	MinCommissionRatesPrefix = []byte{0x01} // prefix for each MinCommissionRate entry
+)
+
+// MinCommissionRates - stored by *validator addr*
+func GetMinCommissionRatesKey(addr string) []byte {
+	return append(MinCommissionRatesPrefix, []byte(addr)...)
+}

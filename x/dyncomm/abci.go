@@ -18,7 +18,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// Check epoch last block
 	// TODO: Change this to the appropriate period
-	if !core.IsPeriodLastBlock(ctx, core.BlocksPerHour) {
+	if !core.IsPeriodLastBlock(ctx, core.BlocksPerMinute) {
 		return
 	}
 

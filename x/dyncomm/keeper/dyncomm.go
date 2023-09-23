@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	types "github.com/classic-terra/core/v2/x/dyncomm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -44,6 +45,47 @@ func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.V
 
 }
 
+func (k Keeper) SetDynCommissionRate(ctx sdk.Context, validator string, rate sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(
+		&types.MinCommissionRate{
+			ValidatorAddress:  validator,
+			MinCommissionRate: &rate,
+		},
+	)
+	store.Set(types.GetMinCommissionRatesKey(validator), bz)
+}
+
+func (k Keeper) GetDynCommissionRate(ctx sdk.Context, validator string) (rate sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetMinCommissionRatesKey(validator))
+	if bz == nil {
+		return sdk.ZeroDec()
+	}
+
+	var validatorRate types.MinCommissionRate
+	k.cdc.MustUnmarshal(bz, &validatorRate)
+	return *validatorRate.MinCommissionRate
+}
+
+// IterateDynCommissionRates iterates over dyn commission rates in the store
+func (k Keeper) IterateDynCommissionRates(ctx sdk.Context, cb func(types.MinCommissionRate) bool) {
+	store := ctx.KVStore(k.storeKey)
+	it := store.Iterator(nil, nil)
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		var entry types.MinCommissionRate
+		if err := entry.Unmarshal(it.Value()); err != nil {
+			panic(err)
+		}
+
+		if cb(entry) {
+			break
+		}
+	}
+}
+
 func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Validator) {
 
 	currRate := validator.Commission.Rate
@@ -68,6 +110,9 @@ func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Val
 	)
 
 	k.StakingKeeper.SetValidator(ctx, newValidator)
+	k.SetDynCommissionRate(ctx, validator.OperatorAddress, newRate)
+
+	ctx.Logger().Info("update:", "val", validator.OperatorAddress, "rate", k.GetDynCommissionRate(ctx, validator.OperatorAddress))
 
 }
 

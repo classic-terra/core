@@ -6,22 +6,22 @@ import (
 )
 
 func (k Keeper) GetMaxZero(ctx sdk.Context) (ret sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyMaxZero, ret)
+	k.paramSpace.Get(ctx, types.KeyMaxZero, &ret)
 	return ret
 }
 
 func (k Keeper) GetSlopeBase(ctx sdk.Context) (ret sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeySlopeBase, ret)
+	k.paramSpace.Get(ctx, types.KeySlopeBase, &ret)
 	return ret
 }
 
 func (k Keeper) GetSlopeVpImpact(ctx sdk.Context) (ret sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeySlopeVpImpact, ret)
+	k.paramSpace.Get(ctx, types.KeySlopeVpImpact, &ret)
 	return ret
 }
 
 func (k Keeper) GetCap(ctx sdk.Context) (ret sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyCap, ret)
+	k.paramSpace.Get(ctx, types.KeyCap, &ret)
 	return ret
 }
 

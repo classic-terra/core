@@ -40,6 +40,6 @@ func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.V
 	if minComm.GT(y) {
 		y = minComm
 	}
-	return y
+	return y.QuoInt64(100)
 
 }

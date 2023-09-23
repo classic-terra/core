@@ -43,3 +43,51 @@ func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.V
 	return y.QuoInt64(100)
 
 }
+
+func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Validator) {
+
+	currRate := validator.Commission.Rate
+	newRate := k.CalculateDynCommission(ctx, validator)
+	newMaxRate := validator.Commission.MaxRate
+
+	// we have no pain if current rate of validator
+	// is GTE than dyn commission
+	if currRate.GTE(newRate) {
+		return
+	}
+
+	if newMaxRate.LT(newRate) {
+		newMaxRate = newRate
+	}
+
+	newValidator := validator
+	newValidator.Commission = stakingtypes.NewCommission(
+		newRate,
+		newMaxRate,
+		validator.Commission.MaxChangeRate,
+	)
+
+	k.StakingKeeper.SetValidator(ctx, newValidator)
+
+}
+
+func (k Keeper) UpdateAllBondedValidatorRates(ctx sdk.Context) (err error) {
+
+	var lastErr error = nil
+	k.StakingKeeper.IterateValidators(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+
+		val := validator.(stakingtypes.Validator)
+
+		if !val.IsBonded() {
+			return false
+		}
+
+		k.UpdateValidatorRates(ctx, val)
+
+		return false
+
+	})
+
+	return lastErr
+
+}

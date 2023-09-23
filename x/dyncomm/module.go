@@ -162,3 +162,9 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }
+
+// EndBlock returns the end blocker for the dyncomm module.
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, am.keeper)
+	return []abci.ValidatorUpdate{}
+}

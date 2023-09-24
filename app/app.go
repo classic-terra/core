@@ -211,6 +211,8 @@ func NewTerraApp(
 			GovKeeper:          app.GovKeeper,
 			WasmConfig:         &wasmConfig,
 			TXCounterStoreKey:  app.GetKey(wasm.StoreKey),
+			DyncommKeeper:      app.DyncommKeeper,
+			StakingKeeper:      app.StakingKeeper,
 		},
 	)
 	if err != nil {

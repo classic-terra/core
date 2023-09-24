@@ -21,7 +21,7 @@ func TestWasmTestSuite(t *testing.T) {
 }
 
 func (s *WasmTestSuite) SetupTest() {
-	s.Setup(s.T())
+	s.Setup()
 }
 
 func (s *WasmTestSuite) InstantiateContract(addr sdk.AccAddress, contractPath string) sdk.AccAddress {

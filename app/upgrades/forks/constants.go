@@ -24,13 +24,11 @@ var VersionMapEnableFork = upgrades.Fork{
 }
 
 var FixMinCommissionFork = upgrades.Fork{
-	UpgradeName:    "v2.2.1",
-	UpgradeHeight:  fork.FixMinCommissionHeight,
-	BeginForkLogic: runForkLogicFixMinCommission,
+	UpgradeName:   "v2.2.1",
+	UpgradeHeight: fork.FixMinCommissionHeight,
 }
 
 var FixMinCommissionForkRebel = upgrades.Fork{
-	UpgradeName:    "v2.2.1",
-	UpgradeHeight:  fork.FixMinCommissionHeightRebel,
-	BeginForkLogic: runForkLogicFixMinCommissionRebel,
+	UpgradeName:   "v2.2.1",
+	UpgradeHeight: fork.FixMinCommissionHeightRebel,
 }

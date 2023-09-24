@@ -48,7 +48,7 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
-func (s *KeeperTestHelper) Setup(t *testing.T) {
+func (s *KeeperTestHelper) Setup() {
 	s.App = SetupApp(s.T())
 	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "columbus-5", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{

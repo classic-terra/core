@@ -87,7 +87,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 var (
 	PubKeys = simapp.CreateTestPubKeys(32)
 
-	InitTokens    = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+	InitTokens    = sdk.TokensFromConsensusPower(10_000, sdk.DefaultPowerReduction)
 	InitCoins     = sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens))
 	DelegateCoins = sdk.NewCoin(core.MicroLunaDenom, InitTokens)
 
@@ -148,7 +148,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix())
 	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(banktypes.ModuleName), blackListAddrs)
 
-	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, math.Int(math.LegacyNewDec(1_000_000_000))))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, math.Int(math.LegacyNewDec(1_000_000_000_000))))
 	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
 	require.NoError(t, err)
 
@@ -204,6 +204,9 @@ func CreateTestInput(t *testing.T) TestInput {
 		appCodec, keyDyncomm,
 		paramsKeeper.Subspace(types.ModuleName),
 		stakingKeeper,
+	)
+	dyncommKeeper.SetParams(
+		ctx, types.DefaultParams(),
 	)
 
 	return TestInput{ctx, legacyAmino, accountKeeper, bankKeeper, distrKeeper, stakingKeeper, dyncommKeeper}

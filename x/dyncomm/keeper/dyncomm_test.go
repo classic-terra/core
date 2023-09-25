@@ -28,22 +28,40 @@ func TestCalculateVotingPower(t *testing.T) {
 		input.DyncommKeeper.CalculateVotingPower(input.Ctx, vals[0]),
 	)
 
-	/*val0, err := CreateValidator(0, math.NewIntFromUint64(900))
-	require.NoError(t, err, "error creating validator")
-	input.StakingKeeper.SetValidator(input.Ctx, val0)
-	val1, err := CreateValidator(1, math.NewIntFromUint64(100))
-	require.NoError(t, err, "error creating validator")
+}
 
-	val0.Tokens = math.OneInt().MulRaw(9)
-	val1.Tokens = math.OneInt().MulRaw(1)
-	input.StakingKeeper.SetValidator(input.Ctx, val1)
-	input.StakingKeeper.SetValidator(input.Ctx, val0)
-	input.StakingKeeper.BlockValidatorUpdates(input.Ctx)
+func TestCalculateDynCommission(t *testing.T) {
 
-	//CallCreateValidatorHooks(input.Ctx, input.DistrKeeper, AddrFrom(0), ValAddrFrom(0))
-	//CallCreateValidatorHooks(input.Ctx, input.DistrKeeper, AddrFrom(1), ValAddrFrom(1))
+	input := CreateTestInput(t)
+	helper := teststaking.NewHelper(
+		t, input.Ctx, input.StakingKeeper,
+	)
+	helper.Denom = core.MicroLunaDenom
+	helper.CreateValidatorWithValPower(ValAddrFrom(0), PubKeys[0], 950, true)
+	helper.CreateValidatorWithValPower(ValAddrFrom(1), PubKeys[1], 46, true)
+	helper.CreateValidatorWithValPower(ValAddrFrom(2), PubKeys[2], 4, true)
+	helper.TurnBlock(time.Now())
+	vals := input.StakingKeeper.GetBondedValidatorsByPower(input.Ctx)
 
-	// test input should have equal power Validators
-	*/
+	// capped commission
+	require.Equal(
+		t,
+		sdk.NewDecWithPrec(20, 2),
+		input.DyncommKeeper.CalculateDynCommission(input.Ctx, vals[0]),
+	)
+
+	// curve
+	require.Equal(
+		t,
+		sdk.NewDecWithPrec(10086, 5),
+		input.DyncommKeeper.CalculateDynCommission(input.Ctx, vals[1]),
+	)
+
+	// min. commission
+	require.Equal(
+		t,
+		sdk.ZeroDec(),
+		input.DyncommKeeper.CalculateDynCommission(input.Ctx, vals[2]),
+	)
 
 }

@@ -40,6 +40,10 @@ var (
 		{Name: core.MicroSDRDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroUSDDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroMNTDenom, TobinTax: DefaultTobinTax.MulInt64(8)},
+		{Name: core.MicroEURDenom, TobinTax: DefaultTobinTax},
+		// {Name: core.MicroJPYDenom, TobinTax: DefaultTobinTax},
+		// {Name: core.MicroCNYDenom, TobinTax: DefaultTobinTax},
+		// {Name: core.MicroGBPDenom, TobinTax: DefaultTobinTax},
 	}
 	DefaultSlashFraction     = sdk.NewDecWithPrec(1, 4) // 0.01%
 	DefaultMinValidPerWindow = sdk.NewDecWithPrec(5, 2) // 5%

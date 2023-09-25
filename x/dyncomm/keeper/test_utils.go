@@ -4,10 +4,10 @@ package keeper
 //DONTCOVER
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	customauth "github.com/classic-terra/core/v2/custom/auth"
@@ -24,6 +24,7 @@ import (
 	types "github.com/classic-terra/core/v2/x/dyncomm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -84,21 +85,28 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 
 // Test Account
 var (
-	PubKeys = simapp.CreateTestPubKeys(2)
-
-	Addrs = []sdk.AccAddress{
-		sdk.AccAddress(PubKeys[0].Address()),
-		sdk.AccAddress(PubKeys[1].Address()),
-	}
-
-	ValAddrs = []sdk.ValAddress{
-		sdk.ValAddress(PubKeys[0].Address()),
-		sdk.ValAddress(PubKeys[1].Address()),
-	}
+	PubKeys = simapp.CreateTestPubKeys(32)
 
 	InitTokens    = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	InitCoins     = sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens))
 	DelegateCoins = sdk.NewCoin(core.MicroLunaDenom, InitTokens)
+
+	blackListAddrs = map[string]bool{
+		faucetAccountName:              true,
+		authtypes.FeeCollectorName:     true,
+		stakingtypes.NotBondedPoolName: true,
+		stakingtypes.BondedPoolName:    true,
+		distrtypes.ModuleName:          true,
+	}
+
+	maccPerms = map[string][]string{
+		faucetAccountName:              {authtypes.Minter},
+		authtypes.FeeCollectorName:     nil,
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		distrtypes.ModuleName:          nil,
+		types.ModuleName:               {authtypes.Burner, authtypes.Minter},
+	}
 )
 
 type TestInput struct {
@@ -106,6 +114,7 @@ type TestInput struct {
 	Cdc           *codec.LegacyAmino
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
+	DistrKeeper   distrkeeper.Keeper
 	StakingKeeper stakingkeeper.Keeper
 	DyncommKeeper Keeper
 }
@@ -135,28 +144,11 @@ func CreateTestInput(t *testing.T) TestInput {
 
 	require.NoError(t, ms.LoadLatestVersion())
 
-	blackListAddrs := map[string]bool{
-		faucetAccountName:              true,
-		authtypes.FeeCollectorName:     true,
-		stakingtypes.NotBondedPoolName: true,
-		stakingtypes.BondedPoolName:    true,
-		distrtypes.ModuleName:          true,
-	}
-
-	maccPerms := map[string][]string{
-		faucetAccountName:              {authtypes.Minter},
-		authtypes.FeeCollectorName:     nil,
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		distrtypes.ModuleName:          nil,
-		types.ModuleName:               {authtypes.Burner, authtypes.Minter},
-	}
-
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
 	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix())
 	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(banktypes.ModuleName), blackListAddrs)
 
-	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)*10))))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, math.Int(math.LegacyNewDec(1_000_000_000))))
 	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
 	require.NoError(t, err)
 
@@ -171,31 +163,6 @@ func CreateTestInput(t *testing.T) TestInput {
 	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.BondDenom = core.MicroLunaDenom
 	stakingKeeper.SetParams(ctx, stakingParams)
-
-	// create new validators and self-delegate
-	for index, _ := range Addrs {
-		moniker := fmt.Sprintf("val-%02d", index)
-		descr := stakingtypes.NewDescription(moniker, "", "", "", "")
-
-		validator, err := stakingtypes.NewValidator(
-			ValAddrs[index], PubKeys[index], descr,
-		)
-		require.NoError(t, err, "error creating validator")
-		stakingKeeper.SetValidator(ctx, validator)
-		coins10 := sdk.NewCoins(
-			sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(10))),
-		)
-		err = bankKeeper.MintCoins(ctx, faucetAccountName, coins10)
-		require.NoError(t, err, "error minting coins to faucet")
-		err = bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, faucetAccountName, Addrs[index], coins10,
-		)
-		require.NoError(t, err, "error sending coins to validator account")
-		_, err = stakingKeeper.Delegate(
-			ctx, Addrs[index], InitTokens, stakingtypes.Bonded, validator, true,
-		)
-		require.NoError(t, err, "error self-delegating")
-	}
 
 	distrKeeper := distrkeeper.NewKeeper(
 		appCodec,
@@ -216,7 +183,10 @@ func CreateTestInput(t *testing.T) TestInput {
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 
-	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs))))))
+	err = bankKeeper.SendCoinsFromModuleToModule(
+		ctx, faucetAccountName, stakingtypes.NotBondedPoolName,
+		sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(PubKeys))))),
+	)
 	require.NoError(t, err)
 
 	accountKeeper.SetModuleAccount(ctx, feeCollectorAcc)
@@ -224,11 +194,10 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, notBondedPool)
 	accountKeeper.SetModuleAccount(ctx, distrAcc)
 
-	for _, addr := range Addrs {
-		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
-		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, InitCoins)
+	for idx, _ := range PubKeys {
+		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(AddrFrom(idx)))
+		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, AddrFrom(idx), InitCoins)
 		require.NoError(t, err)
-		require.Equal(t, bankKeeper.GetAllBalances(ctx, addr), InitCoins)
 	}
 
 	dyncommKeeper := NewKeeper(
@@ -237,5 +206,44 @@ func CreateTestInput(t *testing.T) TestInput {
 		stakingKeeper,
 	)
 
-	return TestInput{ctx, legacyAmino, accountKeeper, bankKeeper, stakingKeeper, dyncommKeeper}
+	return TestInput{ctx, legacyAmino, accountKeeper, bankKeeper, distrKeeper, stakingKeeper, dyncommKeeper}
+}
+
+func CallCreateValidatorHooks(ctx sdk.Context, k distrkeeper.Keeper, addr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	err := k.Hooks().AfterValidatorCreated(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+	err = k.Hooks().BeforeDelegationCreated(ctx, addr, valAddr)
+	if err != nil {
+		return err
+	}
+	err = k.Hooks().AfterDelegationModified(ctx, addr, valAddr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateValidator(idx int, stake math.Int) (stakingtypes.Validator, error) {
+	val, err := stakingtypes.NewValidator(
+		ValAddrFrom(idx), PubKeys[idx], stakingtypes.Description{Moniker: "TestValidator"},
+	)
+	val.Tokens = stake
+	val.DelegatorShares = sdk.NewDec(val.Tokens.Int64())
+	return val, err
+}
+
+func GetPubKey(idx int) (sdkcrypto.PubKey, sdk.AccAddress, sdk.ValAddress) {
+	addr := AddrFrom(idx)
+	valAddr := ValAddrFrom(idx)
+	return PubKeys[idx], addr, valAddr
+}
+
+func AddrFrom(idx int) sdk.AccAddress {
+	return sdk.AccAddress(PubKeys[idx].Address())
+}
+
+func ValAddrFrom(idx int) sdk.ValAddress {
+	return sdk.ValAddress(PubKeys[idx].Address())
 }

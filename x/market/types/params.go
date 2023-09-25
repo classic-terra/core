@@ -19,13 +19,16 @@ var (
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")
 	// Min spread
 	KeyMinStabilitySpread = []byte("MinStabilitySpread")
+	// Min spread for USTC denom
+	KeyMinUstcStabilitySpread = []byte("MinUSTCStabilitySpread")
 )
 
 // Default parameter values
 var (
-	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
-	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
-	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
+	DefaultBasePool               = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
+	DefaultPoolRecoveryPeriod     = core.BlocksPerDay                    // 14,400
+	DefaultMinStabilitySpread     = sdk.NewDecWithPrec(2, 2)             // 2%
+	DefaultMinUstcStabilitySpread = sdk.ZeroDec()                        // 0%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -33,9 +36,10 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
 	return Params{
-		BasePool:           DefaultBasePool,
-		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
-		MinStabilitySpread: DefaultMinStabilitySpread,
+		BasePool:               DefaultBasePool,
+		PoolRecoveryPeriod:     DefaultPoolRecoveryPeriod,
+		MinStabilitySpread:     DefaultMinStabilitySpread,
+		MinUstcStabilitySpread: DefaultMinUstcStabilitySpread,
 	}
 }
 
@@ -57,6 +61,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyBasePool, &p.BasePool, validateBasePool),
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
+		paramstypes.NewParamSetPair(KeyMinUstcStabilitySpread, &p.MinUstcStabilitySpread, validateMinUstcStabilitySpread),
 	}
 }
 
@@ -102,6 +107,23 @@ func validatePoolRecoveryPeriod(i interface{}) error {
 }
 
 func validateMinStabilitySpread(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("min spread must be positive or zero: %s", v)
+	}
+
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min spread is too large: %s", v)
+	}
+
+	return nil
+}
+
+func validateMinUstcStabilitySpread(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

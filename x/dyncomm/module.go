@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/classic-terra/core/v2/x/dyncomm/client/cli"
 	"github.com/classic-terra/core/v2/x/dyncomm/keeper"
 	"github.com/classic-terra/core/v2/x/dyncomm/types"
 	"github.com/classic-terra/core/v2/x/market/simulation"
@@ -86,7 +87,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns no root query command for the dyncom module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

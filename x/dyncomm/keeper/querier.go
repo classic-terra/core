@@ -21,8 +21,15 @@ func NewQuerier(keeper Keeper) types.QueryServer {
 
 var _ types.QueryServer = querier{}
 
-// Params queries params of market module
+// Params queries params of dyncomm module
 func (q querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryParamsResponse{Params: q.GetParams(ctx)}, nil
+}
+
+// Rates queries Validator Rate of dyncomm module
+func (q querier) Rate(c context.Context, req *types.QueryRateRequest) (*types.QueryRateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	rate := q.GetDynCommissionRate(ctx, req.ValidatorAddr)
+	return &types.QueryRateResponse{Rate: &rate}, nil
 }

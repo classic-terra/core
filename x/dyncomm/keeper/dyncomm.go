@@ -88,15 +88,8 @@ func (k Keeper) IterateDynCommissionRates(ctx sdk.Context, cb func(types.MinComm
 
 func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Validator) {
 
-	currRate := validator.Commission.Rate
 	newRate := k.CalculateDynCommission(ctx, validator)
 	newMaxRate := validator.Commission.MaxRate
-
-	// we have no pain if current rate of validator
-	// is GTE than dyn commission
-	if currRate.GTE(newRate) {
-		return
-	}
 
 	if newMaxRate.LT(newRate) {
 		newMaxRate = newRate
@@ -112,7 +105,7 @@ func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Val
 	k.StakingKeeper.SetValidator(ctx, newValidator)
 	k.SetDynCommissionRate(ctx, validator.OperatorAddress, newRate)
 
-	ctx.Logger().Info("update:", "val", validator.OperatorAddress, "rate", k.GetDynCommissionRate(ctx, validator.OperatorAddress))
+	ctx.Logger().Info("dyncomm:", "val", validator.OperatorAddress, "rate", k.GetDynCommissionRate(ctx, validator.OperatorAddress))
 
 }
 

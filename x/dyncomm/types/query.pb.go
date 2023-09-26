@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -112,34 +113,128 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryRateRequest is the request type for the Query/Rate RPC method.
+type QueryRateRequest struct {
+	// validator_addr defines the validator address to query for.
+	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`
+}
+
+func (m *QueryRateRequest) Reset()         { *m = QueryRateRequest{} }
+func (m *QueryRateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRateRequest) ProtoMessage()    {}
+func (*QueryRateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6284eb8921642edc, []int{2}
+}
+func (m *QueryRateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRateRequest.Merge(m, src)
+}
+func (m *QueryRateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRateRequest proto.InternalMessageInfo
+
+func (m *QueryRateRequest) GetValidatorAddr() string {
+	if m != nil {
+		return m.ValidatorAddr
+	}
+	return ""
+}
+
+// QueryRateResponse is the response type for the Query/Rate RPC method.
+type QueryRateResponse struct {
+	Rate *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate,omitempty"`
+}
+
+func (m *QueryRateResponse) Reset()         { *m = QueryRateResponse{} }
+func (m *QueryRateResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRateResponse) ProtoMessage()    {}
+func (*QueryRateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6284eb8921642edc, []int{3}
+}
+func (m *QueryRateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRateResponse.Merge(m, src)
+}
+func (m *QueryRateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRateResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "terra.dyncomm.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "terra.dyncomm.v1beta1.QueryParamsResponse")
+	proto.RegisterType((*QueryRateRequest)(nil), "terra.dyncomm.v1beta1.QueryRateRequest")
+	proto.RegisterType((*QueryRateResponse)(nil), "terra.dyncomm.v1beta1.QueryRateResponse")
 }
 
 func init() { proto.RegisterFile("terra/dyncomm/v1beta1/query.proto", fileDescriptor_6284eb8921642edc) }
 
 var fileDescriptor_6284eb8921642edc = []byte{
-	// 294 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2c, 0x49, 0x2d, 0x2a,
-	0x4a, 0xd4, 0x4f, 0xa9, 0xcc, 0x4b, 0xce, 0xcf, 0xcd, 0xd5, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49,
-	0x34, 0xd4, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x05,
-	0x2b, 0xd1, 0x83, 0x2a, 0xd1, 0x83, 0x2a, 0x91, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0xab, 0xd0,
-	0x07, 0xb1, 0x20, 0x8a, 0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32,
-	0xf5, 0x13, 0xf3, 0xf2, 0xf2, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0xa1, 0xb2, 0xca, 0xd8,
-	0x6d, 0x83, 0x19, 0x0d, 0x56, 0xa4, 0x24, 0xc2, 0x25, 0x14, 0x08, 0xb2, 0x3e, 0x20, 0xb1, 0x28,
-	0x31, 0xb7, 0x38, 0x28, 0xb5, 0xb0, 0x34, 0xb5, 0xb8, 0x44, 0x29, 0x88, 0x4b, 0x18, 0x45, 0xb4,
-	0xb8, 0x20, 0x3f, 0xaf, 0x38, 0x55, 0xc8, 0x9a, 0x8b, 0xad, 0x00, 0x2c, 0x22, 0xc1, 0xa8, 0xc0,
-	0xa8, 0xc1, 0x6d, 0x24, 0xab, 0x87, 0xd5, 0xb5, 0x7a, 0x10, 0x6d, 0x4e, 0x2c, 0x27, 0xee, 0xc9,
-	0x33, 0x04, 0x41, 0xb5, 0x18, 0x4d, 0x60, 0xe4, 0x62, 0x05, 0x1b, 0x2a, 0xd4, 0xc6, 0xc8, 0xc5,
-	0x06, 0x51, 0x22, 0xa4, 0x89, 0xc3, 0x04, 0x4c, 0x37, 0x49, 0x69, 0x11, 0xa3, 0x14, 0xe2, 0x50,
-	0x25, 0xd5, 0xa6, 0xcb, 0x4f, 0x26, 0x33, 0xc9, 0x0b, 0xc9, 0xea, 0x63, 0x0f, 0x03, 0x88, 0x93,
-	0x9c, 0xbc, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09,
-	0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0xca, 0x20, 0x3d, 0xb3,
-	0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x3f, 0x39, 0x27, 0xb1, 0xb8, 0x38, 0x33, 0x59,
-	0x17, 0x62, 0x54, 0x72, 0x7e, 0x51, 0xaa, 0x7e, 0x99, 0x91, 0x7e, 0x05, 0xdc, 0xd0, 0x92, 0xca,
-	0x82, 0xd4, 0xe2, 0x24, 0x36, 0x70, 0x78, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x7e, 0x3a,
-	0xb8, 0x52, 0xe4, 0x01, 0x00, 0x00,
+	// 417 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x41, 0x4b, 0xe3, 0x40,
+	0x1c, 0xc5, 0x93, 0xd2, 0x2d, 0xec, 0x2c, 0xbb, 0xec, 0xce, 0x76, 0x61, 0x09, 0xdb, 0x74, 0x37,
+	0x4b, 0xb5, 0x16, 0x9a, 0xb1, 0x15, 0x0f, 0x22, 0x08, 0x16, 0x4f, 0x9e, 0x34, 0xde, 0xbc, 0xc8,
+	0x34, 0x19, 0x62, 0xb0, 0xc9, 0xa4, 0x33, 0xd3, 0x62, 0x11, 0x2f, 0x1e, 0x3c, 0x17, 0xfc, 0x08,
+	0x7e, 0x99, 0x1e, 0x0b, 0x5e, 0xc4, 0x43, 0x91, 0xd6, 0x0f, 0x22, 0x99, 0x8c, 0xa5, 0xc5, 0x56,
+	0x3d, 0x25, 0xfc, 0xf3, 0x7b, 0xef, 0xff, 0xe6, 0x4d, 0xc0, 0x3f, 0x41, 0x18, 0xc3, 0xc8, 0xeb,
+	0x45, 0x2e, 0x0d, 0x43, 0xd4, 0xad, 0x35, 0x89, 0xc0, 0x35, 0xd4, 0xee, 0x10, 0xd6, 0xb3, 0x63,
+	0x46, 0x05, 0x85, 0xbf, 0x24, 0x62, 0x2b, 0xc4, 0x56, 0x88, 0x91, 0xf7, 0xa9, 0x4f, 0x25, 0x81,
+	0x92, 0xb7, 0x14, 0x36, 0xfe, 0xf8, 0x94, 0xfa, 0x2d, 0x82, 0x70, 0x1c, 0x20, 0x1c, 0x45, 0x54,
+	0x60, 0x11, 0xd0, 0x88, 0xab, 0xaf, 0xff, 0x17, 0x6f, 0x7b, 0xb1, 0x96, 0x90, 0x95, 0x07, 0xf0,
+	0x30, 0x59, 0x7f, 0x80, 0x19, 0x0e, 0xb9, 0x43, 0xda, 0x1d, 0xc2, 0x85, 0xe5, 0x80, 0x9f, 0x73,
+	0x53, 0x1e, 0xd3, 0x88, 0x13, 0xb8, 0x0d, 0x72, 0xb1, 0x9c, 0xfc, 0xd6, 0xff, 0xea, 0xe5, 0x2f,
+	0xf5, 0x82, 0xbd, 0x30, 0xad, 0x9d, 0xca, 0x1a, 0xd9, 0xc1, 0xa8, 0xa8, 0x39, 0x4a, 0x62, 0x6d,
+	0x81, 0xef, 0xd2, 0xd3, 0xc1, 0x82, 0xa8, 0x3d, 0xb0, 0x04, 0xbe, 0x75, 0x71, 0x2b, 0xf0, 0xb0,
+	0xa0, 0xec, 0x04, 0x7b, 0x1e, 0x93, 0xc6, 0x9f, 0x9d, 0xaf, 0xd3, 0xe9, 0xae, 0xe7, 0x31, 0xeb,
+	0x08, 0xfc, 0x98, 0x91, 0xaa, 0x30, 0x3b, 0x20, 0xcb, 0xb0, 0x20, 0xa9, 0xa2, 0x51, 0x79, 0x18,
+	0x15, 0x57, 0xfc, 0x40, 0x9c, 0x76, 0x9a, 0xb6, 0x4b, 0x43, 0xe4, 0x52, 0x1e, 0x52, 0xae, 0x1e,
+	0x55, 0xee, 0x9d, 0x21, 0xd1, 0x8b, 0x09, 0xb7, 0xf7, 0x88, 0xeb, 0x48, 0x5d, 0xfd, 0x36, 0x03,
+	0x3e, 0x49, 0x57, 0x78, 0xad, 0x83, 0x5c, 0x1a, 0x19, 0xae, 0x2d, 0x39, 0xd1, 0xeb, 0x8e, 0x8c,
+	0xca, 0x47, 0xd0, 0x34, 0xab, 0x55, 0xba, 0xba, 0x7b, 0xba, 0xc9, 0x14, 0x61, 0x01, 0x2d, 0xbe,
+	0x93, 0xb4, 0x22, 0xd8, 0xd7, 0x41, 0x36, 0x39, 0x23, 0x5c, 0x7d, 0xcb, 0x7b, 0xa6, 0x40, 0xa3,
+	0xfc, 0x3e, 0xa8, 0x22, 0x6c, 0xca, 0x08, 0x08, 0x56, 0x97, 0x44, 0x48, 0x3a, 0xe1, 0xe8, 0x62,
+	0xfe, 0x3a, 0x2e, 0x1b, 0xfb, 0x83, 0xb1, 0xa9, 0x0f, 0xc7, 0xa6, 0xfe, 0x38, 0x36, 0xf5, 0xfe,
+	0xc4, 0xd4, 0x86, 0x13, 0x53, 0xbb, 0x9f, 0x98, 0xda, 0xf1, 0xfa, 0x6c, 0xdb, 0x2d, 0xcc, 0x79,
+	0xe0, 0x56, 0x53, 0x6b, 0x97, 0x32, 0x82, 0xba, 0x75, 0x74, 0x3e, 0x5d, 0x22, 0xbb, 0x6f, 0xe6,
+	0xe4, 0x2f, 0xb7, 0xf1, 0x1c, 0x00, 0x00, 0xff, 0xff, 0x4e, 0x98, 0xd4, 0x5d, 0x07, 0x03, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -156,6 +251,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params queries all parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	Rate(ctx context.Context, in *QueryRateRequest, opts ...grpc.CallOption) (*QueryRateResponse, error)
 }
 
 type queryClient struct {
@@ -175,10 +271,20 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Rate(ctx context.Context, in *QueryRateRequest, opts ...grpc.CallOption) (*QueryRateResponse, error) {
+	out := new(QueryRateResponse)
+	err := c.cc.Invoke(ctx, "/terra.dyncomm.v1beta1.Query/Rate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries all parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Rate(context.Context, *QueryRateRequest) (*QueryRateResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -187,6 +293,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) Rate(ctx context.Context, req *QueryRateRequest) (*QueryRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Rate not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -211,6 +320,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Rate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Rate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/terra.dyncomm.v1beta1.Query/Rate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Rate(ctx, req.(*QueryRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "terra.dyncomm.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -218,6 +345,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Rate",
+			Handler:    _Query_Rate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -280,6 +411,71 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryRateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorAddr) > 0 {
+		i -= len(m.ValidatorAddr)
+		copy(dAtA[i:], m.ValidatorAddr)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorAddr)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Rate != nil {
+		{
+			size := m.Rate.Size()
+			i -= size
+			if _, err := m.Rate.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -308,6 +504,32 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryRateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddr)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Rate != nil {
+		l = m.Rate.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -426,6 +648,174 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			var v github_com_cosmos_cosmos_sdk_types.Dec
+			m.Rate = &v
+			if err := m.Rate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

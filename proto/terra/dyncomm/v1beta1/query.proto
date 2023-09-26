@@ -13,6 +13,10 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/dyncomm/v1beta1/params";
   }
+
+  rpc Rate(QueryRateRequest) returns (QueryRateResponse){
+    option (google.api.http).get = "/terra/dyncomm/v1beta1/rates/{validator_addr}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -22,4 +26,15 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryRateRequest is the request type for the Query/Rate RPC method.
+message QueryRateRequest {
+  // validator_addr defines the validator address to query for.
+  string validator_addr = 1;
+}
+
+// QueryRateResponse is the response type for the Query/Rate RPC method.
+message QueryRateResponse {
+  string rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

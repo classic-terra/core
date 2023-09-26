@@ -37,4 +37,5 @@ message QueryRateRequest {
 // QueryRateResponse is the response type for the Query/Rate RPC method.
 message QueryRateResponse {
   string rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string target = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

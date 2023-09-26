@@ -46,11 +46,42 @@ func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.V
 }
 
 func (k Keeper) SetDynCommissionRate(ctx sdk.Context, validator string, rate sdk.Dec) {
+
+	var preSetRate types.ValidatorCommissionRate
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(
-		&types.MinCommissionRate{
-			ValidatorAddress:  validator,
-			MinCommissionRate: &rate,
+	bz := store.Get(types.GetMinCommissionRatesKey(validator))
+	targetRate := sdk.ZeroDec()
+
+	if bz != nil {
+		k.cdc.MustUnmarshal(bz, &preSetRate)
+		targetRate = *preSetRate.TargetCommissionRate
+	}
+	bz = k.cdc.MustMarshal(
+		&types.ValidatorCommissionRate{
+			ValidatorAddress:     validator,
+			MinCommissionRate:    &rate,
+			TargetCommissionRate: &targetRate,
+		},
+	)
+	store.Set(types.GetMinCommissionRatesKey(validator), bz)
+}
+
+func (k Keeper) SetTargetCommissionRate(ctx sdk.Context, validator string, rate sdk.Dec) {
+
+	var preSetRate types.ValidatorCommissionRate
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetMinCommissionRatesKey(validator))
+	minRate := sdk.ZeroDec()
+
+	if bz != nil {
+		k.cdc.MustUnmarshal(bz, &preSetRate)
+		minRate = *preSetRate.MinCommissionRate
+	}
+	bz = k.cdc.MustMarshal(
+		&types.ValidatorCommissionRate{
+			ValidatorAddress:     validator,
+			MinCommissionRate:    &minRate,
+			TargetCommissionRate: &rate,
 		},
 	)
 	store.Set(types.GetMinCommissionRatesKey(validator), bz)
@@ -63,19 +94,31 @@ func (k Keeper) GetDynCommissionRate(ctx sdk.Context, validator string) (rate sd
 		return sdk.ZeroDec()
 	}
 
-	var validatorRate types.MinCommissionRate
+	var validatorRate types.ValidatorCommissionRate
 	k.cdc.MustUnmarshal(bz, &validatorRate)
 	return *validatorRate.MinCommissionRate
 }
 
+func (k Keeper) GetTargetCommissionRate(ctx sdk.Context, validator string) (rate sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetMinCommissionRatesKey(validator))
+	if bz == nil {
+		return sdk.ZeroDec()
+	}
+
+	var validatorRate types.ValidatorCommissionRate
+	k.cdc.MustUnmarshal(bz, &validatorRate)
+	return *validatorRate.TargetCommissionRate
+}
+
 // IterateDynCommissionRates iterates over dyn commission rates in the store
-func (k Keeper) IterateDynCommissionRates(ctx sdk.Context, cb func(types.MinCommissionRate) bool) {
+func (k Keeper) IterateDynCommissionRates(ctx sdk.Context, cb func(types.ValidatorCommissionRate) bool) {
 	store := ctx.KVStore(k.storeKey)
 	it := store.Iterator(nil, nil)
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		var entry types.MinCommissionRate
+		var entry types.ValidatorCommissionRate
 		if err := entry.Unmarshal(it.Value()); err != nil {
 			panic(err)
 		}
@@ -86,13 +129,24 @@ func (k Keeper) IterateDynCommissionRates(ctx sdk.Context, cb func(types.MinComm
 	}
 }
 
-func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Validator) {
+func (k Keeper) UpdateValidatorMinRates(ctx sdk.Context, validator stakingtypes.Validator) {
 
-	newRate := k.CalculateDynCommission(ctx, validator)
+	var newRate sdk.Dec
+	minRate := k.CalculateDynCommission(ctx, validator)
 	newMaxRate := validator.Commission.MaxRate
+	targetRate := k.GetTargetCommissionRate(ctx, validator.OperatorAddress)
 
-	if newMaxRate.LT(newRate) {
-		newMaxRate = newRate
+	// assume the newRate will be the target rate ...
+	newRate = targetRate
+
+	// ... but enforce min rate
+	if newRate.LT(minRate) {
+		newRate = minRate
+	}
+
+	// new min rate pushes max rate
+	if newMaxRate.LT(minRate) {
+		newMaxRate = minRate
 	}
 
 	newValidator := validator
@@ -105,7 +159,10 @@ func (k Keeper) UpdateValidatorRates(ctx sdk.Context, validator stakingtypes.Val
 	k.StakingKeeper.SetValidator(ctx, newValidator)
 	k.SetDynCommissionRate(ctx, validator.OperatorAddress, newRate)
 
-	ctx.Logger().Info("dyncomm:", "val", validator.OperatorAddress, "rate", k.GetDynCommissionRate(ctx, validator.OperatorAddress))
+	// Debug
+	minRate = k.GetDynCommissionRate(ctx, validator.OperatorAddress)
+	targetRate = k.GetTargetCommissionRate(ctx, validator.OperatorAddress)
+	ctx.Logger().Info("dyncomm:", "val", validator.OperatorAddress, "min_rate", minRate, "target_rate", targetRate)
 
 }
 
@@ -120,7 +177,7 @@ func (k Keeper) UpdateAllBondedValidatorRates(ctx sdk.Context) (err error) {
 			return false
 		}
 
-		k.UpdateValidatorRates(ctx, val)
+		k.UpdateValidatorMinRates(ctx, val)
 
 		return false
 

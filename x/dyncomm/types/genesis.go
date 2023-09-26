@@ -1,18 +1,18 @@
 package types
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(params Params, rates []MinCommissionRate) *GenesisState {
+func NewGenesisState(params Params, rates []ValidatorCommissionRate) *GenesisState {
 	return &GenesisState{
-		Params:             params,
-		MinCommissionRates: rates,
+		Params:                   params,
+		ValidatorCommissionRates: rates,
 	}
 }
 
 // DefaultGenesisState gets raw genesis raw message for testing
 func DefaultGenesisState() *GenesisState {
-	emptySet := []MinCommissionRate{}
+	emptySet := []ValidatorCommissionRate{}
 	return &GenesisState{
-		Params:             DefaultParams(),
-		MinCommissionRates: emptySet,
+		Params:                   DefaultParams(),
+		ValidatorCommissionRates: emptySet,
 	}
 }

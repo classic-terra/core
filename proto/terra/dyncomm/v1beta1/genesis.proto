@@ -10,12 +10,13 @@ option go_package = "github.com/classic-terra/core/v2/x/dyncomm/types";
 message GenesisState {
   // params defines all the paramaters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
-  repeated MinCommissionRate min_commission_rates = 2 [(gogoproto.nullable) = false];
+  repeated ValidatorCommissionRate validator_commission_rates = 2 [(gogoproto.nullable) = false];
 }
 
 // MinDynCommission defines a validator - min commission rate
 // pair to be enforced by the blockchain
-message MinCommissionRate {
+message ValidatorCommissionRate {
   string validator_address = 1;
   string min_commission_rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string target_commission_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

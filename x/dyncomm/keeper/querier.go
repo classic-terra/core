@@ -31,5 +31,6 @@ func (q querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 func (q querier) Rate(c context.Context, req *types.QueryRateRequest) (*types.QueryRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	rate := q.GetDynCommissionRate(ctx, req.ValidatorAddr)
-	return &types.QueryRateResponse{Rate: &rate}, nil
+	target := q.GetTargetCommissionRate(ctx, req.ValidatorAddr)
+	return &types.QueryRateResponse{Rate: &rate, Target: &target}, nil
 }

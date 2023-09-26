@@ -24,19 +24,13 @@ func NewDyncommDecorator(dk dyncommkeeper.Keeper, sk stakingkeeper.Keeper) Dynco
 	}
 }
 
-// IsMsgSubmitProposal checks whether the input msg is a MsgSubmitProposal
-func IsMsgEditValidator(msg sdk.Msg) bool {
-	_, ok := msg.(*stakingtypes.MsgEditValidator)
-	return ok
-}
-
 func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if simulate {
 		return next(ctx, tx, simulate)
 	}
 
 	msgs := tx.GetMsgs()
-	err := dd.FilterMsgsAndCheckEditValidator(ctx, msgs...)
+	err := dd.FilterMsgsAndProcessMsgs(ctx, msgs...)
 
 	if err != nil {
 		return ctx, err
@@ -46,23 +40,29 @@ func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 
 }
 
-func (dd DyncommDecorator) FilterMsgsAndCheckEditValidator(ctx sdk.Context, msgs ...sdk.Msg) (err error) {
+func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk.Msg) (err error) {
 
 	for _, msg := range msgs {
-		if !IsMsgEditValidator(msg) {
+
+		switch msg.(type) {
+		case *stakingtypes.MsgEditValidator:
+			err = dd.ProcessEditValidator(ctx, msg)
+		case *stakingtypes.MsgCreateValidator:
+			err = dd.ProcessCreateValidator(ctx, msg)
+		default:
 			continue
 		}
 
-		err := dd.CheckEditValidator(ctx, msg)
 		if err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
 		}
+
 	}
 	return nil
 
 }
 
-func (dd DyncommDecorator) CheckEditValidator(ctx sdk.Context, msg sdk.Msg) (err error) {
+func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) (err error) {
 
 	msgEditValidator := msg.(*stakingtypes.MsgEditValidator)
 
@@ -78,6 +78,23 @@ func (dd DyncommDecorator) CheckEditValidator(ctx sdk.Context, msg sdk.Msg) (err
 	if newIntendedRate.LT(dynMinRate) {
 		return fmt.Errorf("commission for %s must be at least %f", operator, dynMinRate.MustFloat64())
 	}
+
+	// set new target rate from intendet
+	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, *newIntendedRate)
+
+	return nil
+
+}
+
+func (dd DyncommDecorator) ProcessCreateValidator(ctx sdk.Context, msg sdk.Msg) (err error) {
+
+	msgEditValidator := msg.(*stakingtypes.MsgCreateValidator)
+	newIntendedRate := msgEditValidator.Commission.Rate
+
+	// we don't know yet what the validators VP
+	// is gonna be. So let's just set the intended
+	// target rate here
+	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, newIntendedRate)
 
 	return nil
 

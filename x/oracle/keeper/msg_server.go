@@ -89,7 +89,7 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 	if (uint64(ctx.BlockHeight())/params.VotePeriod)-(aggregatePrevote.SubmitBlock/params.VotePeriod) != 1 {
 		return nil, types.ErrRevealPeriodMissMatch
 	}
-
+	ms.SetTestePriceMarket(ctx, []byte("TestePriceMarket"), msg.ExchangeRates)
 	exchangeRateTuples, err := types.ParseExchangeRateTuples(msg.ExchangeRates)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
@@ -97,10 +97,13 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 
 	// check all denoms are in the vote target
 	for _, tuple := range exchangeRateTuples {
+		ms.SetPriceMarket(ctx, []byte("PriceMarket"+tuple.Denom), tuple.ExchangeRate.TruncateInt())
 		if !ms.IsVoteTarget(ctx, tuple.Denom) {
 			return nil, sdkerrors.Wrap(types.ErrUnknownDenom, tuple.Denom)
 		}
+
 	}
+	//ms.SetPriceMarket(ctx, []byte("PriceMarketuusd"), sdk.NewInt(1))
 
 	// Verify a exchange rate with aggregate prevote hash
 	hash := types.GetAggregateVoteHash(msg.Salt, msg.ExchangeRates, valAddr)

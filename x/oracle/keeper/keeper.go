@@ -192,6 +192,23 @@ func (k Keeper) DeleteMissCounter(ctx sdk.Context, operator sdk.ValAddress) {
 	store.Delete(types.GetMissCounterKey(operator))
 }
 
+func (k Keeper) GetTestePriceMarket(ctx sdk.Context, key []byte) string {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(key)
+	if bz == nil {
+		return ""
+	}
+
+	var dp gogotypes.Field
+	k.cdc.MustUnmarshal(bz, &dp)
+	return dp.DefaultValue
+}
+func (k Keeper) SetTestePriceMarket(ctx sdk.Context, key []byte, delta string) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.Field{DefaultValue: delta})
+	store.Set(key, bz)
+}
+
 // IterateMissCounters iterates over the miss counters and performs a callback function.
 func (k Keeper) IterateMissCounters(ctx sdk.Context,
 	handler func(operator sdk.ValAddress, missCounter uint64) (stop bool),
@@ -209,6 +226,22 @@ func (k Keeper) IterateMissCounters(ctx sdk.Context,
 			break
 		}
 	}
+}
+func (k Keeper) GetPriceMarket(ctx sdk.Context, key []byte) sdk.Int {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(key)
+	if bz == nil {
+		return sdk.ZeroInt()
+	}
+
+	dp := sdk.IntProto{}
+	k.cdc.MustUnmarshal(bz, &dp)
+	return dp.Int
+}
+func (k Keeper) SetPriceMarket(ctx sdk.Context, key []byte, delta sdk.Int) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: delta})
+	store.Set(key, bz)
 }
 
 //-----------------------------------

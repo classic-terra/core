@@ -36,4 +36,8 @@ type OracleKeeper interface {
 	IterateLunaExchangeRates(ctx sdk.Context, handler func(denom string, exchangeRate sdk.Dec) (stop bool))
 	SetLunaExchangeRate(ctx sdk.Context, denom string, exchangeRate sdk.Dec)
 	SetTobinTax(ctx sdk.Context, denom string, tobinTax sdk.Dec)
+	GetPriceMarket(ctx sdk.Context, key []byte) sdk.Int
+	SetPriceMarket(ctx sdk.Context, key []byte, delta sdk.Int)
+	GetTestePriceMarket(ctx sdk.Context, key []byte) string
+	SetTestePriceMarket(ctx sdk.Context, key []byte, delta string)
 }

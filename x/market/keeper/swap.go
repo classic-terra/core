@@ -60,15 +60,16 @@ func (k Keeper) NewComputeInternalSwap(ctx sdk.Context, offerCoin sdk.Coin, askD
 	//retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
 
 	if offerCoin.Denom == core.MicroUSDDenom {
-		priceMarket := k.OracleKeeper.GetPriceMarket(ctx, []byte("PriceMarket"+offerCoin.Denom))
-		// if priceMarket.GTE(sdk.NewInt(0)) {
+		priceMarket := k.OracleKeeper.GetPriceMarket(ctx, []byte("PriceMarketx"+offerCoin.Denom))
+		qUSDR := sdk.NewDec(1).Quo(priceMarket)
+		// if priceMarket.GTE(sdk.NewDec(0)) {
 		// 	testepriceMarket := k.OracleKeeper.GetTestePriceMarket(ctx, []byte("TestePriceMarket"))
-		// 	return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrZeroSwapCoin, "preço de mercado "+offerCoin.Denom+" : "+priceMarket.String()+" -- "+testepriceMarket)
+		// 	return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrZeroSwapCoin, "preço de mercado "+offerCoin.Denom+" : "+qUSDR.TruncateInt().String()+" -- "+testepriceMarket)
 		// }
 
-		newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(sdk.NewInt(1).Quo(priceMarket))))
+		//newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(sdk.NewInt(1).Quo(qUSDR.TruncateInt()))))
 
-		//newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(sdk.NewInt(100))))
+		newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(qUSDR.TruncateInt())))
 		return k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(newOfferCoin), core.MicroSDRDenom)
 	} else {
 		return k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom)

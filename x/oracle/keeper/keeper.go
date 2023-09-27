@@ -227,20 +227,20 @@ func (k Keeper) IterateMissCounters(ctx sdk.Context,
 		}
 	}
 }
-func (k Keeper) GetPriceMarket(ctx sdk.Context, key []byte) sdk.Int {
+func (k Keeper) GetPriceMarket(ctx sdk.Context, key []byte) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
 	if bz == nil {
-		return sdk.ZeroInt()
+		return sdk.ZeroDec()
 	}
 
-	dp := sdk.IntProto{}
+	dp := sdk.DecProto{}
 	k.cdc.MustUnmarshal(bz, &dp)
-	return dp.Int
+	return dp.Dec
 }
-func (k Keeper) SetPriceMarket(ctx sdk.Context, key []byte, delta sdk.Int) {
+func (k Keeper) SetPriceMarket(ctx sdk.Context, key []byte, delta sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: delta})
+	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: delta})
 	store.Set(key, bz)
 }
 

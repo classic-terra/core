@@ -4,13 +4,14 @@
 FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
-OLD_VERSION=v2.2.1
+OLD_VERSION=${OLD_VERSION:-v2.0.1}
+NEW_VERSION=${NEW_VERSION:-v2.1.2}
 UPGRADE_WAIT=${UPGRADE_WAIT:-20}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
-SOFTWARE_UPGRADE_NAME="v5"
+SOFTWARE_UPGRADE_NAME=${SOFTWARE_UPGRADE_NAME:-"v4"}
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 
@@ -22,19 +23,16 @@ fi
 mkdir -p _build/gocache
 export GOMODCACHE=$ROOT/_build/gocache
 
-# install old binary
-if ! command -v _build/old/terrad &> /dev/null
+# install old binary if not exist
+if [ ! -f "_build/$OLD_VERSION.zip" ] &> /dev/null
 then
     mkdir -p _build/old
     wget -c "https://github.com/classic-terra/core/archive/refs/tags/${OLD_VERSION}.zip" -O _build/${OLD_VERSION}.zip
     unzip _build/${OLD_VERSION}.zip -d _build
-    cd ./_build/core-${OLD_VERSION:1}
-    GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
-    cd ../..
 fi
 
 # reinstall old binary
-if [ $# -eq 1 ] && [ $1 == "--reinstall-old" ]; then
+if [ $# -eq 1 ] && [ $1 == "--reinstall-old" ] || ! command -v _build/old/terrad &> /dev/null; then
     cd ./_build/core-${OLD_VERSION:1}
     GOBIN="$ROOT/_build/old" go install -mod=readonly ./...
     cd ../..
@@ -43,7 +41,9 @@ fi
 # install new binary
 if ! command -v _build/new/terrad &> /dev/null
 then
+    cd ./_build/core-${NEW_VERSION:1}
     GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
+    cd ../..
 fi
 
 # run old node
@@ -93,19 +93,23 @@ run_upgrade () {
     STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
     UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
 
-    ./_build/old/terrad tx gov submit-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
+    tx=$(./_build/old/terrad tx gov submit-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y -o json | jq -r '.txhash')
 
     sleep 5
 
-    ./_build/old/terrad tx gov deposit 1 "20000000${DENOM}" --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
+    # get proposal id
+    PROPOSAL_ID=$(./_build/old/terrad q tx $tx -o json | jq -r '.raw_log' | jq -r '[.[] | .events[] | .attributes[] | select(.key == "proposal_id")][0].value')
+    echo "PROPOSAL_ID = $PROPOSAL_ID"
+
+    ./_build/old/terrad tx gov deposit $PROPOSAL_ID "20000000${DENOM}" --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
 
     sleep 5
 
-    ./_build/old/terrad tx gov vote 1 yes --from test0 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
+    ./_build/old/terrad tx gov vote $PROPOSAL_ID yes --from test0 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
 
     sleep 5
 
-    ./_build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
+    ./_build/old/terrad tx gov vote $PROPOSAL_ID yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
 
     sleep 5
 

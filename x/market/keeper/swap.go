@@ -50,25 +50,10 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 // Returns an Error if the swap is recursive, or the coins to be traded are unknown by the oracle, or the amount
 // to trade is too small.
 func (k Keeper) NewComputeInternalSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (sdk.DecCoin, error) {
-	//basePool := k.BasePool(ctx)
-
-	// askRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, askDenom)
-	// if err != nil {
-	// 	return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, askDenom)
-	// }
-
-	//retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
 
 	if offerCoin.Denom == core.MicroUSDDenom {
-		priceMarketUSD := k.OracleKeeper.GetPriceMarket(ctx, []byte("PriceMarketx"+offerCoin.Denom))
+		priceMarketUSD := k.OracleKeeper.GetPriceMarket(ctx, []byte("PriceMarketx"+core.MicroUSDDenom))
 		qUSDR := priceMarketUSD.Quo(k.OracleKeeper.GetPriceMarket(ctx, []byte("PriceMarketx"+core.MicroSDRDenom)))
-		// if priceMarket.GTE(sdk.NewDec(0)) {
-		// 	testepriceMarket := k.OracleKeeper.GetTestePriceMarket(ctx, []byte("TestePriceMarket"))
-		// 	return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrZeroSwapCoin, "preço de mercado "+offerCoin.Denom+" : "+qUSDR.TruncateInt().String()+" -- "+testepriceMarket)
-		// }
-
-		//newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(sdk.NewInt(1).Quo(qUSDR.TruncateInt()))))
-		//newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(sdk.NewInt(101))))
 		newOfferCoin := sdk.NewCoin(core.MicroSDRDenom, (offerCoin.Amount.Quo(qUSDR.TruncateInt())))
 		return k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(newOfferCoin), core.MicroSDRDenom)
 	} else {

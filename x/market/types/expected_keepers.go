@@ -38,6 +38,4 @@ type OracleKeeper interface {
 	SetTobinTax(ctx sdk.Context, denom string, tobinTax sdk.Dec)
 	GetPriceMarket(ctx sdk.Context, key []byte) sdk.Dec
 	SetPriceMarket(ctx sdk.Context, key []byte, delta sdk.Dec)
-	GetTestePriceMarket(ctx sdk.Context, key []byte) string
-	SetTestePriceMarket(ctx sdk.Context, key []byte, delta string)
 }

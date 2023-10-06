@@ -49,6 +49,7 @@ import (
 	v5 "github.com/classic-terra/core/v2/app/upgrades/v5"
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
+	custompost "github.com/classic-terra/core/v2/custom/auth/post"
 	customauthtx "github.com/classic-terra/core/v2/custom/auth/tx"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -219,7 +220,17 @@ func NewTerraApp(
 		panic(err)
 	}
 
+	postHandler, err := custompost.NewPostHandler(
+		custompost.HandlerOptions{
+			DyncommKeeper: app.DyncommKeeper,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	app.SetAnteHandler(anteHandler)
+	app.SetPostHandler(postHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

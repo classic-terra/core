@@ -150,10 +150,11 @@ func (k Keeper) UpdateValidatorMinRates(ctx sdk.Context, validator stakingtypes.
 	}
 
 	newValidator := validator
-	newValidator.Commission = stakingtypes.NewCommission(
+	newValidator.Commission = stakingtypes.NewCommissionWithTime(
 		newRate,
 		newMaxRate,
 		validator.Commission.MaxChangeRate,
+		validator.Commission.UpdateTime,
 	)
 
 	k.StakingKeeper.SetValidator(ctx, newValidator)

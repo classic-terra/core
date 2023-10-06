@@ -29,6 +29,10 @@ func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		return next(ctx, tx, simulate)
 	}
 
+	if ctx.IsCheckTx() {
+		return next(ctx, tx, simulate)
+	}
+
 	msgs := tx.GetMsgs()
 	err := dd.FilterMsgsAndProcessMsgs(ctx, msgs...)
 
@@ -47,8 +51,6 @@ func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk
 		switch msg.(type) {
 		case *stakingtypes.MsgEditValidator:
 			err = dd.ProcessEditValidator(ctx, msg)
-		case *stakingtypes.MsgCreateValidator:
-			err = dd.ProcessCreateValidator(ctx, msg)
 		default:
 			continue
 		}
@@ -78,23 +80,6 @@ func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) (e
 	if newIntendedRate.LT(dynMinRate) {
 		return fmt.Errorf("commission for %s must be at least %f", operator, dynMinRate.MustFloat64())
 	}
-
-	// set new target rate from intendet
-	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, *newIntendedRate)
-
-	return nil
-
-}
-
-func (dd DyncommDecorator) ProcessCreateValidator(ctx sdk.Context, msg sdk.Msg) (err error) {
-
-	msgEditValidator := msg.(*stakingtypes.MsgCreateValidator)
-	newIntendedRate := msgEditValidator.Commission.Rate
-
-	// we don't know yet what the validators VP
-	// is gonna be. So let's just set the intended
-	// target rate here
-	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, newIntendedRate)
 
 	return nil
 

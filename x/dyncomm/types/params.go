@@ -61,11 +61,11 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 
 // Validate a set of params
 func (p Params) Validate() error {
-	if !p.SlopeBase.IsPositive() {
-		return fmt.Errorf("mint base pool should be positive or zero, is %s", p.SlopeBase)
+	if p.SlopeBase.IsNegative() {
+		return fmt.Errorf("Slope Base must be positive or zero, is %s", p.SlopeBase)
 	}
 	if !p.SlopeVpImpact.IsPositive() {
-		return fmt.Errorf("pool recovery period should be positive, is %d", p.SlopeVpImpact)
+		return fmt.Errorf("Solpe VP impact should be positive, is %d", p.SlopeVpImpact)
 	}
 	if p.Cap.IsNegative() {
 		return fmt.Errorf("cap shall be 0 or positive: %s", p.Cap)
@@ -73,16 +73,28 @@ func (p Params) Validate() error {
 	if p.Cap.GT(sdk.OneDec()) {
 		return fmt.Errorf("cap shall be less than 1.0: %s", p.Cap)
 	}
+	if p.MaxZero.IsNegative() {
+		return fmt.Errorf("max zero shall be 0 or positive: %s", v)
+	}
+	if p.MaxZero.GT(sdk.OneDec()) {
+		return fmt.Errorf("max zero shall be less than 1.0: %s", v)
+	}
 
 	return nil
 }
 
-//f(VP) = max(min((VP - A) * (B + (VP/C)), D), min_commission)
-
 func validateMaxZero(i interface{}) error {
-	_, ok := i.(sdk.Dec)
+	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("max zero shall be 0 or positive: %s", v)
+	}
+
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("max zero shall be less than 1.0: %s", v)
 	}
 
 	return nil
@@ -94,8 +106,8 @@ func validateSlopeBase(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if !v.IsPositive() {
-		return fmt.Errorf("slope base must be positive: %s", v)
+	if v.IsNegative() {
+		return fmt.Errorf("slope base must be positive or Zero: %s", v)
 	}
 
 	return nil

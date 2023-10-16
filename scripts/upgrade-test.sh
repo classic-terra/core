@@ -93,7 +93,9 @@ run_upgrade () {
     STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
     UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
 
-    ./_build/old/terrad tx gov submit-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "temp" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
+    tar -cf ./_build/new/terrad.tar -C ./_build/new terrad
+    SUM=$(shasum -a 256 ./_build/new/terrad.tar | cut -d ' ' -f1)
+    ./_build/old/terrad tx gov submit-legacy-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "{\"binaries\":{\"linux/amd64\":\"file://"$(pwd)"/_build/new/terrad.tar?checksum=sha256:"$SUM"\"}}" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME -y
 
     sleep 5
 

@@ -74,10 +74,10 @@ func (p Params) Validate() error {
 		return fmt.Errorf("cap shall be less than 1.0: %s", p.Cap)
 	}
 	if p.MaxZero.IsNegative() {
-		return fmt.Errorf("max zero shall be 0 or positive: %s", v)
+		return fmt.Errorf("max zero shall be 0 or positive: %s", p.MaxZero)
 	}
 	if p.MaxZero.GT(sdk.OneDec()) {
-		return fmt.Errorf("max zero shall be less than 1.0: %s", v)
+		return fmt.Errorf("max zero shall be less than 1.0: %s", p.MaxZero)
 	}
 
 	return nil

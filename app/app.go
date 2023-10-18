@@ -198,6 +198,7 @@ func NewTerraApp(
 
 	anteHandler, err := customante.NewAnteHandler(
 		customante.HandlerOptions{
+			Cdc:                app.appCodec,
 			AccountKeeper:      app.AccountKeeper,
 			BankKeeper:         app.BankKeeper,
 			FeegrantKeeper:     app.FeeGrantKeeper,

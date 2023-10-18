@@ -32,8 +32,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // AppModule implements an application module for the auth module.
 type AppModule struct {
 	auth.AppModule
-	accountKeeper     keeper.AccountKeeper
-	randGenAccountsFn types.RandomGenesisAccountsFn
+	accountKeeper keeper.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object

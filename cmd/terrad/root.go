@@ -42,6 +42,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	rootcmd "github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
 )
 
 // NewRootCmd creates a new root command for terrad. It is called once in the
@@ -123,7 +124,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		terralegacy.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(terraapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, terraapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(terraapp.ModuleBasics),
-		AddGenesisAccountCmd(terraapp.DefaultNodeHome),
+		rootcmd.AddGenesisAccountCmd(terraapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(terraapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),

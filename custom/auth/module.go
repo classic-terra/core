@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	customsim "github.com/classic-terra/core/v2/custom/auth/simulation"
 	customtypes "github.com/classic-terra/core/v2/custom/auth/types"
 )
 
@@ -40,13 +39,13 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
 	return AppModule{
-		AppModule:         auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn),
-		accountKeeper:     accountKeeper,
-		randGenAccountsFn: randGenAccountsFn,
+		AppModule:     auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn),
+		accountKeeper: accountKeeper,
+		//randGenAccountsFn: randGenAccountsFn,
 	}
 }
 
 // GenerateGenesisState creates a randomized GenState of the auth module
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	customsim.RandomizedGenState(simState, am.randGenAccountsFn)
-}
+//func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+//	customsim.RandomizedGenState(simState, am.randGenAccountsFn)
+//}

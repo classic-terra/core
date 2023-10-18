@@ -49,7 +49,6 @@ import (
 	terraappparams "github.com/classic-terra/core/v2/app/params"
 
 	customauth "github.com/classic-terra/core/v2/custom/auth"
-	customauthsim "github.com/classic-terra/core/v2/custom/auth/simulation"
 	customauthz "github.com/classic-terra/core/v2/custom/authz"
 	custombank "github.com/classic-terra/core/v2/custom/bank"
 	customcrisis "github.com/classic-terra/core/v2/custom/crisis"
@@ -64,6 +63,8 @@ import (
 	customupgrade "github.com/classic-terra/core/v2/custom/upgrade"
 	customwasm "github.com/classic-terra/core/v2/custom/wasm"
 
+	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -74,7 +75,6 @@ import (
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
-	"github.com/classic-terra/core/v2/x/vesting"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v2/client/docs/statik"
@@ -115,7 +115,6 @@ var (
 		customupgrade.AppModuleBasic{},
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
-		vesting.AppModuleBasic{},
 		oracle.AppModuleBasic{},
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
@@ -193,7 +192,7 @@ func simulationModules(
 	appCodec := encodingConfig.Marshaler
 
 	return []module.AppModuleSimulation{
-		customauth.NewAppModule(appCodec, app.AccountKeeper, customauthsim.RandomGenesisAccounts),
+		customauth.NewAppModule(appCodec, app.AccountKeeper, authsim.RandomGenesisAccounts),
 		custombank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),

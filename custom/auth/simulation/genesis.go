@@ -7,13 +7,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	core "github.com/classic-terra/core/v2/types"
-	customvestingtypes "github.com/classic-terra/core/v2/x/vesting/types"
 )
 
 // Simulation parameter constants
@@ -24,59 +20,6 @@ const (
 	SigVerifyCostED25519   = "sig_verify_cost_ed25519"
 	SigVerifyCostSECP256K1 = "sig_verify_cost_secp256k1"
 )
-
-// RandomGenesisAccounts returns randomly generated genesis accounts
-func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccounts {
-	genesisAccs := make(types.GenesisAccounts, len(simState.Accounts))
-	for i, acc := range simState.Accounts {
-		bacc := types.NewBaseAccountWithAddress(acc.Address)
-
-		// Only consider making a vesting account once the initial bonded validator
-		// set is exhausted due to needing to track DelegatedVesting.
-		if !(int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50) {
-			genesisAccs[i] = bacc
-			continue
-		}
-
-		initialVesting := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, simState.Rand.Int63n(simState.InitialStake.Int64())))
-
-		var gacc types.GenesisAccount = bacc
-
-		// Only consider making a vesting account once the initial bonded validator
-		// set is exhausted due to needing to track DelegatedVesting.
-		if int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50 {
-			var lazySchedules customvestingtypes.Schedules
-
-			// Make sure scheduleNum is even number
-			scheduleNum := 1 + int64(simState.Rand.Intn(10))
-			if scheduleNum%2 != 0 {
-				scheduleNum++
-			}
-
-			ratio := sdk.OneDec().QuoInt64(scheduleNum)
-			for i := int64(0); i < scheduleNum; i++ {
-				var endTime int64
-				startTime := simState.GenTimestamp.Unix()
-
-				// Allow for some vesting accounts to vest very quickly while others very slowly.
-				if simState.Rand.Intn(100) < 50 {
-					endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
-				} else {
-					endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
-				}
-
-				lazySchedules = append(lazySchedules, customvestingtypes.NewSchedule(startTime, endTime, ratio))
-			}
-
-			gacc = customvestingtypes.NewLazyGradedVestingAccount(bacc, initialVesting, customvestingtypes.VestingSchedules{
-				customvestingtypes.NewVestingSchedule(core.MicroLunaDenom, lazySchedules),
-			})
-		}
-		genesisAccs[i] = gacc
-	}
-
-	return genesisAccs
-}
 
 // GenMaxMemoChars randomized MaxMemoChars
 func GenMaxMemoChars(r *rand.Rand) uint64 {

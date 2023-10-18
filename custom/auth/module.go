@@ -41,11 +41,5 @@ func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAc
 	return AppModule{
 		AppModule:     auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn),
 		accountKeeper: accountKeeper,
-		//randGenAccountsFn: randGenAccountsFn,
 	}
 }
-
-// GenerateGenesisState creates a randomized GenState of the auth module
-//func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-//	customsim.RandomizedGenState(simState, am.randGenAccountsFn)
-//}

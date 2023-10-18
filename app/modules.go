@@ -47,6 +47,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	terraappparams "github.com/classic-terra/core/v2/app/params"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 
 	customauth "github.com/classic-terra/core/v2/custom/auth"
 	customauthz "github.com/classic-terra/core/v2/custom/authz"
@@ -116,6 +117,7 @@ var (
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		oracle.AppModuleBasic{},
+		vesting.AppModuleBasic{},
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
 		customwasm.AppModuleBasic{},

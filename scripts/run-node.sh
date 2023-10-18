@@ -54,11 +54,13 @@ $BINARY init --chain-id $CHAIN_ID moniker --home $HOME_DIR
 $BINARY keys add $KEY --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY keys add $KEY1 --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY keys add $KEY2 --keyring-backend $KEYRING --home $HOME_DIR
+echo "empower father transfer coin fix auto song clean soon pet wide hamster end weapon six glass meat spice prize video repeat drift rack betray" | $BINARY keys add astroport --recover --keyring-backend $KEYRING --home $HOME_DIR
 
 # Allocate genesis accounts (cosmos formatted addresses)
 $BINARY add-genesis-account $KEY "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY add-genesis-account $KEY1 "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY add-genesis-account $KEY2 "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
+$BINARY add-genesis-account astroport "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 
 update_test_genesis '.app_state["gov"]["voting_params"]["voting_period"]="50s"'
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'

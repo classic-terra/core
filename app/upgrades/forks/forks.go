@@ -75,7 +75,7 @@ func runForkLogicBlacklist800M(ctx sdk.Context, keepers *keepers.AppKeepers, mm 
 			ctx.Logger().Error("Could not unmarshal blacklist address - ignoring.")
 			return
 		}
-		freeze.Add(addr)
+		freeze.Add(addr.String())
 
 		keepers.TreasuryKeeper.SetFreezeAddrs(ctx, freeze)
 
@@ -94,14 +94,14 @@ func runForkLogicBlacklist800MRebel(ctx sdk.Context, keepers *keepers.AppKeepers
 			ctx.Logger().Error("Could not unmarshal blacklist address - ignoring.")
 			return
 		}
-		freeze.Add(addr)
+		freeze.Add(addr.String())
 
 		addr, err = sdk.AccAddressFromBech32("terra1njlydj87f05jmzdt9wmam0z28dlrc97qr6twqn")
 		if err != nil {
 			ctx.Logger().Error("Could not unmarshal blacklist address - ignoring.")
 			return
 		}
-		freeze.Add(addr)
+		freeze.Add(addr.String())
 
 		keepers.TreasuryKeeper.SetFreezeAddrs(ctx, freeze)
 

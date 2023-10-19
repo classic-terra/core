@@ -5,32 +5,33 @@ import (
 )
 
 type FreezeList struct {
-	Frozen []sdk.Address `json:"frozen"`
+	Frozen []string `json:"frozen"`
 }
 
 func NewFreezeList() FreezeList {
 	return FreezeList{
-		Frozen: []sdk.Address{},
+		Frozen: []string{},
 	}
 }
 
-func (fl FreezeList) Contains(target sdk.Address) bool {
+func (fl *FreezeList) Contains(target string) bool {
 	return sdk.SliceContains(fl.Frozen, target)
 }
 
-func (fl FreezeList) Add(target sdk.Address) {
+func (fl *FreezeList) Add(target string) {
 	if fl.Contains(target) {
 		return
 	}
 	fl.Frozen = append(fl.Frozen, target)
+
 }
 
-func (fl FreezeList) Remove(target sdk.Address) {
+func (fl *FreezeList) Remove(target string) {
 	if !fl.Contains(target) {
 		return
 	}
 
-	var updated []sdk.Address
+	var updated []string
 	for _, item := range fl.Frozen {
 		if item != target {
 			updated = append(updated, item)

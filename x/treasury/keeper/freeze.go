@@ -9,14 +9,17 @@ import (
 
 // GetFreezeAddrs
 func (k Keeper) GetFreezeAddrs(ctx sdk.Context) types.FreezeList {
+
 	store := ctx.KVStore(k.storeKey)
+
 	b := store.Get(types.FreezeKey)
 	if b == nil {
 		return types.NewFreezeList()
 	}
 
 	list := types.NewFreezeList()
-	if err := json.Unmarshal(b, &list); err != nil {
+	err := json.Unmarshal(b, &list)
+	if err != nil {
 		return types.NewFreezeList()
 	}
 
@@ -26,7 +29,9 @@ func (k Keeper) GetFreezeAddrs(ctx sdk.Context) types.FreezeList {
 
 // SetFreezeAddrs
 func (k Keeper) SetFreezeAddrs(ctx sdk.Context, list types.FreezeList) {
+
 	store := ctx.KVStore(k.storeKey)
+
 	bz, err := json.Marshal(list)
 	if err != nil {
 		return

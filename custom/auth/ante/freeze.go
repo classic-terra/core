@@ -61,39 +61,39 @@ func (fd FreezeDecorator) FilterMsgs(ctx sdk.Context, msgs []sdk.Msg) error {
 
 		case *banktypes.MsgSend:
 			addr, _ := sdk.AccAddressFromBech32(v.FromAddress)
-			if BlockedAddr.Contains(addr) {
+			if BlockedAddr.Contains(addr.String()) {
 				return fmt.Errorf("blocked address %s", v.FromAddress)
 			}
 		case *banktypes.MsgMultiSend:
 			for _, input := range v.Inputs {
 				addr, _ := sdk.AccAddressFromBech32(input.Address)
-				if BlockedAddr.Contains(addr) {
+				if BlockedAddr.Contains(addr.String()) {
 					return fmt.Errorf("blocked address %s", addr)
 				}
 			}
 		case *markettypes.MsgSwapSend:
 			addr, _ := sdk.AccAddressFromBech32(v.FromAddress)
-			if BlockedAddr.Contains(addr) {
+			if BlockedAddr.Contains(addr.String()) {
 				return fmt.Errorf("blocked address %s", v.FromAddress)
 			}
 		case *markettypes.MsgSwap:
 			addr, _ := sdk.AccAddressFromBech32(v.Trader)
-			if BlockedAddr.Contains(addr) {
+			if BlockedAddr.Contains(addr.String()) {
 				return fmt.Errorf("blocked address %s", v.Trader)
 			}
 		case *wasmtypes.MsgExecuteContract:
 			addr, _ := sdk.AccAddressFromBech32(v.Sender)
-			if BlockedAddr.Contains(addr) {
+			if BlockedAddr.Contains(addr.String()) {
 				return fmt.Errorf("blocked address %s", v.Sender)
 			}
 		case *wasmtypes.MsgInstantiateContract:
 			addr, _ := sdk.AccAddressFromBech32(v.Sender)
-			if BlockedAddr.Contains(addr) {
+			if BlockedAddr.Contains(addr.String()) {
 				return fmt.Errorf("blocked address %s", v.Sender)
 			}
 		case *ibctransfertypes.MsgTransfer:
 			addr, _ := sdk.AccAddressFromBech32(v.Sender)
-			if BlockedAddr.Contains(addr) {
+			if BlockedAddr.Contains(addr.String()) {
 				return fmt.Errorf("blocked address %s", v.Sender)
 			}
 		case *authztypes.MsgExec:

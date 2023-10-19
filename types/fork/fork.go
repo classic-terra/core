@@ -23,4 +23,8 @@ const (
 	// Revert Min Commission slip during v2.2.0 upgrade
 	FixMinCommissionHeight      = int64(14_890_000)
 	FixMinCommissionHeightRebel = int64(16_300_000)
+	// Freeze 800M USTC wallet
+	Freeze800MHeight      = int64(15_000_000) // TODO: TBD
+	Freeze800MHeightRebel = int64(15_000_000) // TODO: TBD
+
 )

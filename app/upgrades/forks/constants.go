@@ -22,3 +22,15 @@ var VersionMapEnableFork = upgrades.Fork{
 	UpgradeHeight:  fork.VersionMapEnableHeight,
 	BeginForkLogic: runForkLogicVersionMapEnable,
 }
+
+var Freeze800MFork = upgrades.Fork{
+	UpgradeName:    "v2.2.3",
+	UpgradeHeight:  fork.Freeze800MHeight,
+	BeginForkLogic: runForkLogicBlacklist800M,
+}
+
+var Freeze800MForkRebel = upgrades.Fork{
+	UpgradeName:    "v2.2.3",
+	UpgradeHeight:  fork.Freeze800MHeightRebel,
+	BeginForkLogic: runForkLogicBlacklist800MRebel,
+}

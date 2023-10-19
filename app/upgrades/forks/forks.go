@@ -5,6 +5,7 @@ import (
 
 	"github.com/classic-terra/core/v2/app/keepers"
 	core "github.com/classic-terra/core/v2/types"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
@@ -60,5 +61,49 @@ func runForkLogicVersionMapEnable(ctx sdk.Context, keppers *keepers.AppKeepers, 
 	// trigger SetModuleVersionMap in upgrade keeper at the VersionMapEnableHeight
 	if ctx.ChainID() == core.ColumbusChainID {
 		keppers.UpgradeKeeper.SetModuleVersionMap(ctx, mm.GetVersionMap())
+	}
+}
+
+func runForkLogicBlacklist800M(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
+
+	var freeze treasurytypes.FreezeList
+
+	if ctx.ChainID() == core.ColumbusChainID {
+
+		addr, err := sdk.AccAddressFromBech32("terra1qyw695vaxj7jl6s4u564c6xkfe59kercg0h88w")
+		if err != nil {
+			ctx.Logger().Error("Could not unmarshal blacklist address - ignoring.")
+			return
+		}
+		freeze.Add(addr)
+
+		keepers.TreasuryKeeper.SetFreezeAddrs(ctx, freeze)
+
+	}
+
+}
+
+func runForkLogicBlacklist800MRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
+
+	var freeze treasurytypes.FreezeList
+
+	if ctx.ChainID() == core.RebelChainID {
+
+		addr, err := sdk.AccAddressFromBech32("terra10zn3xx8nhvtdynux5tzjer23q2qpg0tz7xamut")
+		if err != nil {
+			ctx.Logger().Error("Could not unmarshal blacklist address - ignoring.")
+			return
+		}
+		freeze.Add(addr)
+
+		addr, err = sdk.AccAddressFromBech32("terra1njlydj87f05jmzdt9wmam0z28dlrc97qr6twqn")
+		if err != nil {
+			ctx.Logger().Error("Could not unmarshal blacklist address - ignoring.")
+			return
+		}
+		freeze.Add(addr)
+
+		keepers.TreasuryKeeper.SetFreezeAddrs(ctx, freeze)
+
 	}
 }

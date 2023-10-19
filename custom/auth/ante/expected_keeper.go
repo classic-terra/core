@@ -1,6 +1,7 @@
 package ante
 
 import (
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -15,6 +16,7 @@ type TreasuryKeeper interface {
 	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
 	HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
 	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
+	GetFreezeAddrs(ctx sdk.Context) treasurytypes.FreezeList
 }
 
 // OracleKeeper for feeder validation

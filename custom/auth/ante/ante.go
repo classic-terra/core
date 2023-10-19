@@ -1,6 +1,7 @@
 package ante
 
 import (
+	ibchostkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/keeper"
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 
@@ -29,6 +30,7 @@ type HandlerOptions struct {
 	SigGasConsumer         ante.SignatureVerificationGasConsumer
 	TxFeeChecker           ante.TxFeeChecker
 	IBCKeeper              ibckeeper.Keeper
+	HostKeeper             ibchostkeeper.Keeper
 	DistributionKeeper     distributionkeeper.Keeper
 	GovKeeper              govkeeper.Keeper
 	WasmConfig             *wasmtypes.WasmConfig
@@ -87,5 +89,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewRedundantRelayDecorator(&options.IBCKeeper),
+		NewFreezeDecorator(options.Cdc, options.HostKeeper, options.TreasuryKeeper),
 	), nil
 }

@@ -53,9 +53,10 @@ var (
 	BurnTaxExemptionListPrefix = []byte{0x20} // prefix for burn tax exemption list
 
 	// Keys for store prefixes of internal purpose variables
-	TRKey  = []byte{0x06} // prefix for each key to a TR
-	SRKey  = []byte{0x07} // prefix for each key to a SR
-	TSLKey = []byte{0x08} // prefix for each key to a TSL
+	TRKey     = []byte{0x06} // prefix for each key to a TR
+	SRKey     = []byte{0x07} // prefix for each key to a SR
+	TSLKey    = []byte{0x08} // prefix for each key to a TSL
+	FreezeKey = []byte{0x30}
 )
 
 // GetTaxCapKey - stored by *denom*

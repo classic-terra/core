@@ -15,25 +15,36 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 )
 
-var (
+/*var (
 	BlockedAddr = map[string]bool{}
-)
+)*/
 
 // FreezeDecorator freezes wallets that should
 // not interact with the blockchain
 type FreezeDecorator struct {
-	cdc        codec.BinaryCodec
-	hostkeeper hostkeeper.Keeper
+	cdc            codec.BinaryCodec
+	hostkeeper     hostkeeper.Keeper
+	treasurykeeper TreasuryKeeper
 }
 
-func NewFreezeDecorator(cdc codec.Codec, keeper hostkeeper.Keeper) FreezeDecorator {
+func NewFreezeDecorator(
+	cdc codec.BinaryCodec,
+	keeper hostkeeper.Keeper,
+	tk TreasuryKeeper,
+) FreezeDecorator {
 	return FreezeDecorator{
-		cdc:        cdc,
-		hostkeeper: keeper,
+		cdc:            cdc,
+		hostkeeper:     keeper,
+		treasurykeeper: tk,
 	}
 }
 
-func (fd FreezeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (fd FreezeDecorator) AnteHandle(
+	ctx sdk.Context,
+	tx sdk.Tx,
+	simulate bool,
+	next sdk.AnteHandler,
+) (sdk.Context, error) {
 
 	msgs := tx.GetMsgs()
 	return ctx, fd.FilterMsgs(ctx, msgs)
@@ -42,38 +53,47 @@ func (fd FreezeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 
 func (fd FreezeDecorator) FilterMsgs(ctx sdk.Context, msgs []sdk.Msg) error {
 
+	BlockedAddr := fd.treasurykeeper.GetFreezeAddrs(ctx)
+
 	for _, msg := range msgs {
 
 		switch v := msg.(type) {
 
 		case *banktypes.MsgSend:
-			if _, ok := BlockedAddr[v.FromAddress]; ok {
+			addr, _ := sdk.AccAddressFromBech32(v.FromAddress)
+			if BlockedAddr.Contains(addr) {
 				return fmt.Errorf("blocked address %s", v.FromAddress)
 			}
 		case *banktypes.MsgMultiSend:
-			for _, addr := range v.Inputs {
-				if _, ok := BlockedAddr[addr.Address]; ok {
-					return fmt.Errorf("blocked address %s", addr.Address)
+			for _, input := range v.Inputs {
+				addr, _ := sdk.AccAddressFromBech32(input.Address)
+				if BlockedAddr.Contains(addr) {
+					return fmt.Errorf("blocked address %s", addr)
 				}
 			}
 		case *markettypes.MsgSwapSend:
-			if _, ok := BlockedAddr[v.FromAddress]; ok {
+			addr, _ := sdk.AccAddressFromBech32(v.FromAddress)
+			if BlockedAddr.Contains(addr) {
 				return fmt.Errorf("blocked address %s", v.FromAddress)
 			}
 		case *markettypes.MsgSwap:
-			if _, ok := BlockedAddr[v.Trader]; ok {
+			addr, _ := sdk.AccAddressFromBech32(v.Trader)
+			if BlockedAddr.Contains(addr) {
 				return fmt.Errorf("blocked address %s", v.Trader)
 			}
 		case *wasmtypes.MsgExecuteContract:
-			if _, ok := BlockedAddr[v.Sender]; ok {
+			addr, _ := sdk.AccAddressFromBech32(v.Sender)
+			if BlockedAddr.Contains(addr) {
 				return fmt.Errorf("blocked address %s", v.Sender)
 			}
 		case *wasmtypes.MsgInstantiateContract:
-			if _, ok := BlockedAddr[v.Sender]; ok {
+			addr, _ := sdk.AccAddressFromBech32(v.Sender)
+			if BlockedAddr.Contains(addr) {
 				return fmt.Errorf("blocked address %s", v.Sender)
 			}
 		case *ibctransfertypes.MsgTransfer:
-			if _, ok := BlockedAddr[v.Sender]; ok {
+			addr, _ := sdk.AccAddressFromBech32(v.Sender)
+			if BlockedAddr.Contains(addr) {
 				return fmt.Errorf("blocked address %s", v.Sender)
 			}
 		case *authztypes.MsgExec:

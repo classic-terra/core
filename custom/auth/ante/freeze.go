@@ -118,7 +118,7 @@ func (fd FreezeDecorator) FilterIbcPacket(ctx sdk.Context, packet channeltypes.P
 
 	var data icatypes.InterchainAccountPacketData
 	if icatypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data) != nil {
-		// jibberish or no ICA packet - we are good
+		ctx.Logger().Error("jibberish ICA message - no ICA packet - ignoring")
 		return nil
 	}
 
@@ -126,6 +126,7 @@ func (fd FreezeDecorator) FilterIbcPacket(ctx sdk.Context, packet channeltypes.P
 	case icatypes.EXECUTE_TX:
 		msgs, err := icatypes.DeserializeCosmosTx(fd.cdc, data.Data)
 		if err != nil {
+			ctx.Logger().Error("could not deserialize cosmos TX from ICA Message")
 			return nil
 		}
 		return fd.FilterMsgs(ctx, msgs)

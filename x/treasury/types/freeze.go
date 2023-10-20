@@ -23,7 +23,6 @@ func (fl *FreezeList) Add(target string) {
 		return
 	}
 	fl.Frozen = append(fl.Frozen, target)
-
 }
 
 func (fl *FreezeList) Remove(target string) {
@@ -38,5 +37,4 @@ func (fl *FreezeList) Remove(target string) {
 		}
 	}
 	fl.Frozen = updated
-
 }

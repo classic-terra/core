@@ -65,7 +65,6 @@ func runForkLogicVersionMapEnable(ctx sdk.Context, keppers *keepers.AppKeepers, 
 }
 
 func runForkLogicBlacklist800M(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
-
 	var freeze treasurytypes.FreezeList
 
 	if ctx.ChainID() == core.ColumbusChainID {
@@ -80,11 +79,9 @@ func runForkLogicBlacklist800M(ctx sdk.Context, keepers *keepers.AppKeepers, mm 
 		keepers.TreasuryKeeper.SetFreezeAddrs(ctx, freeze)
 
 	}
-
 }
 
 func runForkLogicBlacklist800MRebel(ctx sdk.Context, keepers *keepers.AppKeepers, mm *module.Manager) {
-
 	var freeze treasurytypes.FreezeList
 
 	if ctx.ChainID() == core.RebelChainID {

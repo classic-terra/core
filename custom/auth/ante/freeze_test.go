@@ -58,7 +58,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedBankSend() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedBankMultiSend() {
@@ -103,7 +102,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedBankMultiSend() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedSwapSend() {
@@ -145,7 +143,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedSwapSend() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedSwap() {
@@ -186,7 +183,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedSwap() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedInstantiateContract() {
@@ -234,7 +230,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedInstantiateContract() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedMsgInstantiateContract2() {
@@ -284,7 +279,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedMsgInstantiateContract2() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedExecuteContract() {
@@ -330,7 +324,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedExecuteContract() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedMsgTransfer() {
@@ -376,7 +369,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedMsgTransfer() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedAuthz() {
@@ -420,7 +412,6 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedAuthz() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }
 
 func (s *AnteTestSuite) TestFreezeDecorator_BlockedIbcHostMsg() {
@@ -483,5 +474,4 @@ func (s *AnteTestSuite) TestFreezeDecorator_BlockedIbcHostMsg() {
 	// must succeed
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().NoError(err)
-
 }

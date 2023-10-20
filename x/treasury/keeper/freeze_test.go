@@ -28,5 +28,4 @@ func TestFreezeListSetGet(t *testing.T) {
 	require.Equal(t, 2, len(freeze3.Frozen))
 	require.Equal(t, "test2", freeze3.Frozen[0])
 	require.Equal(t, "test3", freeze3.Frozen[1])
-
 }

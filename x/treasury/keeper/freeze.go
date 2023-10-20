@@ -9,7 +9,6 @@ import (
 
 // GetFreezeAddrs
 func (k Keeper) GetFreezeAddrs(ctx sdk.Context) types.FreezeList {
-
 	store := ctx.KVStore(k.storeKey)
 
 	b := store.Get(types.FreezeKey)
@@ -24,12 +23,10 @@ func (k Keeper) GetFreezeAddrs(ctx sdk.Context) types.FreezeList {
 	}
 
 	return list
-
 }
 
 // SetFreezeAddrs
 func (k Keeper) SetFreezeAddrs(ctx sdk.Context, list types.FreezeList) {
-
 	store := ctx.KVStore(k.storeKey)
 
 	bz, err := json.Marshal(list)
@@ -38,5 +35,4 @@ func (k Keeper) SetFreezeAddrs(ctx sdk.Context, list types.FreezeList) {
 	}
 
 	store.Set(types.FreezeKey, bz)
-
 }

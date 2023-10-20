@@ -45,18 +45,14 @@ func (fd FreezeDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-
 	msgs := tx.GetMsgs()
 	return ctx, fd.FilterMsgs(ctx, msgs)
-
 }
 
 func (fd FreezeDecorator) FilterMsgs(ctx sdk.Context, msgs []sdk.Msg) error {
-
 	BlockedAddr := fd.treasurykeeper.GetFreezeAddrs(ctx)
 
 	for _, msg := range msgs {
-
 		switch v := msg.(type) {
 
 		case *banktypes.MsgSend:
@@ -110,12 +106,10 @@ func (fd FreezeDecorator) FilterMsgs(ctx sdk.Context, msgs []sdk.Msg) error {
 	}
 
 	return nil
-
 }
 
 // FilterIbcPacket filters ICA Host messages
 func (fd FreezeDecorator) FilterIbcPacket(ctx sdk.Context, packet channeltypes.Packet) error {
-
 	var data icatypes.InterchainAccountPacketData
 	if icatypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data) != nil {
 		ctx.Logger().Error("jibberish ICA message - no ICA packet - ignoring")
@@ -133,5 +127,4 @@ func (fd FreezeDecorator) FilterIbcPacket(ctx sdk.Context, packet channeltypes.P
 	default:
 		return nil
 	}
-
 }

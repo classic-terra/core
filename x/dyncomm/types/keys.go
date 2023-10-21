@@ -9,7 +9,7 @@ const (
 	QuerierRoute = ModuleName
 )
 
-// Keys for store prefixes
+// MinCommissionRatesPrefix store prefixes
 var MinCommissionRatesPrefix = []byte{0x01} // prefix for each MinCommissionRate entry
 
 // MinCommissionRates - stored by *validator addr*

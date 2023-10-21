@@ -31,7 +31,6 @@ import (
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -147,7 +146,7 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 	valAddr := sdk.ValAddress(addr)
 
 	desc := stakingtypes.NewDescription("moniker", "", "", "", "")
-	validator, err := types.NewValidator(valAddr, pub, desc)
+	validator, err := stakingtypes.NewValidator(valAddr, pub, desc)
 	suite.Require().NoError(err)
 
 	commission := stakingtypes.NewCommissionWithTime(

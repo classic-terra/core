@@ -62,10 +62,10 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 // Validate a set of params
 func (p Params) Validate() error {
 	if p.SlopeBase.IsNegative() {
-		return fmt.Errorf("Slope Base must be positive or zero, is %s", p.SlopeBase)
+		return fmt.Errorf("slope base must be positive or zero, is %s", p.SlopeBase)
 	}
 	if !p.SlopeVpImpact.IsPositive() {
-		return fmt.Errorf("Solpe VP impact should be positive, is %d", p.SlopeVpImpact)
+		return fmt.Errorf("solpe vp impact should be positive, is %d", p.SlopeVpImpact)
 	}
 	if p.Cap.IsNegative() {
 		return fmt.Errorf("cap shall be 0 or positive: %s", p.Cap)

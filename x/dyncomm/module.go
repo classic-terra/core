@@ -2,6 +2,7 @@ package dyncomm
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/classic-terra/core/v2/x/dyncomm/client/cli"
@@ -140,18 +141,31 @@ func (am AppModule) Route() sdk.Route {
 
 // GenerateGenesisState creates a randomized GenState of the dyncomm module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	// workaround so that the staking module
+	// simulation would not fail
+	dyncommGenesis := types.DefaultGenesisState()
+	params := types.DefaultParams()
+	params.Cap = sdk.ZeroDec()
+	dyncommGenesis.Params = params
+	bz, err := json.MarshalIndent(&dyncommGenesis, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Selected default dyncomm parameters:\n%s\n", bz)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(dyncommGenesis)
 }
 
 // ProposalContents returns all the dyncomm content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
+	return []simtypes.WeightedProposalContent{}
 }
 
 // RandomizedParams creates randomized dyncomm param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	// workaround to make the sim work with staking module
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for dyncomm module's types

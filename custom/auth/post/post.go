@@ -15,9 +15,7 @@ type HandlerOptions struct {
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
-
 	return sdk.ChainAnteDecorators(
 		dyncommpost.NewDyncommPostDecorator(options.DyncommKeeper),
 	), nil
-
 }

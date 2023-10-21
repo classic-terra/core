@@ -11,7 +11,6 @@ import (
 )
 
 func TestCalculateVotingPower(t *testing.T) {
-
 	input := CreateTestInput(t)
 	helper := teststaking.NewHelper(
 		t, input.Ctx, input.StakingKeeper,
@@ -27,11 +26,9 @@ func TestCalculateVotingPower(t *testing.T) {
 		sdk.NewDecWithPrec(90, 0),
 		input.DyncommKeeper.CalculateVotingPower(input.Ctx, vals[0]),
 	)
-
 }
 
 func TestCalculateDynCommission(t *testing.T) {
-
 	input := CreateTestInput(t)
 	helper := teststaking.NewHelper(
 		t, input.Ctx, input.StakingKeeper,
@@ -63,5 +60,4 @@ func TestCalculateDynCommission(t *testing.T) {
 		sdk.ZeroDec(),
 		input.DyncommKeeper.CalculateDynCommission(input.Ctx, vals[2]),
 	)
-
 }

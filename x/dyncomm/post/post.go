@@ -19,7 +19,6 @@ func NewDyncommPostDecorator(dk dyncommkeeper.Keeper) DyncommDecorator {
 }
 
 func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-
 	if simulate {
 		return next(ctx, tx, simulate)
 	}
@@ -32,13 +31,10 @@ func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	dd.FilterMsgsAndProcessMsgs(ctx, msgs...)
 
 	return next(ctx, tx, simulate)
-
 }
 
 func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk.Msg) {
-
 	for _, msg := range msgs {
-
 		switch msg.(type) {
 		case *stakingtypes.MsgEditValidator:
 			dd.ProcessEditValidator(ctx, msg)
@@ -47,13 +43,10 @@ func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk
 		default:
 			continue
 		}
-
 	}
-
 }
 
 func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) {
-
 	msgEditValidator := msg.(*stakingtypes.MsgEditValidator)
 
 	// no update of CommissionRate provided
@@ -65,15 +58,12 @@ func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) {
 	// calling runMsgs -> we can set state changes here!
 	newIntendedRate := msgEditValidator.CommissionRate
 	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, *newIntendedRate)
-
 }
 
 func (dd DyncommDecorator) ProcessCreateValidator(ctx sdk.Context, msg sdk.Msg) {
-
 	// post handler runs after successfully
 	// calling runMsgs -> we can set state changes here!
 	msgEditValidator := msg.(*stakingtypes.MsgCreateValidator)
 	newIntendedRate := msgEditValidator.Commission.Rate
 	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, newIntendedRate)
-
 }

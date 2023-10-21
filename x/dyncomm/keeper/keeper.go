@@ -28,7 +28,6 @@ func NewKeeper(
 	paramstore paramstypes.Subspace,
 	stakingKeeper types.StakingKeeper,
 ) Keeper {
-
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {
 		paramstore = paramstore.WithKeyTable(types.ParamKeyTable())

@@ -35,17 +35,14 @@ func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 
 	msgs := tx.GetMsgs()
 	err := dd.FilterMsgsAndProcessMsgs(ctx, msgs...)
-
 	if err != nil {
 		return ctx, err
 	}
 
 	return next(ctx, tx, simulate)
-
 }
 
 func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk.Msg) (err error) {
-
 	for _, msg := range msgs {
 
 		switch msg.(type) {
@@ -61,11 +58,9 @@ func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk
 
 	}
 	return nil
-
 }
 
 func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) (err error) {
-
 	msgEditValidator := msg.(*stakingtypes.MsgEditValidator)
 
 	// no update of CommissionRate provided
@@ -82,5 +77,4 @@ func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) (e
 	}
 
 	return nil
-
 }

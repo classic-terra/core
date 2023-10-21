@@ -9,10 +9,8 @@ const (
 	QuerierRoute = ModuleName
 )
 
-var (
-	// Keys for store prefixes
-	MinCommissionRatesPrefix = []byte{0x01} // prefix for each MinCommissionRate entry
-)
+// Keys for store prefixes
+var MinCommissionRatesPrefix = []byte{0x01} // prefix for each MinCommissionRate entry
 
 // MinCommissionRates - stored by *validator addr*
 func GetMinCommissionRatesKey(addr string) []byte {

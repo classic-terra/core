@@ -143,7 +143,6 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 }
 
 func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, cryptotypes.PubKey, stakingtypes.Validator) {
-
 	priv, pub, addr := testdata.KeyTestPubAddr()
 	valAddr := sdk.ValAddress(addr)
 
@@ -184,7 +183,6 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 	retval, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
 	suite.Require().Equal(true, found)
 	return priv, pub, retval
-
 }
 
 func TestAnteTestSuite(t *testing.T) {
@@ -192,7 +190,6 @@ func TestAnteTestSuite(t *testing.T) {
 }
 
 func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
-
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	suite.ctx = suite.ctx.WithIsCheckTx(false)
@@ -234,5 +231,4 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.Require().NoError(err)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err)
-
 }

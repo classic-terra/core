@@ -8,20 +8,17 @@ import (
 
 // GetVotingPower calculates the voting power of a validator in percent
 func (k Keeper) CalculateVotingPower(ctx sdk.Context, validator stakingtypes.Validator) (ret sdk.Dec) {
-
 	totalPower := k.StakingKeeper.GetLastTotalPower(ctx).Int64()
 	validatorPower := sdk.TokensToConsensusPower(
 		validator.Tokens,
 		k.StakingKeeper.PowerReduction(ctx),
 	)
 	return sdk.NewDec(validatorPower).QuoInt64(totalPower).MulInt64(100)
-
 }
 
 // CalculateDynCommission calculates the min commission according
 // to StrathColes formula
 func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.Validator) (ret sdk.Dec) {
-
 	// The original parameters as defined
 	// by Strath
 	A := k.GetMaxZero(ctx)
@@ -42,11 +39,9 @@ func (k Keeper) CalculateDynCommission(ctx sdk.Context, validator stakingtypes.V
 		y = minComm
 	}
 	return y.QuoInt64(100)
-
 }
 
 func (k Keeper) SetDynCommissionRate(ctx sdk.Context, validator string, rate sdk.Dec) {
-
 	var preSetRate types.ValidatorCommissionRate
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetMinCommissionRatesKey(validator))
@@ -67,7 +62,6 @@ func (k Keeper) SetDynCommissionRate(ctx sdk.Context, validator string, rate sdk
 }
 
 func (k Keeper) SetTargetCommissionRate(ctx sdk.Context, validator string, rate sdk.Dec) {
-
 	var preSetRate types.ValidatorCommissionRate
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetMinCommissionRatesKey(validator))
@@ -130,7 +124,6 @@ func (k Keeper) IterateDynCommissionRates(ctx sdk.Context, cb func(types.Validat
 }
 
 func (k Keeper) UpdateValidatorMinRates(ctx sdk.Context, validator stakingtypes.Validator) {
-
 	var newRate sdk.Dec
 	minRate := k.CalculateDynCommission(ctx, validator)
 	newMaxRate := validator.Commission.MaxRate
@@ -163,14 +156,11 @@ func (k Keeper) UpdateValidatorMinRates(ctx sdk.Context, validator stakingtypes.
 	// Debug
 	targetRate = k.GetTargetCommissionRate(ctx, validator.OperatorAddress)
 	ctx.Logger().Info("dyncomm:", "val", validator.OperatorAddress, "min_rate", minRate, "target_rate", targetRate)
-
 }
 
 func (k Keeper) UpdateAllBondedValidatorRates(ctx sdk.Context) (err error) {
-
 	var lastErr error = nil
 	k.StakingKeeper.IterateValidators(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-
 		val := validator.(stakingtypes.Validator)
 
 		if !val.IsBonded() {
@@ -180,9 +170,7 @@ func (k Keeper) UpdateAllBondedValidatorRates(ctx sdk.Context) (err error) {
 		k.UpdateValidatorMinRates(ctx, val)
 
 		return false
-
 	})
 
 	return lastErr
-
 }

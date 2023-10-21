@@ -194,7 +194,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, notBondedPool)
 	accountKeeper.SetModuleAccount(ctx, distrAcc)
 
-	for idx, _ := range PubKeys {
+	for idx := range PubKeys {
 		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(AddrFrom(idx)))
 		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, AddrFrom(idx), InitCoins)
 		require.NoError(t, err)

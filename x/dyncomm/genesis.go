@@ -13,7 +13,7 @@ import (
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState) {
 	keeper.SetParams(ctx, data.Params)
 
-	//iterate validators and set target rates
+	// iterate validators and set target rates
 	keeper.StakingKeeper.IterateValidators(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 		val := validator.(stakingtypes.Validator)
 		keeper.SetTargetCommissionRate(ctx, val.OperatorAddress, val.Commission.Rate)
@@ -24,7 +24,6 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 	if err != nil {
 		panic("could not initialize genesis")
 	}
-
 }
 
 // ExportGenesis writes the current store values
@@ -34,7 +33,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisSt
 	params := keeper.GetParams(ctx)
 	var rates []types.ValidatorCommissionRate
 
-	//rates = append(rates)
+	// rates = append(rates)
 	keeper.IterateDynCommissionRates(ctx, func(rate types.ValidatorCommissionRate) (stop bool) {
 		rates = append(rates, rate)
 		return false

@@ -18,11 +18,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	// Check epoch last block
 	// TODO: Change this to the appropriate period
-	if !core.IsPeriodLastBlock(ctx, core.BlocksPerMinute) {
+	if !core.IsPeriodLastBlock(ctx, 10*core.BlocksPerMinute) {
 		return
 	}
 
 	ctx.Logger().Info("End Epoch - Calculation of Dyncomm is due")
 	k.UpdateAllBondedValidatorRates(ctx)
-
 }

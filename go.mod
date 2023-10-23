@@ -7,7 +7,7 @@ require (
 	github.com/CosmWasm/wasmvm v1.1.2
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/ibc-go/v6 v6.2.0
+	github.com/cosmos/ibc-go/v6 v6.2.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/google/gofuzz v1.2.0

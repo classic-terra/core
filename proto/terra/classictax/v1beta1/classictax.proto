@@ -23,7 +23,8 @@ message Params {
   ];
 
   repeated string taxable_msg_types = 3 [
-    (gogoproto.moretags)   = "yaml:\"taxable_msg_types\""
+    (gogoproto.moretags)   = "yaml:\"taxable_msg_types\"",
+    (gogoproto.jsontag)    = "taxable_msg_types"
   ];
 
 }

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/custom/auth/ante"
+	"github.com/classic-terra/core/v2/x/classictax/keeper"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -77,7 +77,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 
 	for _, sdkMsg := range sdkMsgs {
 		// Charge tax on result msg
-		taxes := ante.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
+		taxes := keeper.FilterMsgAndComputeStabilityTax(ctx, h.treasuryKeeper, sdkMsg)
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
 			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)

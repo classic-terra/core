@@ -1,4 +1,4 @@
-package ante
+package post
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,8 +9,8 @@ import (
 )
 
 // BurnTaxSplit splits
-func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
-	burnSplitRate := fd.treasuryKeeper.GetBurnSplitRate(ctx)
+func (dd ClassicTaxDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
+	burnSplitRate := dd.treasuryKeeper.GetBurnSplitRate(ctx)
 
 	if burnSplitRate.IsPositive() {
 		distributionDeltaCoins := sdk.NewCoins()
@@ -24,7 +24,7 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 	}
 
 	if !taxes.IsZero() {
-		if err = fd.bankKeeper.SendCoinsFromModuleToModule(
+		if err = dd.bankKeeper.SendCoinsFromModuleToModule(
 			ctx,
 			types.FeeCollectorName,
 			treasury.BurnModuleName,

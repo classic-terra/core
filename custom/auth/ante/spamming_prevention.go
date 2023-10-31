@@ -6,20 +6,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
 	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
 )
 
 // SpammingPreventionDecorator will check if the transaction's gas is smaller than
 // configured hard cap
 type SpammingPreventionDecorator struct {
-	oracleKeeper     OracleKeeper
+	oracleKeeper     expectedkeeper.OracleKeeper
 	oraclePrevoteMap map[string]int64
 	oracleVoteMap    map[string]int64
 	mu               *sync.Mutex
 }
 
 // NewSpammingPreventionDecorator returns new spamming prevention decorator instance
-func NewSpammingPreventionDecorator(oracleKeeper OracleKeeper) SpammingPreventionDecorator {
+func NewSpammingPreventionDecorator(oracleKeeper expectedkeeper.OracleKeeper) SpammingPreventionDecorator {
 	return SpammingPreventionDecorator{
 		oracleKeeper:     oracleKeeper,
 		oraclePrevoteMap: make(map[string]int64),

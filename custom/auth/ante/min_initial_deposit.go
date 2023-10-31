@@ -3,6 +3,7 @@ package ante
 import (
 	"fmt"
 
+	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
 	core "github.com/classic-terra/core/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,11 +14,11 @@ import (
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
 type MinInitialDepositDecorator struct {
 	govKeeper      govkeeper.Keeper
-	treasuryKeeper TreasuryKeeper
+	treasuryKeeper expectedkeeper.TreasuryKeeper
 }
 
 // NewMinInitialDeposit returns new min initial deposit decorator instance
-func NewMinInitialDepositDecorator(govKeeper govkeeper.Keeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
+func NewMinInitialDepositDecorator(govKeeper govkeeper.Keeper, treasuryKeeper expectedkeeper.TreasuryKeeper) MinInitialDepositDecorator {
 	return MinInitialDepositDecorator{
 		govKeeper:      govKeeper,
 		treasuryKeeper: treasuryKeeper,
@@ -31,7 +32,7 @@ func IsMsgSubmitProposal(msg sdk.Msg) bool {
 }
 
 // HandleCheckMinInitialDeposit
-func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkeeper.Keeper, treasuryKeeper TreasuryKeeper) (err error) {
+func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkeeper.Keeper, treasuryKeeper expectedkeeper.TreasuryKeeper) (err error) {
 	submitPropMsg, ok := msg.(*govv1beta1.MsgSubmitProposal)
 	if !ok {
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")

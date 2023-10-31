@@ -1,0 +1,29 @@
+syntax = "proto3";
+package terra.classictax.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/classic-terra/core/v2/x/classictax/types";
+
+// Params defines the parameters for the classictax module.
+message Params {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  string burn_tax = 1 [
+    (gogoproto.moretags)   = "yaml:\"burn_tax\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  string gas_fee = 2 [
+      (gogoproto.moretags)   = "yaml:\"gas_fee\"",
+      (gogoproto.customtype)   = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable)   = false
+  ];
+
+  repeated string taxable_msg_types = 3 [
+    (gogoproto.moretags)   = "yaml:\"taxable_msg_types\""
+  ];
+
+}

@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"math"
 
+	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
+	core "github.com/classic-terra/core/v2/types"
+	classictaxkeeper "github.com/classic-terra/core/v2/x/classictax/keeper"
+	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -15,18 +19,22 @@ import (
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type FeeDecorator struct {
-	accountKeeper  ante.AccountKeeper
-	bankKeeper     BankKeeper
-	feegrantKeeper ante.FeegrantKeeper
-	treasuryKeeper TreasuryKeeper
+	accountKeeper    ante.AccountKeeper
+	bankKeeper       expectedkeeper.BankKeeper
+	feegrantKeeper   ante.FeegrantKeeper
+	treasuryKeeper   expectedkeeper.TreasuryKeeper
+	oracleKeeper     oraclekeeper.Keeper
+	classictaxKeeper classictaxkeeper.Keeper
 }
 
-func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper) FeeDecorator {
+func NewClassicTaxFeeDecorator(ak ante.AccountKeeper, bk expectedkeeper.BankKeeper, fk ante.FeegrantKeeper, tk expectedkeeper.TreasuryKeeper, ok oraclekeeper.Keeper, ctk classictaxkeeper.Keeper) FeeDecorator {
 	return FeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		treasuryKeeper: tk,
+		accountKeeper:    ak,
+		bankKeeper:       bk,
+		feegrantKeeper:   fk,
+		treasuryKeeper:   tk,
+		oracleKeeper:     ok,
+		classictaxKeeper: ctk,
 	}
 }
 
@@ -47,7 +55,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	taxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, fd.treasuryKeeper, msgs...)
 
 	if !simulate {
 		priority, err = fd.checkTxFee(ctx, tx, taxes)
@@ -56,7 +64,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		}
 	}
 
-	if err := fd.checkDeductFee(ctx, feeTx, taxes, simulate); err != nil {
+	if ctx, err := fd.checkDeductFee(ctx, feeTx, taxes, simulate); err != nil {
 		return ctx, err
 	}
 
@@ -65,9 +73,9 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) error {
+func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxes sdk.Coins, simulate bool) (newCtx sdk.Context, err error) {
 	if addr := fd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	fee := feeTx.GetFee()
@@ -75,15 +83,28 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	feeGranter := feeTx.FeeGranter()
 	deductFeesFrom := feePayer
 
+	// in case the tx or the posthandler fails, we only want the user to pay the gas, not the tax
+	// so we need to reduce the fee by the tax amount (not stabilityTax) here
+	if !simulate {
+
+		_, feeGasOnly, err := fd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes, fd.treasuryKeeper, fd.oracleKeeper)
+
+		if err != nil {
+			return ctx, err
+		}
+
+		fee = feeGasOnly
+	}
+
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
 	if feeGranter != nil {
 		if fd.feegrantKeeper == nil {
-			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			err := fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, feeTx.GetMsgs())
 			if err != nil {
-				return sdkerrors.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
+				return ctx, sdkerrors.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
 			}
 		}
 
@@ -92,24 +113,24 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 	deductFeesFromAcc := fd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
-		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
+		return ctx, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	// deduct the fees
 	if !fee.IsZero() {
 		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, fee)
 		if err != nil {
-			return err
+			return ctx, err
 		}
 
-		if !taxes.IsZero() && !simulate {
-			err := fd.BurnTaxSplit(ctx, taxes)
-			if err != nil {
-				return err
+		// this is now stability tax only, so no need to burn tax split
+		if !stabilityTaxes.IsZero() && !simulate {
+			if _, hasNeg := fee.SafeSub(stabilityTaxes...); hasNeg {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", fee, stabilityTaxes)
 			}
 
-			// Record tax proceeds
-			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
+			// Record tax proceeds, disabled for stability tax as since introduction of burn tax it was used for that purpose
+			//fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 		}
 	}
 
@@ -122,7 +143,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	return nil
+	return ctx, nil
 }
 
 // DeductFees deducts fees from the given account.
@@ -143,7 +164,7 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 // Transaction with only oracle messages will skip gas fee check and will have the most priority.
 // It also checks enough fee for treasury tax
-func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (int64, error) {
+func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk.Coins) (int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return 0, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -151,32 +172,24 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
+
 	msgs := feeTx.GetMsgs()
-	isOracleTx := isOracleTx(msgs)
+	isOracleTx := fd.classictaxKeeper.IsOracleTx(msgs)
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
 	if ctx.IsCheckTx() && !isOracleTx {
-		requiredGasFees := sdk.Coins{}
-		minGasPrices := ctx.MinGasPrices()
-		if !minGasPrices.IsZero() {
-			requiredGasFees = make(sdk.Coins, len(minGasPrices))
+		requiredGasFees, _ := fd.classictaxKeeper.GetFeeCoins(ctx, gas, stabilityTaxes, fd.oracleKeeper)
+		requiredTaxFees, requiredTaxFeesUluna := fd.classictaxKeeper.GetTaxCoins(ctx, fd.treasuryKeeper, fd.oracleKeeper, msgs...)
 
-			// Determine the required fees by multiplying each required minimum gas
-			// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-			glDec := sdk.NewDec(int64(gas))
-			for i, gp := range minGasPrices {
-				fee := gp.Amount.Mul(glDec)
-				requiredGasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-			}
-		}
+		requiredTaxFeesUluna.SafeSub(sdk.NewCoin(core.MicroLunaDenom, requiredTaxFees.AmountOf(core.MicroLunaDenom)))
 
-		requiredFees := requiredGasFees.Add(taxes...)
+		requiredFees := requiredGasFees.Add(requiredTaxFees...).Add(stabilityTaxes...)
 
 		// Check required fees
-		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-			return 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
+		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
+			return 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax) + %q(stability)", feeCoins, requiredFees, requiredGasFees, requiredTaxFees, stabilityTaxes)
 		}
 	}
 

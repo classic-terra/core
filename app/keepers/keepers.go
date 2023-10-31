@@ -54,6 +54,8 @@ import (
 	customwasmkeeper "github.com/classic-terra/core/v2/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v2/wasmbinding"
 
+	classictaxkeeper "github.com/classic-terra/core/v2/x/classictax/keeper"
+	classictaxtypes "github.com/classic-terra/core/v2/x/classictax/types"
 	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
@@ -92,6 +94,7 @@ type AppKeepers struct {
 	MarketKeeper        marketkeeper.Keeper
 	TreasuryKeeper      treasurykeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
+	ClassicTaxKeeper    classictaxkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -137,6 +140,7 @@ func NewAppKeepers(
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
 		wasmtypes.StoreKey,
+		classictaxtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -407,6 +411,12 @@ func NewAppKeepers(
 		govConfig,
 	)
 
+	appKeepers.ClassicTaxKeeper = classictaxkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[classictaxtypes.StoreKey],
+		appKeepers.GetSubspace(classictaxtypes.ModuleName),
+	)
+
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
 	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
@@ -442,6 +452,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(classictaxtypes.ModuleName)
 
 	return paramsKeeper
 }

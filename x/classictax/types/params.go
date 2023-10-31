@@ -85,7 +85,7 @@ func validateBurnTax(i interface{}) error {
 }
 
 func validateGasFee(i interface{}) error {
-	v, ok := i.(sdk.DecCoin)
+	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

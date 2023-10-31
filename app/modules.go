@@ -289,6 +289,8 @@ func orderInitGenesis() []string {
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
+		// classic tax needs to be initialized before gov
+		classictaxtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
@@ -310,6 +312,5 @@ func orderInitGenesis() []string {
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
 		wasmtypes.ModuleName,
-		classictaxtypes.ModuleName,
 	}
 }

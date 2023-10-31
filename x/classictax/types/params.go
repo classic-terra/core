@@ -16,7 +16,7 @@ var (
 	KeyTaxableMsgTypes = []byte("TaxableMsgTypes")
 )
 
-// Default dyncomm parameter values
+// Default classictax parameter values
 var (
 	// todo: correct default values
 	DefaultBurnTax         = sdk.NewDecWithPrec(5, 3)     // 0.005 = 0.5%
@@ -26,7 +26,7 @@ var (
 
 var _ paramstypes.ParamSet = &Params{}
 
-// DefaultParams creates default dyncomm module parameters
+// DefaultParams creates default classictax module parameters
 func DefaultParams() Params {
 	return Params{
 		BurnTax:         DefaultBurnTax,

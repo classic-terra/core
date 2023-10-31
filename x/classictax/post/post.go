@@ -11,7 +11,7 @@ import (
 )
 
 // ClassicTaxDecorator does post runMsg store
-// modifications for dyncomm module
+// modifications for classictax module
 type ClassicTaxDecorator struct {
 	classictaxKeeper classictaxkeeper.Keeper
 	treasuryKeeper   treasurykeeper.Keeper

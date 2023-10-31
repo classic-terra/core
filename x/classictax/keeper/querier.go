@@ -21,13 +21,13 @@ func NewQuerier(keeper Keeper) types.QueryServer {
 
 var _ types.QueryServer = querier{}
 
-// Params queries params of dyncomm module
+// Params queries params of classictax module
 func (q querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryParamsResponse{Params: q.GetParams(ctx)}, nil
 }
 
-// Rates queries Validator Rate of dyncomm module
+// TaxRate queries the current burn tax rate
 func (q querier) TaxRate(c context.Context, req *types.QueryTaxRateRequest) (*types.QueryTaxRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	rate := q.GetBurnTaxRate(ctx)

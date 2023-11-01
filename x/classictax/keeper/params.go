@@ -15,7 +15,7 @@ func (k Keeper) GetGasFee(ctx sdk.Context) (ret sdk.Dec) {
 	return ret
 }
 
-func (k Keeper) GetTaxableMsgTypes(ctx sdk.Context) (ret []string) {
+/*func (k Keeper) GetTaxableMsgTypes(ctx sdk.Context) (ret []string) {
 	k.paramSpace.Get(ctx, types.KeyTaxableMsgTypes, &ret)
 	return ret
 }
@@ -29,4 +29,39 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of market parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+*/
+
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+
+	// log ctx.KVStore(k.storeKey) and k.storeKey
+	k.Logger(ctx).Info("Fetching Params 1", "storekey", k.storeKey)
+	k.Logger(ctx).Info("Fetching Params 2", "kvstore", ctx.KVStore(k.storeKey))
+	k.Logger(ctx).Info("Fetching Params 3", "msgtypes", ctx.KVStore(k.storeKey).Get([]byte(types.KeyTaxableMsgTypes)))
+	// Logging the store key and param set key
+	k.paramSpace.GetParamSet(ctx, &params)
+
+	// Logging the fetched params
+	ctx.Logger().Info("Fetched Params", "params", params)
+	return params
+}
+
+// SetParams sets the total set of market parameters.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	ctx.Logger().Info("Setting Params", "params", params)
+	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+func (k Keeper) GetTaxableMsgTypes(ctx sdk.Context) (ret []string) {
+	storeKey := types.KeyTaxableMsgTypes
+
+	// Logging the store key
+	ctx.Logger().Info("Fetching TaxableMsgTypes", "storeKey", storeKey)
+
+	k.paramSpace.Get(ctx, storeKey, &ret)
+
+	// Logging the fetched message types
+	ctx.Logger().Info("Fetched TaxableMsgTypes", "msgTypes", ret)
+
+	return ret
 }

@@ -21,7 +21,7 @@ var (
 	// todo: correct default values
 	DefaultBurnTax         = sdk.NewDecWithPrec(5, 3)     // 0.005 = 0.5%
 	DefaultGasFee          = sdk.NewDecWithPrec(28536, 3) // 28.536
-	DefaultTaxableMsgTypes = []string{"bank/MsgSend", "bank/MsgMultiSend", "wasm/MsgExecuteContract", "wasm/MsgInstantiateContract", "wasm/MsgStoreCode"}
+	DefaultTaxableMsgTypes = []string{"types.MsgSend", "types.MsgMultiSend", "types.MsgExecuteContract", "types.MsgInstantiateContract", "types.MsgStoreCode"}
 )
 
 var _ paramstypes.ParamSet = &Params{}

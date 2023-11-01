@@ -13,10 +13,6 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/classictax/v1beta1/params";
   }
-
-  rpc TaxRate(QueryTaxRateRequest) returns (QueryTaxRateResponse){
-    option (google.api.http).get = "/terra/classictax/v1beta1/taxrate";
-  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -26,12 +22,4 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryTaxRateRequest is the request type for the Query/Rate RPC method.
-message QueryTaxRateRequest {}
-
-// QueryTaxRateResponse is the response type for the Query/Rate RPC method.
-message QueryTaxRateResponse {
-  string tax_rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

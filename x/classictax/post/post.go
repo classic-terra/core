@@ -28,7 +28,7 @@ func NewClassicTaxPostDecorator(dk classictaxkeeper.Keeper, tk treasurykeeper.Ke
 	}
 }
 
-func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -75,10 +75,14 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	if taxes.IsAllGT(sentTaxFeesCoins) {
 		// try uluna tax
 		if taxesUluna.IsGTE(sdk.NewCoin(core.MicroLunaDenom, sentTaxFees.AmountOf(core.MicroLunaDenom).TruncateInt())) {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInsufficientFee, "insufficient tax sent")
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient tax sent %q, required %q. reqgas %d, taxgas %d", sentTaxFees, taxes, requiredGas, taxGas)
 		}
 
 		distributeTax = sdk.NewCoins(taxesUluna)
+	}
+
+	if distributeTax.IsZero() {
+		return next(ctx, tx, simulate)
 	}
 
 	err = dd.BurnTaxSplit(ctx, distributeTax)
@@ -89,5 +93,5 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// Record tax proceeds
 	dd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 
-	return ctx, nil
+	return next(ctx, tx, simulate)
 }

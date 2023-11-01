@@ -26,10 +26,3 @@ func (q querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryParamsResponse{Params: q.GetParams(ctx)}, nil
 }
-
-// TaxRate queries the current burn tax rate
-func (q querier) TaxRate(c context.Context, req *types.QueryTaxRateRequest) (*types.QueryTaxRateResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	rate := q.GetBurnTaxRate(ctx)
-	return &types.QueryTaxRateResponse{TaxRate: &rate}, nil
-}

@@ -22,39 +22,10 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	classictaxQueryCmd.AddCommand(
-		GetCmdQueryTaxRate(),
 		GetCmdQueryParams(),
 	)
 
 	return classictaxQueryCmd
-}
-
-// GetCmdQueryRate implements the query min dynamic commission rate result command.
-func GetCmdQueryTaxRate() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "tax_rate",
-		Args:  cobra.NoArgs,
-		Short: "Query the current tax rate",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.TaxRate(context.Background(),
-				&types.QueryTaxRateRequest{},
-			)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	return cmd
 }
 
 // GetCmdQueryParams implements the query params command.

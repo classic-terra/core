@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -121,7 +122,8 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 	for _, msg := range msgs {
 		taxable := false
 		for _, msgType := range taxableMsgTypes {
-			if msg.String() == msgType {
+			tp := strings.TrimLeft(reflect.TypeOf(msg).String(), "*")
+			if tp == msgType {
 				taxable = true
 				break
 			}
@@ -208,7 +210,7 @@ func (k Keeper) CoinToMicroLuna(ctx sdk.Context, ok oraclekeeper.Keeper, coin sd
 	} else {
 		// get the exchange rate
 		exchangeRate, err := ok.GetLunaExchangeRate(ctx, coin.Denom)
-		if err != nil {
+		if err != nil && !exchangeRate.IsZero() {
 			// convert to micro luna
 			amount := sdk.NewDecFromInt(coin.Amount).Quo(exchangeRate).TruncateInt()
 			microLuna = microLuna.Add(sdk.NewCoin(core.MicroLunaDenom, amount))
@@ -254,6 +256,10 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	sentFeesUluna := sdk.NewDec(k.CoinsToMicroLuna(ctx, ok, fee).Amount.Int64())
 	feeGasUluna := sdk.NewDec(requiredFeesUluna.Amount.Int64())
 	feeTaxUluna := sdk.NewDec(taxesUluna.Amount.Int64())
+
+	if feeTaxUluna.IsZero() {
+		return nil, nil, nil
+	}
 
 	// calculate the assumed multiplier that was used to calculate fees to send (gas * multiplier * gasPrice = sentFees)
 	multiplier := sentFeesUluna.Quo(feeGasUluna.Add(feeTaxUluna))

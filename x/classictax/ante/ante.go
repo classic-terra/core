@@ -38,7 +38,7 @@ func NewClassicTaxFeeDecorator(ak ante.AccountKeeper, bk expectedkeeper.BankKeep
 	}
 }
 
-func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -50,7 +50,6 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	var (
 		priority int64
-		err      error
 	)
 
 	msgs := feeTx.GetMsgs()
@@ -68,7 +67,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return ctx, err
 	}
 
-	newCtx := ctx.WithPriority(priority)
+	newCtx = ctx.WithPriority(priority)
 
 	return next(newCtx, tx, simulate)
 }
@@ -86,7 +85,11 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, stabilit
 	// in case the tx or the posthandler fails, we only want the user to pay the gas, not the tax
 	// so we need to reduce the fee by the tax amount (not stabilityTax) here
 	if !simulate {
-
+		// log the whole ctx to see what is in there
+		ctx.Logger().Info("ctx", "ctx", ctx)
+		// also log the contents of the key value store
+		fd.classictaxKeeper.Logger(ctx).Info("params", "params", fd.classictaxKeeper.GetParams(ctx).TaxableMsgTypes)
+		ctx.Logger().Info("ctaxkep", "msgtypes", fd.classictaxKeeper.GetTaxableMsgTypes(ctx))
 		_, feeGasOnly, err := fd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes, fd.treasuryKeeper, fd.oracleKeeper)
 
 		if err != nil {

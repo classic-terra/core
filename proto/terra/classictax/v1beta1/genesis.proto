@@ -10,12 +10,4 @@ option go_package = "github.com/classic-terra/core/v2/x/classictax/types";
 message GenesisState {
   // params defines all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
-  repeated TaxRate tax_rates = 2 [(gogoproto.nullable) = false];
-}
-
-// TaxRate defines a specific tax rate to be enforced by the blockchain
-message TaxRate {
-  string description = 1; // Change this field to whatever makes sense for your classictax module
-  string rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  string target_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

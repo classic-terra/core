@@ -79,25 +79,27 @@ func (k Keeper) ComputeBurnTax(ctx sdk.Context, principal sdk.Coins) sdk.Coins {
 	return taxes
 }
 
-func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, taxes sdk.Coins, ok oraclekeeper.Keeper) (sdk.Coins, sdk.Coin) {
+func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, stabilityTaxes sdk.Coins, ok oraclekeeper.Keeper) (sdk.Coins, sdk.Coin) {
 	requiredGasFees := sdk.Coins{}
 	requiredGasFeesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 	minGasPrices := ctx.MinGasPrices()
+	k.Logger(ctx).Info("MinGasPrices", "minGasPrices", minGasPrices)
 	if !minGasPrices.IsZero() {
-		requiredGasFees = make(sdk.Coins, len(minGasPrices))
+		requiredGasFees = make(sdk.Coins, 0, len(minGasPrices))
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 		glDec := sdk.NewDec(int64(gas))
-		for i, gp := range minGasPrices {
+		for _, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)
-			requiredGasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			coin := sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			requiredGasFees = append(requiredGasFees, coin)
 			if gp.Denom == core.MicroLunaDenom {
 				requiredGasFeesUluna = sdk.NewCoin(core.MicroLunaDenom, fee.Ceil().RoundInt())
 				break
 			} else {
-				inUluna := k.CoinToMicroLuna(ctx, ok, sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt()))
+				inUluna := k.CoinToMicroLuna(ctx, sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt()))
 				if requiredGasFeesUluna.IsLT(inUluna) {
 					requiredGasFeesUluna = inUluna
 				}
@@ -105,7 +107,12 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, taxes sdk.Coins, ok ora
 		}
 	}
 
-	requiredFees := requiredGasFees.Add(taxes...)
+	stabilityTaxes = stabilityTaxes.Sort()
+	requiredFees := requiredGasFees.Sort()
+
+	if !stabilityTaxes.IsZero() {
+		requiredFees = requiredFees.Add(stabilityTaxes...)
+	}
 
 	return requiredFees, requiredGasFeesUluna
 }
@@ -191,7 +198,7 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 		}
 
 		if taxUluna.IsZero() && tax != nil && !tax.IsZero() {
-			taxUluna = k.CoinsToMicroLuna(ctx, ok, tax)
+			taxUluna = k.CoinsToMicroLuna(ctx, tax)
 		}
 
 		if !taxUluna.IsZero() {
@@ -202,14 +209,14 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 	return taxes, taxesUluna
 }
 
-func (k Keeper) CoinToMicroLuna(ctx sdk.Context, ok oraclekeeper.Keeper, coin sdk.Coin) sdk.Coin {
+func (k Keeper) CoinToMicroLuna(ctx sdk.Context, coin sdk.Coin) sdk.Coin {
 	microLuna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 	if coin.Denom == core.MicroLunaDenom {
 		microLuna = microLuna.Add(coin)
 	} else {
 		// get the exchange rate
-		exchangeRate, err := ok.GetLunaExchangeRate(ctx, coin.Denom)
+		exchangeRate, err := k.oracleKeeper.GetLunaExchangeRate(ctx, coin.Denom)
 		if err != nil && !exchangeRate.IsZero() {
 			// convert to micro luna
 			amount := sdk.NewDecFromInt(coin.Amount).Quo(exchangeRate).TruncateInt()
@@ -220,11 +227,11 @@ func (k Keeper) CoinToMicroLuna(ctx sdk.Context, ok oraclekeeper.Keeper, coin sd
 	return microLuna
 }
 
-func (k Keeper) CoinsToMicroLuna(ctx sdk.Context, ok oraclekeeper.Keeper, coins sdk.Coins) sdk.Coin {
+func (k Keeper) CoinsToMicroLuna(ctx sdk.Context, coins sdk.Coins) sdk.Coin {
 	microLuna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 	for _, coin := range coins {
-		microLuna = microLuna.Add(k.CoinToMicroLuna(ctx, ok, coin))
+		microLuna = microLuna.Add(k.CoinToMicroLuna(ctx, coin))
 	}
 
 	return microLuna
@@ -249,11 +256,11 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	gas := feeTx.GetGas()
 	fee := feeTx.GetFee()
 
-	_, taxesUluna := k.GetTaxCoins(ctx, tk, ok, feeTx.GetMsgs()...)
+	taxes, taxesUluna := k.GetTaxCoins(ctx, tk, ok, feeTx.GetMsgs()...)
 	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gas, stabilityTaxes, ok)
 
 	// calculate the ratio of the tax to the gas
-	sentFeesUluna := sdk.NewDec(k.CoinsToMicroLuna(ctx, ok, fee).Amount.Int64())
+	sentFeesUluna := sdk.NewDec(k.CoinsToMicroLuna(ctx, fee).Amount.Int64())
 	feeGasUluna := sdk.NewDec(requiredFeesUluna.Amount.Int64())
 	feeTaxUluna := sdk.NewDec(taxesUluna.Amount.Int64())
 
@@ -264,15 +271,17 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	// calculate the assumed multiplier that was used to calculate fees to send (gas * multiplier * gasPrice = sentFees)
 	multiplier := sentFeesUluna.Quo(feeGasUluna.Add(feeTaxUluna))
 
-	sentFeesTax := sdk.NewDecCoinsFromCoins(fee...)
+	sentFeesTax := sdk.NewDecCoinsFromCoins(taxes...)
+	//fmt.Printf("multiplier: %q, fee: %q, feestax: %q, gas: %d, sentuluna: %q, feesgasuluna: %q, feestaxuluna: %q\n", multiplier, fee, sentFeesTax, gas, sentFeesUluna, feeGasUluna, feeTaxUluna)
 	sentFeesTax = sentFeesTax.MulDecTruncate(multiplier)
 
 	coins, _ := sentFeesTax.TruncateDecimal()
-	neg := false
-	fee, neg = fee.SafeSub(coins...)
+	//fmt.Printf("multiplier: %q, fee: %q, feestax: %q, coins: %q\n", multiplier, fee, sentFeesTax, coins)
+
+	reducedFee, neg := fee.SafeSub(coins...)
 	if neg {
-		return nil, fee, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", fee, requiredFees)
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 1", fee, requiredFees)
 	}
 
-	return sentFeesTax, fee, nil
+	return sentFeesTax, reducedFee, nil
 }

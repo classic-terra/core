@@ -63,7 +63,6 @@ func (p Params) Validate() error {
 	}
 
 	// todo: validate gas fees and taxable msg types
-
 	return nil
 }
 

@@ -11,13 +11,15 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/classic-terra/core/v2/x/classictax/types"
+	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 )
 
 // Keeper of the market store
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	paramSpace paramstypes.Subspace
+	storeKey     storetypes.StoreKey
+	cdc          codec.BinaryCodec
+	paramSpace   paramstypes.Subspace
+	oracleKeeper oraclekeeper.Keeper
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -25,6 +27,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	paramstore paramstypes.Subspace,
+	ok oraclekeeper.Keeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {
@@ -32,9 +35,10 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		paramSpace: paramstore,
+		cdc:          cdc,
+		storeKey:     storeKey,
+		paramSpace:   paramstore,
+		oracleKeeper: ok,
 	}
 }
 

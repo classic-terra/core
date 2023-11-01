@@ -5,7 +5,6 @@ import (
 	"math"
 
 	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
-	core "github.com/classic-terra/core/v2/types"
 	classictaxkeeper "github.com/classic-terra/core/v2/x/classictax/keeper"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -186,13 +185,15 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk
 		requiredGasFees, _ := fd.classictaxKeeper.GetFeeCoins(ctx, gas, stabilityTaxes, fd.oracleKeeper)
 		requiredTaxFees, requiredTaxFeesUluna := fd.classictaxKeeper.GetTaxCoins(ctx, fd.treasuryKeeper, fd.oracleKeeper, msgs...)
 
-		requiredTaxFeesUluna.SafeSub(sdk.NewCoin(core.MicroLunaDenom, requiredTaxFees.AmountOf(core.MicroLunaDenom)))
-
-		requiredFees := requiredGasFees.Add(requiredTaxFees...).Add(stabilityTaxes...)
+		requiredFees := requiredGasFees.Sort()
+		if !stabilityTaxes.IsZero() {
+			requiredFees = requiredFees.Add(stabilityTaxes...)
+		}
 
 		// Check required fees
-		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
-			return 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax) + %q(stability)", feeCoins, requiredFees, requiredGasFees, requiredTaxFees, stabilityTaxes)
+		// we ignore burn tax here as it is checked in the post handler
+		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
+			return 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeCoins, requiredFees, requiredGasFees, requiredTaxFees, requiredTaxFeesUluna, stabilityTaxes)
 		}
 	}
 

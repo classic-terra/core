@@ -294,6 +294,8 @@ func orderInitGenesis() []string {
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
+		// needs to be before any genesis init that makes txs
+		classictaxtypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -310,6 +312,5 @@ func orderInitGenesis() []string {
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
 		wasmtypes.ModuleName,
-		classictaxtypes.ModuleName,
 	}
 }

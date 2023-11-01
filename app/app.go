@@ -220,6 +220,9 @@ func NewTerraApp(
 
 	postHandler, err := custompost.NewPostHandler(
 		custompost.HandlerOptions{
+			TreasuryKeeper:   app.TreasuryKeeper,
+			BankKeeper:       app.BankKeeper,
+			OracleKeeper:     app.OracleKeeper,
 			ClassicTaxKeeper: app.ClassicTaxKeeper,
 		},
 	)

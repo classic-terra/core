@@ -411,10 +411,12 @@ func NewAppKeepers(
 		govConfig,
 	)
 
+	// register the classictax keeper
 	appKeepers.ClassicTaxKeeper = classictaxkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[classictaxtypes.StoreKey],
 		appKeepers.GetSubspace(classictaxtypes.ModuleName),
+		appKeepers.OracleKeeper,
 	)
 
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper

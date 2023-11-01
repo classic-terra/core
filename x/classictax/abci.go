@@ -17,7 +17,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	// Check epoch last block
-	// TODO: Change this to the appropriate period
 	if !core.IsPeriodLastBlock(ctx, 10*core.BlocksPerMinute) {
 		return
 	}

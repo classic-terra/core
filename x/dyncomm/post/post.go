@@ -63,7 +63,7 @@ func (dd DyncommDecorator) ProcessEditValidator(ctx sdk.Context, msg sdk.Msg) {
 func (dd DyncommDecorator) ProcessCreateValidator(ctx sdk.Context, msg sdk.Msg) {
 	// post handler runs after successfully
 	// calling runMsgs -> we can set state changes here!
-	msgEditValidator := msg.(*stakingtypes.MsgCreateValidator)
-	newIntendedRate := msgEditValidator.Commission.Rate
-	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgEditValidator.ValidatorAddress, newIntendedRate)
+	msgCreateValidator := msg.(*stakingtypes.MsgCreateValidator)
+	newIntendedRate := msgCreateValidator.Commission.Rate
+	dd.dyncommKeeper.SetTargetCommissionRate(ctx, msgCreateValidator.ValidatorAddress, newIntendedRate)
 }

@@ -152,7 +152,6 @@ func (k Keeper) UpdateValidatorMinRates(ctx sdk.Context, validator stakingtypes.
 
 	k.StakingKeeper.SetValidator(ctx, newValidator)
 	k.SetDynCommissionRate(ctx, validator.OperatorAddress, minRate)
-	k.SetTargetCommissionRate(ctx, validator.OperatorAddress, newRate)
 
 	// Debug
 	targetRate = k.GetTargetCommissionRate(ctx, validator.OperatorAddress)

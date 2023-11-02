@@ -10,9 +10,10 @@ func (k Keeper) GetBurnTaxRate(ctx sdk.Context) (ret sdk.Dec) {
 	return ret
 }
 
-func (k Keeper) GetGasFee(ctx sdk.Context) (ret sdk.Dec) {
-	k.paramSpace.Get(ctx, types.KeyGasFee, &ret)
-	return ret
+func (k Keeper) GetGasPrices(ctx sdk.Context) sdk.DecCoins {
+	var fetchParam []sdk.DecCoin
+	k.paramSpace.Get(ctx, types.KeyGasPrices, &fetchParam)
+	return sdk.NewDecCoins(fetchParam...)
 }
 
 func (k Keeper) GetTaxableMsgTypes(ctx sdk.Context) (ret []string) {

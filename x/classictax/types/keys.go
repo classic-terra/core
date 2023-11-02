@@ -7,4 +7,5 @@ const (
 	StoreKey     = ModuleName
 	RouterKey    = ModuleName
 	QuerierRoute = ModuleName
+	CtxFeeKey    = "classictax_fee"
 )

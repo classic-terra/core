@@ -12,15 +12,39 @@ import (
 // Parameter keys
 var (
 	KeyBurnTaxRate     = []byte("BurnTaxRate")
-	KeyGasFee          = []byte("GasFee")
+	KeyGasPrices       = []byte("GasPrices")
 	KeyTaxableMsgTypes = []byte("TaxableMsgTypes")
 )
 
 // Default classictax parameter values
 var (
 	// todo: correct default values
-	DefaultBurnTax         = sdk.NewDecWithPrec(5, 3)     // 0.005 = 0.5%
-	DefaultGasFee          = sdk.NewDecWithPrec(28536, 3) // 28.536
+	DefaultBurnTax   = sdk.NewDecWithPrec(5, 3) // 0.005 = 0.5%
+	DefaultGasPrices = []sdk.DecCoin{
+		sdk.NewDecCoinFromDec("uluna", sdk.NewDecWithPrec(28325, 3)),
+		sdk.NewDecCoinFromDec("usdr", sdk.NewDecWithPrec(52469, 5)),
+		sdk.NewDecCoinFromDec("uusd", sdk.NewDecWithPrec(75, 2)),
+		sdk.NewDecCoinFromDec("ukrw", sdk.NewDecWithPrec(850, 0)),
+		sdk.NewDecCoinFromDec("umnt", sdk.NewDecWithPrec(2142855, 3)),
+		sdk.NewDecCoinFromDec("ueur", sdk.NewDecWithPrec(625, 3)),
+		sdk.NewDecCoinFromDec("ucny", sdk.NewDecWithPrec(49, 1)),
+		sdk.NewDecCoinFromDec("ujpy", sdk.NewDecWithPrec(8185, 2)),
+		sdk.NewDecCoinFromDec("ugbp", sdk.NewDecWithPrec(55, 2)),
+		sdk.NewDecCoinFromDec("uinr", sdk.NewDecWithPrec(544, 1)),
+		sdk.NewDecCoinFromDec("ucad", sdk.NewDecWithPrec(95, 2)),
+		sdk.NewDecCoinFromDec("uchf", sdk.NewDecWithPrec(7, 1)),
+		sdk.NewDecCoinFromDec("uaud", sdk.NewDecWithPrec(95, 2)),
+		sdk.NewDecCoinFromDec("usgd", sdk.NewDec(1)),
+		sdk.NewDecCoinFromDec("uthb", sdk.NewDecWithPrec(231, 1)),
+		sdk.NewDecCoinFromDec("usek", sdk.NewDecWithPrec(625, 2)),
+		sdk.NewDecCoinFromDec("unok", sdk.NewDecWithPrec(625, 2)),
+		sdk.NewDecCoinFromDec("udkk", sdk.NewDecWithPrec(45, 1)),
+		sdk.NewDecCoinFromDec("uidr", sdk.NewDecWithPrec(10900, 0)),
+		sdk.NewDecCoinFromDec("uphp", sdk.NewDecWithPrec(38, 0)),
+		sdk.NewDecCoinFromDec("uhkd", sdk.NewDecWithPrec(585, 2)),
+		sdk.NewDecCoinFromDec("umyr", sdk.NewDecWithPrec(3, 0)),
+		sdk.NewDecCoinFromDec("utwd", sdk.NewDecWithPrec(20, 0)),
+	}
 	DefaultTaxableMsgTypes = []string{"types.MsgSend", "types.MsgMultiSend", "types.MsgExecuteContract", "types.MsgInstantiateContract", "types.MsgStoreCode"}
 )
 
@@ -30,7 +54,7 @@ var _ paramstypes.ParamSet = &Params{}
 func DefaultParams() Params {
 	return Params{
 		BurnTax:         DefaultBurnTax,
-		GasFee:          DefaultGasFee,
+		GasPrices:       DefaultGasPrices,
 		TaxableMsgTypes: DefaultTaxableMsgTypes,
 	}
 }
@@ -51,7 +75,7 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyBurnTaxRate, &p.BurnTax, validateBurnTax),
-		paramstypes.NewParamSetPair(KeyGasFee, &p.GasFee, validateGasFee),
+		paramstypes.NewParamSetPair(KeyGasPrices, &p.GasPrices, validateGasPrices),
 		paramstypes.NewParamSetPair(KeyTaxableMsgTypes, &p.TaxableMsgTypes, validateTaxableMsgTypes),
 	}
 }
@@ -62,7 +86,6 @@ func (p Params) Validate() error {
 		return fmt.Errorf("burn tax must be positive or zero, is %s", p.BurnTax)
 	}
 
-	// todo: validate gas fees and taxable msg types
 	return nil
 }
 
@@ -83,14 +106,16 @@ func validateBurnTax(i interface{}) error {
 	return nil
 }
 
-func validateGasFee(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+func validateGasPrices(i interface{}) error {
+	v, ok := i.([]sdk.DecCoin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNegative() {
-		return fmt.Errorf("gas fees must be positive or zero: %s", v)
+	for _, coin := range v {
+		if coin.IsNegative() {
+			return fmt.Errorf("gas prices must be positive or zero: %s", v)
+		}
 	}
 
 	return nil

@@ -27,23 +27,27 @@ func (k Keeper) ContainsDenom(coins sdk.Coins, denom string) bool {
 	return coins.AmountOf(denom).GT(sdk.ZeroInt())
 }
 
-func (k Keeper) CalculateTaxGas(ctx sdk.Context, taxes sdk.Coins, gasPrice sdk.Dec) uint64 {
+func (k Keeper) CalculateTaxGas(ctx sdk.Context, taxes sdk.Coins, gasPrices sdk.DecCoins) (uint64, error) {
 	taxGas := uint64(0)
 
+	// we are using uluna as a measuring point for the gas of taxes
 	for _, tax := range taxes {
 		// ensure that gasPrice isn't zero
-		if !gasPrice.IsZero() {
-			// calculate tax gas
-			taxForGas := sdk.NewDecFromBigInt(tax.Amount.BigInt()).Quo(gasPrice)
-			taxGasAmount := taxForGas.TruncateInt64()
+		gasPrice := gasPrices.AmountOf(tax.Denom)
+		if gasPrice.IsZero() {
+			return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "gas price for %s is zero", tax.Denom)
+		}
 
-			if taxGasAmount > 0 {
-				taxGas += uint64(taxGasAmount)
-			}
+		// calculate tax gas
+		taxForGas := sdk.NewDecFromBigInt(tax.Amount.BigInt()).Quo(gasPrice)
+		taxGasAmount := taxForGas.TruncateInt64()
+
+		if taxGasAmount > 0 {
+			taxGas += uint64(taxGasAmount)
 		}
 	}
 
-	return taxGas
+	return taxGas, nil
 }
 
 func (k Keeper) ComputeBurnTax(ctx sdk.Context, principal sdk.Coins) sdk.Coins {
@@ -81,15 +85,15 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, stabilityTaxes sdk.Coin
 	requiredGasFees := sdk.Coins{}
 	requiredGasFeesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
-	minGasPrices := ctx.MinGasPrices()
-	k.Logger(ctx).Info("MinGasPrices", "minGasPrices", minGasPrices)
-	if !minGasPrices.IsZero() {
-		requiredGasFees = make(sdk.Coins, 0, len(minGasPrices))
+	gasPrices := k.GetGasPrices(ctx)
+	k.Logger(ctx).Info("GasPrices", "GasPrices", gasPrices)
+	if !gasPrices.IsZero() {
+		requiredGasFees = make(sdk.Coins, 0, len(gasPrices))
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 		glDec := sdk.NewDec(int64(gas))
-		for _, gp := range minGasPrices {
+		for _, gp := range gasPrices {
 			fee := gp.Amount.Mul(glDec)
 			coin := sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 			requiredGasFees = append(requiredGasFees, coin)
@@ -250,27 +254,57 @@ func (k Keeper) IsOracleTx(msgs []sdk.Msg) bool {
 	return true
 }
 
-func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxes sdk.Coins) (sdk.DecCoins, sdk.Coins, error) {
+func (k Keeper) CalculateSentGas(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxes sdk.Coins) (uint64, error) {
 	gas := feeTx.GetGas()
+
+	/*taxes, _ := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
+	gasPrices := k.GetGasPrices(ctx)
+	taxGas, err := k.CalculateTaxGas(ctx, taxes, gasPrices)
+
+	if err != nil {
+		return 0, err
+	}*/
+
+	k.Logger(ctx).Info("CalculateSentGas", "gas", gas, "checktx", ctx.IsCheckTx(), "consumed", ctx.GasMeter().GasConsumed())
+
+	return gas, nil
+
+}
+
+// this should only be used in post handler due to the fact that it checks consumed gas instead of sent gas
+func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxes sdk.Coins) (sdk.DecCoins, sdk.Coins, uint64, error) {
+	gas := feeTx.GetGas()
+	gasConsumed := ctx.GasMeter().GasConsumed()
 	fee := feeTx.GetFee()
 
 	taxes, taxesUluna := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
-	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gas, stabilityTaxes)
+	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gasConsumed, stabilityTaxes)
+
+	taxGas, err := k.CalculateTaxGas(ctx, taxes, k.GetGasPrices(ctx))
+	if err != nil {
+		return nil, nil, gas, err
+	}
 
 	// calculate the ratio of the tax to the gas
 	sentFeesUluna := sdk.NewDec(k.CoinsToMicroLuna(ctx, fee).Amount.Int64())
 	feeGasUluna := sdk.NewDec(requiredFeesUluna.Amount.Int64())
 	feeTaxUluna := sdk.NewDec(taxesUluna.Amount.Int64())
 
+	k.Logger(ctx).Info("CalculateSentTax", "sentFeesUluna", sentFeesUluna, "feeGasUluna", feeGasUluna, "feeTaxUluna", feeTaxUluna, "requiredFeesUluna", requiredFeesUluna, "requiredFees", requiredFees, "taxesUluna", taxesUluna, "taxes", taxes, "checktx", ctx.IsCheckTx())
+
 	if feeTaxUluna.IsZero() {
-		return nil, nil, nil
+		return nil, nil, gas, nil
 	}
 
 	// calculate the assumed multiplier that was used to calculate fees to send (gas * multiplier * gasPrice = sentFees)
-	multiplier := sentFeesUluna.Quo(feeGasUluna.Add(feeTaxUluna))
+	multiplier := sdk.NewDec(int64(gas)).Quo(sdk.NewDec(int64(gasConsumed)).Add(sdk.NewDec(int64(taxGas))))
 
 	sentFeesTax := sdk.NewDecCoinsFromCoins(taxes...)
-	//fmt.Printf("multiplier: %q, fee: %q, feestax: %q, gas: %d, sentuluna: %q, feesgasuluna: %q, feestaxuluna: %q\n", multiplier, fee, sentFeesTax, gas, sentFeesUluna, feeGasUluna, feeTaxUluna)
+	sentTaxGas := sdk.NewDec(int64(taxGas))
+	reducedGas := sdk.NewDec(int64(gas)).Sub(sentTaxGas)
+
+	k.Logger(ctx).Info("CalculateSentTax", "assumed_multiplier", multiplier, "gas", gas, "assumed_gas_estimate", reducedGas, "taxgas", taxGas)
+
 	sentFeesTax = sentFeesTax.MulDecTruncate(multiplier)
 
 	coins, _ := sentFeesTax.TruncateDecimal()
@@ -278,8 +312,8 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 
 	reducedFee, neg := fee.SafeSub(coins...)
 	if neg {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 1", fee, requiredFees)
+		return nil, nil, gas, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 1", fee, requiredFees)
 	}
 
-	return sentFeesTax, reducedFee, nil
+	return sentFeesTax, reducedFee, reducedGas.TruncateInt().Uint64(), nil
 }

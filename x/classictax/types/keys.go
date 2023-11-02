@@ -7,5 +7,6 @@ const (
 	StoreKey     = ModuleName
 	RouterKey    = ModuleName
 	QuerierRoute = ModuleName
-	CtxFeeKey    = "classictax_fee"
+	// CtxFeeKey is used for the context to report deducted fees to post handler
+	CtxFeeKey = "classictax_fee"
 )

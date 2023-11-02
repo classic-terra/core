@@ -45,7 +45,8 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	msgs := feeTx.GetMsgs()
-	// Compute taxes
+
+	// Compute stability taxes
 	stabilityTaxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, fd.treasuryKeeper, msgs...)
 	fee := feeTx.GetFee()
 
@@ -55,16 +56,23 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	gasConsumed := ctx.GasMeter().GasConsumed()
 	if !simulate {
+		// check if we have at least enough fees sent to pay for the gas consumed up to this point
 		if err = fd.checkTxFee(ctx, tx, stabilityTaxes); err != nil {
 			return ctx, err
 		}
 
+		// convert the consumed gas to actual coins
 		requiredFee, _ := fd.classictaxKeeper.GetFeeCoins(ctx, gasConsumed, stabilityTaxes)
+		// get tax coins needed for the transaction
 		taxCoins, taxCoinsUluna := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 
 		// remove tax coins from sent fees
+		// we need this to know if at least the minimum gas has been sent along and we need
+		// to check which denom to use for this fee
 		availableFee, neg := fee.SafeSub(taxCoins...)
 		if neg {
+			// if deducting the tax in the denom of the tax coin fails, try to deduct it in uluna
+			// as we allow paying all tax in uluna if desired
 			availableFee, neg = fee.SafeSub(taxCoinsUluna)
 			if neg {
 				requiredFee = requiredFee.Add(taxCoins.Sort()...)
@@ -81,9 +89,8 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 			// check if one of sent coins contains required fee
 			// if yes, choose the first of those
-			// if no, choose the first coin
+			// if no, error
 			var feeCoin sdk.Coin
-
 			for _, coin := range requiredFee {
 				if found, foundCoin := availableFee.Sort().Find(coin.Denom); found {
 					if foundCoin.IsGTE(coin) {
@@ -94,6 +101,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 			}
 
 			if feeCoin.IsZero() {
+				// add tax coins back to display correct values in the error message
 				requiredFee = requiredFee.Add(taxCoins.Sort()...)
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFee, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
 			}
@@ -101,6 +109,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 			paidFeeCoins = sdk.NewCoins(feeCoin)
 			fd.classictaxKeeper.Logger(ctx).Info("AnteHandle", "sentgas", feeTx.GetGas(), "stability_tax", stabilityTaxes, "total", fee, "before", feeTx.GetFee(), "payfee", feeCoin, "simulate", simulate, "checktx", ctx.IsCheckTx(), "paidFeeCoins", paidFeeCoins)
 
+			// try to pay the minimum gas fees
 			if ctx, err := fd.classictaxKeeper.CheckDeductFee(ctx, feeTx, paidFeeCoins, stabilityTaxes, simulate); err != nil {
 				return ctx, err
 			}
@@ -109,6 +118,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		fd.classictaxKeeper.Logger(ctx).Info("End Antehandler", "sentgas", feeTx.GetGas(), "checktx", ctx.IsCheckTx(), "consumed", gasConsumed)
 	}
 
+	// store the paid fees for the post handler so we don't pay this part twice
 	newCtx = ctx.WithValue(types.CtxFeeKey, paidFeeCoins)
 
 	return next(newCtx, tx, simulate)
@@ -125,20 +135,18 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk
 	}
 
 	feeCoins := feeTx.GetFee()
-	//gas := feeTx.GetGas()
 	usedGas := ctx.GasMeter().GasConsumed()
 
 	msgs := feeTx.GetMsgs()
 	isOracleTx := fd.classictaxKeeper.IsOracleTx(msgs)
 
-	// Ensure that the provided fees meet a minimum threshold for the validator,
-	// if this is a CheckTx. This is only for local mempool purposes, and thus
-	// is only ran on check tx.
+	// Ensure that the provided fees meet a minimum threshold if this is a CheckTx.
+	// This is only for local mempool purposes, and thus is only ran on check tx.
+	// TODO: check if this is needed as we are not using the MinimumGas anymore, but on-chain parameters
 	if ctx.IsCheckTx() && !isOracleTx {
 		// this is the minimum gas fees (in coins) needed at this point,
 		// based upon the consumed gas
 		requiredGasFees, _ := fd.classictaxKeeper.GetFeeCoins(ctx, usedGas, stabilityTaxes)
-		requiredTaxFees, requiredTaxFeesUluna := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 
 		requiredFees := requiredGasFees.Sort()
 		if !stabilityTaxes.IsZero() {
@@ -149,6 +157,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk
 		// we ignore burn tax here as it is checked in the post handler
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
 			// add the tax to overall fees just for displaying it
+			requiredTaxFees, requiredTaxFeesUluna := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 			requiredFees = requiredFees.Add(requiredTaxFees.Sort()...)
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability), gas consumed: %d", feeCoins, requiredFees, requiredGasFees, requiredTaxFees, requiredTaxFeesUluna, stabilityTaxes, usedGas)
 		}

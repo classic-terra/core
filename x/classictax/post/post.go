@@ -73,10 +73,14 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		neg bool
 	)
 
+	// get the stability taxes here, although we are not letting the user pay it
+	// we need it for calculations
 	stabilityTaxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, dd.treasuryKeeper, msgs...)
+
 	sentTaxFees, remainingGasFee, remainingGas, err := dd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes)
 
 	dd.classictaxKeeper.Logger(ctx).Info("RemainingGasFee", "sentFees", feeTx.GetFee(), "sentTaxFees", sentTaxFees, "remainingGasFee", remainingGasFee, "remainingGas", remainingGas)
+	// if we already deducted fees in the ante handler, reduce the remaining gas fee by the fee already paid
 	if paidFeeCoins.IsValid() {
 		remainingGasFee, neg = remainingGasFee.SafeSub(paidFeeCoins...)
 		if neg {
@@ -94,12 +98,13 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	sentTaxFeesCoins, _ := sentTaxFees.TruncateDecimal()
 	if !sentTaxFeesCoins.IsAllGT(taxes) {
-		// try uluna tax
+		// if we have not enough coins in the sent fees for the tax, try to use only uluna for payment
 		sentUluna := sdk.NewCoin(core.MicroLunaDenom, sentTaxFees.AmountOf(core.MicroLunaDenom).TruncateInt())
 		if !sentUluna.IsGTE(taxesUluna) {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient tax sent %q, required %q. reqgas %d, taxgas %d", sentTaxFees, taxes, requiredGas, taxGas)
 		}
 
+		// switch to uluna only
 		distributeTax = sdk.NewCoins(taxesUluna)
 	}
 
@@ -110,13 +115,15 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	dd.classictaxKeeper.Logger(ctx).Info("Distribute tax", "taxes", distributeTax, "sent", sentTaxFees)
 
+	// calculate the tx priority
+	// we moved this from the ante handler as we need the actual gas and fees
 	priority := int64(math.MaxInt64)
 
 	if !dd.classictaxKeeper.IsOracleTx(msgs) {
 		priority = getTxPriority(remainingGasFee, int64(remainingGas))
 	}
 
-	// deduct remaining feed if any
+	// deduct remaining fees if any
 	if !remainingGasFee.IsZero() {
 		if ctx, err := dd.classictaxKeeper.CheckDeductFee(ctx, feeTx, remainingGasFee, sdk.NewCoins(), simulate); err != nil {
 			return ctx, err
@@ -128,6 +135,7 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return next(newCtx, tx, simulate)
 	}
 
+	// send the burn tax to the distribution split function (burn/distribution[rewards/cp])
 	err = dd.BurnTaxSplit(newCtx, distributeTax)
 	if err != nil {
 		return newCtx, err
@@ -139,11 +147,11 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	dd.classictaxKeeper.Logger(newCtx).Info("End Posthandler", "gas", feeTx.GetGas(), "checktx", newCtx.IsCheckTx(), "consumed", newCtx.GasMeter().GasConsumed())
 
 	// we now need to increase the gas meter by the taxGas
+	// TODO: check if we really want to do that here or not
 	newCtx.GasMeter().ConsumeGas(taxGas, "tax gas")
-	allGas := requiredGas + taxGas
-	dd.classictaxKeeper.Logger(newCtx).Info("Gas", "required", requiredGas, "tax", taxGas, "total", allGas)
 
-	dd.classictaxKeeper.Logger(newCtx).Info("End Posthandler 2", "gas", feeTx.GetGas(), "checktx", newCtx.IsCheckTx(), "consumed", newCtx.GasMeter().GasConsumed())
+	allGas := requiredGas + taxGas
+	dd.classictaxKeeper.Logger(newCtx).Info("End Posthandler 2", "gas", feeTx.GetGas(), "checktx", newCtx.IsCheckTx(), "consumed", newCtx.GasMeter().GasConsumed(), "requiredGas", requiredGas, "taxGas", taxGas, "totalGas", allGas)
 
 	return next(newCtx, tx, simulate)
 }

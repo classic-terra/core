@@ -9,6 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// function to get the account to deduct fees from
 func (k Keeper) getDeductFromAcc(ctx sdk.Context, feeTx sdk.FeeTx) (authtypes.AccountI, error) {
 	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
@@ -44,7 +45,6 @@ func (k Keeper) CheckDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, fee sdk.Coins, 
 	}
 
 	deductFeesFrom := feeTx.FeePayer()
-
 	deductFeesFromAcc, err := k.getDeductFromAcc(ctx, feeTx)
 	if err != nil {
 		return ctx, err
@@ -67,6 +67,7 @@ func (k Keeper) CheckDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, fee sdk.Coins, 
 			if err != nil {
 				return ctx, err
 			}
+
 			// Record tax proceeds, disabled for stability tax as since introduction of burn tax it was used for that purpose
 			//fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 		}
@@ -90,13 +91,12 @@ func (k Keeper) CheckDeductTax(ctx sdk.Context, feeTx sdk.FeeTx, tax sdk.Coins, 
 	}
 
 	deductFeesFrom := feeTx.FeePayer()
-
 	deductFeesFromAcc, err := k.getDeductFromAcc(ctx, feeTx)
 	if err != nil {
 		return ctx, err
 	}
 
-	// deduct the fees
+	// deduct the tax amount
 	if !tax.IsZero() {
 		err := DeductFees(k.bankKeeper, ctx, deductFeesFromAcc, tax, simulate)
 		if err != nil {
@@ -118,7 +118,7 @@ func (k Keeper) CheckDeductTax(ctx sdk.Context, feeTx sdk.FeeTx, tax sdk.Coins, 
 	return ctx, nil
 }
 
-// DeductFees deducts fees from the given account.
+// DeductFees deducts fees from the given account or throws an error.
 func DeductFees(bankKeeper authtypes.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins, simulate bool) error {
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)

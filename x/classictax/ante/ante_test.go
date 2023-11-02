@@ -201,19 +201,15 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 
 	priv1, _, _ := suite.CreateValidator(50_000_000_000)
 	suite.CreateValidator(50_000_000_000)
-	//suite.app.ClassicTaxKeeper.UpdateAllBondedValidatorRates(suite.ctx)
 
 	mfd := ante.NewClassicTaxFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, suite.app.TreasuryKeeper, suite.app.OracleKeeper, suite.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	ph := post.NewClassicTaxPostDecorator(suite.app.ClassicTaxKeeper, suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.OracleKeeper)
 	postHandler := sdk.ChainAnteDecorators(ph)
 
-	//dyncomm := suite.app.ClassicTaxKeeper.CalculateTaxGas()(suite.ctx, val1)
-	//invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
-	//validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
-
 	// configure tx Builder
 	suite.txBuilder.SetGasLimit(400_000)
+	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(25_000_000))))
 
 	// invalid tx fails
 	editmsg := banktypes.NewMsgSend(
@@ -234,5 +230,92 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 	// print out values
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000))), tax)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000)), tax2)
+}
+
+func (suite *AnteTestSuite) TestAnte_UnderpayTax() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.ctx = suite.ctx.WithIsCheckTx(false)
+
+	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"))
+	acc2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, sdk.AccAddress("terra1573yjmczqf5l95277as5qupn8v3ug7d88v0skv"))
+	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"), sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000))))
+
+	priv1, _, _ := suite.CreateValidator(50_000_000_000)
+	suite.CreateValidator(50_000_000_000)
+
+	mfd := ante.NewClassicTaxFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, suite.app.TreasuryKeeper, suite.app.OracleKeeper, suite.app.ClassicTaxKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+	ph := post.NewClassicTaxPostDecorator(suite.app.ClassicTaxKeeper, suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.OracleKeeper)
+	postHandler := sdk.ChainAnteDecorators(ph)
+
+	// configure tx Builder
+	suite.txBuilder.SetGasLimit(400_000)
+	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(25_000_000))))
+
+	// invalid tx fails
+	editmsg := banktypes.NewMsgSend(
+		acc.GetAddress(),
+		acc2.GetAddress(),
+		sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000))),
+	)
+	err := suite.txBuilder.SetMsgs(editmsg)
+	suite.Require().NoError(err)
+	tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().Error(err)
+	_, err = postHandler(suite.ctx, tx, false)
+	suite.Require().Error(err)
+}
+
+func (suite *AnteTestSuite) TestAnte_OverpayTax() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.ctx = suite.ctx.WithIsCheckTx(false)
+
+	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"))
+	acc2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, sdk.AccAddress("terra1573yjmczqf5l95277as5qupn8v3ug7d88v0skv"))
+	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"), sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000))))
+
+	priv1, _, _ := suite.CreateValidator(50_000_000_000)
+	suite.CreateValidator(50_000_000_000)
+
+	mfd := ante.NewClassicTaxFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, suite.app.TreasuryKeeper, suite.app.OracleKeeper, suite.app.ClassicTaxKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+	ph := post.NewClassicTaxPostDecorator(suite.app.ClassicTaxKeeper, suite.app.TreasuryKeeper, suite.app.BankKeeper, suite.app.OracleKeeper)
+	postHandler := sdk.ChainAnteDecorators(ph)
+
+	// configure tx Builder
+	suite.txBuilder.SetGasLimit(400_000)
+	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(100_000_000))))
+
+	// invalid tx fails
+	editmsg := banktypes.NewMsgSend(
+		acc.GetAddress(),
+		acc2.GetAddress(),
+		sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(500_000_000))),
+	)
+	err := suite.txBuilder.SetMsgs(editmsg)
+	suite.Require().NoError(err)
+	tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NoError(err)
+	_, err = postHandler(suite.ctx, tx, false)
+	suite.Require().NoError(err)
+
+	// check that balance for gas was deducted nonetheless
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(100_000_000))), tx.GetFee())
+
+	balance := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc.GetAddress())
+	//suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000))), balance)
+
+	//value := suite.ctx.Value(classictaxtypes.CtxFeeKey)
+	//suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(75_000_000))), value)
+	//896_970_060
+	//103_029_940
+	balance = suite.app.BankKeeper.GetAllBalances(suite.ctx, acc2.GetAddress())
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000))), balance)
 
 }

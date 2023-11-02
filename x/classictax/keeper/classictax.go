@@ -144,8 +144,10 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (sdk.Coins, sdk.Co
 			// get the type string (e.g. types.MsgSend)
 			// TODO check if this needs to be improved
 			tp := strings.TrimLeft(reflect.TypeOf(msg).String(), "*")
+			k.Logger(ctx).Info("Check taxable", "msg", tp, "msgType", msgType)
 			if tp == msgType {
 				taxable = true
+				k.Logger(ctx).Info("Found taxable message type")
 				break
 			}
 		}
@@ -187,10 +189,13 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (sdk.Coins, sdk.Co
 				}
 			}
 
+		case *marketexported.MsgSwap:
+			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(msg.OfferCoin))
 		case *marketexported.MsgSwapSend:
 			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(msg.OfferCoin))
 
 		case *wasm.MsgInstantiateContract:
+			tax = k.ComputeBurnTax(ctx, msg.Funds)
 		case *wasm.MsgInstantiateContract2:
 			tax = k.ComputeBurnTax(ctx, msg.Funds)
 
@@ -200,6 +205,7 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (sdk.Coins, sdk.Co
 			}
 
 		case *stakingtypes.MsgDelegate:
+			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, msg.Amount.Amount)))
 		case *stakingtypes.MsgUndelegate:
 			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, msg.Amount.Amount)))
 
@@ -299,7 +305,10 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	}
 
 	// calculate the assumed multiplier that was used to calculate fees to send (gas * multiplier * gasPrice = sentFees)
-	multiplier := sdk.NewDec(int64(gas)).Quo(sdk.NewDec(int64(gasConsumed)).Add(sdk.NewDec(int64(taxGas))))
+	multiplier := sentFeesUluna.Quo(sdk.NewDec(requiredFeesUluna.Amount.Int64()).Add(sdk.NewDec(taxesUluna.Amount.Int64())))
+	if multiplier.LT(sdk.OneDec()) {
+		multiplier = sdk.OneDec()
+	}
 
 	sentFeesTax := sdk.NewDecCoinsFromCoins(taxes...)
 	sentTaxGas := sdk.NewDec(int64(taxGas))
@@ -317,7 +326,7 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	reducedFee, neg := fee.SafeSub(coins...)
 	if neg {
 		// this should never happen, but we check it anyway to be on the safe side
-		return nil, nil, gas, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 1", fee, requiredFees)
+		return nil, nil, gas, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 1 - sent feestax: %q, reducedFee: %q, multiplier: %q", fee, requiredFees, sentFeesTax, reducedFee, multiplier)
 	}
 
 	// return the full fees sent as tax, the sent fees reduced by that amount and the gas without taxgas

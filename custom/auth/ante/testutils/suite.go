@@ -7,6 +7,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	classictaxtypes "github.com/classic-terra/core/v2/x/classictax/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -46,6 +47,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 		simapp.EmptyAppOptions{}, wasmOpts,
 	)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+	app.ClassicTaxKeeper.SetParams(ctx, classictaxtypes.DefaultParams())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())

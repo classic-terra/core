@@ -341,6 +341,18 @@ func NewAppKeepers(
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
 	)
 
+	// register the classictax keeper, needs to be before wasmkeeper
+	appKeepers.ClassicTaxKeeper = classictaxkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[classictaxtypes.StoreKey],
+		appKeepers.GetSubspace(classictaxtypes.ModuleName),
+		appKeepers.OracleKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		appKeepers.FeeGrantKeeper,
+	)
+
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
@@ -356,6 +368,7 @@ func NewAppKeepers(
 		appKeepers.AccountKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
+		appKeepers.ClassicTaxKeeper,
 	)
 	// the first slice will replace all default msh handler with custom one
 	wasmOpts = append([]wasmkeeper.Option{wasmkeeper.WithMessageHandler(wasmMsgHandler)}, wasmOpts...)
@@ -409,18 +422,6 @@ func NewAppKeepers(
 		govRouter,
 		bApp.MsgServiceRouter(),
 		govConfig,
-	)
-
-	// register the classictax keeper
-	appKeepers.ClassicTaxKeeper = classictaxkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[classictaxtypes.StoreKey],
-		appKeepers.GetSubspace(classictaxtypes.ModuleName),
-		appKeepers.OracleKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.TreasuryKeeper,
-		appKeepers.FeeGrantKeeper,
 	)
 
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper

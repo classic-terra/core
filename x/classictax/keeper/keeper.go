@@ -10,12 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
 	"github.com/classic-terra/core/v2/x/classictax/types"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Keeper of the market store
@@ -25,7 +25,7 @@ type Keeper struct {
 	paramSpace     paramstypes.Subspace
 	oracleKeeper   oraclekeeper.Keeper
 	accountKeeper  authkeeper.AccountKeeper
-	bankKeeper     authtypes.BankKeeper
+	bankKeeper     expectedkeeper.BankKeeper
 	treasuryKeeper treasurykeeper.Keeper
 	feegrantKeeper ante.FeegrantKeeper
 }
@@ -37,7 +37,7 @@ func NewKeeper(
 	paramstore paramstypes.Subspace,
 	ok oraclekeeper.Keeper,
 	ak authkeeper.AccountKeeper,
-	bk authtypes.BankKeeper,
+	bk expectedkeeper.BankKeeper,
 	tk treasurykeeper.Keeper,
 	fk ante.FeegrantKeeper,
 ) Keeper {

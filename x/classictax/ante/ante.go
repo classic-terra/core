@@ -75,16 +75,16 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 			// as we allow paying all tax in uluna if desired
 			availableFee, neg = fee.SafeSub(taxCoinsUluna)
 			if neg {
-				requiredFee = requiredFee.Add(taxCoins.Sort()...)
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFee, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
+				requiredFeeAll := requiredFee.Add(taxCoins.Sort()...)
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFeeAll, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
 			}
 		}
 
 		if !requiredFee.IsZero() {
 			// we don't include the tax fees here
 			if !availableFee.IsAnyGTE(requiredFee) {
-				requiredFee = requiredFee.Add(taxCoins.Sort()...)
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFee, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
+				requiredFeeAll := requiredFee.Add(taxCoins.Sort()...)
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFeeAll, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
 			}
 
 			// check if one of sent coins contains required fee
@@ -102,15 +102,15 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 			if feeCoin.IsZero() {
 				// add tax coins back to display correct values in the error message
-				requiredFee = requiredFee.Add(taxCoins.Sort()...)
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFee, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
+				requiredFeeAll := requiredFee.Add(taxCoins.Sort()...)
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", fee, requiredFeeAll, requiredFee, taxCoins, taxCoinsUluna, stabilityTaxes)
 			}
 
 			paidFeeCoins = sdk.NewCoins(feeCoin)
 			fd.classictaxKeeper.Logger(ctx).Info("AnteHandle", "sentgas", feeTx.GetGas(), "stability_tax", stabilityTaxes, "total", fee, "before", feeTx.GetFee(), "payfee", feeCoin, "simulate", simulate, "checktx", ctx.IsCheckTx(), "paidFeeCoins", paidFeeCoins)
 
 			// try to pay the minimum gas fees
-			if ctx, err := fd.classictaxKeeper.CheckDeductFee(ctx, feeTx, paidFeeCoins, stabilityTaxes, simulate); err != nil {
+			if ctx, err = fd.classictaxKeeper.CheckDeductFee(ctx, feeTx, paidFeeCoins, stabilityTaxes, simulate); err != nil {
 				return ctx, err
 			}
 		}

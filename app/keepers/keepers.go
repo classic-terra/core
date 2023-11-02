@@ -417,6 +417,10 @@ func NewAppKeepers(
 		appKeepers.keys[classictaxtypes.StoreKey],
 		appKeepers.GetSubspace(classictaxtypes.ModuleName),
 		appKeepers.OracleKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		appKeepers.FeeGrantKeeper,
 	)
 
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper

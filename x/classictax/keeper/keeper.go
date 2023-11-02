@@ -12,14 +12,22 @@ import (
 
 	"github.com/classic-terra/core/v2/x/classictax/types"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
+	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
+	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Keeper of the market store
 type Keeper struct {
-	storeKey     storetypes.StoreKey
-	cdc          codec.BinaryCodec
-	paramSpace   paramstypes.Subspace
-	oracleKeeper oraclekeeper.Keeper
+	storeKey       storetypes.StoreKey
+	cdc            codec.BinaryCodec
+	paramSpace     paramstypes.Subspace
+	oracleKeeper   oraclekeeper.Keeper
+	accountKeeper  authkeeper.AccountKeeper
+	bankKeeper     authtypes.BankKeeper
+	treasuryKeeper treasurykeeper.Keeper
+	feegrantKeeper ante.FeegrantKeeper
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -28,6 +36,10 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	paramstore paramstypes.Subspace,
 	ok oraclekeeper.Keeper,
+	ak authkeeper.AccountKeeper,
+	bk authtypes.BankKeeper,
+	tk treasurykeeper.Keeper,
+	fk ante.FeegrantKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramstore.HasKeyTable() {
@@ -35,10 +47,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:          cdc,
-		storeKey:     storeKey,
-		paramSpace:   paramstore,
-		oracleKeeper: ok,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		paramSpace:     paramstore,
+		oracleKeeper:   ok,
+		accountKeeper:  ak,
+		bankKeeper:     bk,
+		treasuryKeeper: tk,
+		feegrantKeeper: fk,
 	}
 }
 

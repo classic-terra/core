@@ -39,7 +39,7 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// the ante handler already deducted the fees for gas, but we now need to deduct tax
 
 	// get tax from sent coins
-	taxes, taxesUluna := dd.classictaxKeeper.GetTaxCoins(ctx, dd.treasuryKeeper, dd.oracleKeeper, msgs...)
+	taxes, taxesUluna := dd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 
 	// get the parameter for gas prices
 	gasPrice := dd.classictaxKeeper.GetGasFee(ctx)
@@ -63,7 +63,7 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	stabilityTaxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, dd.treasuryKeeper, msgs...)
-	sentTaxFees, _, err := dd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes, dd.treasuryKeeper, dd.oracleKeeper)
+	sentTaxFees, _, err := dd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes)
 
 	if err != nil {
 		return ctx, err
@@ -72,14 +72,22 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	distributeTax := taxes
 
 	sentTaxFeesCoins, _ := sentTaxFees.TruncateDecimal()
-	if taxes.IsAllGT(sentTaxFeesCoins) {
+	if !sentTaxFeesCoins.IsAllGT(taxes) {
 		// try uluna tax
-		if taxesUluna.IsGTE(sdk.NewCoin(core.MicroLunaDenom, sentTaxFees.AmountOf(core.MicroLunaDenom).TruncateInt())) {
+		sentUluna := sdk.NewCoin(core.MicroLunaDenom, sentTaxFees.AmountOf(core.MicroLunaDenom).TruncateInt())
+		if !sentUluna.IsGTE(taxesUluna) {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient tax sent %q, required %q. reqgas %d, taxgas %d", sentTaxFees, taxes, requiredGas, taxGas)
 		}
 
 		distributeTax = sdk.NewCoins(taxesUluna)
 	}
+
+	// send tax to fee collector
+	if ctx, err := dd.classictaxKeeper.CheckDeductTax(ctx, feeTx, distributeTax, simulate); err != nil {
+		return ctx, err
+	}
+
+	dd.classictaxKeeper.Logger(ctx).Info("Distribute tax", "taxes", distributeTax, "sent", sentTaxFees)
 
 	if distributeTax.IsZero() {
 		return next(ctx, tx, simulate)

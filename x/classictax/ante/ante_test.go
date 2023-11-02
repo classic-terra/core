@@ -230,7 +230,7 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 	_, err = postHandler(suite.ctx, tx, false)
 	suite.Require().NoError(err)
 
-	tax, tax2 := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, suite.app.TreasuryKeeper, suite.app.OracleKeeper, tx.GetMsgs()...)
+	tax, tax2 := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, tx.GetMsgs()...)
 	// print out values
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000))), tax)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000)), tax2)

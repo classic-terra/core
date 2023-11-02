@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
 	core "github.com/classic-terra/core/v2/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -14,7 +13,6 @@ import (
 
 	marketexported "github.com/classic-terra/core/v2/x/market/exported"
 	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
-	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -79,7 +77,7 @@ func (k Keeper) ComputeBurnTax(ctx sdk.Context, principal sdk.Coins) sdk.Coins {
 	return taxes
 }
 
-func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, stabilityTaxes sdk.Coins, ok oraclekeeper.Keeper) (sdk.Coins, sdk.Coin) {
+func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, stabilityTaxes sdk.Coins) (sdk.Coins, sdk.Coin) {
 	requiredGasFees := sdk.Coins{}
 	requiredGasFeesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
@@ -117,7 +115,7 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64, stabilityTaxes sdk.Coin
 	return requiredFees, requiredGasFeesUluna
 }
 
-func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, ok oraclekeeper.Keeper, msgs ...sdk.Msg) (sdk.Coins, sdk.Coin) {
+func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (sdk.Coins, sdk.Coin) {
 	// define empty coins list
 	taxes := sdk.NewCoins()
 	taxesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
@@ -145,7 +143,7 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
+			if !k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
 				tax = k.ComputeBurnTax(ctx, msg.Amount)
 			}
 
@@ -153,13 +151,13 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 			tainted := 0
 
 			for _, input := range msg.Inputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
+				if k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, input.Address) {
 					tainted++
 				}
 			}
 
 			for _, output := range msg.Outputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
+				if k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, output.Address) {
 					tainted++
 				}
 			}
@@ -178,7 +176,7 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 			tax = k.ComputeBurnTax(ctx, msg.Funds)
 
 		case *wasm.MsgExecuteContract:
-			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
+			if !k.treasuryKeeper.HasBurnTaxExemptionContract(ctx, msg.Contract) {
 				tax = k.ComputeBurnTax(ctx, msg.Funds)
 			}
 
@@ -189,7 +187,7 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, tk expectedkeeper.TreasuryKeeper, o
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err != nil {
-				tax, taxUluna = k.GetTaxCoins(ctx, tk, ok, messages...)
+				tax, taxUluna = k.GetTaxCoins(ctx, messages...)
 			}
 		}
 
@@ -252,12 +250,12 @@ func (k Keeper) IsOracleTx(msgs []sdk.Msg) bool {
 	return true
 }
 
-func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxes sdk.Coins, tk expectedkeeper.TreasuryKeeper, ok oraclekeeper.Keeper) (sdk.DecCoins, sdk.Coins, error) {
+func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxes sdk.Coins) (sdk.DecCoins, sdk.Coins, error) {
 	gas := feeTx.GetGas()
 	fee := feeTx.GetFee()
 
-	taxes, taxesUluna := k.GetTaxCoins(ctx, tk, ok, feeTx.GetMsgs()...)
-	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gas, stabilityTaxes, ok)
+	taxes, taxesUluna := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
+	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gas, stabilityTaxes)
 
 	// calculate the ratio of the tax to the gas
 	sentFeesUluna := sdk.NewDec(k.CoinsToMicroLuna(ctx, fee).Amount.Int64())

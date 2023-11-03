@@ -52,24 +52,27 @@ func (k Keeper) CheckDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, fee sdk.Coins, 
 
 	// deduct the fees
 	if !fee.IsZero() {
-		err := DeductFees(k.bankKeeper, ctx, deductFeesFromAcc, fee, simulate)
-		if err != nil {
-			return ctx, err
-		}
-
-		// this is now stability tax only, so no need to burn tax split
 		if !stabilityTaxes.IsZero() && !simulate {
-			if _, hasNeg := fee.SafeSub(stabilityTaxes...); hasNeg {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", fee, stabilityTaxes)
+			newFee, hasNeg := fee.SafeSub(stabilityTaxes...)
+
+			if hasNeg {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s(stability)", fee, stabilityTaxes)
 			}
+
+			fee = newFee
 
 			err := DeductFees(k.bankKeeper, ctx, deductFeesFromAcc, stabilityTaxes, simulate)
 			if err != nil {
 				return ctx, err
 			}
-
+			// this is now stability tax only, so no need to burn tax split
 			// Record tax proceeds, disabled for stability tax as since introduction of burn tax it was used for that purpose
 			//fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
+		}
+
+		err := DeductFees(k.bankKeeper, ctx, deductFeesFromAcc, fee, simulate)
+		if err != nil {
+			return ctx, err
 		}
 	}
 

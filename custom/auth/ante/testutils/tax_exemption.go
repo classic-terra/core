@@ -14,6 +14,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
+	custompost "github.com/classic-terra/core/v2/custom/auth/post"
 	core "github.com/classic-terra/core/v2/types"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
@@ -36,15 +37,19 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	sendAmt := int64(1_000_000)
 	sendCoin := sdk.NewInt64Coin(core.MicroSDRDenom, sendAmt)
 	feeAmt := int64(1000)
+	taxAmt := int64(5000)
 
 	cases := []struct {
 		name              string
+		account           sdk.AccAddress
 		msgSigner         cryptotypes.PrivKey
 		msgCreator        func() []sdk.Msg
 		expectedFeeAmount int64
+		expectedTaxAmount int64
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
+			account:   addrs[0],
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -54,9 +59,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: 0,
+			expectedFeeAmount: feeAmt,
+			expectedTaxAmount: 0,
 		}, {
 			name:      "MsgSend(normal -> normal)",
+			account:   addrs[2],
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -68,8 +75,25 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 			},
 			// tax this one hence burn amount is fee amount
 			expectedFeeAmount: feeAmt,
+			expectedTaxAmount: taxAmt,
+		}, {
+			name:      "MsgSend(normal -> exemption)",
+			account:   addrs[2],
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[0], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			expectedFeeAmount: feeAmt,
+			expectedTaxAmount: taxAmt,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
+			account:   addrs[0],
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -82,9 +106,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			expectedFeeAmount: feeAmt,
+			expectedFeeAmount: feeAmt * 2,
+			expectedTaxAmount: taxAmt,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption)",
+			account:   addrs[0],
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -113,7 +139,8 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: feeAmt * 2,
+			expectedFeeAmount: feeAmt * 3,
+			expectedTaxAmount: taxAmt * 2,
 		},
 	}
 
@@ -152,8 +179,18 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		)
 		s.Require().NoError(err)
 
+		posthandler, err := custompost.NewPostHandler(
+			custompost.HandlerOptions{
+				TreasuryKeeper:   s.app.TreasuryKeeper,
+				BankKeeper:       s.app.BankKeeper,
+				OracleKeeper:     s.app.OracleKeeper,
+				ClassicTaxKeeper: s.app.ClassicTaxKeeper,
+			},
+		)
+		s.Require().NoError(err)
+
 		for i := 0; i < 4; i++ {
-			coins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000))
+			coins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000))
 			testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
 		}
 
@@ -162,36 +199,46 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
 		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
+		// set zero gas prices
+		s.ctx = s.ctx.WithMinGasPrices(sdk.NewDecCoins())
+		curParams := s.app.ClassicTaxKeeper.GetParams(s.ctx)
+		curParams.GasPrices = sdk.NewDecCoins()
+		s.app.ClassicTaxKeeper.SetParams(s.ctx, curParams)
+
 		s.Run(c.name, func() {
 			// case 1 provides zero fee so not enough fee
-			// case 2 provides enough fee
-			feeCases := []int64{0, feeAmt}
+			// case 2 provides enough fee (was never enabled)
+			feeCases := []int64{c.expectedFeeAmount, c.expectedFeeAmount} // stability tax is not included in tax exemption!
 			for i := 0; i < 1; i++ {
 				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, feeCases[i]))
+
 				gasLimit := testdata.NewTestGasLimit()
 				s.Require().NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(gasLimit)
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{3}, []uint64{0}
+				account := ak.GetAccount(s.ctx, c.account)
+				privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}
 				tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 				s.Require().NoError(err)
-
-				// set zero gas prices
-				s.ctx = s.ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 				feeCollectorBefore := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
 				burnBefore := bk.GetBalance(s.ctx, burnModule.GetAddress(), core.MicroSDRDenom)
 				communityBefore := dk.GetFeePool(s.ctx).CommunityPool.AmountOf(core.MicroSDRDenom)
 				supplyBefore := bk.GetSupply(s.ctx, core.MicroSDRDenom)
 
-				_, err = antehandler(s.ctx, tx, false)
-				if i == 0 && c.expectedFeeAmount != 0 {
+				s.ctx, err = antehandler(s.ctx, tx, false)
+				s.Require().NoError(err)
+
+				s.ctx, err = posthandler(s.ctx, tx, false)
+				if i == 0 && c.expectedTaxAmount != 0 {
 					s.Require().EqualError(err, fmt.Sprintf(
-						"insufficient fees; got: \"\", required: \"%dusdr\" = \"\"(gas) + \"%dusdr\"(stability): insufficient fee",
-						c.expectedFeeAmount, c.expectedFeeAmount))
+						"insufficient fees; got: \"%dusdr\", required: \"%dusdr\" = \"\"(gas) + \"%dusdr\"(tax)/\"0uluna\"(tax_uluna) + \"%dusdr\"(stability): insufficient fee",
+						c.expectedFeeAmount, c.expectedFeeAmount+c.expectedTaxAmount, c.expectedTaxAmount, c.expectedFeeAmount))
 				} else {
 					s.Require().NoError(err)
+					newSeq := account.GetSequence()
+					account.SetSequence(newSeq + 1)
 				}
 
 				feeCollectorAfter := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
@@ -200,14 +247,14 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				supplyAfter := bk.GetSupply(s.ctx, core.MicroSDRDenom)
 
 				if i == 0 {
-					s.Require().Equal(feeCollectorBefore, feeCollectorAfter)
+					s.Require().Equal(feeCollectorBefore.AddAmount(sdk.NewInt(feeCases[i])), feeCollectorAfter)
 					s.Require().Equal(burnBefore, burnAfter)
 					s.Require().Equal(communityBefore, communityAfter)
 					s.Require().Equal(supplyBefore, supplyAfter)
 				}
 
-				if i == 1 {
-					s.Require().Equal(feeCollectorBefore, feeCollectorAfter)
+				if i == 1 { // this test has never been active (see loop conditions)
+					s.Require().Equal(feeCollectorBefore.AddAmount(sdk.NewInt(feeCases[i])), feeCollectorAfter)
 					splitAmount := burnSplitRate.MulInt64(c.expectedFeeAmount).TruncateInt()
 					s.Require().Equal(burnBefore, burnAfter.AddAmount(splitAmount))
 					s.Require().Equal(communityBefore, communityAfter.Add(sdk.NewDecFromInt(splitAmount)))

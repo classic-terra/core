@@ -45,7 +45,7 @@ func FilterMsgAndComputeStabilityTax(ctx sdk.Context, tk expectedkeeper.Treasury
 		}
 	}
 
-	return taxes
+	return taxes.Sort()
 }
 
 // computes the stability tax according to tax-rate and tax-cap

@@ -76,9 +76,17 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// get the stability taxes here, although we are not letting the user pay it
 	// we need it for calculations
 	stabilityTaxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, dd.treasuryKeeper, msgs...)
-	requiredGasFees, _ := dd.classictaxKeeper.GetFeeCoins(ctx, requiredGas, stabilityTaxes)
+	//requiredGasFees, _ := dd.classictaxKeeper.GetFeeCoins(ctx, requiredGas, stabilityTaxes)
 
-	sentTaxFees, remainingGasFee, remainingGas, err := dd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes)
+	// sentTaxFees and sentTaxFeesUluna are _virtual_ values calculated by the assumed multiplier
+	// they have to be checked against the actual sent fees
+	sentTaxFees, sentTaxFeesUluna, remainingGasFee, remainingGas, err := dd.classictaxKeeper.CalculateSentTax(ctx, feeTx, stabilityTaxes)
+
+	// store the value for later use
+	remainingGasFeeAll := remainingGasFee
+
+	// we also take the actual sent fees here and reduce it by the already paid fees
+	availableSentFee := feeTx.GetFee()
 
 	dd.classictaxKeeper.Logger(ctx).Info("RemainingGasFee", "sentFees", feeTx.GetFee(), "sentTaxFees", sentTaxFees, "remainingGasFee", remainingGasFee, "remainingGas", remainingGas)
 	// if we already deducted fees in the ante handler, reduce the remaining gas fee by the fee already paid
@@ -86,6 +94,11 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		remainingGasFee, neg = remainingGasFee.SafeSub(paidFeeCoins...)
 		if neg {
 			remainingGasFee = sdk.NewCoins()
+		}
+
+		availableSentFee, neg = availableSentFee.SafeSub(paidFeeCoins...)
+		if neg {
+			availableSentFee = sdk.NewCoins()
 		}
 	}
 
@@ -95,18 +108,62 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, err
 	}
 
-	distributeTax := taxes
-
 	sentTaxFeesCoins, _ := sentTaxFees.TruncateDecimal()
-	if !sentTaxFeesCoins.IsAllGT(taxes) {
+
+	sentTaxFeesCoinsUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
+	if sentTaxFeesUluna.IsValid() {
+		sentTaxFeesCoinsUluna, _ = sentTaxFeesUluna.TruncateDecimal()
+	}
+
+	// the available sent fees has to be maxed out at the virtually sent tax part as everything else accounts to gas only
+	// for all denoms in the availableSentFee, check if the virtual tax fees are lower than the available sent fees
+	// if so, set the available sent fees to the virtual tax fees
+	// we need to handle it separately for uluna as there could be mixed taxes including uluna
+	var (
+		newAvailableSentFee sdk.Coins
+		availableSentUluna  sdk.DecCoin
+	)
+
+	if !sentTaxFeesUluna.IsValid() || availableSentFee.AmountOf(core.MicroLunaDenom).GT(sentTaxFeesUluna.Amount.TruncateInt()) {
+		availableSentUluna = sentTaxFeesUluna
+	} else {
+		availableSentUluna = sdk.NewDecCoin(core.MicroLunaDenom, availableSentFee.AmountOf(core.MicroLunaDenom))
+	}
+
+	for _, coin := range availableSentFee {
+		if found, foundCoin := sentTaxFeesCoins.Find(coin.Denom); found {
+			if foundCoin.IsLT(coin) {
+				// If the virtual sent tax fee is lower, use it instead
+				newAvailableSentFee = append(newAvailableSentFee, foundCoin)
+			} else {
+				newAvailableSentFee = append(newAvailableSentFee, coin)
+			}
+		}
+	}
+	availableSentFee = newAvailableSentFee
+
+	distributeTax := taxes
+	// can we pay in actual currency?
+	if _, neg := availableSentFee.SafeSub(taxes...); neg {
 		// if we have not enough coins in the sent fees for the tax, try to use only uluna for payment
-		sentUluna := sdk.NewCoin(core.MicroLunaDenom, sentTaxFees.AmountOf(core.MicroLunaDenom).TruncateInt())
-		if !sentUluna.IsGTE(taxesUluna) {
-			// need to add paid gas fee back to the remaining gas fee for error display
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q/%q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability), consumed gas: %d", feeTx.GetFee(), sentUluna, requiredGasFees.Add(taxes...), requiredGasFees, taxes, taxesUluna, stabilityTaxes, ctx.GasMeter().GasConsumed())
+		if taxesUluna.IsZero() || !sentTaxFeesCoinsUluna.IsGTE(taxesUluna) {
+			// if uluna taxes are zero, we need to error as there is no exchange rate
+			// need to remove stability from gas fees for error display
+
+			remainingFeeSum := remainingGasFeeAll.Add(taxes...)
+			if !stabilityTaxes.IsZero() {
+				remainingFeeSum = remainingFeeSum.Add(stabilityTaxes...)
+			}
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeTx.GetFee(), remainingFeeSum, remainingGasFeeAll, taxes, taxesUluna, stabilityTaxes)
 		}
 
 		// switch to uluna only
+		// check if we have enough coins in the sent fees for the tax
+		if availableSentUluna.IsLT(sdk.NewDecCoinFromCoin(taxesUluna)) {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeTx.GetFee(), remainingGasFeeAll, remainingGasFeeAll, taxes, taxesUluna, stabilityTaxes)
+		}
+
+		// we have enough coins in the sent fees for the tax in uluna, but not in other denom, so we can use this
 		distributeTax = sdk.NewCoins(taxesUluna)
 	}
 

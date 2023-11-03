@@ -47,7 +47,10 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 		simapp.EmptyAppOptions{}, wasmOpts,
 	)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.ClassicTaxKeeper.SetParams(ctx, classictaxtypes.DefaultParams())
+	classicParams := classictaxtypes.DefaultParams()
+	// the tests rely on minimum gas prices of zero
+	classicParams.GasPrices = []sdk.DecCoin{sdk.NewDecCoin("uluna", sdk.NewInt(0))}
+	app.ClassicTaxKeeper.SetParams(ctx, classicParams)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())

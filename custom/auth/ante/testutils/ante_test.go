@@ -1,15 +1,13 @@
-package ante_test
+package testutils
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"github.com/classic-terra/core/v2/custom/auth/ante/testutils"
 )
 
 func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(testutils.AnteTestSuite))
+	suite.Run(t, new(AnteTestSuite))
 }
 
 // func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptotypes.PubKey, signatures [][]byte) {

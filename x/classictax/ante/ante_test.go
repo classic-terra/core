@@ -226,7 +226,7 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 	_, err = postHandler(suite.ctx, tx, false)
 	suite.Require().NoError(err)
 
-	tax, tax2 := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, tx.GetMsgs()...)
+	tax, tax2, _ := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, tx.GetMsgs()...)
 	// print out values
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000))), tax)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000)), tax2)
@@ -417,7 +417,7 @@ func (suite *AnteTestSuite) TestAnte_OverpayTax() {
 	suite.Require().NoError(err)
 
 	// check tax gas
-	tax, _ := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, sendmsg)
+	tax, _, _ := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, sendmsg)
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2_500_000))), tax)
 	taxGas, _ := suite.app.ClassicTaxKeeper.CalculateTaxGas(suite.ctx, tax, curParams.GasPrices)
 	suite.Require().Equal(sdk.NewInt(250_000).Int64(), int64(taxGas))

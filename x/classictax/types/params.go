@@ -45,7 +45,7 @@ var (
 		sdk.NewDecCoinFromDec("umyr", sdk.NewDecWithPrec(3, 0)),
 		sdk.NewDecCoinFromDec("utwd", sdk.NewDecWithPrec(20, 0)),
 	}
-	DefaultTaxableMsgTypes = []string{"types.MsgSend", "types.MsgMultiSend", "types.MsgExecuteContract", "types.MsgInstantiateContract", "types.MsgStoreCode"}
+	DefaultTaxableMsgTypes = []string{"bank/MsgSend", "bank/MsgMultiSend", "wasm/MsgExecuteContract", "wasm/MsgInstantiateContract", "wasm/MsgInstantiateContract2", "wasm/MsgStoreCode", "market/MsgSwapSend"}
 )
 
 var _ paramstypes.ParamSet = &Params{}

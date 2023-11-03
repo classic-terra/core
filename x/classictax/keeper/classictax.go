@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -92,7 +91,15 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin) {
 	requiredGasFees := sdk.Coins{}
 	requiredGasFeesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
-	gasPrices := k.GetGasPrices(ctx)
+	var (
+		gasPrices sdk.DecCoins
+	)
+
+	if ctx.IsCheckTx() {
+		gasPrices = ctx.MinGasPrices()
+	} else {
+		gasPrices = k.GetGasPrices(ctx)
+	}
 	k.Logger(ctx).Info("GasPrices", "GasPrices", gasPrices)
 	if !gasPrices.IsZero() {
 		requiredGasFees = make(sdk.Coins, 0, len(gasPrices))
@@ -122,95 +129,108 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin) {
 	return requiredFees, requiredGasFeesUluna
 }
 
+func (k Keeper) IsTaxableMsgType(ctx sdk.Context, taxableMsgTypes []string, msgType string) bool {
+	for _, msg := range taxableMsgTypes {
+		if msg == msgType {
+			return true
+		}
+	}
+
+	return false
+}
+
 // this function calculates the coins necessary for paying the tax
 // tax can either be paid as previously in the corresponding denom
 // or totally in uluna
-func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (sdk.Coins, sdk.Coin) {
+func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (taxes sdk.Coins, taxesUluna sdk.Coin, couldTax bool) {
 	// define empty coins list
-	taxes := sdk.NewCoins()
-	taxesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
+	taxes = sdk.NewCoins()
+	taxesUluna = sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 	// read taxable message types from params
 	taxableMsgTypes := k.GetTaxableMsgTypes(ctx)
 
+	couldTax = false
+
 	// read taxable message types from params
 	for _, msg := range msgs {
-		taxable := false
-		for _, msgType := range taxableMsgTypes {
-			// get the type string (e.g. types.MsgSend)
-			// TODO check if this needs to be improved
-			tp := strings.TrimLeft(reflect.TypeOf(msg).String(), "*")
-			k.Logger(ctx).Info("Check taxable", "msg", tp, "msgType", msgType)
-			if tp == msgType {
-				taxable = true
-				k.Logger(ctx).Info("Found taxable message type")
-				break
-			}
-		}
-
-		if !taxable {
-			continue
-		}
-
 		var tax sdk.Coins
 		taxUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 		// calculate the tax needed for this message
 		// TODO check for further message types that might be able to be taxed
 		// as the taxable msg types can be changed by governance
+		couldBeTaxed := true
+
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			if !k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "bank/MsgSend") && !k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
 				tax = k.ComputeBurnTax(ctx, msg.Amount)
 			}
 
 		case *banktypes.MsgMultiSend:
 			tainted := 0
-
-			for _, input := range msg.Inputs {
-				if k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, input.Address) {
-					tainted++
-				}
-			}
-
-			for _, output := range msg.Outputs {
-				if k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, output.Address) {
-					tainted++
-				}
-			}
-
-			if tainted != len(msg.Inputs)+len(msg.Outputs) {
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "bank/MsgMultiSend") {
 				for _, input := range msg.Inputs {
-					tax = k.ComputeBurnTax(ctx, input.Coins)
+					if k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, input.Address) {
+						tainted++
+					}
+				}
+
+				for _, output := range msg.Outputs {
+					if k.treasuryKeeper.HasBurnTaxExemptionAddress(ctx, output.Address) {
+						tainted++
+					}
+				}
+
+				if tainted != len(msg.Inputs)+len(msg.Outputs) {
+					for _, input := range msg.Inputs {
+						tax = tax.Add(k.ComputeBurnTax(ctx, input.Coins)...)
+					}
 				}
 			}
-
 		case *marketexported.MsgSwap:
-			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(msg.OfferCoin))
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "market/MsgSwap") {
+				tax = k.ComputeBurnTax(ctx, sdk.NewCoins(msg.OfferCoin))
+			}
 		case *marketexported.MsgSwapSend:
-			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(msg.OfferCoin))
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "market/MsgSwapSend") {
+				tax = k.ComputeBurnTax(ctx, sdk.NewCoins(msg.OfferCoin))
+			}
 
 		case *wasm.MsgInstantiateContract:
-			tax = k.ComputeBurnTax(ctx, msg.Funds)
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "wasm/MsgInstantiateContract") {
+				tax = k.ComputeBurnTax(ctx, msg.Funds)
+			}
 		case *wasm.MsgInstantiateContract2:
-			tax = k.ComputeBurnTax(ctx, msg.Funds)
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "wasm/MsgInstantiateContract2") {
+				tax = k.ComputeBurnTax(ctx, msg.Funds)
+			}
 
 		case *wasm.MsgExecuteContract:
-			if !k.treasuryKeeper.HasBurnTaxExemptionContract(ctx, msg.Contract) {
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "wasm/MsgExecuteContract") && !k.treasuryKeeper.HasBurnTaxExemptionContract(ctx, msg.Contract) {
 				tax = k.ComputeBurnTax(ctx, msg.Funds)
 			}
 
 		case *stakingtypes.MsgDelegate:
-			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, msg.Amount.Amount)))
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "staking/MsgDelegate") {
+				tax = k.ComputeBurnTax(ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, msg.Amount.Amount)))
+			}
 		case *stakingtypes.MsgUndelegate:
-			tax = k.ComputeBurnTax(ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, msg.Amount.Amount)))
+			if k.IsTaxableMsgType(ctx, taxableMsgTypes, "staking/MsgUndelegate") {
+				tax = k.ComputeBurnTax(ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, msg.Amount.Amount)))
+			}
 
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err != nil {
-				tax, taxUluna = k.GetTaxCoins(ctx, messages...)
+				tax, taxUluna, couldBeTaxed = k.GetTaxCoins(ctx, messages...)
 			}
+		default:
+			couldBeTaxed = false
 		}
+
+		couldTax = couldTax || couldBeTaxed
 
 		if tax != nil && !tax.IsZero() {
 			taxes = taxes.Add(tax...)
@@ -226,7 +246,7 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (sdk.Coins, sdk.Co
 		}
 	}
 
-	return taxes.Sort(), taxesUluna
+	return taxes.Sort(), taxesUluna, couldTax
 }
 
 // convert a coin to uluna by using the oracle exchange rates
@@ -281,7 +301,7 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	gasConsumed := ctx.GasMeter().GasConsumed()
 	fee := feeTx.GetFee()
 
-	taxes, taxesUluna := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
+	taxes, taxesUluna, couldTax := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
 	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gasConsumed)
 
 	// get the tax equivalent in gas
@@ -295,15 +315,18 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	feeGasUluna := sdk.NewDec(requiredFeesUluna.Amount.Int64())
 	feeTaxUluna := sdk.NewDec(taxesUluna.Amount.Int64())
 
-	k.Logger(ctx).Info("CalculateSentTax", "sentFeesUluna", sentFeesUluna, "feeGasUluna", feeGasUluna, "feeTaxUluna", feeTaxUluna, "requiredFeesUluna", requiredFeesUluna, "requiredFees", requiredFees, "taxesUluna", taxesUluna, "stability", stabilityTaxes, "taxes", taxes, "checktx", ctx.IsCheckTx())
+	k.Logger(ctx).Info("CalculateSentTax", "sentFeesUluna", sentFeesUluna, "feeGasUluna", feeGasUluna, "feeTaxUluna", feeTaxUluna, "requiredFeesUluna", requiredFeesUluna, "requiredFees", requiredFees, "taxesUluna", taxesUluna, "stability", stabilityTaxes, "taxes", taxes, "checktx", ctx.IsCheckTx(), "couldtax", couldTax)
 
-	if feeTaxUluna.IsZero() {
-		return nil, sdk.DecCoin{}, nil, gas, nil
-	}
-
+	var (
+		multiplier sdk.Dec
+	)
 	// calculate the assumed multiplier that was used to calculate fees to send (gas * multiplier * gasPrice = sentFees)
-	multiplier := sentFeesUluna.Quo(sdk.NewDec(requiredFeesUluna.Amount.Int64()).Add(sdk.NewDec(taxesUluna.Amount.Int64())))
-	if multiplier.LT(sdk.OneDec()) {
+	if sentFeesUluna.IsPositive() {
+		multiplier = sentFeesUluna.Quo(sdk.NewDec(requiredFeesUluna.Amount.Int64()).Add(sdk.NewDec(taxesUluna.Amount.Int64())))
+		if multiplier.LT(sdk.OneDec()) {
+			multiplier = sdk.OneDec()
+		}
+	} else {
 		multiplier = sdk.OneDec()
 	}
 
@@ -333,6 +356,13 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 		if neg {
 			// this should never happen as it was catched earlier, but we check it anyway to be on the safe side
 			return nil, sdk.DecCoin{}, nil, gas, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 1 - sent feestax: %q, reducedFee: %q, multiplier: %q", fee, requiredFees, sentFeesTax, reducedFee, multiplier)
+		}
+	}
+
+	if stabilityTaxes.IsValid() {
+		reducedFee, neg = reducedFee.SafeSub(stabilityTaxes...)
+		if neg {
+			return nil, sdk.DecCoin{}, nil, gas, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q - TODO 2 - sent feestax: %q, reducedFee: %q, multiplier: %q", fee, requiredFees, sentFeesTax, reducedFee, multiplier)
 		}
 	}
 

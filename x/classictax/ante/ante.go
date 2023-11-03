@@ -69,7 +69,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 			requiredFee = requiredFee.Add(stabilityTaxes...)
 		}
 		// get tax coins needed for the transaction
-		taxCoins, taxCoinsUluna := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+		taxCoins, taxCoinsUluna, _ := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 
 		requiredFeeWithTax := requiredFee
 		if !taxCoins.IsZero() {
@@ -164,7 +164,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk
 		// we ignore burn tax here as it is checked in the post handler
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
 			// add the tax to overall fees just for displaying it
-			requiredTaxFees, requiredTaxFeesUluna := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+			requiredTaxFees, requiredTaxFeesUluna, _ := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 			requiredFees = requiredFees.Add(requiredTaxFees.Sort()...)
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeCoins, requiredFees, requiredGasFees, requiredTaxFees, requiredTaxFeesUluna, stabilityTaxes)
 		}

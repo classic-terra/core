@@ -228,7 +228,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 			events = eventManager.Events()
 		}
 
-		taxes, _ := h.classictaxKeeper.GetTaxCoins(ctx, sdkMsg)
+		taxes, _, _ := h.classictaxKeeper.GetTaxCoins(ctx, sdkMsg)
 		// Deduct tax from contract account and subtract from amount that can be sent
 		if !taxes.IsZero() {
 			h.classictaxKeeper.Logger(ctx).Info("Deduct tax from contract account", "taxes", taxes)

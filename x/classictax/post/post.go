@@ -47,7 +47,7 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// get tax from sent coins
-	taxes, taxesUluna := dd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+	taxes, taxesUluna, _ := dd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
 
 	// get the parameter for gas prices
 	gasPrices := dd.classictaxKeeper.GetGasPrices(ctx)
@@ -160,7 +160,11 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		// switch to uluna only
 		// check if we have enough coins in the sent fees for the tax
 		if availableSentUluna.IsLT(sdk.NewDecCoinFromCoin(taxesUluna)) {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeTx.GetFee(), remainingGasFeeAll, remainingGasFeeAll, taxes, taxesUluna, stabilityTaxes)
+			remainingFeeSum := remainingGasFeeAll.Add(taxes...)
+			if !stabilityTaxes.IsZero() {
+				remainingFeeSum = remainingFeeSum.Add(stabilityTaxes...)
+			}
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeTx.GetFee(), remainingFeeSum, remainingGasFeeAll, taxes, taxesUluna, stabilityTaxes)
 		}
 
 		// we have enough coins in the sent fees for the tax in uluna, but not in other denom, so we can use this
@@ -183,9 +187,6 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	newCtx = ctx.WithPriority(priority)
-	if distributeTax.IsZero() {
-		return next(newCtx, tx, simulate)
-	}
 
 	// deduct remaining fees if any
 	if !remainingGasFee.IsZero() {
@@ -194,14 +195,15 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		}
 	}
 
+	if distributeTax.IsZero() {
+		return next(newCtx, tx, simulate)
+	}
+
 	// send the burn tax to the distribution split function (burn/distribution[rewards/cp])
 	err = dd.classictaxKeeper.BurnTaxSplit(newCtx, distributeTax)
 	if err != nil {
 		return newCtx, err
 	}
-
-	// Record tax proceeds
-	dd.treasuryKeeper.RecordEpochTaxProceeds(newCtx, taxes)
 
 	dd.classictaxKeeper.Logger(newCtx).Info("End Posthandler", "gas", feeTx.GetGas(), "checktx", newCtx.IsCheckTx(), "consumed", newCtx.GasMeter().GasConsumed())
 

@@ -166,9 +166,13 @@ func getTxPriority(fee sdk.Coins, gas int64) int64 {
 	var priority int64
 	for _, c := range fee {
 		p := int64(math.MaxInt64)
-		gasPrice := c.Amount.QuoRaw(gas)
-		if gasPrice.IsInt64() {
-			p = gasPrice.Int64()
+		if gas == 0 {
+			p = 0
+		} else {
+			gasPrice := c.Amount.QuoRaw(gas)
+			if gasPrice.IsInt64() {
+				p = gasPrice.Int64()
+			}
 		}
 		if priority == 0 || p < priority {
 			priority = p

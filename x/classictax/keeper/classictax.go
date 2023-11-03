@@ -37,7 +37,9 @@ func (k Keeper) CalculateTaxGas(ctx sdk.Context, taxes sdk.Coins, gasPrices sdk.
 		// ensure that gasPrice isn't zero
 		gasPrice := gasPrices.AmountOf(tax.Denom)
 		if gasPrice.IsZero() {
-			return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "gas price for %s is zero", tax.Denom)
+			// TODO check if it should be allowed to disable tax by setting gas to zero
+			//return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "gas price for %s is zero", tax.Denom)
+			continue
 		}
 
 		// calculate tax gas
@@ -315,6 +317,9 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 
 	// this is the gas amount without the tax gas
 	reducedGas := sdk.NewDec(int64(gas)).Sub(sentTaxGas)
+	if reducedGas.IsNegative() {
+		reducedGas = sdk.ZeroDec()
+	}
 
 	k.Logger(ctx).Info("CalculateSentTax", "assumed_multiplier", multiplier, "gas", gas, "assumed_gas_estimate", reducedGas, "taxgas", taxGas)
 

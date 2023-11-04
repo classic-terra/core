@@ -21,4 +21,9 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  bytes min_ustc_stability_spread = 4 [
+    (gogoproto.moretags)   = "yaml:\"min_ustc_stability_spread\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

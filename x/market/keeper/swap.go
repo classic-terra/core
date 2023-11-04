@@ -89,6 +89,12 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 		}
 
 		spread = tobinTax
+
+		// applied min ustc stability spread for swapping into ustc denom
+		if askDenom == core.MicroUSDDenom && spread.LT(k.MinUstcStabilitySpread(ctx)) {
+			spread = k.MinUstcStabilitySpread(ctx)
+		}
+
 		return retDecCoin, spread, nil
 	}
 

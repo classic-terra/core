@@ -55,7 +55,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	)
 
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	if !simulate {
+	if !simulate && ctx.BlockHeight() > 0 {
 		// check if we have at least enough fees sent to pay for the gas consumed up to this point
 		if err = fd.checkTxFee(ctx, tx, stabilityTaxes); err != nil {
 			return ctx, err

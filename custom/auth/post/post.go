@@ -3,6 +3,8 @@ package post
 import (
 	classictaxkeeper "github.com/classic-terra/core/v2/x/classictax/keeper"
 	classictaxpost "github.com/classic-terra/core/v2/x/classictax/post"
+	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	dyncommpost "github.com/classic-terra/core/v2/x/dyncomm/post"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +17,7 @@ type HandlerOptions struct {
 	TreasuryKeeper   treasurykeeper.Keeper
 	BankKeeper       bankkeeper.Keeper
 	OracleKeeper     oraclekeeper.Keeper
+	DyncommKeeper    dyncommkeeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -22,6 +25,7 @@ type HandlerOptions struct {
 // signer.
 func NewPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	return sdk.ChainAnteDecorators(
+		dyncommpost.NewDyncommPostDecorator(options.DyncommKeeper),
 		classictaxpost.NewClassicTaxPostDecorator(options.ClassicTaxKeeper, options.TreasuryKeeper, options.BankKeeper, options.OracleKeeper),
 	), nil
 }

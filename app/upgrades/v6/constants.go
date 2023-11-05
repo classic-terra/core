@@ -2,7 +2,7 @@ package v6
 
 import (
 	"github.com/classic-terra/core/v2/app/upgrades"
-	classictaxtypes "github.com/classic-terra/core/v2/x/classictax/types"
+	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -13,7 +13,7 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateV6UpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
-			classictaxtypes.StoreKey,
+			dyncommtypes.StoreKey,
 		},
 	},
 }

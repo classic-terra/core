@@ -69,6 +69,8 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/x/classictax"
 	classictaxtypes "github.com/classic-terra/core/v2/x/classictax/types"
+	"github.com/classic-terra/core/v2/x/dyncomm"
+	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
 	"github.com/classic-terra/core/v2/x/market"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	"github.com/classic-terra/core/v2/x/oracle"
@@ -124,6 +126,7 @@ var (
 		customwasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		classictax.AppModuleBasic{},
+		dyncomm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -186,6 +189,7 @@ func appModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		classictax.NewAppModule(appCodec, app.ClassicTaxKeeper),
+		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 	}
 }
 
@@ -218,6 +222,7 @@ func simulationModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		classictax.NewAppModule(appCodec, app.ClassicTaxKeeper),
+		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 	}
 }
 
@@ -249,6 +254,7 @@ func orderBeginBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		classictaxtypes.ModuleName,
+		dyncommtypes.ModuleName,
 	}
 }
 
@@ -280,6 +286,7 @@ func orderEndBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		classictaxtypes.ModuleName,
+		dyncommtypes.ModuleName,
 	}
 }
 
@@ -312,5 +319,6 @@ func orderInitGenesis() []string {
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
 		wasmtypes.ModuleName,
+		dyncommtypes.ModuleName,
 	}
 }

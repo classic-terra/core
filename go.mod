@@ -3,7 +3,7 @@ go 1.20
 module github.com/classic-terra/core/v2
 
 require (
-	cosmossdk.io/math v1.0.0-rc.0
+	cosmossdk.io/math v1.1.3-rc.1
 	github.com/CosmWasm/wasmd v0.30.0
 	github.com/CosmWasm/wasmvm v1.1.2
 	github.com/cosmos/cosmos-sdk v0.46.14

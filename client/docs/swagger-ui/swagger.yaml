@@ -26619,7 +26619,7 @@ paths:
                       format: byte
       tags:
         - Query
-  /terra/dyncomm/v1beta1/rate/{validator_addr}:
+  /terra/dyncomm/v1beta1/rates/{validator_addr}:
     get:
       operationId: Rate
       responses:

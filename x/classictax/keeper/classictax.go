@@ -75,11 +75,9 @@ func (k Keeper) ComputeBurnTax(ctx sdk.Context, principal sdk.Coins) sdk.Coins {
 		taxDue := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).Ceil().RoundInt()
 
 		// If tax due is greater than the tax cap, cap!
-		if taxDue.Equal(sdk.ZeroInt()) {
-			continue
+		if !taxDue.IsZero() {
+			taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxDue))
 		}
-
-		taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxDue))
 	}
 
 	return taxes
@@ -124,9 +122,7 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin) {
 		}
 	}
 
-	requiredFees := requiredGasFees.Sort()
-
-	return requiredFees, requiredGasFeesUluna
+	return requiredGasFees.Sort(), requiredGasFeesUluna
 }
 
 func (k Keeper) IsTaxableMsgType(ctx sdk.Context, taxableMsgTypes []string, msgType string) bool {

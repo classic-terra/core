@@ -1,6 +1,7 @@
 package classictax
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -76,7 +77,9 @@ func (AppModuleBasic) ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, 
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the classictax module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+}
 
 // GetTxCmd returns the root tx command for the oracle module.
 func (AppModuleBasic) GetTxCmd() *cobra.Command {

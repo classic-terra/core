@@ -26570,6 +26570,101 @@ paths:
                       format: byte
       tags:
         - Query
+  /terra/dyncomm/v1beta1/params:
+    get:
+      summary: Params queries all parameters.
+      operationId: DyncommParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params defines the parameters of the module.
+                type: object
+                properties:
+                  max_zero:
+                    type: string
+                  slope_base:
+                    type: string
+                  slope_vp_impact:
+                    type: string
+                  cap:
+                    type: string
+            description: >-
+              QueryParamsResponse is the response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /terra/dyncomm/v1beta1/rate/{validator_addr}:
+    get:
+      operationId: Rate
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rate:
+                type: string
+              target:
+                type: string
+            description: >-
+              QueryRateResponse is the response type for the Query/Rate RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: validator_addr
+          description: validator_addr defines the validator address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /terra/classictax/v1beta1/params:
     get:
       summary: Params queries all parameters.
@@ -60989,6 +61084,42 @@ definitions:
     description: |-
       QueryTaxRateResponse is response type for the
       Query/TaxRate RPC method.
+  terra.dyncomm.v1beta1.Params:
+    type: object
+    properties:
+      max_zero:
+        type: string
+      slope_base:
+        type: string
+      slope_vp_impact:
+        type: string
+      cap:
+        type: string
+    description: Params defines the parameters for the dyncomm module.
+  terra.dyncomm.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+        properties:
+          max_zero:
+            type: string
+          slope_base:
+            type: string
+          slope_vp_impact:
+            type: string
+          cap:
+            type: string
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  terra.dyncomm.v1beta1.QueryRateResponse:
+    type: object
+    properties:
+      rate:
+        type: string
+      target:
+        type: string
+    description: QueryRateResponse is the response type for the Query/Rate RPC method.
   terra.classictax.v1beta1.Params:
     type: object
     properties:

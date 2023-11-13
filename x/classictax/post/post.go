@@ -47,7 +47,10 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// get tax from sent coins
-	taxes, taxesUluna, _ := dd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+	taxes, taxesUluna, _, err := dd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+	if err != nil {
+		return ctx, err
+	}
 
 	// get the parameter for gas prices
 	gasPrices := dd.classictaxKeeper.GetGasPrices(ctx)

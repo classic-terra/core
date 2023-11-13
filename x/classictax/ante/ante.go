@@ -62,14 +62,21 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		}
 
 		// convert the consumed gas to actual coins
-		requiredFee, _ := fd.classictaxKeeper.GetFeeCoins(ctx, gasConsumed)
+		requiredFee, _, err := fd.classictaxKeeper.GetFeeCoins(ctx, gasConsumed)
+		if err != nil {
+			return ctx, err
+		}
+
 		requiredGasFee := requiredFee
 
 		if !stabilityTaxes.IsZero() {
 			requiredFee = requiredFee.Add(stabilityTaxes...)
 		}
 		// get tax coins needed for the transaction
-		taxCoins, taxCoinsUluna, _ := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+		taxCoins, taxCoinsUluna, _, err := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+		if err != nil {
+			return ctx, err
+		}
 
 		requiredFeeWithTax := requiredFee
 		if !taxCoins.IsZero() {
@@ -153,7 +160,10 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk
 	if ctx.IsCheckTx() && !isOracleTx {
 		// this is the minimum gas fees (in coins) needed at this point,
 		// based upon the consumed gas
-		requiredGasFees, _ := fd.classictaxKeeper.GetFeeCoins(ctx, usedGas)
+		requiredGasFees, _, err := fd.classictaxKeeper.GetFeeCoins(ctx, usedGas)
+		if err != nil {
+			return err
+		}
 
 		requiredFees := requiredGasFees
 		if !stabilityTaxes.IsZero() {
@@ -164,7 +174,11 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, stabilityTaxes sdk
 		// we ignore burn tax here as it is checked in the post handler
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
 			// add the tax to overall fees just for displaying it
-			requiredTaxFees, requiredTaxFeesUluna, _ := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+			requiredTaxFees, requiredTaxFeesUluna, _, err := fd.classictaxKeeper.GetTaxCoins(ctx, msgs...)
+			if err != nil {
+				return err
+			}
+
 			requiredFees = requiredFees.Add(requiredTaxFees.Sort()...)
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(tax)/%q(tax_uluna) + %q(stability)", feeCoins, requiredFees, requiredGasFees, requiredTaxFees, requiredTaxFeesUluna, stabilityTaxes)
 		}

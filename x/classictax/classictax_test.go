@@ -197,7 +197,7 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"))
 	acc2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, sdk.AccAddress("terra1573yjmczqf5l95277as5qupn8v3ug7d88v0skv"))
-	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"), sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000))))
+	suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, sdk.AccAddress("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v"), sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000)), sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(1_000_000_000))))
 
 	priv1, _, _ := suite.CreateValidator(50_000_000_000)
 	suite.CreateValidator(50_000_000_000)
@@ -226,10 +226,37 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 	_, err = postHandler(suite.ctx, tx, false)
 	suite.Require().NoError(err)
 
-	tax, tax2, _ := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, tx.GetMsgs()...)
+	tax, tax2, _, err := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, tx.GetMsgs()...)
+	suite.Require().NoError(err)
+
 	// print out values
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000))), tax)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(5_000_000)), tax2)
+
+	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(25_000_000))))
+	// calculate for sending uusd
+	sendmsg := banktypes.NewMsgSend(
+		acc.GetAddress(),
+		acc2.GetAddress(),
+		sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(1_000_000_000))),
+	)
+	err = suite.txBuilder.SetMsgs(sendmsg)
+	suite.Require().NoError(err)
+	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.ctx, tx, false)
+	suite.Require().NoError(err)
+	_, err = postHandler(suite.ctx, tx, false)
+	suite.Require().NoError(err)
+
+	tax, tax2, _, err = suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, tx.GetMsgs()...)
+	suite.Require().NoError(err)
+
+	// print out values
+	// exchange rate is (from gas fees) 0.75 (uusd) / 28.325 (uluna) = 0.026478376
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(5_000_000))), tax)
+	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(188_833_333)), tax2)
+
 }
 
 func (suite *AnteTestSuite) TestAnte_UnderpayTax() {
@@ -327,7 +354,7 @@ func (suite *AnteTestSuite) TestAnte_TaxPaymentDenoms() {
 	sendmsg := banktypes.NewMsgSend(
 		acc.GetAddress(),
 		acc2.GetAddress(),
-		sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(1_000_000))),
+		sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(100_000_000))),
 	)
 
 	err := suite.txBuilder.SetMsgs(sendmsg)
@@ -338,7 +365,7 @@ func (suite *AnteTestSuite) TestAnte_TaxPaymentDenoms() {
 	suite.Require().Error(err)
 
 	// first test with paying in coin denom
-	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(600_000))))
+	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(1_200_000))))
 	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 	suite.ctx, err = antehandler(suite.ctx, tx, false)
@@ -355,12 +382,12 @@ func (suite *AnteTestSuite) TestAnte_TaxPaymentDenoms() {
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt()), burnBefore)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt()), burnAfter)
 	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.ZeroInt()), burnBeforeUSD)
-	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(4_500)), burnAfterUSD)
+	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(450_000)), burnAfterUSD)
 
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt()), feeBefore)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt()), feeAfter)
 	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.ZeroInt()), feeBeforeUSD)
-	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(595_500)), feeAfterUSD)
+	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(750_000)), feeAfterUSD)
 
 	// now pay all in uluna
 	suite.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(300_000_000))))
@@ -371,15 +398,27 @@ func (suite *AnteTestSuite) TestAnte_TaxPaymentDenoms() {
 	_, err = postHandler(suite.ctx, tx, false)
 	suite.Require().NoError(err)
 
+	// tax split in tests is 90/10
+	// tax is 500_000 uusd -> 18_883_333 uluna
+	// 90% of that is 16_995_000
+	// 10% of that is 1_888_333
+	exchangeRate, err := suite.app.ClassicTaxKeeper.GetLunaExchangeRate(suite.ctx, core.MicroUSDDenom)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewDecWithPrec(264783759929391, 16), exchangeRate)
+
+	taxInUluna, err := suite.app.ClassicTaxKeeper.CoinToMicroLuna(suite.ctx, sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000)))
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(18_883_333)), taxInUluna)
+
 	burnAfter = suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroLunaDenom)
 	feeAfter = suite.app.BankKeeper.GetBalance(suite.ctx, fcModule.GetAddress(), core.MicroLunaDenom)
 	burnAfterUSD = suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroUSDDenom)
 	feeAfterUSD = suite.app.BankKeeper.GetBalance(suite.ctx, fcModule.GetAddress(), core.MicroUSDDenom)
 
-	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(90_000_000)), burnAfter)
-	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(210_000_000)), feeAfter)
-	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(4_500)), burnAfterUSD)
-	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(595_500)), feeAfterUSD)
+	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(16_995_000)), burnAfter)
+	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(225_581_295)), feeAfter)
+	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(450_000)), burnAfterUSD)
+	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(750_000)), feeAfterUSD)
 }
 
 func (suite *AnteTestSuite) TestAnte_OverpayTax() {
@@ -417,7 +456,8 @@ func (suite *AnteTestSuite) TestAnte_OverpayTax() {
 	suite.Require().NoError(err)
 
 	// check tax gas
-	tax, _, _ := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, sendmsg)
+	tax, _, _, err := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, sendmsg)
+	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2_500_000))), tax)
 	taxGas, _ := suite.app.ClassicTaxKeeper.CalculateTaxGas(suite.ctx, tax, curParams.GasPrices)
 	suite.Require().Equal(sdk.NewInt(250_000).Int64(), int64(taxGas))
@@ -475,7 +515,8 @@ func (suite *AnteTestSuite) TestAnte_RefundTax() {
 	suite.Require().NoError(err)
 
 	// check tax gas
-	tax, _, _ := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, sendmsg)
+	tax, _, _, err := suite.app.ClassicTaxKeeper.GetTaxCoins(suite.ctx, sendmsg)
+	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2_500_000))), tax)
 	taxGas, _ := suite.app.ClassicTaxKeeper.CalculateTaxGas(suite.ctx, tax, curParams.GasPrices)
 	suite.Require().Equal(sdk.NewInt(250_000).Int64(), int64(taxGas))

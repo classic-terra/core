@@ -85,7 +85,7 @@ func (k Keeper) ComputeBurnTax(ctx sdk.Context, principal sdk.Coins) sdk.Coins {
 
 // this function calculates the required fees for a transaction
 // based on a provided gas value and the on-chain gas price parameters
-func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin) {
+func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin, error) {
 	requiredGasFees := sdk.Coins{}
 	requiredGasFeesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
@@ -114,7 +114,11 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin) {
 			} else {
 				// to get an optional uluna amount for paying the whole tax in uluna,
 				// we take the highest equivalent of the gas prices
-				inUluna := k.CoinToMicroLuna(ctx, sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt()))
+				inUluna, err := k.CoinToMicroLuna(ctx, sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt()))
+				if err != nil {
+					return nil, sdk.Coin{}, err
+				}
+
 				if requiredGasFeesUluna.IsLT(inUluna) {
 					requiredGasFeesUluna = inUluna
 				}
@@ -122,7 +126,7 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin) {
 		}
 	}
 
-	return requiredGasFees.Sort(), requiredGasFeesUluna
+	return requiredGasFees.Sort(), requiredGasFeesUluna, nil
 }
 
 func (k Keeper) IsTaxableMsgType(ctx sdk.Context, taxableMsgTypes []string, msgType string) bool {
@@ -138,7 +142,7 @@ func (k Keeper) IsTaxableMsgType(ctx sdk.Context, taxableMsgTypes []string, msgT
 // this function calculates the coins necessary for paying the tax
 // tax can either be paid as previously in the corresponding denom
 // or totally in uluna
-func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (taxes sdk.Coins, taxesUluna sdk.Coin, couldTax bool) {
+func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (taxes sdk.Coins, taxesUluna sdk.Coin, couldTax bool, err error) {
 	// define empty coins list
 	taxes = sdk.NewCoins()
 	taxesUluna = sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
@@ -220,7 +224,10 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (taxes sdk.Coins, 
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err != nil {
-				tax, taxUluna, couldBeTaxed = k.GetTaxCoins(ctx, messages...)
+				tax, taxUluna, couldBeTaxed, err = k.GetTaxCoins(ctx, messages...)
+				if err != nil {
+					return nil, sdk.Coin{}, couldTax, err
+				}
 			}
 		default:
 			couldBeTaxed = false
@@ -233,7 +240,10 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (taxes sdk.Coins, 
 
 			if taxUluna.IsZero() {
 				// if the tax is not already in uluna, convert it from oracle exchange rates
-				taxUluna = k.CoinsToMicroLuna(ctx, tax)
+				taxUluna, err = k.CoinsToMicroLuna(ctx, tax)
+				if err != nil {
+					return nil, sdk.Coin{}, couldTax, err
+				}
 			}
 		}
 
@@ -242,37 +252,58 @@ func (k Keeper) GetTaxCoins(ctx sdk.Context, msgs ...sdk.Msg) (taxes sdk.Coins, 
 		}
 	}
 
-	return taxes.Sort(), taxesUluna, couldTax
+	return taxes.Sort(), taxesUluna, couldTax, nil
+}
+
+func (k Keeper) GetLunaExchangeRate(ctx sdk.Context, denom string) (sdk.Dec, error) {
+	gasPrices := k.GetGasPrices(ctx)
+	gasUluna := gasPrices.AmountOf(core.MicroLunaDenom)
+	gasDenom := gasPrices.AmountOf(denom)
+	if gasUluna.IsZero() || gasDenom.IsZero() {
+		return sdk.ZeroDec(), nil
+	}
+
+	return gasDenom.Quo(gasUluna), nil
 }
 
 // convert a coin to uluna by using the oracle exchange rates
-func (k Keeper) CoinToMicroLuna(ctx sdk.Context, coin sdk.Coin) sdk.Coin {
-	microLuna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
+func (k Keeper) CoinToMicroLuna(ctx sdk.Context, coin sdk.Coin) (microLuna sdk.Coin, err error) {
+	microLuna = sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 	if coin.Denom == core.MicroLunaDenom {
 		microLuna = coin
 	} else {
 		// get the exchange rate
-		exchangeRate, err := k.oracleKeeper.GetLunaExchangeRate(ctx, coin.Denom)
-		if err == nil && !exchangeRate.IsZero() {
+		// we calculate it by gas prices because the oracle values are based on USD (1 USTC = 1USD)
+		exchangeRate, err := k.GetLunaExchangeRate(ctx, coin.Denom)
+		if err != nil {
+			return microLuna, err
+		}
+
+		// to use the oracle, exchange rates would have to be extended by the real USTC cryptocurrency prices
+		//exchangeRate, err := k.oracleKeeper.GetLunaExchangeRate(ctx, coin.Denom)
+		//if err == nil && !exchangeRate.IsZero() {
+		if !exchangeRate.IsZero() {
 			// convert to micro luna
-			amount := sdk.NewDecFromInt(coin.Amount).Quo(exchangeRate).TruncateInt()
-			microLuna = sdk.NewCoin(core.MicroLunaDenom, amount)
+			microLuna.Amount = sdk.NewDecFromInt(coin.Amount).Quo(exchangeRate).TruncateInt()
 		}
 	}
 
-	return microLuna
+	return microLuna, nil
 }
 
-func (k Keeper) CoinsToMicroLuna(ctx sdk.Context, coins sdk.Coins) sdk.Coin {
-	microLuna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
+func (k Keeper) CoinsToMicroLuna(ctx sdk.Context, coins sdk.Coins) (microLuna sdk.Coin, err error) {
+	microLuna = sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
 	for _, coin := range coins {
-		converted := k.CoinToMicroLuna(ctx, coin)
+		converted, err := k.CoinToMicroLuna(ctx, coin)
+		if err != nil {
+			return microLuna, err
+		}
 		microLuna = microLuna.Add(converted)
 	}
 
-	return microLuna
+	return microLuna, nil
 }
 
 func (k Keeper) IsOracleTx(msgs []sdk.Msg) bool {
@@ -297,8 +328,15 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	gasConsumed := ctx.GasMeter().GasConsumed()
 	fee := feeTx.GetFee()
 
-	taxes, taxesUluna, couldTax := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
-	requiredFees, requiredFeesUluna := k.GetFeeCoins(ctx, gasConsumed)
+	taxes, taxesUluna, couldTax, err := k.GetTaxCoins(ctx, feeTx.GetMsgs()...)
+	if err != nil {
+		return nil, sdk.DecCoin{}, nil, gas, err
+	}
+
+	requiredFees, requiredFeesUluna, err := k.GetFeeCoins(ctx, gasConsumed)
+	if err != nil {
+		return nil, sdk.DecCoin{}, nil, gas, err
+	}
 
 	// get the tax equivalent in gas
 	taxGas, err := k.CalculateTaxGas(ctx, taxes, k.GetGasPrices(ctx))
@@ -307,7 +345,11 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 	}
 
 	// calculate the ratio of the tax to the gas
-	sentFeesUluna := sdk.NewDec(k.CoinsToMicroLuna(ctx, fee).Amount.Int64())
+	inUluna, err := k.CoinsToMicroLuna(ctx, fee)
+	if err != nil {
+		return nil, sdk.DecCoin{}, nil, gas, err
+	}
+	sentFeesUluna := sdk.NewDec(inUluna.Amount.Int64())
 	feeGasUluna := sdk.NewDec(requiredFeesUluna.Amount.Int64())
 	feeTaxUluna := sdk.NewDec(taxesUluna.Amount.Int64())
 

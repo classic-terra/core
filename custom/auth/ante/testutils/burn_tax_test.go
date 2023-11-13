@@ -872,7 +872,9 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	tk.BurnCoinsFromBurnAccount(s.ctx)
 
 	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))...)
-	taxes, _, _ := s.app.ClassicTaxKeeper.GetTaxCoins(s.ctx, msg)
+	taxes, _, _, err := s.app.ClassicTaxKeeper.GetTaxCoins(s.ctx, msg)
+	require.NoError(err)
+
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
 	if burnSplitRate.IsPositive() {

@@ -24,6 +24,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+
+	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
 )
 
 func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
@@ -44,6 +46,8 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 	// Create Transfer Stack
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
+
+	transferStack = ibchooks.NewIBCMiddleware(transferStack, &appKeepers.IBCHooksWrapper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, appKeepers.IBCFeeKeeper)
 
 	// Create Interchain Accounts Stack

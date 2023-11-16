@@ -62,6 +62,10 @@ import (
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+
+	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
+	ibchookskeeper "github.com/terra-money/core/v2/x/ibc-hooks/keeper"
+	ibchooktypes "github.com/terra-money/core/v2/x/ibc-hooks/types"
 )
 
 type AppKeepers struct {
@@ -95,6 +99,10 @@ type AppKeepers struct {
 	TreasuryKeeper      treasurykeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper
+	IBCHooksKeeper      ibchookskeeper.Keeper
+
+	Ics20WasmHooks  ibchooks.WasmHooks
+	IBCHooksWrapper ibchooks.ICS4Middleware
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -275,12 +283,23 @@ func NewAppKeepers(
 		&appKeepers.IBCKeeper.PortKeeper, appKeepers.AccountKeeper, appKeepers.BankKeeper,
 	)
 
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
+	appKeepers.Ics20WasmHooks = ibchooks.NewWasmHooks(
+		&appKeepers.IBCHooksKeeper, contractKeeper,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
+
+	appKeepers.IBCHooksWrapper = ibchooks.NewICS4Middleware(
+		appKeepers.IBCFeeKeeper,
+		appKeepers.Ics20WasmHooks,
+	)
+
 	// Create Transfer Keepers
 	appKeepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.IBCFeeKeeper,
+		appKeepers.IBCHooksWrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
@@ -454,6 +473,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
+	paramsKeeper.Subspace(ibchooktypes.ModuleName)
 
 	return paramsKeeper
 }

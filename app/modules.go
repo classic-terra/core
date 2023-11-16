@@ -80,6 +80,9 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v2/client/docs/statik"
+
+	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
+	ibchooktypes "github.com/terra-money/core/v2/x/ibc-hooks/types"
 )
 
 var (
@@ -124,6 +127,7 @@ var (
 		customwasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
+		ibchooks.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -142,6 +146,7 @@ var (
 		ibcfeetypes.ModuleName:         nil,
 		icatypes.ModuleName:            nil,
 		wasm.ModuleName:                {authtypes.Burner},
+		ibchooktypes.ModuleName:        nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -186,6 +191,7 @@ func appModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
+		ibchooks.NewAppModule(app.AccountKeeper),
 	}
 }
 
@@ -243,6 +249,7 @@ func orderBeginBlockers() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		ibchooktypes.ModuleName,
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
@@ -274,6 +281,7 @@ func orderEndBlockers() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		ibchooktypes.ModuleName,
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
@@ -305,6 +313,7 @@ func orderInitGenesis() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		ibchooktypes.ModuleName,
 		// Terra Classic modules
 		markettypes.ModuleName,
 		oracletypes.ModuleName,

@@ -6,10 +6,6 @@ package tx
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -21,15 +17,16 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ = proto.Marshal
-	_ = golang_proto.Marshal
-	_ = fmt.Errorf
-	_ = math.Inf
-)
+var _ = proto.Marshal
+var _ = golang_proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -53,11 +50,9 @@ func (*ComputeTaxRequest) ProtoMessage()    {}
 func (*ComputeTaxRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_0b3c73e5d85273f4, []int{0}
 }
-
 func (m *ComputeTaxRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *ComputeTaxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ComputeTaxRequest.Marshal(b, m, deterministic)
@@ -70,15 +65,12 @@ func (m *ComputeTaxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-
 func (m *ComputeTaxRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ComputeTaxRequest.Merge(m, src)
 }
-
 func (m *ComputeTaxRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *ComputeTaxRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_ComputeTaxRequest.DiscardUnknown(m)
 }
@@ -113,11 +105,9 @@ func (*ComputeTaxResponse) ProtoMessage()    {}
 func (*ComputeTaxResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_0b3c73e5d85273f4, []int{1}
 }
-
 func (m *ComputeTaxResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *ComputeTaxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ComputeTaxResponse.Marshal(b, m, deterministic)
@@ -130,15 +120,12 @@ func (m *ComputeTaxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-
 func (m *ComputeTaxResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ComputeTaxResponse.Merge(m, src)
 }
-
 func (m *ComputeTaxResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *ComputeTaxResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_ComputeTaxResponse.DiscardUnknown(m)
 }
@@ -186,19 +173,17 @@ var fileDescriptor_0b3c73e5d85273f4 = []byte{
 	0xdc, 0x67, 0xcf, 0xbc, 0x7c, 0x2d, 0xf0, 0xa4, 0xd5, 0x66, 0x6c, 0x30, 0xf9, 0x55, 0x94, 0xf6,
 	0xc9, 0x38, 0x3d, 0xfd, 0x40, 0xe8, 0xd6, 0x33, 0x97, 0x78, 0xf0, 0x8e, 0x50, 0xfa, 0x57, 0x4e,
 	0x70, 0x97, 0xff, 0x9b, 0x3d, 0xbf, 0x10, 0x44, 0x74, 0xef, 0xff, 0x45, 0xce, 0x51, 0x9c, 0xbc,
-	0xff, 0xfa, 0xeb, 0x93, 0x1f, 0xc7, 0x77, 0xc4, 0x85, 0x73, 0x2b, 0x57, 0xbd, 0x44, 0x69, 0x1f,
-	0x93, 0x07, 0xd9, 0xd3, 0xd3, 0x35, 0x23, 0x67, 0x6b, 0x46, 0x7e, 0xae, 0x19, 0xf9, 0x38, 0x30,
+	0xff, 0xfa, 0xeb, 0x93, 0x1f, 0x3f, 0x26, 0x0f, 0xe2, 0x3b, 0xe2, 0xc2, 0xc5, 0x95, 0x6b, 0x58,
+	0xa2, 0xb4, 0xd9, 0xd3, 0xd3, 0x35, 0x23, 0x67, 0x6b, 0x46, 0x7e, 0xae, 0x19, 0xf9, 0x38, 0x30,
 	0xef, 0xcb, 0xc0, 0xc8, 0xd9, 0xc0, 0xbc, 0x6f, 0x03, 0xf3, 0x5e, 0x88, 0xb9, 0xc5, 0x63, 0x69,
-	0x4c, 0xa5, 0xf6, 0xdc, 0x44, 0x05, 0x9d, 0x16, 0xab, 0x54, 0xa8, 0xde, 0x20, 0xd4, 0x42, 0xf6,
-	0x78, 0x24, 0xd0, 0x16, 0x97, 0xc7, 0x1b, 0x3e, 0xfa, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xb8, 0x20,
-	0xf4, 0xe0, 0x67, 0x02, 0x00, 0x00,
+	0x4c, 0xa5, 0xf6, 0xdc, 0x38, 0x05, 0x9d, 0x16, 0xab, 0x54, 0xa8, 0xde, 0x20, 0xd4, 0x42, 0xf6,
+	0x78, 0x24, 0xd0, 0x16, 0x97, 0xc7, 0x1b, 0x3e, 0xfa, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xd9, 0x06,
+	0x00, 0x7b, 0x67, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ context.Context
-	_ grpc.ClientConn
-)
+var _ context.Context
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
@@ -236,7 +221,8 @@ type ServiceServer interface {
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedServiceServer struct{}
+type UnimplementedServiceServer struct {
+}
 
 func (*UnimplementedServiceServer) ComputeTax(ctx context.Context, req *ComputeTaxRequest) (*ComputeTaxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ComputeTax not implemented")
@@ -367,7 +353,6 @@ func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-
 func (m *ComputeTaxRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -403,11 +388,9 @@ func (m *ComputeTaxResponse) Size() (n int) {
 func sovService(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-
 func sozService(x uint64) (n int) {
 	return sovService(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
 func (m *ComputeTaxRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -528,7 +511,6 @@ func (m *ComputeTaxRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *ComputeTaxResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -613,7 +595,6 @@ func (m *ComputeTaxResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func skipService(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

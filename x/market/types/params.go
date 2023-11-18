@@ -19,6 +19,8 @@ var (
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")
 	// Min spread
 	KeyMinStabilitySpread = []byte("MinStabilitySpread")
+	// Fee burn percentage
+	KeyFeeBurnRatio = []byte("FeeBurnRatio")
 )
 
 // Default parameter values
@@ -26,6 +28,7 @@ var (
 	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
 	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
+	DefaultBurnRatio          = sdk.NewDecWithPrec(100, 2)           // 100%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -36,6 +39,7 @@ func DefaultParams() Params {
 		BasePool:           DefaultBasePool,
 		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
 		MinStabilitySpread: DefaultMinStabilitySpread,
+		FeeBurnRatio:       DefaultBurnRatio,
 	}
 }
 
@@ -57,6 +61,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyBasePool, &p.BasePool, validateBasePool),
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
+		paramstypes.NewParamSetPair(KeyFeeBurnRatio, &p.FeeBurnRatio, validateFeeBurnRatio),
 	}
 }
 
@@ -70,6 +75,9 @@ func (p Params) Validate() error {
 	}
 	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
 		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
+	}
+	if p.FeeBurnRatio.IsNegative() || p.FeeBurnRatio.GT(sdk.OneDec()) {
+		return fmt.Errorf("fee burn ratio should be a value between [0,1], is %s", p.FeeBurnRatio)
 	}
 
 	return nil
@@ -113,6 +121,23 @@ func validateMinStabilitySpread(i interface{}) error {
 
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min spread is too large: %s", v)
+	}
+
+	return nil
+}
+
+func validateFeeBurnRatio(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("burn ratio must be positive or zero: %s", v)
+	}
+
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("burn ratio is too large: %s", v)
 	}
 
 	return nil

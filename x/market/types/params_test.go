@@ -30,7 +30,13 @@ func TestParamsEqual(t *testing.T) {
 	err = p4.Validate()
 	require.Error(t, err)
 
+	// invalid min spread
 	p5 := DefaultParams()
-	require.NotNil(t, p5.ParamSetPairs())
-	require.NotNil(t, p5.String())
+	p5.FeeBurnRatio = sdk.NewDecWithPrec(-1, 2)
+	err = p5.Validate()
+	require.Error(t, err)
+
+	p6 := DefaultParams()
+	require.NotNil(t, p6.ParamSetPairs())
+	require.NotNil(t, p6.String())
 }

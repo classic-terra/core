@@ -45,10 +45,12 @@ func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
 func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 	// Create Transfer Stack
 	var transferStack porttypes.IBCModule
-	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
+	var transferHookStack porttypes.IBCModule
+	var transferHookFeeStack porttypes.IBCModule
 
-	transferStack = ibchooks.NewIBCMiddleware(transferStack, &appKeepers.IBCHooksWrapper)
-	transferStack = ibcfee.NewIBCMiddleware(transferStack, appKeepers.IBCFeeKeeper)
+	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
+	transferHookStack = ibchooks.NewIBCMiddleware(transferStack, appKeepers.IBCHooksWrapper)
+	transferHookFeeStack = ibcfee.NewIBCMiddleware(transferHookStack, appKeepers.IBCFeeKeeper)
 
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
@@ -73,7 +75,7 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
-		AddRoute(ibctransfertypes.ModuleName, transferStack).
+		AddRoute(ibctransfertypes.ModuleName, transferHookFeeStack).
 		AddRoute(wasm.ModuleName, wasmStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack)

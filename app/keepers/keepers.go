@@ -9,6 +9,7 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
 	ibcfeekeeper "github.com/cosmos/ibc-go/v6/modules/apps/29-fee/keeper"
 	ibcfeetypes "github.com/cosmos/ibc-go/v6/modules/apps/29-fee/types"
+	ibctransfer "github.com/cosmos/ibc-go/v6/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
@@ -99,10 +100,11 @@ type AppKeepers struct {
 	TreasuryKeeper      treasurykeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper
-	IBCHooksKeeper      ibchookskeeper.Keeper
+	IBCHooksKeeper      *ibchookskeeper.Keeper
 
-	Ics20WasmHooks  ibchooks.WasmHooks
-	IBCHooksWrapper ibchooks.ICS4Middleware
+	Ics20WasmHooks  *ibchooks.WasmHooks
+	IBCHooksWrapper *ibchooks.ICS4Middleware
+	TransferStack   ibctransfer.IBCModule
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -144,6 +146,7 @@ func NewAppKeepers(
 		ibcfeetypes.StoreKey,
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
+		ibchooktypes.StoreKey,
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
@@ -283,30 +286,6 @@ func NewAppKeepers(
 		&appKeepers.IBCKeeper.PortKeeper, appKeepers.AccountKeeper, appKeepers.BankKeeper,
 	)
 
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
-	appKeepers.Ics20WasmHooks = ibchooks.NewWasmHooks(
-		&appKeepers.IBCHooksKeeper, contractKeeper,
-		sdk.GetConfig().GetBech32AccountAddrPrefix(),
-	)
-
-	appKeepers.IBCHooksWrapper = ibchooks.NewICS4Middleware(
-		appKeepers.IBCFeeKeeper,
-		appKeepers.Ics20WasmHooks,
-	)
-
-	// Create Transfer Keepers
-	appKeepers.TransferKeeper = ibctransferkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[ibctransfertypes.StoreKey],
-		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.IBCHooksWrapper,
-		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		scopedTransferKeeper,
-	)
-
 	appKeepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[icahosttypes.StoreKey],
@@ -329,10 +308,6 @@ func NewAppKeepers(
 		scopedICAControllerKeeper,
 		bApp.MsgServiceRouter(),
 	)
-
-	// Create static IBC router, add transfer route, then set and seal it
-	ibcRouter := appKeepers.newIBCRouter()
-	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -358,6 +333,39 @@ func NewAppKeepers(
 		appKeepers.MarketKeeper, appKeepers.OracleKeeper,
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
+	)
+
+	hooksKeeper := ibchookskeeper.NewKeeper(
+		appKeepers.keys[ibchooktypes.StoreKey],
+	)
+	appKeepers.IBCHooksKeeper = &hooksKeeper
+
+	// - contract keeper needs to be initialized after wasm
+	// - transfer needs to be initialized before wasm
+	// - hooks needs to be initialized before transfer
+	wasmHooks := ibchooks.NewWasmHooks(
+		appKeepers.IBCHooksKeeper, nil,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	)
+	appKeepers.Ics20WasmHooks = &wasmHooks
+
+	hooksMiddleware := ibchooks.NewICS4Middleware(
+		appKeepers.IBCFeeKeeper,
+		appKeepers.Ics20WasmHooks,
+	)
+	appKeepers.IBCHooksWrapper = &hooksMiddleware
+
+	// Create Transfer Keepers AFTER Hooks keeper but BEFORE wasm
+	appKeepers.TransferKeeper = ibctransferkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[ibctransfertypes.StoreKey],
+		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
+		appKeepers.IBCHooksWrapper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		scopedTransferKeeper,
 	)
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
@@ -415,6 +423,10 @@ func NewAppKeepers(
 		wasmOpts...,
 	)
 
+	// AFTER wasm set contractKeeper for ics20 wasm hook
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
+	appKeepers.Ics20WasmHooks.ContractKeeper = contractKeeper
+
 	// register the proposal types
 	govRouter := appKeepers.newGovRouter()
 	govConfig := govtypes.DefaultConfig()
@@ -443,6 +455,10 @@ func NewAppKeepers(
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
 	appKeepers.ScopedIBCFeeKeeper = scopedIBCFeeKeeper
 	appKeepers.ScopedWasmKeeper = scopedWasmKeeper
+
+	// Create static IBC router, add transfer route, then set and seal it
+	ibcRouter := appKeepers.newIBCRouter()
+	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	return appKeepers
 }

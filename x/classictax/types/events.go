@@ -1,5 +1,6 @@
 package types
 
 const (
-	AttributeKeyTax = "tax"
+	AttributeKeyTax    = "tax"
+	AttributeKeyBurned = "burned"
 )

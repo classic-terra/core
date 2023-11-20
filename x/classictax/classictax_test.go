@@ -272,7 +272,6 @@ func (suite *AnteTestSuite) TestAnte_UnderpayTax() {
 	suite.CreateValidator(50_000_000_000)
 
 	burnModule := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, treasurytypes.BurnModuleName)
-	//cpBefore := suite.app.DistrKeeper.GetFeePool(suite.ctx).CommunityPool.AmountOf(core.MicroLunaDenom)
 	burnBefore := suite.app.BankKeeper.GetBalance(suite.ctx, burnModule.GetAddress(), core.MicroLunaDenom)
 	fcModule := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, authtypes.FeeCollectorName)
 	feeBefore := suite.app.BankKeeper.GetBalance(suite.ctx, fcModule.GetAddress(), core.MicroLunaDenom)

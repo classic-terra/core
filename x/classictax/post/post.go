@@ -79,7 +79,7 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	// get the stability taxes here, although we are not letting the user pay it
 	// we need it for calculations
 	stabilityTaxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, dd.treasuryKeeper, msgs...)
-	//requiredGasFees, _ := dd.classictaxKeeper.GetFeeCoins(ctx, requiredGas, stabilityTaxes)
+	// requiredGasFees, _ := dd.classictaxKeeper.GetFeeCoins(ctx, requiredGas, stabilityTaxes)
 
 	// sentTaxFees and sentTaxFeesUluna are _virtual_ values calculated by the assumed multiplier
 	// they have to be checked against the actual sent fees

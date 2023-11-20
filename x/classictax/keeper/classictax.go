@@ -37,7 +37,7 @@ func (k Keeper) CalculateTaxGas(ctx sdk.Context, taxes sdk.Coins, gasPrices sdk.
 		gasPrice := gasPrices.AmountOf(tax.Denom)
 		if gasPrice.IsZero() {
 			// TODO check if it should be allowed to disable tax by setting gas to zero
-			//return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "gas price for %s is zero", tax.Denom)
+			// return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "gas price for %s is zero", tax.Denom)
 			continue
 		}
 
@@ -281,8 +281,8 @@ func (k Keeper) CoinToMicroLuna(ctx sdk.Context, coin sdk.Coin) (microLuna sdk.C
 		}
 
 		// to use the oracle, exchange rates would have to be extended by the real USTC cryptocurrency prices
-		//exchangeRate, err := k.oracleKeeper.GetLunaExchangeRate(ctx, coin.Denom)
-		//if err == nil && !exchangeRate.IsZero() {
+		// exchangeRate, err := k.oracleKeeper.GetLunaExchangeRate(ctx, coin.Denom)
+		// if err == nil && !exchangeRate.IsZero() {
 		if !exchangeRate.IsZero() {
 			// convert to micro luna
 			microLuna.Amount = sdk.NewDecFromInt(coin.Amount).Quo(exchangeRate).TruncateInt()

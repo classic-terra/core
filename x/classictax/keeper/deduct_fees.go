@@ -67,7 +67,7 @@ func (k Keeper) CheckDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, fee sdk.Coins, 
 			}
 			// this is now stability tax only, so no need to burn tax split
 			// Record tax proceeds, disabled for stability tax as since introduction of burn tax it was used for that purpose
-			//fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
+			// fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 		}
 
 		err := DeductFees(k.bankKeeper, ctx, deductFeesFromAcc, fee, simulate)

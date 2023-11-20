@@ -72,9 +72,7 @@ func (dd ClassicTaxDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return next(ctx, tx, simulate)
 	}
 
-	var (
-		neg bool
-	)
+	var neg bool
 
 	// get the stability taxes here, although we are not letting the user pay it
 	// we need it for calculations

@@ -50,9 +50,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	stabilityTaxes := classictaxkeeper.FilterMsgAndComputeStabilityTax(ctx, fd.treasuryKeeper, msgs...)
 	fee := feeTx.GetFee()
 
-	var (
-		paidFeeCoins sdk.Coins
-	)
+	var paidFeeCoins sdk.Coins
 
 	gasConsumed := ctx.GasMeter().GasConsumed()
 	if !simulate && ctx.BlockHeight() > 0 {

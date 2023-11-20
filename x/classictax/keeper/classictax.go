@@ -89,9 +89,7 @@ func (k Keeper) GetFeeCoins(ctx sdk.Context, gas uint64) (sdk.Coins, sdk.Coin, e
 	requiredGasFees := sdk.Coins{}
 	requiredGasFeesUluna := sdk.NewCoin(core.MicroLunaDenom, sdk.ZeroInt())
 
-	var (
-		gasPrices sdk.DecCoins
-	)
+	var gasPrices sdk.DecCoins
 
 	if ctx.IsCheckTx() {
 		gasPrices = ctx.MinGasPrices()
@@ -355,9 +353,7 @@ func (k Keeper) CalculateSentTax(ctx sdk.Context, feeTx sdk.FeeTx, stabilityTaxe
 
 	k.Logger(ctx).Info("CalculateSentTax", "sentFeesUluna", sentFeesUluna, "feeGasUluna", feeGasUluna, "feeTaxUluna", feeTaxUluna, "requiredFeesUluna", requiredFeesUluna, "requiredFees", requiredFees, "taxesUluna", taxesUluna, "stability", stabilityTaxes, "taxes", taxes, "checktx", ctx.IsCheckTx(), "couldtax", couldTax)
 
-	var (
-		multiplier sdk.Dec
-	)
+	var multiplier sdk.Dec
 	// calculate the assumed multiplier that was used to calculate fees to send (gas * multiplier * gasPrice = sentFees)
 	if sentFeesUluna.IsPositive() {
 		multiplier = sentFeesUluna.Quo(sdk.NewDec(requiredFeesUluna.Amount.Int64()).Add(sdk.NewDec(taxesUluna.Amount.Int64())))

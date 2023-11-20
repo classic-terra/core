@@ -1,9 +1,6 @@
 package keeper
 
 import (
-	"reflect"
-	"strings"
-
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -82,7 +79,12 @@ func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKee
 	}
 }
 
-func DeductTaxFromCoin(ctx sdk.Context, ctk classictaxkeeper.Keeper, coin sdk.Coin) (newCoin sdk.Coin, err error) {
+func DeductTaxFromCoin(ctx sdk.Context, ctk classictaxkeeper.Keeper, coin sdk.Coin, taxableMsgTypes []string, msgType string) (newCoin sdk.Coin, err error) {
+	taxable := ctk.IsTaxableMsgType(ctx, taxableMsgTypes, msgType)
+	if !taxable {
+		return coin, nil
+	}
+
 	taxes := ctk.ComputeBurnTax(ctx, sdk.NewCoins(coin))
 
 	if !taxes.IsZero() {
@@ -97,7 +99,12 @@ func DeductTaxFromCoin(ctx sdk.Context, ctk classictaxkeeper.Keeper, coin sdk.Co
 	return newCoin, nil
 }
 
-func DeductTaxFromCoins(ctx sdk.Context, ctk classictaxkeeper.Keeper, coins sdk.Coins) (newCoins sdk.Coins, err error) {
+func DeductTaxFromCoins(ctx sdk.Context, ctk classictaxkeeper.Keeper, coins sdk.Coins, taxableMsgTypes []string, msgType string) (newCoins sdk.Coins, err error) {
+	taxable := ctk.IsTaxableMsgType(ctx, taxableMsgTypes, msgType)
+	if !taxable {
+		return coins, nil
+	}
+
 	taxes := ctk.ComputeBurnTax(ctx, coins)
 
 	var (
@@ -121,65 +128,48 @@ func DeductTaxFromMessage(ctx sdk.Context, ctk classictaxkeeper.Keeper, msg sdk.
 
 	taxableMsgTypes := ctk.GetTaxableMsgTypes(ctx)
 
-	taxable := false
-	for _, msgType := range taxableMsgTypes {
-		// get the type string (e.g. types.MsgSend)
-		// TODO check if this needs to be improved
-		tp := strings.TrimLeft(reflect.TypeOf(msg).String(), "*")
-		ctk.Logger(ctx).Info("Check taxable", "msg", tp, "msgType", msgType)
-		if tp == msgType {
-			taxable = true
-			ctk.Logger(ctx).Info("Found taxable message type")
-			break
-		}
-	}
-
-	if !taxable {
-		return nil
-	}
-
 	switch msg := msg.(type) {
 	case *banktypes.MsgSend:
-		if msg.Amount, err = DeductTaxFromCoins(ctx, ctk, msg.Amount); err != nil {
+		if msg.Amount, err = DeductTaxFromCoins(ctx, ctk, msg.Amount, taxableMsgTypes, "bank/MsgSend"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 
 	case *banktypes.MsgMultiSend:
 		for _, input := range msg.Inputs {
-			if input.Coins, err = DeductTaxFromCoins(ctx, ctk, input.Coins); err != nil {
+			if input.Coins, err = DeductTaxFromCoins(ctx, ctk, input.Coins, taxableMsgTypes, "bank/MultiSend"); err != nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 			}
 		}
 
 	case *marketexported.MsgSwap:
-		if msg.OfferCoin, err = DeductTaxFromCoin(ctx, ctk, msg.OfferCoin); err != nil {
+		if msg.OfferCoin, err = DeductTaxFromCoin(ctx, ctk, msg.OfferCoin, taxableMsgTypes, "market/MsgSwap"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 	case *marketexported.MsgSwapSend:
-		if msg.OfferCoin, err = DeductTaxFromCoin(ctx, ctk, msg.OfferCoin); err != nil {
+		if msg.OfferCoin, err = DeductTaxFromCoin(ctx, ctk, msg.OfferCoin, taxableMsgTypes, "market/MsgSwapSend"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 
 	case *wasm.MsgInstantiateContract:
-		if msg.Funds, err = DeductTaxFromCoins(ctx, ctk, msg.Funds); err != nil {
+		if msg.Funds, err = DeductTaxFromCoins(ctx, ctk, msg.Funds, taxableMsgTypes, "wasm/MsgInstantiateContract"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 	case *wasm.MsgInstantiateContract2:
-		if msg.Funds, err = DeductTaxFromCoins(ctx, ctk, msg.Funds); err != nil {
+		if msg.Funds, err = DeductTaxFromCoins(ctx, ctk, msg.Funds, taxableMsgTypes, "wasm/MsgInstantiateContract2"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 
 	case *wasm.MsgExecuteContract:
-		if msg.Funds, err = DeductTaxFromCoins(ctx, ctk, msg.Funds); err != nil {
+		if msg.Funds, err = DeductTaxFromCoins(ctx, ctk, msg.Funds, taxableMsgTypes, "wasm/MsgExecuteContract"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 
 	case *stakingtypes.MsgDelegate:
-		if msg.Amount, err = DeductTaxFromCoin(ctx, ctk, msg.Amount); err != nil {
+		if msg.Amount, err = DeductTaxFromCoin(ctx, ctk, msg.Amount, taxableMsgTypes, "staking/MsgDelegate"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 	case *stakingtypes.MsgUndelegate:
-		if msg.Amount, err = DeductTaxFromCoin(ctx, ctk, msg.Amount); err != nil {
+		if msg.Amount, err = DeductTaxFromCoin(ctx, ctk, msg.Amount, taxableMsgTypes, "staking/MsgUndelegate"); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 		}
 	case *authz.MsgExec:

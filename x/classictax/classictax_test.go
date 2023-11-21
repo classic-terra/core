@@ -256,7 +256,6 @@ func (suite *AnteTestSuite) TestAnte_GetTaxCoins() {
 	// exchange rate is (from gas fees) 0.75 (uusd) / 28.325 (uluna) = 0.026478376
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(5_000_000))), tax)
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(188_833_333)), tax2)
-
 }
 
 func (suite *AnteTestSuite) TestAnte_UnderpayTax() {

@@ -107,9 +107,7 @@ func DeductTaxFromCoins(ctx sdk.Context, ctk classictaxkeeper.Keeper, coins sdk.
 
 	taxes := ctk.ComputeBurnTax(ctx, coins)
 
-	var (
-		neg bool
-	)
+	var neg bool
 
 	if !taxes.IsZero() {
 		// Deduct tax from coins
@@ -122,9 +120,7 @@ func DeductTaxFromCoins(ctx sdk.Context, ctk classictaxkeeper.Keeper, coins sdk.
 }
 
 func DeductTaxFromMessage(ctx sdk.Context, ctk classictaxkeeper.Keeper, msg sdk.Msg) error {
-	var (
-		err error
-	)
+	var err error
 
 	taxableMsgTypes := ctk.GetTaxableMsgTypes(ctx)
 

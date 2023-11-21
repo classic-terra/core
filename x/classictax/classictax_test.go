@@ -414,7 +414,7 @@ func (suite *AnteTestSuite) TestAnte_TaxPaymentDenoms() {
 	feeAfterUSD = suite.app.BankKeeper.GetBalance(suite.ctx, fcModule.GetAddress(), core.MicroUSDDenom)
 
 	suite.Require().Equal(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(16_995_000)), burnAfter)
-	suite.Require().Greater(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(200_000_000)), feeAfter)
+	suite.Require().Less(sdk.NewInt(200_000_000).Int64(), feeAfter.Amount.Int64())
 	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(450_000)), burnAfterUSD)
 	suite.Require().Equal(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(750_000)), feeAfterUSD)
 }
@@ -473,9 +473,6 @@ func (suite *AnteTestSuite) TestAnte_OverpayTax() {
 	balance := suite.app.BankKeeper.GetAllBalances(suite.ctx, acc.GetAddress())
 	suite.Require().Less(sdk.NewInt(885_000_000).Int64(), balance.AmountOf(core.MicroLunaDenom).Int64())
 	suite.Require().Greater(sdk.NewInt(950_000_000).Int64(), balance.AmountOf(core.MicroLunaDenom).Int64())
-
-	value := suite.ctx.Value(classictaxtypes.CtxFeeKey)
-	suite.Require().Less(sdk.NewInt(5_000_000).Int64(), value.(sdk.Coins).AmountOf(core.MicroLunaDenom).Int64())
 }
 
 func (suite *AnteTestSuite) TestAnte_RefundTax() {

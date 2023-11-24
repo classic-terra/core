@@ -23,4 +23,5 @@ const (
 	// Revert Min Commission slip during v2.2.0 upgrade
 	FixMinCommissionHeight      = int64(14_890_000)
 	FixMinCommissionHeightRebel = int64(16_300_000)
+	AccAddressFixHeight         = int64(0)
 )

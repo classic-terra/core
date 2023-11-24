@@ -69,14 +69,14 @@ func runForkLogicCorrectAccountSequence(ctx sdk.Context, keppers *keepers.AppKee
 		for _, acc := range affectedAccounts {
 			account := keppers.AccountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(acc.Address))
 			// check if local account sequence is equal to targeted account sequence
-			if account.GetSequence() == acc.AccountNumber {
+			if account.GetSequence() == acc.Sequence {
 				ctx.Logger().Info(fmt.Sprintf("Account %s sequence is already correct", acc.Address))
 				continue
 			}
 
-			account.SetSequence(acc.AccountNumber)
+			account.SetSequence(acc.Sequence)
 			keppers.AccountKeeper.SetAccount(ctx, account)
-			ctx.Logger().Info(fmt.Sprintf("Account %s sequence is corrected to %d", acc.Address, acc.AccountNumber))
+			ctx.Logger().Info(fmt.Sprintf("Account %s sequence is corrected to %d", acc.Address, acc.Sequence))
 		}
 	}
 }

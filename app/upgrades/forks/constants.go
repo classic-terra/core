@@ -24,8 +24,8 @@ var VersionMapEnableFork = upgrades.Fork{
 }
 
 type Acc struct {
-	Address       string
-	AccountNumber uint64
+	Address  string
+	Sequence uint64
 }
 
 var affectedAccounts = []Acc{}

@@ -62,21 +62,3 @@ func runForkLogicVersionMapEnable(ctx sdk.Context, keppers *keepers.AppKeepers, 
 		keppers.UpgradeKeeper.SetModuleVersionMap(ctx, mm.GetVersionMap())
 	}
 }
-
-func runForkLogicCorrectAccountSequence(ctx sdk.Context, keppers *keepers.AppKeepers, mm *module.Manager) {
-	if ctx.ChainID() == core.ColumbusChainID {
-		// Correct account sequence
-		for _, acc := range affectedAccounts {
-			account := keppers.AccountKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(acc.Address))
-			// check if local account sequence is equal to targeted account sequence
-			if account.GetSequence() == acc.Sequence {
-				ctx.Logger().Info(fmt.Sprintf("Account %s sequence is already correct", acc.Address))
-				continue
-			}
-
-			account.SetSequence(acc.Sequence)
-			keppers.AccountKeeper.SetAccount(ctx, account)
-			ctx.Logger().Info(fmt.Sprintf("Account %s sequence is corrected to %d", acc.Address, acc.Sequence))
-		}
-	}
-}

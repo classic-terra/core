@@ -22,16 +22,3 @@ var VersionMapEnableFork = upgrades.Fork{
 	UpgradeHeight:  fork.VersionMapEnableHeight,
 	BeginForkLogic: runForkLogicVersionMapEnable,
 }
-
-type Acc struct {
-	Address  string
-	Sequence uint64
-}
-
-var affectedAccounts = []Acc{}
-
-var AccAddressFixFork = upgrades.Fork{
-	UpgradeName:    "v2.3.1",
-	UpgradeHeight:  fork.AccAddressFixHeight,
-	BeginForkLogic: runForkLogicCorrectAccountSequence,
-}

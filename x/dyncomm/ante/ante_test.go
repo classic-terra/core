@@ -20,13 +20,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	terraapp "github.com/classic-terra/core/v2/app"
-	"github.com/classic-terra/core/v2/x/dyncomm/ante"
+	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
 	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -40,9 +41,10 @@ type AnteTestSuite struct {
 
 	app *terraapp.TerraApp
 	// anteHandler sdk.AnteHandler
-	ctx       sdk.Context
-	clientCtx client.Context
-	txBuilder client.TxBuilder
+	ctx            sdk.Context
+	clientCtx      client.Context
+	txBuilder      client.TxBuilder
+	encodingConfig simappparams.EncodingConfig
 }
 
 // returns context and app with params set on account keeper
@@ -79,10 +81,10 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := suite.SetupEncoding()
+	suite.encodingConfig = suite.SetupEncoding()
 
 	suite.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+		WithTxConfig(suite.encodingConfig.TxConfig)
 }
 
 func (suite *AnteTestSuite) SetupEncoding() simappparams.EncodingConfig {
@@ -141,7 +143,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 	return suite.txBuilder.GetTx(), nil
 }
 
-func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, cryptotypes.PubKey, stakingtypes.Validator) {
+func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, cryptotypes.PubKey, stakingtypes.Validator, authtypes.AccountI) {
 	priv, pub, addr := testdata.KeyTestPubAddr()
 	valAddr := sdk.ValAddress(addr)
 
@@ -170,6 +172,13 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 	err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, addr, sendCoins)
 	suite.Require().NoError(err)
 
+	// set account in account keeper
+	account := authtypes.NewBaseAccountWithAddress(addr)
+	account.SetPubKey(pub)
+	account.SetAccountNumber(0)
+	account.SetSequence(0)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, account)
+
 	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addr, math.NewInt(tokens), stakingtypes.Unbonded, validator, true)
 	suite.Require().NoError(err)
 	err = suite.app.StakingKeeper.AfterDelegationModified(suite.ctx, addr, valAddr)
@@ -181,7 +190,7 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 
 	retval, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
 	suite.Require().Equal(true, found)
-	return priv, pub, retval
+	return priv, pub, retval, account
 }
 
 func TestAnteTestSuite(t *testing.T) {
@@ -193,11 +202,11 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 	suite.ctx = suite.ctx.WithIsCheckTx(false)
 
-	priv1, _, val1 := suite.CreateValidator(50_000_000_000)
+	priv1, _, val1, _ := suite.CreateValidator(50_000_000_000)
 	suite.CreateValidator(50_000_000_000)
 	suite.app.DyncommKeeper.UpdateAllBondedValidatorRates(suite.ctx)
 
-	mfd := ante.NewDyncommDecorator(suite.app.DyncommKeeper, suite.app.StakingKeeper)
+	mfd := dyncommante.NewDyncommDecorator(suite.app.DyncommKeeper, suite.app.StakingKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	dyncomm := suite.app.DyncommKeeper.CalculateDynCommission(suite.ctx, val1)
@@ -230,4 +239,51 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.Require().NoError(err)
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err)
+}
+
+// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v2/x/dyncomm/ante
+// check that account keeper sequence no longer increases when editing validator unsuccessfully
+func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
+	suite.SetupTest(true) // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.ctx = suite.ctx.WithIsCheckTx(false)
+
+	priv1, _, val1, acc := suite.CreateValidator(50_000_000_000)
+
+	suite.CreateValidator(50_000_000_000)
+	suite.app.DyncommKeeper.UpdateAllBondedValidatorRates(suite.ctx)
+
+	antehandler := sdk.ChainAnteDecorators(
+		dyncommante.NewDyncommDecorator(suite.app.DyncommKeeper, suite.app.StakingKeeper),
+		ante.NewValidateSigCountDecorator(suite.app.AccountKeeper),
+		ante.NewSigVerificationDecorator(suite.app.AccountKeeper, suite.encodingConfig.TxConfig.SignModeHandler()),
+		ante.NewIncrementSequenceDecorator(suite.app.AccountKeeper),
+	)
+
+	dyncomm := suite.app.DyncommKeeper.CalculateDynCommission(suite.ctx, val1)
+	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
+
+	// configure tx Builder
+	suite.txBuilder.SetGasLimit(400_000)
+
+	// invalid tx fails, not updating account sequence in account keeper
+	var seq uint64
+	for i := 0; i < 5; i++ {
+		editmsg := stakingtypes.NewMsgEditValidator(
+			val1.GetOperator(),
+			val1.Description, &invalidtarget, &val1.MinSelfDelegation,
+		)
+		err := suite.txBuilder.SetMsgs(editmsg)
+		suite.Require().NoError(err)
+		tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}, suite.ctx.ChainID())
+		suite.Require().NoError(err)
+		_, err = antehandler(suite.ctx, tx, false)
+		suite.Require().Error(err)
+
+		// check and update account keeper
+		acc = suite.app.AccountKeeper.GetAccount(suite.ctx, acc.GetAddress())
+		seq = acc.GetSequence()
+	}
+	// sequece is not updated
+	suite.Require().Equal(uint64(0), seq)
 }

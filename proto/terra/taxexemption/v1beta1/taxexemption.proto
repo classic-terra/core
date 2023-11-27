@@ -1,0 +1,17 @@
+syntax = "proto3";
+package terra.taxexemption.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
+
+message Zone {
+    string name        = 1 [(gogoproto.moretags) = "yaml:\"name\""];
+    bool   outgoing    = 2 [(gogoproto.moretags) = "yaml:\"outgoing\""];
+    bool   incoming    = 3 [(gogoproto.moretags) = "yaml:\"incoming\""];
+    bool   cross_zone  = 4 [(gogoproto.moretags) = "yaml:\"cross_zone\""];
+}
+
+message ZoneList {
+    repeated string zones = 1 [(gogoproto.moretags) = "yaml:\"zones\""];
+}

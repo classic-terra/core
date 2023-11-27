@@ -733,6 +733,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	ak := s.app.AccountKeeper
 	bk := s.app.BankKeeper
 	tk := s.app.TreasuryKeeper
+	te := s.app.TaxExemptionKeeper
 	mfd := ante.NewFeeDecorator(ak, bk, s.app.FeeGrantKeeper, tk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
@@ -790,7 +791,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	tk.BurnCoinsFromBurnAccount(s.ctx)
 
 	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))...)
-	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, msg)
+	taxes := ante.FilterMsgAndComputeTax(s.ctx, te, tk, msg)
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
 	if burnSplitRate.IsPositive() {

@@ -11,6 +11,7 @@ import (
 
 	marketexported "github.com/classic-terra/core/v2/x/market/exported"
 	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
+	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
@@ -20,32 +21,32 @@ func isIBCDenom(denom string) bool {
 }
 
 // FilterMsgAndComputeTax computes the stability tax on messages.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
+func FilterMsgAndComputeTax(ctx sdk.Context, te taxexemptionkeeper.Keeper, tk TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
 	taxes := sdk.Coins{}
 
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
+			if !te.IsExemptedFromTax(ctx, msg.FromAddress, msg.ToAddress) {
 				taxes = taxes.Add(computeTax(ctx, tk, msg.Amount)...)
 			}
 
 		case *banktypes.MsgMultiSend:
 			tainted := 0
 
+			// make list of output addresses
+			outputAddresses := make([]string, len(msg.Outputs))
+			for i, output := range msg.Outputs {
+				outputAddresses[i] = output.Address
+			}
+
 			for _, input := range msg.Inputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
+				if te.IsExemptedFromTax(ctx, input.Address, outputAddresses...) {
 					tainted++
 				}
 			}
 
-			for _, output := range msg.Outputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
-					tainted++
-				}
-			}
-
-			if tainted != len(msg.Inputs)+len(msg.Outputs) {
+			if tainted != len(msg.Inputs) {
 				for _, input := range msg.Inputs {
 					taxes = taxes.Add(computeTax(ctx, tk, input.Coins)...)
 				}
@@ -68,7 +69,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err != nil {
-				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, messages...)...)
+				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, te, tk, messages...)...)
 			}
 		}
 	}

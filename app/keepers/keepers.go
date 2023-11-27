@@ -60,6 +60,7 @@ import (
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
@@ -92,6 +93,7 @@ type AppKeepers struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 	OracleKeeper        oraclekeeper.Keeper
 	MarketKeeper        marketkeeper.Keeper
+	TaxExemptionKeeper  taxexemptionkeeper.Keeper
 	TreasuryKeeper      treasurykeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper

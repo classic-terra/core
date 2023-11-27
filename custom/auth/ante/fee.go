@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -15,10 +16,11 @@ import (
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type FeeDecorator struct {
-	accountKeeper  ante.AccountKeeper
-	bankKeeper     BankKeeper
-	feegrantKeeper ante.FeegrantKeeper
-	treasuryKeeper TreasuryKeeper
+	accountKeeper      ante.AccountKeeper
+	bankKeeper         BankKeeper
+	feegrantKeeper     ante.FeegrantKeeper
+	treasuryKeeper     TreasuryKeeper
+	taxexemptionKeeper taxexemptionkeeper.Keeper
 }
 
 func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper) FeeDecorator {
@@ -47,7 +49,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	taxes := FilterMsgAndComputeTax(ctx, fd.taxexemptionKeeper, fd.treasuryKeeper, msgs...)
 
 	if !simulate {
 		priority, err = fd.checkTxFee(ctx, tx, taxes)

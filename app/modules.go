@@ -73,6 +73,7 @@ import (
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	"github.com/classic-terra/core/v2/x/oracle"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	taxexemptionclient "github.com/classic-terra/core/v2/x/taxexemption/client"
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
@@ -106,6 +107,11 @@ var (
 				ibcclientclient.UpgradeProposalHandler,
 				treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
 				treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
+				taxexemptionclient.ProposalAddTaxExemptionZoneHandler,
+				taxexemptionclient.ProposalRemoveTaxExemptionZoneHandler,
+				taxexemptionclient.ProposalModifyTaxExemptionZoneHandler,
+				taxexemptionclient.ProposalAddTaxExemptionAddressHandler,
+				taxexemptionclient.ProposalRemoveTaxExemptionAddressHandler,
 			),
 		),
 		customparams.AppModuleBasic{},

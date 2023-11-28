@@ -154,9 +154,9 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 	retval, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddr)
 	suite.Require().Equal(true, found)
 
-	updated_account := suite.App.AccountKeeper.GetAccount(suite.Ctx, addr)
+	updatedAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, addr)
 
-	return priv, pub, retval, updated_account
+	return priv, pub, retval, updatedAccount
 }
 
 func TestAnteTestSuite(t *testing.T) {

@@ -50,7 +50,7 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
-func (s *KeeperTestHelper) Setup(t *testing.T, chainID string) {
+func (s *KeeperTestHelper) Setup(_ *testing.T, chainID string) {
 	s.App = SetupApp(s.T())
 	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 	s.CheckCtx = s.App.BaseApp.NewContext(true, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})

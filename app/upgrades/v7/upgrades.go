@@ -17,7 +17,6 @@ func CreateV7UpgradeHandler(
 	k *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(c sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// migrate old treasurykeeper tax exemption to new tax exemption keeper
 		// tax exemption keeper is now a module
 

@@ -119,7 +119,7 @@ func (k Keeper) AddTaxExemptionAddress(ctx sdk.Context, zone string, address str
 	// Check if the address is already associated with a zone
 	bz := store.Get(addressKey)
 	if bz != nil {
-		var existingZone = string(bz)
+		existingZone := string(bz)
 
 		// If the address is already associated with a different zone, raise an error
 		if existingZone != zone {
@@ -231,7 +231,6 @@ func (k Keeper) ListTaxExemptionZones(c sdk.Context, req *types.QueryTaxExemptio
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -252,7 +251,6 @@ func (k Keeper) ListTaxExemptionAddresses(c sdk.Context, req *types.QueryTaxExem
 		}
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, nil, err
 	}

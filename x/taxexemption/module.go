@@ -166,6 +166,6 @@ func (am AppModule) WeightedOperations(module.SimulationState) []simtypes.Weight
 
 // EndBlock returns the end blocker for the taxexemption module.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
+	//EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }

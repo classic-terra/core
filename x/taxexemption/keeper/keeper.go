@@ -66,7 +66,7 @@ func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) types.Zone
 // Burn tax zone list
 func (k Keeper) AddTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
 	// Ensure the storeKey is properly set up in the Keeper
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionListPrefix)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
 
 	// Convert the zone name to byte slice which will be used as the key
 	key := []byte(zone.Name)
@@ -168,7 +168,6 @@ func (k Keeper) IsExemptedFromTax(ctx sdk.Context, sender_address string, recipi
 
 	// Check and cache the sender's zone
 	senderZone, senderHasZone := k.checkAndCacheZone(ctx, store, sender_address, zoneCache)
-	senderEligibleForOutgoing := senderHasZone && senderZone.Outgoing
 
 	for _, address := range recipient_addresses {
 		recipientZone, recipientHasZone := k.checkAndCacheZone(ctx, store, address, zoneCache)
@@ -180,13 +179,13 @@ func (k Keeper) IsExemptedFromTax(ctx sdk.Context, sender_address string, recipi
 
 		// Different zones: either sender must have CrossZone and outgoing, or recipient must have Incoming and CrossZone
 		if senderHasZone && recipientHasZone && senderZone.Name != recipientZone.Name {
-			if (!senderEligibleForOutgoing || !senderZone.CrossZone) && (!recipientZone.Incoming || !recipientZone.CrossZone) {
+			if (!senderZone.Outgoing || !senderZone.CrossZone) && (!recipientZone.Incoming || !recipientZone.CrossZone) {
 				return false
 			}
 		}
 
 		// only sender has zone: sender must have outgoing
-		if senderHasZone && !recipientHasZone && !senderEligibleForOutgoing {
+		if senderHasZone && !recipientHasZone && !senderZone.Outgoing {
 			return false
 		}
 

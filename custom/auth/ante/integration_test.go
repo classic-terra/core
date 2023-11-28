@@ -15,6 +15,7 @@ import (
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
+	taxexemptiontypes "github.com/classic-terra/core/v2/x/taxexemption/types"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
@@ -23,6 +24,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress
+	var zones []string
 
 	// 0, 1: exemption
 	// 2, 3: normal
@@ -30,6 +32,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		privs = append(privs, priv)
 		addrs = append(addrs, addr)
+		if i < 2 {
+			zones = append(zones, "EntityA")
+		} else {
+			zones = append(zones, "EntityB")
+		}
 	}
 
 	// set send amount
@@ -120,9 +127,13 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	for _, c := range cases {
 		s.SetupTest(true) // setup
 		tk := s.app.TreasuryKeeper
+		te := s.app.TaxExemptionKeeper
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
 		dk := s.app.DistrKeeper
+
+		te.AddTaxExemptionZone(s.ctx, taxexemptiontypes.Zone{Name: "EntityA", Outgoing: false, Incoming: false, CrossZone: false})
+		te.AddTaxExemptionZone(s.ctx, taxexemptiontypes.Zone{Name: "EntityB", Outgoing: false, Incoming: false, CrossZone: false})
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
@@ -141,6 +152,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				FeegrantKeeper:     s.app.FeeGrantKeeper,
 				OracleKeeper:       s.app.OracleKeeper,
 				TreasuryKeeper:     s.app.TreasuryKeeper,
+				TaxExemptionKeeper: s.app.TaxExemptionKeeper,
 				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
 				SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 				IBCKeeper:          *s.app.IBCKeeper,
@@ -158,8 +170,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 
 		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
-		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
+		te.AddTaxExemptionAddress(s.ctx, zones[0], addrs[0].String())
+		te.AddTaxExemptionAddress(s.ctx, zones[1], addrs[1].String())
+
+		// tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
+		// tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
 		s.Run(c.name, func() {
 			// case 1 provides zero fee so not enough fee

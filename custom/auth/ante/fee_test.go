@@ -22,13 +22,14 @@ import (
 	core "github.com/classic-terra/core/v2/types"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v2/x/taxexemption/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -62,7 +63,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -146,7 +147,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 
-	dfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	dfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -167,7 +168,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -221,7 +222,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -274,7 +275,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -341,7 +342,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -400,7 +401,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -458,7 +459,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -513,6 +514,13 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress
 
+	zoneNone := types.Zone{}
+	zoneInternal := types.Zone{Name: "Internal", Outgoing: false, Incoming: false, CrossZone: false}
+	zoneOutgoing := types.Zone{Name: "Outgoing", Outgoing: true, Incoming: false, CrossZone: false}
+	zoneIncoming := types.Zone{Name: "Incoming", Outgoing: false, Incoming: true, CrossZone: false}
+	zoneCrossZoneOutgoing := types.Zone{Name: "CrossOutgoing", Outgoing: true, Incoming: false, CrossZone: true}
+	zoneCrossZoneIncoming := types.Zone{Name: "CrossIncoming", Outgoing: false, Incoming: true, CrossZone: true}
+
 	// 0, 1: exemption
 	// 2, 3: normal
 	for i := 0; i < 4; i++ {
@@ -532,6 +540,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		msgCreator     func() []sdk.Msg
 		minFeeAmount   int64
 		expectProceeds int64
+		zoneA          types.Zone
+		zoneB          types.Zone
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
@@ -546,6 +556,128 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			},
 			minFeeAmount:   0,
 			expectProceeds: 0,
+			zoneA:          zoneInternal,
+			zoneB:          zoneInternal,
+		}, {
+			name:      "MsgSend(internal -> noexemption)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
+			zoneA:          zoneInternal,
+			zoneB:          zoneNone,
+		}, {
+			name:      "MsgSend(outgoing -> noexemption)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   0,
+			expectProceeds: 0,
+			zoneA:          zoneOutgoing,
+			zoneB:          zoneNone,
+		}, {
+			name:      "MsgSend(noexemption -> incoming)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   0,
+			expectProceeds: 0,
+			zoneA:          zoneNone,
+			zoneB:          zoneIncoming,
+		}, {
+			name:      "MsgSend(internal -> outgoing)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
+			zoneA:          zoneInternal,
+			zoneB:          zoneOutgoing,
+		}, {
+			name:      "MsgSend(internal -> incoming)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
+			zoneA:          zoneInternal,
+			zoneB:          zoneIncoming,
+		}, {
+			name:      "MsgSend(internal -> incoming w cross)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   0,
+			expectProceeds: 0,
+			zoneA:          zoneInternal,
+			zoneB:          zoneCrossZoneIncoming,
+		}, {
+			name:      "MsgSend(outgoing w cross -> internal)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   0,
+			expectProceeds: 0,
+			zoneA:          zoneCrossZoneOutgoing,
+			zoneB:          zoneInternal,
+		}, {
+			name:      "MsgSend(cross incoming -> cross outgoing)",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
+			zoneA:          zoneCrossZoneIncoming,
+			zoneB:          zoneCrossZoneOutgoing,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],
@@ -560,6 +692,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			// tax this one hence burn amount is fee amount
 			minFeeAmount:   feeAmt,
 			expectProceeds: feeAmt,
+			zoneA:          zoneInternal,
+			zoneB:          zoneInternal,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
@@ -576,6 +710,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			// tax this one hence burn amount is fee amount
 			minFeeAmount:   feeAmt,
 			expectProceeds: feeAmt,
+			zoneA:          zoneInternal,
+			zoneB:          zoneInternal,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
 			msgSigner: privs[0],
@@ -612,6 +748,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			},
 			minFeeAmount:   feeAmt * 2,
 			expectProceeds: feeAmt * 2,
+			zoneA:          zoneInternal,
+			zoneB:          zoneInternal,
 		}, {
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
 			msgSigner: privs[3],
@@ -636,7 +774,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				// instantiate contract then set the contract address to tax exemption
 				addr, _, err := per.Instantiate(s.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
 				s.Require().NoError(err)
-				s.app.TreasuryKeeper.AddBurnTaxExemptionAddress(s.ctx, addr.String())
+				// s.app.TreasuryKeeper.AddBurnTaxExemptionAddress(s.ctx, addr.String())
+				s.app.TaxExemptionKeeper.AddTaxExemptionAddress(s.ctx, "Internal", addr.String())
 				// instantiate contract then not set to tax exemption
 				addr1, _, err := per.Instantiate(s.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
 				s.Require().NoError(err)
@@ -662,6 +801,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			},
 			minFeeAmount:   feeAmt,
 			expectProceeds: feeAmt,
+			zoneA:          zoneInternal,
+			zoneB:          zoneInternal,
 		},
 	}
 
@@ -670,9 +811,25 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		s.SetupTest(true) // setup
 		require := s.Require()
 		tk := s.app.TreasuryKeeper
+		te := s.app.TaxExemptionKeeper
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
 		burnSplitRate := sdk.NewDecWithPrec(5, 1)
+
+		// normal test as for prior handling
+		if c.zoneA != zoneNone {
+			te.AddTaxExemptionZone(s.ctx, c.zoneA)
+		}
+		if c.zoneB != zoneNone && c.zoneB != c.zoneA {
+			te.AddTaxExemptionZone(s.ctx, c.zoneB)
+		}
+
+		if c.zoneA != zoneNone {
+			te.AddTaxExemptionAddress(s.ctx, c.zoneA.Name, addrs[0].String())
+		}
+		if c.zoneB != zoneNone {
+			te.AddTaxExemptionAddress(s.ctx, c.zoneB.Name, addrs[1].String())
+		}
 
 		// Set burn split rate to 50%
 		tk.SetBurnSplitRate(s.ctx, burnSplitRate)
@@ -680,10 +837,10 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		fmt.Printf("CASE = %s \n", c.name)
 		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
-		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
+		// tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
+		// tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
-		mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+		mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper)
 		antehandler := sdk.ChainAnteDecorators(mfd)
 
 		for i := 0; i < 4; i++ {
@@ -734,7 +891,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	bk := s.app.BankKeeper
 	tk := s.app.TreasuryKeeper
 	te := s.app.TaxExemptionKeeper
-	mfd := ante.NewFeeDecorator(ak, bk, s.app.FeeGrantKeeper, tk)
+	mfd := ante.NewFeeDecorator(ak, bk, s.app.FeeGrantKeeper, te, tk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// Set burn split tax
@@ -830,6 +987,7 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 		s.app.AccountKeeper,
 		s.app.BankKeeper,
 		s.app.FeeGrantKeeper,
+		s.app.TaxExemptionKeeper,
 		s.app.TreasuryKeeper,
 	)
 	antehandler := sdk.ChainAnteDecorators(mfd)
@@ -879,6 +1037,7 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 		s.app.AccountKeeper,
 		s.app.BankKeeper,
 		s.app.FeeGrantKeeper,
+		s.app.TaxExemptionKeeper,
 		s.app.TreasuryKeeper,
 	)
 	antehandler := sdk.ChainAnteDecorators(mfd)

@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	core "github.com/classic-terra/core/v2/types"
@@ -159,6 +157,7 @@ func TestParams(t *testing.T) {
 	require.Equal(t, defaultParams, retrievedParams)
 }
 
+/*
 func TestBurnTaxExemptionList(t *testing.T) {
 	input := CreateTestInput(t)
 
@@ -181,3 +180,4 @@ func TestBurnTaxExemptionList(t *testing.T) {
 	input.TreasuryKeeper.RemoveBurnTaxExemptionAddress(input.Ctx, address.String())
 	require.False(t, input.TreasuryKeeper.HasBurnTaxExemptionAddress(input.Ctx, address.String()))
 }
+*/

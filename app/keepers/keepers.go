@@ -94,8 +94,8 @@ type AppKeepers struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 	OracleKeeper        oraclekeeper.Keeper
 	MarketKeeper        marketkeeper.Keeper
-	TaxExemptionKeeper  taxexemptionkeeper.Keeper
 	TreasuryKeeper      treasurykeeper.Keeper
+	TaxExemptionKeeper  taxexemptionkeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper
 
@@ -142,6 +142,7 @@ func NewAppKeepers(
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
+		taxexemptiontypes.StoreKey,
 		wasmtypes.StoreKey,
 		dyncommtypes.StoreKey,
 	)
@@ -359,6 +360,7 @@ func NewAppKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		scopedWasmKeeper,
 		appKeepers.BankKeeper,
+		appKeepers.TaxExemptionKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
 		appCodec,

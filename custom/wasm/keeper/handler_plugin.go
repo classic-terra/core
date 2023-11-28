@@ -44,6 +44,7 @@ func NewMessageHandler(
 	channelKeeper wasmtypes.ChannelKeeper,
 	capabilityKeeper wasmtypes.CapabilityKeeper,
 	bankKeeper bankKeeper.Keeper,
+	taxexemptionKeeper taxexemptionkeeper.Keeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	accountKeeper authkeeper.AccountKeeper,
 	unpacker codectypes.AnyUnpacker,
@@ -55,19 +56,20 @@ func NewMessageHandler(
 		encoders = encoders.Merge(e)
 	}
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
+		NewSDKMessageHandler(router, encoders, taxexemptionKeeper, treasuryKeeper, accountKeeper, bankKeeper),
 		wasmkeeper.NewIBCRawPacketHandler(channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
 
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
+func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, taxexemptionKeeper taxexemptionkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
 	return SDKMessageHandler{
-		router:         router,
-		encoders:       encoders,
-		treasuryKeeper: treasuryKeeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
+		router:             router,
+		encoders:           encoders,
+		treasuryKeeper:     treasuryKeeper,
+		taxexemptionKeeper: taxexemptionKeeper,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
 	}
 }
 

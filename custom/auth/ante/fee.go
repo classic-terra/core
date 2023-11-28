@@ -23,12 +23,13 @@ type FeeDecorator struct {
 	taxexemptionKeeper taxexemptionkeeper.Keeper
 }
 
-func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper) FeeDecorator {
+func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, te taxexemptionkeeper.Keeper, tk TreasuryKeeper) FeeDecorator {
 	return FeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		treasuryKeeper: tk,
+		accountKeeper:      ak,
+		bankKeeper:         bk,
+		feegrantKeeper:     fk,
+		taxexemptionKeeper: te,
+		treasuryKeeper:     tk,
 	}
 }
 

@@ -10,7 +10,6 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
 
 service Query {
-    // BurnTaxExemptionList returns all registered burn tax exemption addresses
     rpc TaxExemptionZonesList(QueryTaxExemptionZonesRequest) returns (QueryTaxExemptionZonesResponse) {
     option (google.api.http).get = "/terra/taxexemption/v1beta1/zones";
     }

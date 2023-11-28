@@ -15,14 +15,14 @@ import (
 	"github.com/classic-terra/core/v2/x/taxexemption/types"
 )
 
-// Keeper of the treasury store
+// Keeper of the store
 type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramstypes.Subspace
 }
 
-// NewKeeper creates a new treasury Keeper instance
+// NewKeeper creates a new taxexemption Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
@@ -63,7 +63,7 @@ func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) types.Zone
 	return zone
 }
 
-// Burn tax zone list
+// Tax exemption zone list
 func (k Keeper) AddTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
 	// Ensure the storeKey is properly set up in the Keeper
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)

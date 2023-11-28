@@ -82,6 +82,13 @@ func (p *AddTaxExemptionZoneProposal) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "zone name cannot be empty")
 	}
 
+	for _, address := range p.Addresses {
+		_, err = sdk.AccAddressFromBech32(address)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
+		}
+	}
+
 	return nil
 }
 

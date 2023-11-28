@@ -13,7 +13,7 @@ type querier struct {
 	Keeper
 }
 
-// NewQuerier returns an implementation of the market QueryServer interface
+// NewQuerier returns an implementation of the QueryServer interface
 // for the provided Keeper.
 func NewQuerier(keeper Keeper) types.QueryServer {
 	return &querier{Keeper: keeper}

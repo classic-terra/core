@@ -1,0 +1,11 @@
+syntax = "proto3";
+package terra.taxexemption.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
+
+// GenesisState defines the taxexemption module's genesis state.
+message GenesisState {
+  
+}

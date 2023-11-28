@@ -24,11 +24,18 @@ var _ types.QueryServer = querier{}
 // TaxExemptionZoneList queries tax exemption zone list of taxexemption module
 func (q querier) TaxExemptionZonesList(c context.Context, req *types.QueryTaxExemptionZonesRequest) (*types.QueryTaxExemptionZonesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	zones, err := q.Keeper.ListTaxExemptionZones(ctx, req)
+	zones, pageRes, err := q.Keeper.ListTaxExemptionZones(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryTaxExemptionZonesResponse{Zones: zones.Zones}, nil
+
+	zonePointers := make([]*types.Zone, len(zones))
+	for i, zone := range zones {
+		zoneCopy := zone // Make a copy to avoid referencing the loop variable
+		zonePointers[i] = &zoneCopy
+	}
+
+	return &types.QueryTaxExemptionZonesResponse{Zones: zonePointers, Pagination: pageRes}, nil
 }
 
 // TaxExemptionAddressList queries tax exemption address list of taxexemption module

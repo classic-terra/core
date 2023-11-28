@@ -1,11 +1,9 @@
 syntax = "proto3";
 package terra.taxexemption.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "terra/taxexemption/v1beta1/taxexemption.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
 

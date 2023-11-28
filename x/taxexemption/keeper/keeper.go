@@ -160,7 +160,7 @@ func (k Keeper) RemoveTaxExemptionAddress(ctx sdk.Context, zone string, address 
 
 // IsExemptedFromTax returns true if the transaction between sender and all recipients
 // meets the tax exemption criteria based on their zones
-func (k Keeper) IsExemptedFromTax(ctx sdk.Context, senderAddress string, recipient_addresses ...string) bool {
+func (k Keeper) IsExemptedFromTax(ctx sdk.Context, senderAddress string, recipientAddresses ...string) bool {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionListPrefix)
 
 	// Cache for looked up zones to avoid redundant queries
@@ -169,7 +169,7 @@ func (k Keeper) IsExemptedFromTax(ctx sdk.Context, senderAddress string, recipie
 	// Check and cache the sender's zone
 	senderZone, senderHasZone := k.checkAndCacheZone(ctx, store, senderAddress, zoneCache)
 
-	for _, address := range recipient_addresses {
+	for _, address := range recipientAddresses {
 		recipientZone, recipientHasZone := k.checkAndCacheZone(ctx, store, address, zoneCache)
 
 		// both sender and recipient have no zone: no tax exemption

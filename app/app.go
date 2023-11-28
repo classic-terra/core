@@ -205,6 +205,7 @@ func NewTerraApp(
 			FeegrantKeeper:     app.FeeGrantKeeper,
 			OracleKeeper:       app.OracleKeeper,
 			TreasuryKeeper:     app.TreasuryKeeper,
+			TaxExemptionKeeper: app.TaxExemptionKeeper,
 			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 			IBCKeeper:          *app.IBCKeeper,

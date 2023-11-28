@@ -2,6 +2,7 @@ package types
 
 // query endpoints supported by the auth Querier
 const (
+	QueryParameters        = "parameters"
 	QueryTaxExemptionZones = "taxExemptionZones"
 	QueryTaxExemptionList  = "taxExemptionList"
 )

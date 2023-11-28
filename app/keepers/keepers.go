@@ -61,6 +61,7 @@ import (
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
 	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
+	taxexemptiontypes "github.com/classic-terra/core/v2/x/taxexemption/types"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
@@ -342,6 +343,10 @@ func NewAppKeepers(
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
 	)
+	appKeepers.TaxExemptionKeeper = taxexemptionkeeper.NewKeeper(
+		appCodec, appKeepers.keys[taxexemptiontypes.StoreKey],
+		appKeepers.GetSubspace(taxexemptiontypes.ModuleName),
+	)
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -453,6 +458,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
+	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)

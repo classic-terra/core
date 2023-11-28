@@ -7,13 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/classic-terra/core/v2/x/taxexemption/types"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 // Keeper of the treasury store
@@ -21,8 +20,6 @@ type Keeper struct {
 	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramstypes.Subspace
-
-	distributionModuleName string
 }
 
 // NewKeeper creates a new treasury Keeper instance
@@ -30,15 +27,12 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	paramSpace paramstypes.Subspace,
-	wasmKeeper *wasmkeeper.Keeper,
-	distributionModuleName string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	return Keeper{
-		cdc:                    cdc,
-		storeKey:               storeKey,
-		paramSpace:             paramSpace,
-		distributionModuleName: distributionModuleName,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		paramSpace: paramSpace,
 	}
 }
 
@@ -222,4 +216,47 @@ func (k Keeper) checkAndCacheZone(ctx sdk.Context, store prefix.Store, address s
 	}
 
 	return types.Zone{}, false
+}
+
+func (k Keeper) ListTaxExemptionZones(c sdk.Context, req *types.QueryTaxExemptionZonesRequest) ([]types.Zone, *query.PageResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
+
+	var zones []types.Zone
+
+	// Create a paginated iterator over the store
+	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var zone types.Zone
+		k.cdc.MustUnmarshal(value, &zone)
+		zones = append(zones, zone)
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return zones, pageRes, nil
+}
+
+func (k Keeper) ListTaxExemptionAddresses(c sdk.Context, req *types.QueryTaxExemptionAddressRequest) ([]string, *query.PageResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionListPrefix)
+
+	var addresses []string
+
+	// Create an iterator over the store
+	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		if accumulate && (req.ZoneName == "" || string(value) == req.ZoneName) {
+			addresses = append(addresses, string(key))
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return addresses, pageRes, nil
 }

@@ -29,10 +29,6 @@ func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		return next(ctx, tx, simulate)
 	}
 
-	if ctx.IsCheckTx() {
-		return next(ctx, tx, simulate)
-	}
-
 	msgs := tx.GetMsgs()
 	err := dd.FilterMsgsAndProcessMsgs(ctx, msgs...)
 	if err != nil {

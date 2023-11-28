@@ -11,8 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -21,8 +24,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -43,14 +44,16 @@ type KeeperTestHelper struct {
 	suite.Suite
 
 	App         *app.TerraApp
-	Ctx         sdk.Context
+	Ctx         sdk.Context // ctx is deliver ctx
+	CheckCtx    sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
 	TestAccs    []sdk.AccAddress
 }
 
-func (s *KeeperTestHelper) Setup(t *testing.T) {
+func (s *KeeperTestHelper) Setup(_ *testing.T, chainID string) {
 	s.App = SetupApp(s.T())
-	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "columbus-5", Time: time.Now().UTC()})
+	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
+	s.CheckCtx = s.App.BaseApp.NewContext(true, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
@@ -126,6 +129,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// init chain will set the validator set and initialize the genesis accounts
 	terraApp.InitChain(
 		abci.RequestInitChain{
+			ChainId:         SimAppChainID,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -135,6 +139,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// commit genesis changes
 	terraApp.Commit()
 	terraApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		ChainID:            SimAppChainID,
 		Height:             terraApp.LastBlockHeight() + 1,
 		AppHash:            terraApp.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -248,7 +253,7 @@ func genesisStateWithValSet(t *testing.T,
 	return genesisState
 }
 
-func (s *KeeperTestHelper) KeyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func (s *KeeperTestHelper) Ed25519PubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
@@ -258,7 +263,7 @@ func (s *KeeperTestHelper) KeyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccA
 func (s *KeeperTestHelper) RandomAccountAddresses(n int) []sdk.AccAddress {
 	addrsList := make([]sdk.AccAddress, n)
 	for i := 0; i < n; i++ {
-		_, _, addrs := s.KeyPubAddr()
+		_, _, addrs := testdata.KeyTestPubAddr()
 		addrsList[i] = addrs
 	}
 	return addrsList

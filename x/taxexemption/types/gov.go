@@ -38,14 +38,14 @@ var (
 )
 
 // ======AddTaxExemptionZoneProposal======
-func NewAddTaxExemptionZoneProposal(title, description string, zone string, outgoing bool, incoming bool, cross_zone bool) govv1beta1.Content {
+func NewAddTaxExemptionZoneProposal(title, description string, zone string, outgoing bool, incoming bool, crossZone bool) govv1beta1.Content {
 	return &AddTaxExemptionZoneProposal{
 		Title:       title,
 		Description: description,
 		Zone:        zone,
 		Outgoing:    outgoing,
 		Incoming:    incoming,
-		CrossZone:   cross_zone,
+		CrossZone:   crossZone,
 	}
 }
 
@@ -137,14 +137,14 @@ func (p *RemoveTaxExemptionZoneProposal) ValidateBasic() error {
 
 // ======ModifyTaxExemptionZoneProposal======
 
-func NewModifyTaxExemptionZoneProposal(title, description string, zone string, outgoing bool, incoming bool, cross_zone bool) govv1beta1.Content {
+func NewModifyTaxExemptionZoneProposal(title, description string, zone string, outgoing bool, incoming bool, crossZone bool) govv1beta1.Content {
 	return &ModifyTaxExemptionZoneProposal{
 		Title:       title,
 		Description: description,
 		Zone:        zone,
 		Outgoing:    outgoing,
 		Incoming:    incoming,
-		CrossZone:   cross_zone,
+		CrossZone:   crossZone,
 	}
 }
 

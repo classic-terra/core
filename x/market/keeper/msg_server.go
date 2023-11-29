@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	treasury "github.com/classic-terra/core/v2/x/treasury/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -121,12 +122,24 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
-	// Send swap fee to oracle account
+	// Send swap fee to oracle account based on percentage, burn the rest
 	if feeCoin.IsPositive() {
-		feeCoins := sdk.NewCoins(feeCoin)
-		err = k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, oracletypes.ModuleName, feeCoins)
-		if err != nil {
-			return nil, err
+		var sendCoins sdk.Coins
+		burnCoins := sdk.NewCoins(sdk.NewCoin(feeCoin.GetDenom(), sdk.NewDec(feeCoin.Amount.Int64()).Mul(k.FeeBurnRatio(ctx)).TruncateInt()))
+		if !burnCoins.IsZero() {
+			sendCoins = sdk.NewCoins(feeCoin.Sub(burnCoins[0]))
+			err = k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, treasury.BurnModuleName, burnCoins)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			sendCoins = sdk.NewCoins(feeCoin)
+		}
+		if !sendCoins.IsZero() {
+			err = k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, oracletypes.ModuleName, sendCoins)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

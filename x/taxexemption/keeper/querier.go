@@ -21,6 +21,13 @@ func NewQuerier(keeper Keeper) types.QueryServer {
 
 var _ types.QueryServer = querier{}
 
+// Taxable queries if a tx from one address to another is taxable
+func (q querier) Taxable(c context.Context, req *types.QueryTaxableRequest) (*types.QueryTaxableResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	taxable := !q.Keeper.IsExemptedFromTax(ctx, req.FromAddress, req.ToAddress)
+	return &types.QueryTaxableResponse{Taxable: taxable}, nil
+}
+
 // TaxExemptionZoneList queries tax exemption zone list of taxexemption module
 func (q querier) TaxExemptionZonesList(c context.Context, req *types.QueryTaxExemptionZonesRequest) (*types.QueryTaxExemptionZonesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)

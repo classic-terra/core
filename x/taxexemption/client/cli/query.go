@@ -21,11 +21,42 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	taxexemptionQueryCmd.AddCommand(
+		GetCmdQueryTaxable(),
 		GetCmdQueryZonelist(),
 		GetCmdQueryExemptlist(),
 	)
 
 	return taxexemptionQueryCmd
+}
+
+func GetCmdQueryTaxable() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "taxable [from-address] [to-address]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Query tax exemption of an transfer from an address to another",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fromAddress := args[0]
+			toAddress := args[1]
+
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Taxable(context.Background(), &types.QueryTaxableRequest{
+				FromAddress: fromAddress,
+				ToAddress:   toAddress,
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 func GetCmdQueryZonelist() *cobra.Command {

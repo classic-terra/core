@@ -16,11 +16,11 @@ import (
 
 func ProposalAddTaxExemptionZoneCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-tax-exemption-zone [zone] [addresses] --exempt-incoming [true|false] --exempt-outgoing [true|false] --exempt-cross-zone [true|false] --title [text] --description [text]",
+		Use:   "add-tax-exemption-zone [zone] [addresses] [--exempt-incoming] [--exempt-outgoing] [--exempt-cross-zone] --title [text] --description [text]",
 		Short: "Submit an add tax exemption zone proposal",
 		Long: fmt.Sprintf(`Submit a proposal to add a tax exemption zone.
 Example:
-$ %s tx gov submit-proposal add-tax-exemption-zone zonexyz terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --exempt-incoming true --exempt-outgoing false --exempt-cross-zone false --title "add tax exemption zone" --description "add tax exemption zone"
+$ %s tx gov submit-proposal add-tax-exemption-zone zonexyz terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t,terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye --exempt-incoming --title "add tax exemption zone" --description "add tax exemption zone"
 			`, version.AppName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -158,11 +158,11 @@ $ %s tx gov submit-proposal remove-tax-exemption-zone zonexyz --title "remove ta
 
 func ProposalModifyTaxExemptionZoneCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "modify-tax-exemption-zone [zone] --exempt-incoming [true|false] --exempt-outgoing [true|false] --exempt-cross-zone [true|false] --title [text] --description [text]",
+		Use:   "modify-tax-exemption-zone [zone] [--exempt-incoming] [--exempt-outgoing] [--exempt-cross-zone] --title [text] --description [text]",
 		Short: "Submit an modify tax exemption zone proposal",
 		Long: fmt.Sprintf(`Submit a proposal to modify a tax exemption zone.
 Example:
-$ %s tx gov submit-proposal modify-tax-exemption-zone zonexyz --exempt-incoming false --exempt-outgoing true --exempt-cross-zone false --title "add tax exemption zone" --description "add tax exemption zone"
+$ %s tx gov submit-proposal modify-tax-exemption-zone zonexyz --exempt-outgoing true --title "add tax exemption zone" --description "add tax exemption zone"
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

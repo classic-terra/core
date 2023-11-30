@@ -8,6 +8,10 @@ import "terra/taxexemption/v1beta1/taxexemption.proto";
 option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
 
 service Query {
+    rpc Taxable(QueryTaxableRequest) returns (QueryTaxableResponse) {
+    option (google.api.http).get = "/terra/taxexemption/v1beta1/taxable/{from_address}/{to_address}";
+    }
+
     rpc TaxExemptionZonesList(QueryTaxExemptionZonesRequest) returns (QueryTaxExemptionZonesResponse) {
     option (google.api.http).get = "/terra/taxexemption/v1beta1/zones";
     }
@@ -15,6 +19,15 @@ service Query {
     rpc TaxExemptionAddressList(QueryTaxExemptionAddressRequest) returns (QueryTaxExemptionAddressResponse) {
     option (google.api.http).get = "/terra/taxexemption/v1beta1/{zone_name}/addresses";
     }
+}
+
+message QueryTaxableRequest {
+string from_address = 1;
+string to_address = 2;
+}
+
+message QueryTaxableResponse {
+bool taxable = 1;
 }
 
 message QueryTaxExemptionZonesRequest {

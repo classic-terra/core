@@ -9,7 +9,7 @@ func HandleAddTaxExemptionZoneProposal(ctx sdk.Context, k Keeper, p *types.AddTa
 	k.AddTaxExemptionZone(ctx, types.Zone{Name: p.Zone, Outgoing: p.Outgoing, Incoming: p.Incoming, CrossZone: p.CrossZone})
 
 	for _, address := range p.Addresses {
-		k.AddTaxExemptionAddress(ctx, address, p.Zone)
+		k.AddTaxExemptionAddress(ctx, p.Zone, address)
 	}
 
 	return nil
@@ -29,7 +29,7 @@ func HandleModifyTaxExemptionZoneProposal(ctx sdk.Context, k Keeper, p *types.Mo
 
 func HandleAddTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *types.AddTaxExemptionAddressProposal) error {
 	for _, address := range p.Addresses {
-		k.AddTaxExemptionAddress(ctx, address, p.Zone)
+		k.AddTaxExemptionAddress(ctx, p.Zone, address)
 	}
 
 	return nil

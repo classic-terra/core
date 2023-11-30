@@ -6,30 +6,37 @@ import (
 )
 
 func HandleAddTaxExemptionZoneProposal(ctx sdk.Context, k Keeper, p *types.AddTaxExemptionZoneProposal) error {
-	k.AddTaxExemptionZone(ctx, types.Zone{Name: p.Zone, Outgoing: p.Outgoing, Incoming: p.Incoming, CrossZone: p.CrossZone})
+	err := k.AddTaxExemptionZone(ctx, types.Zone{Name: p.Zone, Outgoing: p.Outgoing, Incoming: p.Incoming, CrossZone: p.CrossZone})
+	if err != nil {
+		return err
+	}
 
 	for _, address := range p.Addresses {
-		k.AddTaxExemptionAddress(ctx, p.Zone, address)
+		err := k.AddTaxExemptionAddress(ctx, p.Zone, address)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func HandleRemoveTaxExemptionZoneProposal(ctx sdk.Context, k Keeper, p *types.RemoveTaxExemptionZoneProposal) error {
-	k.RemoveTaxExemptionZone(ctx, p.Zone)
-
-	return nil
+	return k.RemoveTaxExemptionZone(ctx, p.Zone)
 }
 
 func HandleModifyTaxExemptionZoneProposal(ctx sdk.Context, k Keeper, p *types.ModifyTaxExemptionZoneProposal) error {
-	k.ModifyTaxExemptionZone(ctx, types.Zone{Name: p.Zone, Outgoing: p.Outgoing, Incoming: p.Incoming, CrossZone: p.CrossZone})
+	err := k.ModifyTaxExemptionZone(ctx, types.Zone{Name: p.Zone, Outgoing: p.Outgoing, Incoming: p.Incoming, CrossZone: p.CrossZone})
 
-	return nil
+	return err
 }
 
 func HandleAddTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *types.AddTaxExemptionAddressProposal) error {
 	for _, address := range p.Addresses {
-		k.AddTaxExemptionAddress(ctx, p.Zone, address)
+		err := k.AddTaxExemptionAddress(ctx, p.Zone, address)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -37,7 +44,10 @@ func HandleAddTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *types.Ad
 
 func HandleRemoveTaxExemptionAddressProposal(ctx sdk.Context, k Keeper, p *types.RemoveTaxExemptionAddressProposal) error {
 	for _, address := range p.Addresses {
-		k.RemoveTaxExemptionAddress(ctx, p.Zone, address)
+		err := k.RemoveTaxExemptionAddress(ctx, p.Zone, address)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -16,8 +16,8 @@ func TestTaxExemptionList(t *testing.T) {
 	input := CreateTestInput(t)
 
 	require.False(t, input.TaxExemptionKeeper.IsExemptedFromTax(input.Ctx, "", ""))
-	require.Panics(t, func() { input.TaxExemptionKeeper.AddTaxExemptionAddress(input.Ctx, "", "") })
-	require.Panics(t, func() { input.TaxExemptionKeeper.RemoveTaxExemptionAddress(input.Ctx, "", "") })
+	require.Error(t, input.TaxExemptionKeeper.AddTaxExemptionAddress(input.Ctx, "", ""))
+	require.Error(t, input.TaxExemptionKeeper.RemoveTaxExemptionAddress(input.Ctx, "", ""))
 
 	pubKey := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()

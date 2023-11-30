@@ -41,7 +41,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) types.Zone {
+func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) (types.Zone, error) {
 	// Ensure the storeKey is properly set up in the Keeper
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
 
@@ -50,7 +50,7 @@ func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) types.Zone
 
 	// Check if the zone exists
 	if !store.Has(key) {
-		panic(types.ErrNoSuchTaxExemptionZone.Wrapf("zone = %s", zoneName))
+		return types.Zone{}, types.ErrNoSuchTaxExemptionZone.Wrapf("zone = %s", zoneName)
 	}
 
 	// Get the zone
@@ -60,11 +60,11 @@ func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) types.Zone
 	var zone types.Zone
 	k.cdc.MustUnmarshal(bz, &zone)
 
-	return zone
+	return zone, nil
 }
 
 // Tax exemption zone list
-func (k Keeper) AddTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
+func (k Keeper) AddTaxExemptionZone(ctx sdk.Context, zone types.Zone) error {
 	// Ensure the storeKey is properly set up in the Keeper
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
 
@@ -76,9 +76,11 @@ func (k Keeper) AddTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
 
 	// Store the marshaled zone under its name key
 	store.Set(key, marshaledZone)
+
+	return nil
 }
 
-func (k Keeper) ModifyTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
+func (k Keeper) ModifyTaxExemptionZone(ctx sdk.Context, zone types.Zone) error {
 	// Ensure the storeKey is properly set up in the Keeper
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
 
@@ -87,7 +89,7 @@ func (k Keeper) ModifyTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
 
 	// Check if the zone exists
 	if !store.Has(key) {
-		panic(types.ErrNoSuchTaxExemptionZone.Wrapf("zone = %s", zone.Name))
+		return types.ErrNoSuchTaxExemptionZone.Wrapf("zone = %s", zone.Name)
 	}
 
 	// Marshal the zone struct to binary format
@@ -95,6 +97,8 @@ func (k Keeper) ModifyTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
 
 	// Store the marshaled zone under its name key
 	store.Set(key, marshaledZone)
+
+	return nil
 }
 
 func (k Keeper) RemoveTaxExemptionZone(ctx sdk.Context, zoneName string) error {
@@ -126,10 +130,10 @@ func (k Keeper) RemoveTaxExemptionZone(ctx sdk.Context, zoneName string) error {
 }
 
 // AddTaxExemptionAddress associates an address with a tax exemption zone
-func (k Keeper) AddTaxExemptionAddress(ctx sdk.Context, zone string, address string) {
+func (k Keeper) AddTaxExemptionAddress(ctx sdk.Context, zone string, address string) error {
 	// Validate the address format
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		panic(err)
+		return err
 	}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionListPrefix)
@@ -142,22 +146,24 @@ func (k Keeper) AddTaxExemptionAddress(ctx sdk.Context, zone string, address str
 
 		// If the address is already associated with a different zone, raise an error
 		if existingZone != zone {
-			panic(fmt.Errorf("address %s is already associated with a different zone: %s", address, existingZone))
+			return fmt.Errorf("address %s is already associated with a different zone: %s", address, existingZone)
 		}
 		// If it's the same zone, no action needed
-		return
+		return nil
 	}
 
 	// If the address is not associated with any zone, associate it with the new zone
 	// Marshal using standard Go marshaling to bytes
 	store.Set(addressKey, []byte(zone))
+
+	return nil
 }
 
 // RemoveTaxExemptionAddress removes an address from the tax exemption list
-func (k Keeper) RemoveTaxExemptionAddress(ctx sdk.Context, zone string, address string) {
+func (k Keeper) RemoveTaxExemptionAddress(ctx sdk.Context, zone string, address string) error {
 	// Validate the address format
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		panic(err)
+		return err
 	}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionListPrefix)
@@ -166,15 +172,17 @@ func (k Keeper) RemoveTaxExemptionAddress(ctx sdk.Context, zone string, address 
 	// Check if the address is already associated with a zone
 	bz := store.Get(addressKey)
 	if bz == nil {
-		panic(fmt.Errorf("address %s is not associated with any zone", address))
+		return fmt.Errorf("address %s is not associated with any zone", address)
 	}
 
 	// If the address is associated with a different zone, raise an error
 	if string(bz) != zone {
-		panic(fmt.Errorf("address %s is associated with a different zone: %s", address, string(bz)))
+		return fmt.Errorf("address %s is associated with a different zone: %s", address, string(bz))
 	}
 
 	store.Delete(addressKey)
+
+	return nil
 }
 
 // IsExemptedFromTax returns true if the transaction between sender and all recipients
@@ -228,7 +236,11 @@ func (k Keeper) checkAndCacheZone(ctx sdk.Context, store prefix.Store, address s
 			return zone, true
 		}
 
-		zone := k.GetTaxExemptionZone(ctx, zoneName)
+		zone, err := k.GetTaxExemptionZone(ctx, zoneName)
+		if err != nil {
+			return types.Zone{}, false
+		}
+
 		zoneCache[zoneName] = zone
 		return zone, true
 	}

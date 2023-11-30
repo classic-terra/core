@@ -12,6 +12,8 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 
+	"github.com/classic-terra/core/v2/x/taxexemption"
+	taxexemptiontypes "github.com/classic-terra/core/v2/x/taxexemption/types"
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -35,7 +37,8 @@ func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(appKeepers.TreasuryKeeper)).
-		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasm.EnableAllProposals))
+		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasm.EnableAllProposals)).
+		AddRoute(taxexemptiontypes.RouterKey, taxexemption.NewProposalHandler(appKeepers.TaxExemptionKeeper))
 
 	return govRouter
 }

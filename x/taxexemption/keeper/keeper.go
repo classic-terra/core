@@ -136,8 +136,15 @@ func (k Keeper) AddTaxExemptionAddress(ctx sdk.Context, zone string, address str
 		return err
 	}
 
+	zonestore := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
+	zonekey := []byte(zone)
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionListPrefix)
 	addressKey := []byte(address)
+
+	if !zonestore.Has(zonekey) {
+		return types.ErrNoSuchTaxExemptionZone.Wrapf("zone = %s", zone)
+	}
 
 	// Check if the address is already associated with a zone
 	bz := store.Get(addressKey)

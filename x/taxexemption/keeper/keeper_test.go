@@ -35,6 +35,9 @@ func TestTaxExemptionList(t *testing.T) {
 	input.TaxExemptionKeeper.AddTaxExemptionZone(input.Ctx, types.Zone{Name: "zone2", Outgoing: true, Incoming: false, CrossZone: false})
 	input.TaxExemptionKeeper.AddTaxExemptionZone(input.Ctx, types.Zone{Name: "zone3", Outgoing: false, Incoming: true, CrossZone: true})
 
+	// add an address to an invalid zone
+	require.Error(t, input.TaxExemptionKeeper.AddTaxExemptionAddress(input.Ctx, "zone4", address.String()))
+
 	// add an address
 	input.TaxExemptionKeeper.AddTaxExemptionAddress(input.Ctx, "zone1", address.String())
 	input.TaxExemptionKeeper.AddTaxExemptionAddress(input.Ctx, "zone1", address2.String())

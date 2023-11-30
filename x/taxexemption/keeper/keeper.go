@@ -78,6 +78,25 @@ func (k Keeper) AddTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
 	store.Set(key, marshaledZone)
 }
 
+func (k Keeper) ModifyTaxExemptionZone(ctx sdk.Context, zone types.Zone) {
+	// Ensure the storeKey is properly set up in the Keeper
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)
+
+	// Convert the zone name to byte slice which will be used as the key
+	key := []byte(zone.Name)
+
+	// Check if the zone exists
+	if !store.Has(key) {
+		panic(types.ErrNoSuchTaxExemptionZone.Wrapf("zone = %s", zone.Name))
+	}
+
+	// Marshal the zone struct to binary format
+	marshaledZone := k.cdc.MustMarshal(&zone)
+
+	// Store the marshaled zone under its name key
+	store.Set(key, marshaledZone)
+}
+
 func (k Keeper) RemoveTaxExemptionZone(ctx sdk.Context, zoneName string) error {
 	// Ensure the storeKey is properly set up in the Keeper
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.TaxExemptionZonePrefix)

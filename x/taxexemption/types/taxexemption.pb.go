@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -135,9 +136,287 @@ func (m *ZoneList) GetZones() []string {
 	return nil
 }
 
+type ProposalMetadata struct {
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	Forum       string `protobuf:"bytes,3,opt,name=forum,proto3" json:"forum,omitempty" yaml:"forum"`
+	Other       string `protobuf:"bytes,4,opt,name=other,proto3" json:"other,omitempty" yaml:"other"`
+}
+
+func (m *ProposalMetadata) Reset()         { *m = ProposalMetadata{} }
+func (m *ProposalMetadata) String() string { return proto.CompactTextString(m) }
+func (*ProposalMetadata) ProtoMessage()    {}
+func (*ProposalMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3ad47fbcb2a3f71e, []int{2}
+}
+func (m *ProposalMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ProposalMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ProposalMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ProposalMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProposalMetadata.Merge(m, src)
+}
+func (m *ProposalMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *ProposalMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProposalMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProposalMetadata proto.InternalMessageInfo
+
+func (m *ProposalMetadata) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *ProposalMetadata) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *ProposalMetadata) GetForum() string {
+	if m != nil {
+		return m.Forum
+	}
+	return ""
+}
+
+func (m *ProposalMetadata) GetOther() string {
+	if m != nil {
+		return m.Other
+	}
+	return ""
+}
+
+type AddTaxExemptionZoneProposal struct {
+	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	Zone        string   `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty" yaml:"zone"`
+	Outgoing    bool     `protobuf:"varint,4,opt,name=outgoing,proto3" json:"outgoing,omitempty" yaml:"outgoing"`
+	Incoming    bool     `protobuf:"varint,5,opt,name=incoming,proto3" json:"incoming,omitempty" yaml:"incoming"`
+	CrossZone   bool     `protobuf:"varint,6,opt,name=cross_zone,json=crossZone,proto3" json:"cross_zone,omitempty" yaml:"cross_zone"`
+	Addresses   []string `protobuf:"bytes,7,rep,name=addresses,proto3" json:"addresses,omitempty" yaml:"addresses"`
+	Authority   string   `protobuf:"bytes,8,opt,name=authority,proto3" json:"authority,omitempty" yaml:"authority"`
+}
+
+func (m *AddTaxExemptionZoneProposal) Reset()      { *m = AddTaxExemptionZoneProposal{} }
+func (*AddTaxExemptionZoneProposal) ProtoMessage() {}
+func (*AddTaxExemptionZoneProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3ad47fbcb2a3f71e, []int{3}
+}
+func (m *AddTaxExemptionZoneProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AddTaxExemptionZoneProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AddTaxExemptionZoneProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AddTaxExemptionZoneProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddTaxExemptionZoneProposal.Merge(m, src)
+}
+func (m *AddTaxExemptionZoneProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *AddTaxExemptionZoneProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddTaxExemptionZoneProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddTaxExemptionZoneProposal proto.InternalMessageInfo
+
+type RemoveTaxExemptionZoneProposal struct {
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	Zone        string `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty" yaml:"zone"`
+	Authority   string `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty" yaml:"authority"`
+}
+
+func (m *RemoveTaxExemptionZoneProposal) Reset()      { *m = RemoveTaxExemptionZoneProposal{} }
+func (*RemoveTaxExemptionZoneProposal) ProtoMessage() {}
+func (*RemoveTaxExemptionZoneProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3ad47fbcb2a3f71e, []int{4}
+}
+func (m *RemoveTaxExemptionZoneProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RemoveTaxExemptionZoneProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RemoveTaxExemptionZoneProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RemoveTaxExemptionZoneProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveTaxExemptionZoneProposal.Merge(m, src)
+}
+func (m *RemoveTaxExemptionZoneProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *RemoveTaxExemptionZoneProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_RemoveTaxExemptionZoneProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RemoveTaxExemptionZoneProposal proto.InternalMessageInfo
+
+type ModifyTaxExemptionZoneProposal struct {
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	Zone        string `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty" yaml:"zone"`
+	Outgoing    bool   `protobuf:"varint,4,opt,name=outgoing,proto3" json:"outgoing,omitempty" yaml:"outgoing"`
+	Incoming    bool   `protobuf:"varint,5,opt,name=incoming,proto3" json:"incoming,omitempty" yaml:"incoming"`
+	CrossZone   bool   `protobuf:"varint,6,opt,name=cross_zone,json=crossZone,proto3" json:"cross_zone,omitempty" yaml:"cross_zone"`
+	Authority   string `protobuf:"bytes,7,opt,name=authority,proto3" json:"authority,omitempty" yaml:"authority"`
+}
+
+func (m *ModifyTaxExemptionZoneProposal) Reset()      { *m = ModifyTaxExemptionZoneProposal{} }
+func (*ModifyTaxExemptionZoneProposal) ProtoMessage() {}
+func (*ModifyTaxExemptionZoneProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3ad47fbcb2a3f71e, []int{5}
+}
+func (m *ModifyTaxExemptionZoneProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModifyTaxExemptionZoneProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModifyTaxExemptionZoneProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModifyTaxExemptionZoneProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModifyTaxExemptionZoneProposal.Merge(m, src)
+}
+func (m *ModifyTaxExemptionZoneProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModifyTaxExemptionZoneProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModifyTaxExemptionZoneProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModifyTaxExemptionZoneProposal proto.InternalMessageInfo
+
+type AddTaxExemptionAddressProposal struct {
+	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	Zone        string   `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty" yaml:"zone"`
+	Addresses   []string `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty" yaml:"addresses"`
+	Authority   string   `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty" yaml:"authority"`
+}
+
+func (m *AddTaxExemptionAddressProposal) Reset()      { *m = AddTaxExemptionAddressProposal{} }
+func (*AddTaxExemptionAddressProposal) ProtoMessage() {}
+func (*AddTaxExemptionAddressProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3ad47fbcb2a3f71e, []int{6}
+}
+func (m *AddTaxExemptionAddressProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AddTaxExemptionAddressProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AddTaxExemptionAddressProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AddTaxExemptionAddressProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddTaxExemptionAddressProposal.Merge(m, src)
+}
+func (m *AddTaxExemptionAddressProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *AddTaxExemptionAddressProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddTaxExemptionAddressProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddTaxExemptionAddressProposal proto.InternalMessageInfo
+
+type RemoveTaxExemptionAddressProposal struct {
+	Title       string   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	Zone        string   `protobuf:"bytes,3,opt,name=zone,proto3" json:"zone,omitempty" yaml:"zone"`
+	Addresses   []string `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty" yaml:"addresses"`
+	Authority   string   `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty" yaml:"authority"`
+}
+
+func (m *RemoveTaxExemptionAddressProposal) Reset()      { *m = RemoveTaxExemptionAddressProposal{} }
+func (*RemoveTaxExemptionAddressProposal) ProtoMessage() {}
+func (*RemoveTaxExemptionAddressProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3ad47fbcb2a3f71e, []int{7}
+}
+func (m *RemoveTaxExemptionAddressProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RemoveTaxExemptionAddressProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RemoveTaxExemptionAddressProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RemoveTaxExemptionAddressProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RemoveTaxExemptionAddressProposal.Merge(m, src)
+}
+func (m *RemoveTaxExemptionAddressProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *RemoveTaxExemptionAddressProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_RemoveTaxExemptionAddressProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RemoveTaxExemptionAddressProposal proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*Zone)(nil), "terra.taxexemption.v1beta1.Zone")
 	proto.RegisterType((*ZoneList)(nil), "terra.taxexemption.v1beta1.ZoneList")
+	proto.RegisterType((*ProposalMetadata)(nil), "terra.taxexemption.v1beta1.ProposalMetadata")
+	proto.RegisterType((*AddTaxExemptionZoneProposal)(nil), "terra.taxexemption.v1beta1.AddTaxExemptionZoneProposal")
+	proto.RegisterType((*RemoveTaxExemptionZoneProposal)(nil), "terra.taxexemption.v1beta1.RemoveTaxExemptionZoneProposal")
+	proto.RegisterType((*ModifyTaxExemptionZoneProposal)(nil), "terra.taxexemption.v1beta1.ModifyTaxExemptionZoneProposal")
+	proto.RegisterType((*AddTaxExemptionAddressProposal)(nil), "terra.taxexemption.v1beta1.AddTaxExemptionAddressProposal")
+	proto.RegisterType((*RemoveTaxExemptionAddressProposal)(nil), "terra.taxexemption.v1beta1.RemoveTaxExemptionAddressProposal")
 }
 
 func init() {
@@ -145,27 +424,46 @@ func init() {
 }
 
 var fileDescriptor_3ad47fbcb2a3f71e = []byte{
-	// 309 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x91, 0xc1, 0x4a, 0xc3, 0x30,
-	0x18, 0x80, 0x17, 0x37, 0x65, 0x8b, 0xc2, 0xb4, 0x2a, 0x94, 0x1d, 0xd2, 0x11, 0x41, 0x76, 0x71,
-	0x61, 0x53, 0x2f, 0x1e, 0x7b, 0x16, 0x84, 0x1e, 0x77, 0x91, 0x2c, 0x84, 0x1a, 0x58, 0xf3, 0x8f,
-	0x26, 0x1b, 0x9b, 0x4f, 0xe1, 0x3b, 0x79, 0xf1, 0xb8, 0xa3, 0xa7, 0x22, 0xdb, 0x1b, 0xf4, 0x09,
-	0x24, 0xe9, 0x36, 0x99, 0xa7, 0x36, 0xff, 0xf7, 0x7d, 0x10, 0xf2, 0xe3, 0x3b, 0x2b, 0xf3, 0x9c,
-	0x33, 0xcb, 0x17, 0x72, 0x21, 0xb3, 0xa9, 0x55, 0xa0, 0xd9, 0x7c, 0x30, 0x96, 0x96, 0x0f, 0x0e,
-	0x86, 0xfd, 0x69, 0x0e, 0x16, 0x82, 0x8e, 0xd7, 0xfb, 0x07, 0x64, 0xab, 0x77, 0xae, 0x52, 0x48,
-	0xc1, 0x6b, 0xcc, 0xfd, 0x55, 0x05, 0xfd, 0x44, 0xb8, 0x31, 0x02, 0x2d, 0x83, 0x1b, 0xdc, 0xd0,
-	0x3c, 0x93, 0x21, 0xea, 0xa2, 0x5e, 0x2b, 0x6e, 0x97, 0x45, 0x74, 0xba, 0xe4, 0xd9, 0xe4, 0x89,
-	0xba, 0x29, 0x4d, 0x3c, 0x0c, 0x18, 0x6e, 0xc2, 0xcc, 0xa6, 0xa0, 0x74, 0x1a, 0x1e, 0x75, 0x51,
-	0xaf, 0x19, 0x5f, 0x96, 0x45, 0xd4, 0xae, 0xc4, 0x1d, 0xa1, 0xc9, 0x5e, 0x72, 0x81, 0xd2, 0x02,
-	0x32, 0x17, 0xd4, 0xff, 0x07, 0x3b, 0x42, 0x93, 0xbd, 0x14, 0x3c, 0x60, 0x2c, 0x72, 0x30, 0xe6,
-	0xf5, 0x1d, 0xb4, 0x0c, 0x1b, 0x3e, 0xb9, 0x2e, 0x8b, 0xe8, 0xa2, 0x4a, 0xfe, 0x18, 0x4d, 0x5a,
-	0xfe, 0xe0, 0x2e, 0x4f, 0x87, 0xb8, 0xe9, 0xbe, 0xcf, 0xca, 0xd8, 0xe0, 0x16, 0x1f, 0x3b, 0x6e,
-	0x42, 0xd4, 0xad, 0xf7, 0x5a, 0xf1, 0x79, 0x59, 0x44, 0x67, 0x55, 0xec, 0xc7, 0x34, 0xa9, 0x70,
-	0xfc, 0xf2, 0xb5, 0x26, 0x68, 0xb5, 0x26, 0xe8, 0x67, 0x4d, 0xd0, 0xc7, 0x86, 0xd4, 0x56, 0x1b,
-	0x52, 0xfb, 0xde, 0x90, 0xda, 0xe8, 0x31, 0x55, 0xf6, 0x6d, 0x36, 0xee, 0x0b, 0xc8, 0x98, 0x98,
-	0x70, 0x63, 0x94, 0xd8, 0xee, 0x41, 0x40, 0x2e, 0xd9, 0x7c, 0xc8, 0x16, 0x87, 0x1b, 0xb1, 0xcb,
-	0xa9, 0x34, 0xe3, 0x13, 0xff, 0xa2, 0xf7, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x8d, 0x3e, 0x0c,
-	0x57, 0xb4, 0x01, 0x00, 0x00,
+	// 620 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x56, 0xb1, 0x6f, 0xd3, 0x4e,
+	0x18, 0xb5, 0x13, 0xb7, 0x4d, 0xae, 0x3f, 0xa9, 0xfd, 0x99, 0x82, 0x4c, 0x90, 0xec, 0x72, 0x95,
+	0x50, 0x85, 0xd4, 0x58, 0x2d, 0x20, 0xa1, 0x6e, 0x0d, 0x62, 0xa3, 0x02, 0x59, 0x4c, 0x5d, 0xaa,
+	0xab, 0x7d, 0x75, 0x2d, 0xc5, 0xfe, 0x22, 0xdf, 0x25, 0x4a, 0xf8, 0x07, 0x60, 0x64, 0x64, 0xa3,
+	0x7f, 0x04, 0x1b, 0x12, 0x0b, 0x0c, 0x88, 0xa9, 0x23, 0x93, 0x85, 0x92, 0x85, 0xd9, 0x7f, 0x01,
+	0xba, 0xbb, 0x38, 0x8d, 0xc3, 0xd2, 0x56, 0x11, 0xea, 0xd0, 0x29, 0x77, 0xdf, 0x7b, 0x4f, 0x97,
+	0x7b, 0xdf, 0xfb, 0xac, 0x43, 0x5b, 0x9c, 0xa6, 0x29, 0x71, 0x39, 0xe9, 0xd3, 0x3e, 0x8d, 0x3b,
+	0x3c, 0x82, 0xc4, 0xed, 0x6d, 0x1f, 0x51, 0x4e, 0xb6, 0x4b, 0xc5, 0x66, 0x27, 0x05, 0x0e, 0x66,
+	0x43, 0xd2, 0x9b, 0x25, 0x64, 0x4c, 0x6f, 0xac, 0x85, 0x10, 0x82, 0xa4, 0xb9, 0x62, 0xa5, 0x14,
+	0x8d, 0xbb, 0x3e, 0xb0, 0x18, 0xd8, 0xa1, 0x02, 0xd4, 0x46, 0x41, 0xf8, 0xab, 0x8e, 0x8c, 0x03,
+	0x48, 0xa8, 0xb9, 0x81, 0x8c, 0x84, 0xc4, 0xd4, 0xd2, 0xd7, 0xf5, 0xcd, 0x7a, 0x6b, 0x25, 0xcf,
+	0x9c, 0xe5, 0x01, 0x89, 0xdb, 0xbb, 0x58, 0x54, 0xb1, 0x27, 0x41, 0xd3, 0x45, 0x35, 0xe8, 0xf2,
+	0x10, 0xa2, 0x24, 0xb4, 0x2a, 0xeb, 0xfa, 0x66, 0xad, 0x75, 0x2b, 0xcf, 0x9c, 0x15, 0x45, 0x2c,
+	0x10, 0xec, 0x4d, 0x48, 0x42, 0x10, 0x25, 0x3e, 0xc4, 0x42, 0x50, 0x9d, 0x15, 0x14, 0x08, 0xf6,
+	0x26, 0x24, 0xf3, 0x31, 0x42, 0x7e, 0x0a, 0x8c, 0x1d, 0xbe, 0x81, 0x84, 0x5a, 0x86, 0x94, 0xdc,
+	0xce, 0x33, 0xe7, 0x7f, 0x25, 0x39, 0xc7, 0xb0, 0x57, 0x97, 0x1b, 0xf1, 0xe7, 0xf1, 0x0e, 0xaa,
+	0x89, 0xdf, 0x17, 0x11, 0xe3, 0xe6, 0x03, 0xb4, 0x20, 0x70, 0x66, 0xe9, 0xeb, 0xd5, 0xcd, 0x7a,
+	0x6b, 0x35, 0xcf, 0x9c, 0xff, 0x94, 0x58, 0x96, 0xb1, 0xa7, 0x60, 0xfc, 0x4d, 0x47, 0xab, 0xaf,
+	0x52, 0xe8, 0x00, 0x23, 0xed, 0x7d, 0xca, 0x49, 0x40, 0x38, 0x11, 0x62, 0x1e, 0xf1, 0x76, 0x61,
+	0xc3, 0x94, 0x58, 0x96, 0xb1, 0xa7, 0x60, 0xf3, 0x29, 0x5a, 0x0e, 0x28, 0xf3, 0xd3, 0x48, 0xda,
+	0x2f, 0xbd, 0xa8, 0xb7, 0xee, 0xe4, 0x99, 0x63, 0x2a, 0xf6, 0x14, 0x88, 0xbd, 0x69, 0xaa, 0x38,
+	0xe1, 0x18, 0xd2, 0x6e, 0x2c, 0xed, 0x28, 0x9d, 0x20, 0xcb, 0xd8, 0x53, 0xb0, 0xe0, 0x01, 0x3f,
+	0xa1, 0xa9, 0xf4, 0xa0, 0xc4, 0x93, 0x65, 0xec, 0x29, 0x18, 0x9f, 0x55, 0xd1, 0xbd, 0xbd, 0x20,
+	0x78, 0x4d, 0xfa, 0xcf, 0x8b, 0x34, 0x08, 0x2b, 0x8a, 0x9b, 0xfd, 0x83, 0x1b, 0x6d, 0x20, 0x43,
+	0x36, 0xab, 0x3a, 0x9b, 0x1c, 0xd5, 0x26, 0x09, 0x96, 0x92, 0x63, 0x5c, 0x36, 0x39, 0x0b, 0x97,
+	0x4f, 0xce, 0xe2, 0xc5, 0x92, 0x63, 0xee, 0xa0, 0x3a, 0x09, 0x82, 0x94, 0x32, 0x46, 0x99, 0xb5,
+	0x24, 0x13, 0xb3, 0x96, 0x67, 0xce, 0xaa, 0x12, 0x4d, 0x20, 0xec, 0x9d, 0xd3, 0xa4, 0xa6, 0xcb,
+	0x4f, 0x20, 0x8d, 0xf8, 0xc0, 0xaa, 0xc9, 0x5b, 0x4f, 0x6b, 0x0a, 0x48, 0x68, 0x8a, 0xf5, 0xee,
+	0xc3, 0x77, 0xa7, 0x8e, 0xf6, 0xe1, 0xd4, 0xd1, 0x7e, 0x9f, 0x3a, 0xda, 0x8f, 0x4f, 0x5b, 0x8d,
+	0xf1, 0x14, 0x86, 0xd0, 0x2b, 0x86, 0xb7, 0xf9, 0x0c, 0x12, 0x4e, 0x13, 0x8e, 0xdf, 0x56, 0x90,
+	0xed, 0xd1, 0x18, 0x7a, 0xf4, 0xba, 0x77, 0xb5, 0xe4, 0x84, 0x31, 0x7f, 0x27, 0x3e, 0x56, 0x91,
+	0xbd, 0x0f, 0x41, 0x74, 0x3c, 0xb8, 0xc9, 0xf7, 0xd5, 0xf3, 0x3d, 0xe9, 0xd0, 0xd2, 0xfc, 0x3b,
+	0xf4, 0xb9, 0x82, 0xec, 0x99, 0xcf, 0xcf, 0x9e, 0x1a, 0x94, 0xeb, 0x98, 0xd5, 0xc9, 0xa4, 0x1b,
+	0x57, 0x98, 0xf4, 0x85, 0xf9, 0xbb, 0xf7, 0xa5, 0x82, 0xee, 0xff, 0x3d, 0xe9, 0x37, 0x06, 0x5e,
+	0xd4, 0xc0, 0xd6, 0xcb, 0xef, 0x43, 0x5b, 0x3f, 0x1b, 0xda, 0xfa, 0xaf, 0xa1, 0xad, 0xbf, 0x1f,
+	0xd9, 0xda, 0xd9, 0xc8, 0xd6, 0x7e, 0x8e, 0x6c, 0xed, 0xe0, 0x49, 0x18, 0xf1, 0x93, 0xee, 0x51,
+	0xd3, 0x87, 0xd8, 0xf5, 0xdb, 0x84, 0xb1, 0xc8, 0x1f, 0xbf, 0xb3, 0x7c, 0x48, 0xa9, 0xdb, 0xdb,
+	0x71, 0xfb, 0xe5, 0x17, 0x17, 0x1f, 0x74, 0x28, 0x3b, 0x5a, 0x94, 0xcf, 0xa2, 0x47, 0x7f, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0x2f, 0x52, 0x97, 0x46, 0x94, 0x09, 0x00, 0x00,
 }
 
 func (m *Zone) Marshal() (dAtA []byte, err error) {
@@ -260,6 +558,399 @@ func (m *ZoneList) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ProposalMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ProposalMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ProposalMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Other) > 0 {
+		i -= len(m.Other)
+		copy(dAtA[i:], m.Other)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Other)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Forum) > 0 {
+		i -= len(m.Forum)
+		copy(dAtA[i:], m.Forum)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Forum)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AddTaxExemptionZoneProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AddTaxExemptionZoneProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AddTaxExemptionZoneProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Addresses[iNdEx])))
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if m.CrossZone {
+		i--
+		if m.CrossZone {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.Incoming {
+		i--
+		if m.Incoming {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Outgoing {
+		i--
+		if m.Outgoing {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Zone) > 0 {
+		i -= len(m.Zone)
+		copy(dAtA[i:], m.Zone)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Zone)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RemoveTaxExemptionZoneProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RemoveTaxExemptionZoneProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RemoveTaxExemptionZoneProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Zone) > 0 {
+		i -= len(m.Zone)
+		copy(dAtA[i:], m.Zone)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Zone)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ModifyTaxExemptionZoneProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModifyTaxExemptionZoneProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModifyTaxExemptionZoneProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.CrossZone {
+		i--
+		if m.CrossZone {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.Incoming {
+		i--
+		if m.Incoming {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Outgoing {
+		i--
+		if m.Outgoing {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Zone) > 0 {
+		i -= len(m.Zone)
+		copy(dAtA[i:], m.Zone)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Zone)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AddTaxExemptionAddressProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AddTaxExemptionAddressProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AddTaxExemptionAddressProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Addresses[iNdEx])))
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.Zone) > 0 {
+		i -= len(m.Zone)
+		copy(dAtA[i:], m.Zone)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Zone)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RemoveTaxExemptionAddressProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RemoveTaxExemptionAddressProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RemoveTaxExemptionAddressProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Addresses) > 0 {
+		for iNdEx := len(m.Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Addresses[iNdEx])
+			copy(dAtA[i:], m.Addresses[iNdEx])
+			i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Addresses[iNdEx])))
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.Zone) > 0 {
+		i -= len(m.Zone)
+		copy(dAtA[i:], m.Zone)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Zone)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTaxexemption(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTaxexemption(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTaxexemption(v)
 	base := offset
@@ -304,6 +995,192 @@ func (m *ZoneList) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovTaxexemption(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *ProposalMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Forum)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Other)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	return n
+}
+
+func (m *AddTaxExemptionZoneProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Zone)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	if m.Outgoing {
+		n += 2
+	}
+	if m.Incoming {
+		n += 2
+	}
+	if m.CrossZone {
+		n += 2
+	}
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
+			l = len(s)
+			n += 1 + l + sovTaxexemption(uint64(l))
+		}
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	return n
+}
+
+func (m *RemoveTaxExemptionZoneProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Zone)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	return n
+}
+
+func (m *ModifyTaxExemptionZoneProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Zone)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	if m.Outgoing {
+		n += 2
+	}
+	if m.Incoming {
+		n += 2
+	}
+	if m.CrossZone {
+		n += 2
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	return n
+}
+
+func (m *AddTaxExemptionAddressProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Zone)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
+			l = len(s)
+			n += 1 + l + sovTaxexemption(uint64(l))
+		}
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	return n
+}
+
+func (m *RemoveTaxExemptionAddressProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	l = len(m.Zone)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
+	}
+	if len(m.Addresses) > 0 {
+		for _, s := range m.Addresses {
+			l = len(s)
+			n += 1 + l + sovTaxexemption(uint64(l))
+		}
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTaxexemption(uint64(l))
 	}
 	return n
 }
@@ -516,6 +1393,1290 @@ func (m *ZoneList) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Zones = append(m.Zones, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTaxexemption(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ProposalMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaxexemption
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ProposalMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ProposalMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Forum", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Forum = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Other", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Other = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTaxexemption(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AddTaxExemptionZoneProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaxexemption
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AddTaxExemptionZoneProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AddTaxExemptionZoneProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Outgoing", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Outgoing = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Incoming", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Incoming = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CrossZone", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CrossZone = bool(v != 0)
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTaxexemption(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RemoveTaxExemptionZoneProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaxexemption
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RemoveTaxExemptionZoneProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RemoveTaxExemptionZoneProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTaxexemption(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModifyTaxExemptionZoneProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaxexemption
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModifyTaxExemptionZoneProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModifyTaxExemptionZoneProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Outgoing", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Outgoing = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Incoming", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Incoming = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CrossZone", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CrossZone = bool(v != 0)
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTaxexemption(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AddTaxExemptionAddressProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaxexemption
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AddTaxExemptionAddressProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AddTaxExemptionAddressProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTaxexemption(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RemoveTaxExemptionAddressProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTaxexemption
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RemoveTaxExemptionAddressProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RemoveTaxExemptionAddressProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addresses = append(m.Addresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTaxexemption
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTaxexemption
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

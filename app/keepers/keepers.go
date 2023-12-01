@@ -344,9 +344,12 @@ func NewAppKeepers(
 		appKeepers.StakingKeeper, appKeepers.DistrKeeper,
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
 	)
+
 	appKeepers.TaxExemptionKeeper = taxexemptionkeeper.NewKeeper(
 		appCodec, appKeepers.keys[taxexemptiontypes.StoreKey],
 		appKeepers.GetSubspace(taxexemptiontypes.ModuleName),
+		appKeepers.AccountKeeper,
+		string(appKeepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 	)
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)

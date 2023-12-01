@@ -4,22 +4,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
-// provided LegacyAmino codec. These types are used for Amino JSON serialization
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&AddTaxExemptionZoneProposal{}, "taxexemption/AddTaxExemptionZoneProposal", nil)
-	cdc.RegisterConcrete(&RemoveTaxExemptionZoneProposal{}, "taxexemption/RemoveTaxExemptionZoneProposal", nil)
-	cdc.RegisterConcrete(&ModifyTaxExemptionZoneProposal{}, "taxexemption/ModifyTaxExemptionZoneProposal", nil)
-	cdc.RegisterConcrete(&AddTaxExemptionAddressProposal{}, "taxexemption/AddTaxExemptionAddressProposal", nil)
-	cdc.RegisterConcrete(&RemoveTaxExemptionAddressProposal{}, "taxexemption/RemoveTaxExemptionAddressProposal", nil)
-}
-
-// RegisterInterfaces associates protoName with AccountI and VestingAccount
-// Interfaces and creates a registry of it's concrete implementations
+// RegisterInterfaces associates protoName with the new message types
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
+		&MsgAddTaxExemptionZone{},
+		&MsgRemoveTaxExemptionZone{},
+		&MsgModifyTaxExemptionZone{},
+		&MsgAddTaxExemptionAddress{},
+		&MsgRemoveTaxExemptionAddress{},
+	)
+
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
 		&AddTaxExemptionZoneProposal{},
@@ -28,22 +31,30 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&AddTaxExemptionAddressProposal{},
 		&RemoveTaxExemptionAddressProposal{},
 	)
+
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+}
+
+// RegisterLegacyAminoCodec registers the concrete types on the Amino codec
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	legacy.RegisterAminoMsg(cdc, &MsgAddTaxExemptionZone{}, "taxexemption/AddTaxExemptionZone")
+	legacy.RegisterAminoMsg(cdc, &MsgRemoveTaxExemptionZone{}, "taxexemption/RemoveTaxExemptionZone")
+	legacy.RegisterAminoMsg(cdc, &MsgModifyTaxExemptionZone{}, "taxexemption/ModifyTaxExemptionZone")
+	legacy.RegisterAminoMsg(cdc, &MsgAddTaxExemptionAddress{}, "taxexemption/AddTaxExemptionAddress")
+	legacy.RegisterAminoMsg(cdc, &MsgRemoveTaxExemptionAddress{}, "taxexemption/RemoveTaxExemptionAddress")
 }
 
 var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/oracle module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/staking and
-	// defined at the application level.
+	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
-	amino.Seal()
+	sdk.RegisterLegacyAminoCodec(amino)
+
+	// Register all Amino interfaces and concrete types on the authz  and gov Amino codec so that this can later be
+	// used to properly serialize MsgGrant, MsgExec and MsgSubmitProposal instances
+	RegisterLegacyAminoCodec(authzcodec.Amino)
 }

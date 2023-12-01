@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -10,9 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/spf13/cobra"
 )
+
+var govModuleAddr = "terra10d07y265gmmuvt4z0w9aw880jnsr700juxf95n"
 
 func ProposalAddTaxExemptionZoneCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -64,25 +67,35 @@ $ %s tx gov submit-proposal add-tax-exemption-zone zonexyz terra1dczz24r33fwlj0q
 				return err
 			}
 
-			content := types.AddTaxExemptionZoneProposal{
-				Title:       proposalTitle,
-				Description: proposalDescr,
-				Zone:        zoneName,
-				Outgoing:    exemptOutgoing,
-				Incoming:    exemptIncoming,
-				CrossZone:   exemptCrossZone,
-				Addresses:   addresses,
+			msg := types.MsgAddTaxExemptionZone{
+				Authority: govModuleAddr,
+				Zone:      zoneName,
+				Outgoing:  exemptOutgoing,
+				Incoming:  exemptIncoming,
+				CrossZone: exemptCrossZone,
+				Addresses: addresses,
 			}
 
-			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			meta := types.ProposalMetadata{
+				Title:       proposalTitle,
+				Description: proposalDescr,
+				Forum:       "",
+				Other:       "",
+			}
+
+			jsonMeta, err := json.Marshal(meta)
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+
+			sdkMsg := []sdk.Msg{&msg}
+
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), submitMsg)
 		},
 	}
 
@@ -131,21 +144,31 @@ $ %s tx gov submit-proposal remove-tax-exemption-zone zonexyz --title "remove ta
 				return err
 			}
 
-			content := types.RemoveTaxExemptionZoneProposal{
-				Title:       proposalTitle,
-				Description: proposalDescr,
-				Zone:        zoneName,
+			msg := types.MsgRemoveTaxExemptionZone{
+				Authority: govModuleAddr,
+				Zone:      zoneName,
 			}
 
-			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			meta := types.ProposalMetadata{
+				Title:       proposalTitle,
+				Description: proposalDescr,
+				Forum:       "",
+				Other:       "",
+			}
+
+			jsonMeta, err := json.Marshal(meta)
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+
+			sdkMsg := []sdk.Msg{&msg}
+
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), submitMsg)
 		},
 	}
 
@@ -205,24 +228,34 @@ $ %s tx gov submit-proposal modify-tax-exemption-zone zonexyz --exempt-outgoing 
 				return err
 			}
 
-			content := types.ModifyTaxExemptionZoneProposal{
-				Title:       proposalTitle,
-				Description: proposalDescr,
-				Zone:        zoneName,
-				Outgoing:    exemptOutgoing,
-				Incoming:    exemptIncoming,
-				CrossZone:   exemptCrossZone,
+			msg := types.MsgModifyTaxExemptionZone{
+				Authority: govModuleAddr,
+				Zone:      zoneName,
+				Outgoing:  exemptOutgoing,
+				Incoming:  exemptIncoming,
+				CrossZone: exemptCrossZone,
 			}
 
-			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			meta := types.ProposalMetadata{
+				Title:       proposalTitle,
+				Description: proposalDescr,
+				Forum:       "",
+				Other:       "",
+			}
+
+			jsonMeta, err := json.Marshal(meta)
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+
+			sdkMsg := []sdk.Msg{&msg}
+
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), submitMsg)
 		},
 	}
 
@@ -272,22 +305,32 @@ $ %s tx gov submit-proposal add-tax-exemption-address zonexyz terra1dczz24r33fwl
 				return err
 			}
 
-			content := types.AddTaxExemptionAddressProposal{
-				Title:       proposalTitle,
-				Description: proposalDescr,
-				Zone:        zoneName,
-				Addresses:   addresses,
+			msg := types.MsgAddTaxExemptionAddress{
+				Authority: govModuleAddr,
+				Zone:      zoneName,
+				Addresses: addresses,
 			}
 
-			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			meta := types.ProposalMetadata{
+				Title:       proposalTitle,
+				Description: proposalDescr,
+				Forum:       "",
+				Other:       "",
+			}
+
+			jsonMeta, err := json.Marshal(meta)
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+
+			sdkMsg := []sdk.Msg{&msg}
+
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), submitMsg)
 		},
 	}
 
@@ -333,22 +376,32 @@ $ %s tx gov submit-proposal remove-tax-exemption-address zonexyz terra1dczz24r33
 				return err
 			}
 
-			content := types.RemoveTaxExemptionAddressProposal{
-				Title:       proposalTitle,
-				Description: proposalDescr,
-				Zone:        zoneName,
-				Addresses:   addresses,
+			msg := types.MsgRemoveTaxExemptionAddress{
+				Authority: govModuleAddr,
+				Zone:      zoneName,
+				Addresses: addresses,
 			}
 
-			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			meta := types.ProposalMetadata{
+				Title:       proposalTitle,
+				Description: proposalDescr,
+				Forum:       "",
+				Other:       "",
+			}
+
+			jsonMeta, err := json.Marshal(meta)
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+
+			sdkMsg := []sdk.Msg{&msg}
+
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), submitMsg)
 		},
 	}
 

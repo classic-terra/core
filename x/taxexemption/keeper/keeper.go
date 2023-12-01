@@ -8,6 +8,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -17,9 +18,11 @@ import (
 
 // Keeper of the store
 type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	paramSpace paramstypes.Subspace
+	storeKey      storetypes.StoreKey
+	cdc           codec.BinaryCodec
+	paramSpace    paramstypes.Subspace
+	accountKeeper accountkeeper.AccountKeeper
+	authority     string
 }
 
 // NewKeeper creates a new taxexemption Keeper instance
@@ -27,18 +30,26 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	paramSpace paramstypes.Subspace,
+	accountKeeper accountkeeper.AccountKeeper,
+	authority string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	return Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		paramSpace:    paramSpace,
+		accountKeeper: accountKeeper,
+		authority:     authority,
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetAuthority() sdk.AccAddress {
+	return sdk.AccAddress(k.authority)
 }
 
 func (k Keeper) GetTaxExemptionZone(ctx sdk.Context, zoneName string) (types.Zone, error) {

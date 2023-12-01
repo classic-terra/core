@@ -38,16 +38,6 @@ var (
 )
 
 // ======AddTaxExemptionZoneProposal======
-func NewAddTaxExemptionZoneProposal(title, description string, zone string, outgoing bool, incoming bool, crossZone bool) govv1beta1.Content {
-	return &AddTaxExemptionZoneProposal{
-		Title:       title,
-		Description: description,
-		Zone:        zone,
-		Outgoing:    outgoing,
-		Incoming:    incoming,
-		CrossZone:   crossZone,
-	}
-}
 
 func (p *AddTaxExemptionZoneProposal) GetTitle() string { return p.Title }
 
@@ -94,14 +84,6 @@ func (p *AddTaxExemptionZoneProposal) ValidateBasic() error {
 
 // ======RemoveTaxExemptionZoneProposal======
 
-func NewRemoveTaxExemptionZoneProposal(title, description string, zone string) govv1beta1.Content {
-	return &RemoveTaxExemptionZoneProposal{
-		Title:       title,
-		Description: description,
-		Zone:        zone,
-	}
-}
-
 func (p *RemoveTaxExemptionZoneProposal) GetTitle() string { return p.Title }
 
 func (p *RemoveTaxExemptionZoneProposal) GetDescription() string { return p.Description }
@@ -136,17 +118,6 @@ func (p *RemoveTaxExemptionZoneProposal) ValidateBasic() error {
 }
 
 // ======ModifyTaxExemptionZoneProposal======
-
-func NewModifyTaxExemptionZoneProposal(title, description string, zone string, outgoing bool, incoming bool, crossZone bool) govv1beta1.Content {
-	return &ModifyTaxExemptionZoneProposal{
-		Title:       title,
-		Description: description,
-		Zone:        zone,
-		Outgoing:    outgoing,
-		Incoming:    incoming,
-		CrossZone:   crossZone,
-	}
-}
 
 func (p *ModifyTaxExemptionZoneProposal) GetTitle() string { return p.Title }
 
@@ -186,15 +157,6 @@ func (p *ModifyTaxExemptionZoneProposal) ValidateBasic() error {
 
 // ======AddTaxExemptionAddressProposal======
 
-func NewAddTaxExemptionAddressProposal(title, description string, zone string, addresses []string) govv1beta1.Content {
-	return &AddTaxExemptionAddressProposal{
-		Title:       title,
-		Description: description,
-		Zone:        zone,
-		Addresses:   addresses,
-	}
-}
-
 func (p *AddTaxExemptionAddressProposal) GetTitle() string { return p.Title }
 
 func (p *AddTaxExemptionAddressProposal) GetDescription() string { return p.Description }
@@ -233,15 +195,6 @@ func (p *AddTaxExemptionAddressProposal) ValidateBasic() error {
 }
 
 // ======RemoveTaxExemptionAddressProposal======
-
-func NewRemoveTaxExemptionAddressProposal(title, description string, zone string, addresses []string) govv1beta1.Content {
-	return &RemoveTaxExemptionAddressProposal{
-		Title:       title,
-		Description: description,
-		Zone:        zone,
-		Addresses:   addresses,
-	}
-}
 
 func (p *RemoveTaxExemptionAddressProposal) GetTitle() string { return p.Title }
 

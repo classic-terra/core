@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/require"
 
 	customauth "github.com/classic-terra/core/v2/custom/auth"
@@ -15,6 +16,7 @@ import (
 	"github.com/classic-terra/core/v2/x/market"
 	"github.com/classic-terra/core/v2/x/oracle"
 	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -32,7 +34,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 )
 
@@ -107,6 +111,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	keyTaxExemption := sdk.NewKVStoreKey(types.StoreKey)
 	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
 	tKeyParams := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
+	aKeyParams := sdk.NewKVStoreKey(authtypes.StoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -118,11 +123,22 @@ func CreateTestInput(t *testing.T) TestInput {
 
 	require.NoError(t, ms.LoadLatestVersion())
 
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
+	maccPerms := map[string][]string{
+		authtypes.FeeCollectorName: nil, // just added to enable align fee
+		govtypes.ModuleName:        {authtypes.Burner},
+		wasm.ModuleName:            {authtypes.Burner},
+	}
 
-	taxexemptionKeeper := NewKeeper(
-		appCodec,
+	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
+	accountKeeper := authkeeper.NewAccountKeeper(appCodec, aKeyParams, paramsKeeper.Subspace(authtypes.ModuleName),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		sdk.GetConfig().GetBech32AccountAddrPrefix())
+
+	taxexemptionKeeper := NewKeeper(appCodec,
 		keyTaxExemption, paramsKeeper.Subspace(types.ModuleName),
+		accountKeeper,
+		string(accountKeeper.GetModuleAddress(govtypes.ModuleName)),
 	)
 
 	return TestInput{ctx, legacyAmino, taxexemptionKeeper}

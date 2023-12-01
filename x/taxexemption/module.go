@@ -32,6 +32,8 @@ type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
+var _ module.AppModuleBasic = AppModuleBasic{}
+
 // AppModule implements an application module for the taxexemption module.
 type AppModule struct {
 	AppModuleBasic
@@ -126,16 +128,12 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// no msg server for this module
 	querier := keeper.NewQuerier(am.keeper)
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
-}
-
-// NewHandler returns an sdk.Handler for the taxexemption module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
 
 // Route returns the message routing key for the taxexemption module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
 // GenerateGenesisState creates a randomized GenState of the taxexemption module.

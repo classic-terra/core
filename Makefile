@@ -112,7 +112,7 @@ endif
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
 
-all: tools install lint test
+all: tools install lint test test-e2e
 
 build: go.sum
 ifeq ($(OS),Windows_NT)
@@ -229,22 +229,30 @@ clean:
 ###############################################################################
 
 include sims.mk
+include e2e.mk
+
+PACKAGES_UNIT=$(shell go list ./... | grep -v -e '/tests/e2e')
+PACKAGES_E2E=$(shell cd tests/e2e && go list ./... | grep '/e2e')
+TEST_PACKAGES=./...
 
 test: test-unit
 
-test-all: test-unit test-race test-cover
+test-all: test-unit test-race test-cover test-e2e
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
+	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
+
+test-e2e:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m $(PACKAGES_E2E)
 
 benchmark:
-	@go test -mod=readonly -bench=. ./...
+	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 .PHONY: test test-all test-cover test-unit test-race
 

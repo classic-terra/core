@@ -249,6 +249,26 @@ benchmark:
 .PHONY: test test-all test-cover test-unit test-race
 
 ###############################################################################
+###                               Interchain test                           ###
+###############################################################################
+# Executes basic chain tests via interchaintest
+ictest-basic:
+	@cd tests/interchaintest && go test -race -v -run TestBasicTerraStart .
+
+ictest-build: get-heighliner local-image
+
+###############################################################################
+###                                  Heighliner                             ###
+###############################################################################
+get-heighliner:
+	@rm -rf heighliner
+	@git clone https://github.com/strangelove-ventures/heighliner.git
+	@cd heighliner && go build
+local-image:
+	@heighliner/heighliner build -c core --local --build-env BUILD_TAGS=muslc
+.PHONY: get-heighliner local-image
+
+###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
 

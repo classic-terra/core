@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	TerraClassicE2ERepo  = "terra-classic/terra-classic-e2e"
+	TerraClassicE2ERepo  = "terra-classic/core-e2e"
 	TerraClassicMainRepo = "terra-classic/core"
 
 	repo, version = GetDockerImageInfo()
@@ -25,10 +25,10 @@ var (
 		UidGid:     "1025:1025",
 	}
 
-	pathTerraGaia = "terra-gaia"
+	pathTerraGaia       = "terra-gaia"
 	genesisWalletAmount = math.NewInt(10_000_000_000)
-	votingPeriod     = "30s"
-	maxDepositPeriod = "10s"
+	votingPeriod        = "30s"
+	maxDepositPeriod    = "10s"
 )
 
 func createConfig() (ibc.ChainConfig, error) {
@@ -44,7 +44,7 @@ func createConfig() (ibc.ChainConfig, error) {
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "112h",
 			NoHostMount:         false,
-			ModifyGenesis:        ModifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
+			ModifyGenesis:       nil,
 			ConfigFileOverrides: nil,
 			EncodingConfig:      coreEncoding(),
 		},
@@ -60,7 +60,6 @@ func coreEncoding() *simappparams.EncodingConfig {
 	govv1.RegisterInterfaces(cfg.InterfaceRegistry)
 	return &cfg
 }
-
 
 func ModifyGenesisShortProposals(votingPeriod, maxDepositPeriod string) func(ibc.ChainConfig, []byte) ([]byte, error) {
 	return func(chainConfig ibc.ChainConfig, genbz []byte) ([]byte, error) {

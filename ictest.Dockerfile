@@ -11,23 +11,14 @@ COPY . /code/
 
 RUN LEDGER_ENABLED=false make build
 
-# Cosmwasm - Download correct libwasmvm version
-RUN set -eux; \    
-    export ARCH=$(uname -m); \
-    WASM_VERSION=$(go list -m all | grep github.com/CosmWasm/wasmvm | awk '{print $2}'); \
-    if [ ! -z "${WASM_VERSION}" ]; then \
-      wget -O /lib/libwasmvm_muslc.a https://github.com/CosmWasm/wasmvm/releases/download/${WASM_VERSION}/libwasmvm_muslc.${ARCH}.a; \      
-    fi; \
-    go mod download;
+RUN cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/libwasmvm.aarch64.so /lib/libwasmvm.aarch64.so
 
-# Copy the remaining files
-COPY . .
-
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 WORKDIR /root
 
 COPY --from=go-builder /code/build/terrad /usr/local/bin/terrad
+COPY --from=go-builder /lib/libwasmvm.aarch64.so /lib/libwasmvm.aarch64.so
 
 # rest server
 EXPOSE 1317

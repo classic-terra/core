@@ -256,7 +256,7 @@ ictest-basic:
 	@cd tests/interchaintest && go test -race -v -run TestBasicTerraStart .
 
 ictest-build: 
-	@DOCKER_BUILDKIT=1 docker build -t core:local -f Dockerfile.ictest .
+	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###

@@ -505,6 +505,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
 	paramsKeeper.Subspace(ibchooktypes.ModuleName)
+	paramsKeeper.Subspace(forwardtypes.ModuleName)
 
 	return paramsKeeper
 }

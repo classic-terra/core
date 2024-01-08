@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestBasicTerraStart is a basic test to assert that spinning up a Terra Classic network with one validator works properly.
-func TestBasicTerraStart(t *testing.T) {
+// TestTerraStart is a test to assert that spinning up a Terra Classic network with one validator works properly.
+func TestTerraStart(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}

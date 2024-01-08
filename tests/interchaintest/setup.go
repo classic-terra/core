@@ -29,6 +29,7 @@ var (
 	genesisWalletAmount = math.NewInt(10_000_000_000)
 	votingPeriod        = "30s"
 	maxDepositPeriod    = "10s"
+	signedBlocksWindow  = int64(20)
 )
 
 func createConfig() (ibc.ChainConfig, error) {
@@ -44,7 +45,7 @@ func createConfig() (ibc.ChainConfig, error) {
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "112h",
 			NoHostMount:         false,
-			ModifyGenesis:       nil,
+			ModifyGenesis:       ModifyGenesis(),
 			ConfigFileOverrides: nil,
 			EncodingConfig:      coreEncoding(),
 		},
@@ -61,20 +62,25 @@ func coreEncoding() *simappparams.EncodingConfig {
 	return &cfg
 }
 
-func ModifyGenesisShortProposals(votingPeriod, maxDepositPeriod string) func(ibc.ChainConfig, []byte) ([]byte, error) {
+func ModifyGenesis() func(ibc.ChainConfig, []byte) ([]byte, error) {
 	return func(chainConfig ibc.ChainConfig, genbz []byte) ([]byte, error) {
 		g := make(map[string]interface{})
 		if err := json.Unmarshal(genbz, &g); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal genesis file: %w", err)
 		}
-		if err := dyno.Set(g, votingPeriod, "app_state", "gov", "params", "voting_period"); err != nil {
+		// Modify short proposal
+		if err := dyno.Set(g, votingPeriod, "app_state", "gov", "voting_params", "voting_period"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
 		}
-		if err := dyno.Set(g, maxDepositPeriod, "app_state", "gov", "params", "max_deposit_period"); err != nil {
+		if err := dyno.Set(g, maxDepositPeriod, "app_state", "gov", "deposit_params", "max_deposit_period"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
 		}
-		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "params", "min_deposit", 0, "denom"); err != nil {
+		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "deposit_params", "min_deposit", 0, "denom"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
+		}
+		// Modify signed blocks window
+		if err := dyno.Set(g, signedBlocksWindow, "app_state", "slashing", "params", "signed_blocks_window"); err != nil {
+			return nil, fmt.Errorf("failed to set signed blocks window in genesis json: %w", err)
 		}
 		out, err := json.Marshal(g)
 		if err != nil {

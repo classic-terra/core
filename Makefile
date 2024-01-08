@@ -252,8 +252,11 @@ benchmark:
 ###                               Interchain test                           ###
 ###############################################################################
 # Executes basic chain tests via interchaintest
-ictest-basic:
-	@cd tests/interchaintest && go test -race -v -run TestBasicTerraStart .
+ictest-start:
+	@cd tests/interchaintest && go test -race -v -run TestTerraStart .
+
+ictest-validator:
+	@cd tests/interchaintest && go test -timeout=25m -race -v -run TestValidator .
 
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .

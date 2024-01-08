@@ -15,10 +15,15 @@ RUN cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/libwasmvm.aar
 
 FROM ubuntu:22.04
 
-WORKDIR /root
-
 COPY --from=go-builder /code/build/terrad /usr/local/bin/terrad
 COPY --from=go-builder /lib/libwasmvm.aarch64.so /lib/libwasmvm.aarch64.so
+
+RUN  apt-get update \
+  && apt-get install -y wget \
+  && rm -rf /var/lib/apt/lists/*
+  
+ENV HOME /terra
+WORKDIR $HOME
 
 # rest server
 EXPOSE 1317

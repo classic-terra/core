@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  terrad:
+    image: local:terra
+    build:
+      context: ../../
+      dockerfile: local.Dockerfile
+    volumes:
+      - ./scripts/setup.sh:/terra/setup.sh
+      - $HOME/.terrad-local/:/terra/.terrad/
+    entrypoint:
+      - /terra/setup.sh
+    command:
+      - $STATE
+    ports:
+      - 26657:26657
+      - 1317:1317
+      - 9090:9090
+      - 9091:9091
+      - 6060:6060

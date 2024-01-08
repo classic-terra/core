@@ -337,6 +337,20 @@ localnet-stop:
 	rm -rf build/node*
 	rm -rf build/gentxs
 
+localnet-keys:
+	. scripts/localterra/scripts/add_keys.sh
+
+localnet-init: localnet-clean localnet-build
+
+localnet-clean:
+	@rm -rfI $(HOME)/.terrad-local/
+
+localnet-build:
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f scripts/localterra/docker-compose.yml build
+
+localnet-starts:
+	@STATE="" docker-compose -f scripts/localterra/docker-compose.yml up
+
 .PHONY: localnet-start localnet-stop
 
 ###############################################################################

@@ -15,8 +15,6 @@ COPY . /code/
 
 RUN LEDGER_ENABLED=false make build
 
-
-
 RUN if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
         WASMVM_URL="libwasmvm.x86_64.so"; \
     elif [ ${BUILDPLATFORM} = "linux/arm64" ]; then \
@@ -27,7 +25,7 @@ RUN if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
     fi; \
     cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/${WASMVM_URL} /lib/${WASMVM_URL}
 
-FROM ubuntu:22.04
+FROM ubuntu:23.04
 
 COPY --from=go-builder /code/build/terrad /usr/local/bin/terrad
 COPY --from=go-builder /lib/${WASMVM_URL} /lib/${WASMVM_URL}

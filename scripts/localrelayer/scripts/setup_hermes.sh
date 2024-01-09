@@ -24,6 +24,7 @@ add_keys(){
     echo $CHAIN_A_MNEMONIC > /home/hermes/mnemonics/$CHAIN_A_ID
 
     hermes keys add \
+    --hd-path "m/44'/330'/0'/0/0" \
     --chain $CHAIN_A_ID \
     --mnemonic-file /home/hermes/mnemonics/$CHAIN_A_ID \
     --key-name $CHAIN_A_ID \
@@ -33,6 +34,7 @@ add_keys(){
     echo $CHAIN_B_MNEMONIC > /home/hermes/mnemonics/$CHAIN_B_ID
 
     hermes keys add \
+    --hd-path "m/44'/330'/0'/0/0" \
     --chain $CHAIN_B_ID \
     --mnemonic-file /home/hermes/mnemonics/$CHAIN_B_ID \
     --key-name $CHAIN_B_ID \

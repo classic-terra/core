@@ -65,6 +65,7 @@ create_channel(){
     --new-client-connection --yes
 }
 
+sleep 10
 install_prerequisites
 add_keys
 create_channel

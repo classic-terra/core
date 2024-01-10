@@ -24,10 +24,10 @@ TX_FLAGS=($args)
 # store and instantiate the contract
 chainA tx wasm store ./tests/ibc-hooks/bytecode/counter.wasm --from validator  "${TX_FLAGS[@]}"
 CONTRACT_ID=$(chainA query wasm list-code -o json | jq -r '.code_infos[-1].code_id')
-chainA tx wasm instantiate "$CONTRACT_ID" '{"count": 0}' --from validator --no-admin --label=counter "${TX_FLAGS[@]}"
+chainA tx wasm instantiate "$CONTRACT_ID" '{"count": "0"}' --from validator --no-admin --label=counter "${TX_FLAGS[@]}"
 
 # get the contract address
-export CONTRACT_ADDRESS=$(chainA query wasm list-contract-by-code 1 -o json | jq -r '.contracts | [last][0]')
+export CONTRACT_ADDRESS=$(chainA query wasm list-contract-by-code "$CONTRACT_ID" -o json | jq -r '.contracts | [last][0]')
 
 denom=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].denom')
 balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].amount')
@@ -43,10 +43,11 @@ sleep 16
 
 new_balance=$(chainA query bank balances "$CONTRACT_ADDRESS" -o json | jq -r '.balances[0].amount')
 export ADDR_IN_CHAIN_A=$(chainA q ibchooks wasm-sender channel-0 "$VALIDATOR")
-QUERY='{"get_total_funds": {"addr":"'"$ADDR_IN_CHAIN_A"'"}}'
-funds=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json | jq -c -r '.data.total_funds[]')
-QUERY='{"get_count": {"addr": "'"$ADDR_IN_CHAIN_A"'"}}'
-count=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json |  jq -r '.data.count')
+QUERY='{"get_total_funds": {}}'
+funds=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json | jq -c -r '.data')
+# QUERY='{"get_count": {"addr": "'"$ADDR_IN_CHAIN_A"'"}}'
+QUERY='{"get_count": {}}'
+count=$(chainA query wasm contract-state smart "$CONTRACT_ADDRESS" "$QUERY" -o json |  jq -r '.data')
 
 echo "funds: $funds, count: $count"
 echo "denom: $denom, old balance: $balance, new balance: $new_balance"

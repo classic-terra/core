@@ -22,3 +22,4 @@ restartd: stop
 clean:
 	@rm -rfI $(HOME)/.terrad-local-a/
 	@rm -rfI $(HOME)/.terrad-local-b/
+	@rm -rfI $(HOME)/.terrad-local-c/

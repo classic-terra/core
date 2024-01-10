@@ -1,5 +1,3 @@
-ARG BUILDPLATFORM=linux/amd64
-
 FROM golang:1.20 AS go-builder
 
 ARG BUILDPLATFORM
@@ -18,7 +16,7 @@ RUN LEDGER_ENABLED=false make build
 RUN if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
         WASMVM_URL="libwasmvm.x86_64.so"; \
     elif [ ${BUILDPLATFORM} = "linux/arm64" ]; then \
-        WASMVM_URL="libwasmvm.aarch64.so"; \      
+        WASMVM_URL="libwasmvm.aarch64.so"; \     
     else \
         echo "Unsupported Build Platfrom ${BUILDPLATFORM}"; \
         exit 1; \

@@ -42,6 +42,30 @@ services:
       - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       # Can't use the same ports
+      - 46657:26657
+      - 41317:1317
+      - 49090:9090
+    networks:
+      - localterra
+
+  localterra-c:
+    image: local:terra
+    build:
+      context: ../../
+      dockerfile: local.Dockerfile
+    volumes:
+      - ./scripts/setup_chain.sh:/terra/setup.sh
+      - $HOME/.terrad-local-c/:/terra/.terrad/
+    entrypoint:
+      - /terra/setup.sh
+    environment:
+      - CHAIN_ID=localterra-c
+      - VALIDATOR_MONIKER=validator-c
+      - VALIDATOR_MNEMONIC=family album bird seek tilt color pill danger message abuse manual tent almost ridge boost blast high comic core quantum spoon coconut oyster remove
+      - FAUCET_MNEMONIC=increase bread alpha rigid glide amused approve oblige print asset idea enact lawn proof unfold jeans rabbit audit return chuckle valve rather cactus great
+      - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
+    ports:
+      # Can't use the same ports
       - 36657:26657
       - 31317:1317
       - 39090:9090
@@ -61,11 +85,14 @@ services:
       - CHAIN_A_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
       - CHAIN_B_ID=localterra-b
       - CHAIN_B_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
+      - CHAIN_C_ID=localterra-c
+      - CHAIN_C_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       - 3000:3000
     depends_on:
       - localterra-a
       - localterra-b
+      - localterra-c
     networks:
       - localterra
 

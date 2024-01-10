@@ -5,11 +5,15 @@ DEFAULT_CHAIN_A_ID="localterra-a"
 DEFAULT_CHAIN_A_MNEMONIC="black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken"
 DEFAULT_CHAIN_B_ID="localterra-b"
 DEFAULT_CHAIN_B_MNEMONIC="black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken"
+DEFAULT_CHAIN_C_ID="localterra-c"
+DEFAULT_CHAIN_C_MNEMONIC="black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken"
 
 CHAIN_A_MNEMONIC=${CHAIN_A_MNEMONIC:-$DEFAULT_CHAIN_A_MNEMONIC}
 CHAIN_A_ID=${CHAIN_A_ID:-$DEFAULT_CHAIN_A_ID}
 CHAIN_B_MNEMONIC=${CHAIN_B_MNEMONIC:-$DEFAULT_CHAIN_B_MNEMONIC}
 CHAIN_B_ID=${CHAIN_B_ID:-$DEFAULT_CHAIN_B_ID}
+CHAIN_C_MNEMONIC=${CHAIN_C_MNEMONIC:-$DEFAULT_CHAIN_C_MNEMONIC}
+CHAIN_C_ID=${CHAIN_C_ID:-$DEFAULT_CHAIN_C_ID}
 
 install_prerequisites(){
     echo "🧰 Install prerequisites"
@@ -39,6 +43,16 @@ add_keys(){
     --mnemonic-file /home/hermes/mnemonics/$CHAIN_B_ID \
     --key-name $CHAIN_B_ID \
     --overwrite
+
+    echo "🔑 Adding key for $CHAIN_C_ID"
+    echo $CHAIN_C_MNEMONIC > /home/hermes/mnemonics/$CHAIN_C_ID
+
+    hermes keys add \
+    --hd-path "m/44'/330'/0'/0/0" \
+    --chain $CHAIN_C_ID \
+    --mnemonic-file /home/hermes/mnemonics/$CHAIN_C_ID \
+    --key-name $CHAIN_C_ID \
+    --overwrite
 }
 
 create_channel(){
@@ -56,10 +70,25 @@ create_channel(){
         sleep 5
     done
 
+    echo "🥱 Waiting for $CHAIN_C_ID to start"
+    COUNTER=0
+    until $(curl --output /dev/null --silent --head --fail http://$CHAIN_C_ID:26657/status); do
+        printf '.'
+        sleep 5
+    done
+
     echo "📺 Creating channel $CHAIN_A_ID <> $CHAIN_B_ID"
     hermes create channel \
     --a-chain $CHAIN_A_ID \
     --b-chain $CHAIN_B_ID \
+    --a-port transfer \
+    --b-port transfer \
+    --new-client-connection --yes
+
+    echo "📺 Creating channel $CHAIN_B_ID <> $CHAIN_C_ID"
+    hermes create channel \
+    --a-chain $CHAIN_B_ID \
+    --b-chain $CHAIN_C_ID \
     --a-port transfer \
     --b-port transfer \
     --new-client-connection --yes

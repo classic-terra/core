@@ -26,6 +26,8 @@ var (
 	}
 
 	pathTerraGaia       = "terra-gaia"
+	pathTerraOsmo       = "terra-osmo"
+	pathGaiaOsmo        = "gaia-osmo"
 	genesisWalletAmount = math.NewInt(10_000_000_000)
 	votingPeriod        = "30s"
 	maxDepositPeriod    = "10s"

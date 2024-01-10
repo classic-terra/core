@@ -258,6 +258,15 @@ ictest-start:
 ictest-validator:
 	@cd tests/interchaintest && go test -timeout=25m -race -v -run TestValidator .
 
+ictest-ibc:
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaIBCTranfer .
+
+ictest-ibc-hooks:
+	@cd tests/interchaintest && go test -race -v -run TestTerraIBCHooks .
+
+ictest-ibc-pfm:
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaOsmoPFM .
+
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
 

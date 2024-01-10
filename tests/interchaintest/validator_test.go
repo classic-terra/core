@@ -17,6 +17,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	"github.com/classic-terra/core/v2/test/interchaintest/helpers"
 )
 
 // TestValidator is a basic test to accrue enough token to join active validator set, gets slashed for missing or tombstoned for double signing
@@ -93,7 +95,7 @@ func TestValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
 
-	terraValidators, pubKeys, err := UnmarshalValidators(*config.EncodingConfig, stdout)
+	terraValidators, pubKeys, err := helpers.UnmarshalValidators(*config.EncodingConfig, stdout)
 	require.NoError(t, err)
 	require.Equal(t, len(terraValidators), 5)
 
@@ -114,7 +116,7 @@ func TestValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
 
-	signedBlocksWindow, err := GetSignedBlocksWindow(stdout)
+	signedBlocksWindow, err := helpers.GetSignedBlocksWindow(stdout)
 	require.NoError(t, err)
 	require.Equal(t, signedBlocksWindow, int64(20))
 

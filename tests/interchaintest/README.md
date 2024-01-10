@@ -20,5 +20,5 @@ make docker-build-debug
 ```
 2. Run Test-case you want to test. Example:
 ```bash
-make ictest-start-cosmos
+make ictest-start
 ```

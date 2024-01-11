@@ -39,7 +39,7 @@ type NodeConfig struct {
 
 const (
 	// common
-	TerraDenom          = "uosmo"
+	TerraDenom          = "luna"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
@@ -100,9 +100,9 @@ var (
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", TerraBalanceA, TerraDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceB, TerraDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
-	OsmoToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300uosmo
+	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
-	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
+	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 )
 
@@ -312,7 +312,7 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 func updateGovGenesis(votingPeriod time.Duration) func(*govv1.GenesisState) {
 	return func(govGenState *govv1.GenesisState) {
 		govGenState.VotingParams.VotingPeriod = &votingPeriod
-		govGenState.DepositParams.MinDeposit = tenOsmo
+		govGenState.DepositParams.MinDeposit = tenTerra
 	}
 }
 

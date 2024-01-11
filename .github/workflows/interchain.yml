@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - feat/interchaintest
+      - frag/foundation
 permissions:
   contents: read
   packages: write
@@ -33,7 +33,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ghcr.io/genuine-labs/terra-classic-ictest:latest
+            ghcr.io/terra-classsic/core-ictest:latest
 
   test-terra-start:
     runs-on: ubuntu-latest

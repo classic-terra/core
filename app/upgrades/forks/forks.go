@@ -20,7 +20,7 @@ func runForkLogicSwapDisable(ctx sdk.Context, keppers *keepers.AppKeepers, _ *mo
 
 		// Disable IBC Channels
 		channelIDs := []string{
-			"channel-1",  // Osmosis
+			"channel-1",  // terra
 			"channel-49", // Crescent
 			"channel-20", // Juno
 		}
@@ -40,7 +40,7 @@ func runForkLogicIbcEnable(ctx sdk.Context, keppers *keepers.AppKeepers, _ *modu
 	if ctx.ChainID() == core.ColumbusChainID {
 		// Enable IBC Channels
 		channelIDs := []string{
-			"channel-1",  // Osmosis
+			"channel-1",  // terra
 			"channel-49", // Crescent
 			"channel-20", // Juno
 		}

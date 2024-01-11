@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - feat/interchaintests
+      - feat/interchaintest
 permissions:
   contents: read
   packages: write

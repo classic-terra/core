@@ -37,9 +37,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
 
 	"github.com/classic-terra/core/v2/app/keepers"
 	terraappparams "github.com/classic-terra/core/v2/app/params"
+
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+
 
 	// upgrades
 	"github.com/classic-terra/core/v2/app/upgrades"
@@ -248,6 +253,10 @@ func NewTerraApp(
 	return app
 }
 
+func (app *TerraApp) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
+}
+
 // Name returns the name of the App
 func (app *TerraApp) Name() string { return app.BaseApp.Name() }
 
@@ -416,4 +425,21 @@ func (app *TerraApp) setupUpgradeHandlers() {
 			),
 		)
 	}
+}
+
+// Required for ibctesting
+func (app *TerraApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+	return app.StakingKeeper // Dereferencing the pointer
+}
+
+func (app *TerraApp) GetIBCKeeper() *ibckeeper.Keeper {
+	return app.AppKeepers.IBCKeeper // This is a *ibckeeper.Keeper
+}
+
+func (app *TerraApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+	return app.AppKeepers.ScopedIBCKeeper
+}
+
+func (app *TerraApp) GetTxConfig() client.TxConfig {
+	return MakeEncodingConfig().TxConfig
 }

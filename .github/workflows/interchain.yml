@@ -2,7 +2,10 @@ name: Interchain Tests
 
 on:
   workflow_dispatch:
-
+  pull_request:
+  push:
+    branches:
+      - feat/interchaintests
 permissions:
   contents: read
   packages: write

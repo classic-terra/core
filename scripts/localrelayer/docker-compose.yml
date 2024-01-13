@@ -42,9 +42,9 @@ services:
       - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       # Can't use the same ports
-      - 46657:26657
-      - 41317:1317
-      - 49090:9090
+      - 36657:26657
+      - 31317:1317
+      - 39090:9090
     networks:
       - localterra
 
@@ -66,9 +66,9 @@ services:
       - RELAYER_MNEMONIC=black frequent sponsor nice claim rally hunt suit parent size stumble expire forest avocado mistake agree trend witness lounge shiver image smoke stool chicken
     ports:
       # Can't use the same ports
-      - 36657:26657
-      - 31317:1317
-      - 39090:9090
+      - 46657:26657
+      - 41317:1317
+      - 49090:9090
     networks:
       - localterra
 

@@ -12,7 +12,6 @@ startd:
 stop:
 	@docker-compose -f docker-compose.yml down -t 3
 
-
 restart: stop
 	@docker-compose -f docker-compose.yml up --force-recreate 
 

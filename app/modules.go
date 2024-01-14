@@ -119,6 +119,7 @@ var (
 		customfeegrant.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		forward.AppModuleBasic{},
 		customupgrade.AppModuleBasic{},
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -130,7 +131,6 @@ var (
 		ibcfee.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
-		forward.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -253,9 +253,9 @@ func orderBeginBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
-		forwardtypes.ModuleName,
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
@@ -286,9 +286,9 @@ func orderEndBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
-		forwardtypes.ModuleName,
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
@@ -319,9 +319,9 @@ func orderInitGenesis() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
-		forwardtypes.ModuleName,
 		// Terra Classic modules
 		markettypes.ModuleName,
 		oracletypes.ModuleName,

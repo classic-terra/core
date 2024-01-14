@@ -30,13 +30,13 @@ denom=$(chainC query bank balances "$RECEIVER" -o json | jq -r '.balances[0].den
 balance=$(chainC query bank balances "$RECEIVER" -o json | jq -r '.balances[0].amount')
 
 # send ibc transaction to execute the pfm 
-MEMO='{"forward":{"receiver":"'"$RECEIVER"'","port":"transfer", "channel":"channel-0" }}'
+MEMO='{"forward":{"receiver":"'"$RECEIVER"'","port":"transfer","channel":"channel-1" }}'
 chainA tx ibc-transfer transfer transfer channel-0 $RECEIVER 100uluna \
        --from validator --keyring-backend test -y  \
        --memo "$MEMO"
 
 # wait for the ibc round trip
-sleep 16
+sleep 30
 
 # query new bank balances
 new_balance=$(chainC query bank balances "$RECEIVER" -o json | jq -r '.balances[0].amount')

@@ -264,9 +264,6 @@ ictest-ibc:
 ictest-ibc-hooks:
 	@cd tests/interchaintest && go test -race -v -run TestTerraIBCHooks .
 
-ictest-ibc-pfm-terra:
-	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
-
 ictest-ibc-pfm:
 	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaOsmoPFM .
 

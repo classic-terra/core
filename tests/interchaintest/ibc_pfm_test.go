@@ -21,7 +21,7 @@ import (
 )
 
 // TestTerraGaiaOsmoPFM setup up a Terra Classic, Osmosis and Gaia network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Terra Classic -> Gaia -> Osmosis to make sure that the IBC denom not being hashed again.
+// and sends an ICS20 token transfer from Gaia -> Terra Classic -> Osmosis to make sure that the IBC denom not being hashed again.
 func TestTerraGaiaOsmoPFM(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
@@ -292,54 +292,15 @@ func TestTerraGaiaOsmoPFM(t *testing.T) {
 		},
 	)
 
-	// Send a transfer from Terra Classic -> Gaia
+	// Send a transfer from Gaia -> Terra Classic
 	transferAmount := math.NewInt(1000)
 	transfer := ibc.WalletAmount{
-		Address: gaiaUserAddr,
-		Denom:   terra.Config().Denom,
-		Amount:  transferAmount,
-	}
-
-	transferTx, err := terra.SendIBCTransfer(ctx, channelTerraGaia.ChannelID, terraUser.KeyName(), transfer, ibc.TransferOptions{})
-	require.NoError(t, err)
-
-	terraHeight, err := terra.Height(ctx)
-	require.NoError(t, err)
-
-	_, err = testutil.PollForAck(ctx, terra, terraHeight, terraHeight+30, transferTx.Packet)
-	require.NoError(t, err)
-	err = testutil.WaitForBlocks(ctx, 5, terra)
-	require.NoError(t, err)
-
-	terraOnGaiaTokenDenom := transfertypes.GetPrefixedDenom(channelTerraGaia.Counterparty.PortID, channelTerraGaia.Counterparty.ChannelID, terra.Config().Denom)
-	terraOnGaiaIBCDenom := transfertypes.ParseDenomTrace(terraOnGaiaTokenDenom).IBCDenom()
-
-	terraOnOsmoTokenDenom := transfertypes.GetPrefixedDenom(channelTerraOsmo.Counterparty.PortID, channelTerraOsmo.Counterparty.ChannelID, terra.Config().Denom)
-	terraOnOsmoIBCDenom := transfertypes.ParseDenomTrace(terraOnOsmoTokenDenom).IBCDenom()
-
-	gaiaUserUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, terraOnGaiaIBCDenom)
-	require.NoError(t, err)
-	require.Equal(t, transferAmount, gaiaUserUpdateBal)
-
-	// Send a transfer with pfm from Gaia -> Osmosis
-	// The PacketForwardMiddleware will forward the packet Terra Classic -> Osmosis
-	metadata := &helpers.PacketMetadata{
-		Forward: &helpers.ForwardMetadata{
-			Receiver: osmoUserAddr,
-			Channel:  channelTerraOsmo.ChannelID,
-			Port:     channelTerraOsmo.PortID,
-		},
-	}
-	transfer = ibc.WalletAmount{
 		Address: terraUserAddr,
-		Denom:   terraOnGaiaIBCDenom,
+		Denom:   gaia.Config().Denom,
 		Amount:  transferAmount,
 	}
 
-	memo, err := json.Marshal(metadata)
-	require.NoError(t, err)
-
-	transferTx, err = gaia.SendIBCTransfer(ctx, channelGaiaTerra.ChannelID, gaiaUser.KeyName(), transfer, ibc.TransferOptions{Memo: string(memo)})
+	transferTx, err := gaia.SendIBCTransfer(ctx, channelGaiaTerra.ChannelID, gaiaUser.KeyName(), transfer, ibc.TransferOptions{})
 	require.NoError(t, err)
 
 	gaiaHeight, err := gaia.Height(ctx)
@@ -350,22 +311,61 @@ func TestTerraGaiaOsmoPFM(t *testing.T) {
 	err = testutil.WaitForBlocks(ctx, 5, gaia)
 	require.NoError(t, err)
 
-	// Terra user sent 1000uatom at the begining so the balance should be 1000uluna less
-	terraUserUpdateBal, err := terra.GetBalance(ctx, terraUserAddr, terra.Config().Denom)
-	require.NoError(t, err)
-	require.Equal(t, terraUserUpdateBal, genesisWalletAmount.Sub(transferAmount))
+	gaiaOnTerraTokenDenom := transfertypes.GetPrefixedDenom(channelGaiaTerra.Counterparty.PortID, channelGaiaTerra.Counterparty.ChannelID, gaia.Config().Denom)
+	gaiaOnTerraIBCDenom := transfertypes.ParseDenomTrace(gaiaOnTerraTokenDenom).IBCDenom()
 
-	gaiaUserUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, terraOnGaiaIBCDenom)
-	require.NoError(t, err)
-	require.Equal(t, math.ZeroInt(), gaiaUserUpdateBal)
+	gaiaOnOsmoTokenDenom := transfertypes.GetPrefixedDenom(channelGaiaOsmo.Counterparty.PortID, channelGaiaOsmo.Counterparty.ChannelID, gaia.Config().Denom)
+	gaiaOnOsmoIBCDenom := transfertypes.ParseDenomTrace(gaiaOnOsmoTokenDenom).IBCDenom()
 
-	osmoUserUpdateBal, err := osmo.GetBalance(ctx, osmoUserAddr, terraOnOsmoIBCDenom)
+	terraUserUpdateBal, err := terra.GetBalance(ctx, terraUserAddr, gaiaOnTerraIBCDenom)
+	require.NoError(t, err)
+	require.Equal(t, transferAmount, terraUserUpdateBal)
+
+	// Send a transfer with pfm from Terra Classic -> Osmosis
+	// The PacketForwardMiddleware will forward the packet Gaia -> Osmosis
+	metadata := &helpers.PacketMetadata{
+		Forward: &helpers.ForwardMetadata{
+			Receiver: osmoUserAddr,
+			Channel:  channelGaiaOsmo.ChannelID,
+			Port:     channelGaiaOsmo.PortID,
+		},
+	}
+	transfer = ibc.WalletAmount{
+		Address: gaiaUserAddr,
+		Denom:   gaiaOnTerraIBCDenom,
+		Amount:  transferAmount,
+	}
+
+	memo, err := json.Marshal(metadata)
+	require.NoError(t, err)
+
+	transferTx, err = terra.SendIBCTransfer(ctx, channelTerraGaia.ChannelID, terraUser.KeyName(), transfer, ibc.TransferOptions{Memo: string(memo)})
+	require.NoError(t, err)
+
+	terraHeight, err := terra.Height(ctx)
+	require.NoError(t, err)
+
+	_, err = testutil.PollForAck(ctx, terra, terraHeight, terraHeight+30, transferTx.Packet)
+	require.NoError(t, err)
+	err = testutil.WaitForBlocks(ctx, 5, terra)
+	require.NoError(t, err)
+
+	// Gaia user send 1000uatom at the begining so the balance should be 1000uatom less
+	gaiaUserUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, gaiaUserUpdateBal, genesisWalletAmount.Sub(transferAmount))
+
+	terraUserUpdateBal, err = terra.GetBalance(ctx, terraUserAddr, gaiaOnTerraIBCDenom)
+	require.NoError(t, err)
+	require.Equal(t, math.ZeroInt(), terraUserUpdateBal)
+
+	osmoUserUpdateBal, err := osmo.GetBalance(ctx, osmoUserAddr, gaiaOnOsmoIBCDenom)
 	require.NoError(t, err)
 	require.Equal(t, osmoUserUpdateBal, transferAmount)
 
 	// Check Escrow Balance
-	escrowAccount := sdk.MustBech32ifyAddressBytes(terra.Config().Bech32Prefix, transfertypes.GetEscrowAddress(channelTerraOsmo.PortID, channelTerraOsmo.ChannelID))
-	escrowBalance, err := terra.GetBalance(ctx, escrowAccount, terra.Config().Denom)
+	escrowAccount := sdk.MustBech32ifyAddressBytes(gaia.Config().Bech32Prefix, transfertypes.GetEscrowAddress(channelGaiaOsmo.PortID, channelGaiaOsmo.ChannelID))
+	escrowBalance, err := gaia.GetBalance(ctx, escrowAccount, gaia.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, transferAmount, escrowBalance)
 }

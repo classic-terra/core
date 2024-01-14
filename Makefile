@@ -267,6 +267,9 @@ ictest-ibc-hooks:
 ictest-ibc-pfm:
 	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaOsmoPFM .
 
+ictest-ibc-pfm-terra:
+	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
+
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
 

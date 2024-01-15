@@ -229,30 +229,22 @@ clean:
 ###############################################################################
 
 include sims.mk
-include e2e.mk
-
-PACKAGES_UNIT=$(shell go list ./... | grep -v -e '/tests/e2e')
-PACKAGES_E2E=$(shell cd tests/e2e && go list ./... | grep '/e2e')
-TEST_PACKAGES=./...
 
 test: test-unit
 
-test-all: test-unit test-race test-cover test-e2e
+test-all: test-unit test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' ./...
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
 
 test-cover:
-	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
-
-test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m $(PACKAGES_E2E)
+	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
 
 benchmark:
-	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
+	@go test -mod=readonly -bench=. ./...
 
 .PHONY: test test-all test-cover test-unit test-race
 

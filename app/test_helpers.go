@@ -24,19 +24,19 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-var defaultGenesisBz []byte
+// var defaultGenesisBz []byte
 
-func getDefaultGenesisStateBytes() []byte {
-	if len(defaultGenesisBz) == 0 {
-		genesisState := NewDefaultGenesisState()
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
-		defaultGenesisBz = stateBytes
-	}
-	return defaultGenesisBz
-}
+// func getDefaultGenesisStateBytes() []byte {
+// 	if len(defaultGenesisBz) == 0 {
+// 		genesisState := NewDefaultGenesisState()
+// 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		defaultGenesisBz = stateBytes
+// 	}
+// 	return defaultGenesisBz
+// }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.

@@ -190,6 +190,7 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 
 	// recv in chain a
 	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 
 	// get the ack from the chain a's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
@@ -306,7 +307,7 @@ func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
 		} else {
 			suite.Require().Contains(ackStr, "error", tc.memo)
 		}
-		sequence += 1
+		sequence++
 	}
 }
 
@@ -458,7 +459,6 @@ func (suite *HooksTestSuite) TestAcks() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestTimeouts() {
@@ -491,7 +491,6 @@ func (suite *HooksTestSuite) TestTimeouts() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":10}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
@@ -530,15 +529,13 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChainB(swaprouterAddr, owner sdk.Acc
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) GetChain(name Chain) *terraibctesting.TestChain {
 	if name == ChainA {
 		return suite.chainA
-	} else {
-		return suite.chainB
 	}
+	return suite.chainB
 }
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the

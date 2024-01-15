@@ -42,9 +42,8 @@ import (
 	"github.com/classic-terra/core/v2/app/keepers"
 	terraappparams "github.com/classic-terra/core/v2/app/params"
 
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 
 	// upgrades
 	"github.com/classic-terra/core/v2/app/upgrades"

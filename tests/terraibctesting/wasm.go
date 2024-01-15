@@ -67,7 +67,7 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	return string(state)
 }
 
-func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
+func (chain *TestChain) QueryContractJSON(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
 	terraApp := chain.GetTerraApp()
 	state, err := terraApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)

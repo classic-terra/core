@@ -1,38 +1,42 @@
 # syntax=docker/dockerfile:1
 
 ## Build Image
-FROM golang:1.18.2-alpine3.15 as build
+FROM golang:1.20 as go-builder
+
+ARG BUILDPLATFORM
 
 ARG E2E_SCRIPT_NAME
 
-RUN set -eux; apk add --no-cache ca-certificates build-base;
-
-RUN apk add git
-
-# needed by github.com/zondax/hid
-RUN apk add linux-headers
+# Install minimum necessary dependencies, build Cosmos SDK, remove packages
+RUN apt update
+RUN apt install -y curl git build-essential
+# debug: for live editting in the image
+RUN apt install -y vim
 
 WORKDIR /terra
 COPY . /terra
 
-# CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
-RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 7d2239e9f25e96d0d4daba982ce92367aacf0cbd95d2facb8442268f2b1cc1fc
-RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd874b1e3163504dbd9607c6af915b2740479
+RUN LINK_STATICALLY=true E2E_SCRIPT_NAME=${E2E_SCRIPT_NAME} make build-e2e-script
 
-# CosmWasm: copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
-RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
+RUN if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
+        WASMVM_URL="libwasmvm.x86_64.so"; \
+    elif [ ${BUILDPLATFORM} = "linux/arm64" ]; then \
+        WASMVM_URL="libwasmvm.aarch64.so"; \     
+    else \
+        echo "Unsupported Build Platfrom ${BUILDPLATFORM}"; \
+        exit 1; \
+    fi; \
+    cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/${WASMVM_URL} /lib/${WASMVM_URL}
 
-RUN BUILD_TAGS=muslc LINK_STATICALLY=true E2E_SCRIPT_NAME=${E2E_SCRIPT_NAME} make build-e2e-script
 
 ## Deploy image
-FROM ubuntu
+FROM ubuntu:23.04
 
 # Args only last for a single build stage - renew
 ARG E2E_SCRIPT_NAME
 
-COPY --from=build /terra/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
+COPY --from=go-builder /terra/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
+COPY --from=go-builder /lib/${WASMVM_URL} /lib/${WASMVM_URL}
 
 ENV HOME /terra
 WORKDIR $HOME

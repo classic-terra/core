@@ -23,10 +23,10 @@ const (
 	// Pre-upgrade Terra repo/tag to pull.
 	// It should be uploaded to Docker Hub. Terra_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
-	previousVersionTerraRepository = "terras/terra"
+	previousVersionTerraRepository = "terra"
 	previousVersionTerraTag        = "12.2"
 	// Pre-upgrade repo/tag for Terra initialization (this should be one version below upgradeVersion)
-	previousVersionInitRepository = "terras/terra-e2e-init-chain"
+	previousVersionInitRepository = "terra-e2e-init-chain"
 	previousVersionInitTag        = "v12.2.0"
 	// Hermes repo/version for relayer
 	relayerRepository = "terras/hermes"

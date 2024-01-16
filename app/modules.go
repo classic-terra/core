@@ -1,6 +1,8 @@
 package app
 
 import (
+	forward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router"
+	forwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router/types"
 	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 	ibcfee "github.com/cosmos/ibc-go/v6/modules/apps/29-fee"
@@ -117,6 +119,7 @@ var (
 		customfeegrant.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		forward.AppModuleBasic{},
 		customupgrade.AppModuleBasic{},
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -192,6 +195,7 @@ func appModules(
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
+		app.ForwardModule,
 	}
 }
 
@@ -224,6 +228,7 @@ func simulationModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
+		app.ForwardModule,
 	}
 }
 
@@ -248,6 +253,7 @@ func orderBeginBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
 		// Terra Classic modules
@@ -280,6 +286,7 @@ func orderEndBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
 		// Terra Classic modules
@@ -312,6 +319,7 @@ func orderInitGenesis() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
 		// Terra Classic modules

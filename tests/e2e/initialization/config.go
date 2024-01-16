@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -243,6 +244,11 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, minttypes.ModuleName, &minttypes.GenesisState{}, updateMintGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis(appGenState))
 	if err != nil {
 		return err
@@ -282,6 +288,10 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 		}
 	}
 	return nil
+}
+
+func updateMintGenesis(mintGenState *minttypes.GenesisState) {
+	mintGenState.Params.MintDenom = TerraDenom
 }
 
 func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {

@@ -96,19 +96,6 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 	n.LogActionF("Failed to send IBC transfer (as expected)")
 }
 
-// SwapExactAmountIn swaps tokenInCoin to get at least tokenOutMinAmountInt of the other token's pool out.
-// swapRoutePoolIds is the comma separated list of pool ids to swap through.
-// swapRouteDenoms is the comma separated list of denoms to swap through.
-// To reproduce locally:
-// docker container exec <container id> terrad tx gamm swap-exact-amount-in <tokeinInCoin> <tokenOutMinAmountInt> --swap-route-pool-ids <swapRoutePoolIds> --swap-route-denoms <swapRouteDenoms> --chain-id=<id>--from=<address> --keyring-backend=test -b=block --yes --log_format=json
-func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string, swapRoutePoolIds string, swapRouteDenoms string, from string) {
-	n.LogActionF("swapping %s to get a minimum of %s with pool id routes (%s) and denom routes (%s)", tokenInCoin, tokenOutMinAmountInt, swapRoutePoolIds, swapRouteDenoms)
-	cmd := []string{"terrad", "tx", "gamm", "swap-exact-amount-in", tokenInCoin, tokenOutMinAmountInt, fmt.Sprintf("--swap-route-pool-ids=%s", swapRoutePoolIds), fmt.Sprintf("--swap-route-denoms=%s", swapRouteDenoms), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully swapped")
-}
-
 func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", amount, from, recipient, memo)
 
@@ -126,14 +113,6 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted upgrade proposal")
-}
-
-func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.Coin) {
-	n.LogActionF("submitting superfluid proposal for asset %s", asset)
-	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully submitted superfluid proposal for asset %s", asset)
 }
 
 func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, isExpedited bool) {
@@ -182,46 +161,6 @@ func (n *NodeConfig) LockTokens(tokens string, duration string, from string) {
 	require.NoError(n.t, err)
 	n.LogActionF("successfully created lock")
 }
-
-// func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string) {
-// 	n.LogActionF("retrieving existing lock ID")
-// 	durationPath := fmt.Sprintf("/terra/lockup/v1beta1/account_locked_longer_duration/%s?duration=%s", from, duration)
-// 	bz, err := n.QueryGRPCGateway(durationPath)
-// 	require.NoError(n.t, err)
-// 	var accountLockedDurationResp lockuptypes.AccountLockedDurationResponse
-// 	err = util.Cdc.UnmarshalJSON(bz, &accountLockedDurationResp)
-// 	require.NoError(n.t, err)
-// 	var lockID string
-// 	for _, periodLock := range accountLockedDurationResp.Locks {
-// 		if periodLock.Coins.AmountOf(denom).GT(sdk.ZeroInt()) {
-// 			lockID = fmt.Sprintf("%v", periodLock.ID)
-// 			break
-// 		}
-// 	}
-// 	n.LogActionF("noting previous lockup amount")
-// 	path := fmt.Sprintf("/terra/lockup/v1beta1/locked_by_id/%s", lockID)
-// 	bz, err = n.QueryGRPCGateway(path)
-// 	require.NoError(n.t, err)
-// 	var lockedResp lockuptypes.LockedResponse
-// 	err = util.Cdc.UnmarshalJSON(bz, &lockedResp)
-// 	require.NoError(n.t, err)
-// 	previousLockupAmount := lockedResp.Lock.Coins.AmountOf(denom)
-// 	n.LogActionF("previous lockup amount is %v", previousLockupAmount)
-// 	n.LogActionF("locking %s for %s", tokens, duration)
-// 	cmd := []string{"terrad", "tx", "lockup", "lock-tokens", fmt.Sprintf("%s%s", tokens, denom), fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
-// 	_, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-// 	require.NoError(n.t, err)
-// 	n.LogActionF("noting new lockup amount")
-// 	bz, err = n.QueryGRPCGateway(path)
-// 	require.NoError(n.t, err)
-// 	err = util.Cdc.UnmarshalJSON(bz, &lockedResp)
-// 	require.NoError(n.t, err)
-// 	newLockupAmount := lockedResp.Lock.Coins.AmountOf(denom)
-// 	n.LogActionF("new lockup amount is %v", newLockupAmount)
-// 	lockupDelta := newLockupAmount.Sub(previousLockupAmount)
-// 	require.True(n.t, lockupDelta.Equal(tokens))
-// 	n.LogActionF("successfully added to existing lock")
-// }
 
 func (n *NodeConfig) SuperfluidDelegate(lockNumber int, valAddress string, from string) {
 	lockStr := strconv.Itoa(lockNumber)

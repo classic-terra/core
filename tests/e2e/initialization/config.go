@@ -40,7 +40,7 @@ type NodeConfig struct {
 
 const (
 	// common
-	TerraDenom          = "luna"
+	TerraDenom          = "uluna"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"

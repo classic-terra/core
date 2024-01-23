@@ -59,6 +59,7 @@ func newNode(chain *internalChain, nodeConfig *NodeConfig) (*internalNode, error
 	if err := node.createKey(ValidatorWalletName); err != nil {
 		return nil, err
 	}
+
 	if err := node.createNodeKey(); err != nil {
 		return nil, err
 	}
@@ -174,7 +175,11 @@ func (n *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
 		return err
 	}
 
-	info, err := kb.NewAccount(name, mnemonic, "", sdk.FullFundraiserPath, algo)
+	info, err := kb.NewAccount(name, mnemonic, "", "44'/330'/0'/0/0", algo)
+	if err != nil {
+		return err
+	}
+	
 	if err != nil {
 		return err
 	}

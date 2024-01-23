@@ -16,9 +16,9 @@ enabled = true
 refresh = true
 misbehaviour = true
 [mode.connections]
-enabled = false
+enabled = true
 [mode.channels]
-enabled = false
+enabled = true
 [mode.packets]
 enabled = true
 clear_interval = 100
@@ -43,10 +43,14 @@ key_name = 'val01-terra-a'
 store_prefix = 'ibc'
 max_gas = 6000000
 gas_price = { price = 0.000, denom = 'luna' }
-gas_adjustment = 1.0
+gas_multiplier = 1.1
+max_msg_num = 30
+max_tx_size = 2097152
 clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
-trust_threshold = { numerator = '1', denominator = '3' }
+[chains.trust_threshold]
+numerator = '1'
+denominator = '3'
 [[chains]]
 id = '$TERRA_B_E2E_CHAIN_ID'
 rpc_addr = 'http://$TERRA_B_E2E_VAL_HOST:26657'
@@ -58,15 +62,22 @@ key_name = 'val01-terra-b'
 store_prefix = 'ibc'
 max_gas = 6000000
 gas_price = { price = 0.000, denom = 'luna' }
-gas_adjustment = 1.0
+gas_multiplier = 1.1
+max_msg_num = 30
+max_tx_size = 2097152
 clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
-trust_threshold = { numerator = '1', denominator = '3' }
+[chains.trust_threshold]
+numerator = '1'
+denominator = '3'
 EOF
 
 # import keys
-hermes keys restore ${TERRA_B_E2E_CHAIN_ID} -n "val01-terra-b" -m "${TERRA_B_E2E_VAL_MNEMONIC}"
-hermes keys restore ${TERRA_A_E2E_CHAIN_ID} -n "val01-terra-a" -m "${TERRA_A_E2E_VAL_MNEMONIC}"
+
+hermes keys add --hd-path "m/44'/330'/0'/0/0" --chain ${TERRA_A_E2E_CHAIN_ID} --key-name "val01-terra-a" --mnemonic-file "${TERRA_A_E2E_VAL_MNEMONIC}" --overwrite
+hermes keys add --hd-path "m/44'/330'/0'/0/0" --chain ${TERRA_B_E2E_CHAIN_ID} --key-name "val01-terra-a" --mnemonic-file "${TERRA_B_E2E_VAL_MNEMONIC}" --overwrite
+# hermes keys restore ${TERRA_B_E2E_CHAIN_ID} -n "val01-terra-b" -m "${TERRA_B_E2E_VAL_MNEMONIC}"
+# hermes keys restore ${TERRA_A_E2E_CHAIN_ID} -n "val01-terra-a" -m "${TERRA_A_E2E_VAL_MNEMONIC}"
 
 # start Hermes relayer
 hermes start

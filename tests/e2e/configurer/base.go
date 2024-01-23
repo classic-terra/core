@@ -107,13 +107,46 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	relayerNodeA := chainConfigA.NodeConfigs[0]
 	relayerNodeB := chainConfigB.NodeConfigs[0]
 
+	err = util.WritePublicFile(filepath.Join(hermesCfgPath, "mnemonicA.json"), []byte(relayerNodeA.Mnemonic))
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("relayerNodeA.Mnemonic:", relayerNodeA.Mnemonic)
+
+	err = util.WritePublicFile(filepath.Join(hermesCfgPath, "mnemonicB.json"), []byte(relayerNodeB.Mnemonic))
+	if err != nil {
+		return err
+	}
+
+
+	// Open the directory
+	dir, err := os.Open(hermesCfgPath)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+
+	// Read the directory entries
+	entries, err := dir.ReadDir(0) // 0 means no limit on the number of entries
+	if err != nil {
+		fmt.Println("Error reading directory:", err)
+		return err
+	}
+
+	// Print the names of the files
+	fmt.Println("Files in", hermesCfgPath, ":")
+	for _, entry := range entries {
+		fmt.Println(entry.Name())
+	}
+
 	hermesResource, err := bc.containerManager.RunHermesResource(
 		chainConfigA.Id,
 		relayerNodeA.Name,
-		relayerNodeA.Mnemonic,
+		filepath.Join(hermesCfgPath, "mnemonicA.json"),
 		chainConfigB.Id,
 		relayerNodeB.Name,
-		relayerNodeB.Mnemonic,
+		filepath.Join(hermesCfgPath, "mnemonicB.json"),
 		hermesCfgPath)
 	if err != nil {
 		return err
@@ -149,7 +182,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 		return status == "success" && len(chains) == 2
 	},
-		5*time.Minute,
+		1*time.Minute,
 		time.Second,
 		"hermes relayer not healthy")
 

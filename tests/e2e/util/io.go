@@ -40,3 +40,12 @@ func WriteFile(path string, body []byte) error {
 
 	return os.WriteFile(path, body, 0o600)
 }
+
+func WritePublicFile(path string, body []byte) error {
+	_, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, body, 0o666)
+}

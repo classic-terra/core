@@ -29,8 +29,8 @@ const (
 	previousVersionInitRepository = "terra-e2e-init-chain"
 	previousVersionInitTag        = "v12.2.0"
 	// Hermes repo/version for relayer
-	relayerRepository = "terras/hermes"
-	relayerTag        = "0.13.0"
+	relayerRepository = "informalsystems/hermes"
+	relayerTag        = "1.1.0"
 )
 
 // Returns ImageConfig needed for running e2e test.

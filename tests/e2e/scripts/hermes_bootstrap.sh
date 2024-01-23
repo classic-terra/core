@@ -42,15 +42,23 @@ account_prefix = 'terra'
 key_name = 'val01-terra-a'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 0.000, denom = 'luna' }
+gas_price = { price = 0.1, denom = 'uluna' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
-clock_drift = '1m' # to accomdate docker containers
-trusting_period = '239seconds'
+clock_drift = '5s' # to accomdate docker containers
+max_block_time = '30s'
+memo_prefix = ''
+sequential_batch_tx = false
 [chains.trust_threshold]
 numerator = '1'
 denominator = '3'
+[chains.packet_filter]
+policy = 'allow'
+list = [[
+    'transfer',
+    'channel-*',
+]]
 [[chains]]
 id = '$TERRA_B_E2E_CHAIN_ID'
 rpc_addr = 'http://$TERRA_B_E2E_VAL_HOST:26657'
@@ -61,15 +69,23 @@ account_prefix = 'terra'
 key_name = 'val01-terra-b'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 0.000, denom = 'luna' }
+gas_price = { price = 0.1, denom = 'uluna' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
-clock_drift = '1m' # to accomdate docker containers
-trusting_period = '239seconds'
+clock_drift = '5s' # to accomdate docker containers
+max_block_time = '30s'
+memo_prefix = ''
+sequential_batch_tx = false
 [chains.trust_threshold]
 numerator = '1'
 denominator = '3'
+[chains.packet_filter]
+policy = 'allow'
+list = [[
+    'transfer',
+    'channel-*',
+]]
 EOF
 
 # import keys

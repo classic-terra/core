@@ -2,8 +2,6 @@ package e2e
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -11,7 +9,6 @@ import (
 	ibchookskeeper "github.com/terra-money/core/v2/x/ibc-hooks/keeper"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/tests/e2e/util"
 )
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
@@ -24,14 +21,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	nodeB, err := chainB.GetDefaultNode()
-	s.NoError(err)
-
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 
 	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)

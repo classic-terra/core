@@ -180,7 +180,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 
 	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
-	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "successfully opened init channel")
+	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}

@@ -27,7 +27,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
 	nodeA.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeId),
-		`{"count": 0}`,
+		`{"count": "0"}`,
 		initialization.ValidatorWalletName)
 
 	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)

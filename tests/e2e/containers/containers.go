@@ -3,9 +3,11 @@ package containers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -13,7 +15,24 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
+
+type TxResponse struct {
+	Code      int      `yaml:"code" json:"code"`
+	Codespace string   `yaml:"codespace" json:"codespace"`
+	Data      string   `yaml:"data" json:"data"`
+	GasUsed   string   `yaml:"gas_used" json:"gas_used"`
+	GasWanted string   `yaml:"gas_wanted" json:"gas_wanted"`
+	Height    string   `yaml:"height" json:"height"`
+	Info      string   `yaml:"info" json:"info"`
+	Logs      []string `yaml:"logs" json:"logs"`
+	Timestamp string   `yaml:"timestamp" json:"timestamp"`
+	Tx        string   `yaml:"tx" json:"tx"`
+	TxHash    string   `yaml:"txhash" json:"txhash"`
+	RawLog    string   `yaml:"raw_log" json:"raw_log"`
+	Events    []string `yaml:"events" json:"events"`
+}
 
 const (
 	hermesContainerName = "hermes-relayer"
@@ -64,12 +83,12 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	txCommand := append(command, allTxArgs...)
-	return m.ExecCmd(t, containerName, txCommand, successStr)
+	return m.ExecCmd(t, containerName, txCommand, successStr, true, false)
 }
 
 // ExecHermesCmd executes command on the hermes relaer container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
-	return m.ExecCmd(t, hermesContainerName, command, success)
+	return m.ExecCmd(t, hermesContainerName, command, success, false, false)
 }
 
 // ExecCmd executes command by running it on the node container (specified by containerName)
@@ -77,18 +96,21 @@ func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) 
 // It is found by checking if stdout or stderr contains the success string anywhere within it.
 // returns container std out, container std err, and error if any.
 // An error is returned if the command fails to execute or if the success string is not found in the output.
-func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string, checkTxHash, returnTxHashInfoAsJSON bool) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}
 	containerId := m.resources[containerName].Container.ID
 
 	var (
+		exec   *docker.Exec
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer
+		err    error
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	if m.isDebugLogEnabled {
@@ -96,12 +118,18 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
 
+	expectedSequence := 0
+	var sequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
+
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
 	require.Eventually(
 		t,
 		func() bool {
-			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
+			outBuf.Reset()
+			errBuf.Reset()
+
+			exec, err = m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -121,11 +149,50 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				return false
 			}
 
+			// Sometimes a node hangs and doesn't vote in time, as long as it passes that is all we care about
+			if strings.Contains(outBuf.String(), "inactive proposal") || strings.Contains(errBuf.String(), "inactive proposal") {
+				return true
+			}
+
 			errBufString := errBuf.String()
+			// When a validator attempts to send multiple transactions in the same block, the expected sequence number
+			// will be thrown off, causing the transaction to fail. It will eventually clear, but what the following code
+			// does is it takes the expected sequence number from the error message, adds a sequence number flag with that
+			// number, and retries the transaction. This allows for multiple txs from the same validator to be committed in the same block.
+			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
+				// Check if the error message matches the expected pattern
+				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
+				outBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(outBuf.String(), -1)
+				if len(errBufMatches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := errBufMatches[len(errBufMatches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				} else if len(outBufMatches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := outBufMatches[len(outBufMatches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				}
+			}
+
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
+			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
+				!strings.Contains(errBufString, "not found") {
 				t.Log("\nstderr:")
 				t.Log(errBufString)
 
@@ -139,17 +206,124 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				maxDebugLogTriesLeft--
 			}
 
-			if success != "" {
+			if success != "" && !checkTxHash {
 				return strings.Contains(outBuf.String(), success) || strings.Contains(errBufString, success)
+			}
+
+			if success != "" && checkTxHash {
+				// Now that sdk got rid of block.. we need to query the txhash to get the result
+				outStr := outBuf.String()
+
+				txResponse, err := parseTxResponse(outStr)
+				if err != nil {
+					return false
+				}
+
+				// Don't even attempt to query the tx hash if the initial response code is not 0
+				if txResponse.Code != 0 {
+					return false
+				}
+
+				// This method attempts to query the txhash until the block is committed, at which point it returns an error here,
+				// causing the tx to be submitted again.
+				outBuf, errBuf, err = m.ExecQueryTxHash(t, containerName, txResponse.TxHash, returnTxHashInfoAsJSON)
+				if err != nil {
+					return false
+				}
 			}
 
 			return true
 		},
 		time.Minute,
-		50*time.Millisecond,
-		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
-			success, outBuf.String(), errBuf.String()),
+		10*time.Millisecond,
+		fmt.Sprintf("success condition (%s) command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			success, command, outBuf.String(), errBuf.String(), err),
 	)
+
+	return outBuf, errBuf, nil
+}
+
+func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, returnAsJson bool) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
+	if _, ok := m.resources[containerName]; !ok {
+		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
+	}
+	containerId := m.resources[containerName].Container.ID
+
+	var (
+		exec   *docker.Exec
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+		err    error
+	)
+
+	var command []string
+	if returnAsJson {
+		command = []string{"osmosisd", "query", "tx", txHash, "-o=json"}
+	} else {
+		command = []string{"osmosisd", "query", "tx", txHash}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	if m.isDebugLogEnabled {
+		t.Logf("\n\nRunning: \"%s\", success condition is \"code: 0\"", txHash)
+	}
+	maxDebugLogTriesLeft := maxDebugLogsPerCommand
+
+	successConditionMet := false
+	startTime := time.Now()
+	for time.Since(startTime) < time.Second*5 {
+		outBuf.Reset()
+		errBuf.Reset()
+
+		exec, err = m.pool.Client.CreateExec(docker.CreateExecOptions{
+			Context:      ctx,
+			AttachStdout: true,
+			AttachStderr: true,
+			Container:    containerId,
+			User:         "root",
+			Cmd:          command,
+		})
+		if err != nil {
+			return outBuf, errBuf, err
+		}
+
+		err = m.pool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			Context:      ctx,
+			Detach:       false,
+			OutputStream: &outBuf,
+			ErrorStream:  &errBuf,
+		})
+		if err != nil {
+			return outBuf, errBuf, err
+		}
+
+		errBufString := errBuf.String()
+
+		if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
+			!strings.Contains(errBufString, "not found") {
+			t.Log("\nstderr:")
+			t.Log(errBufString)
+
+			t.Log("\nstdout:")
+			t.Log(outBuf.String())
+			maxDebugLogTriesLeft--
+		}
+
+		successConditionMet = strings.Contains(outBuf.String(), "code: 0") || strings.Contains(errBufString, "code: 0") || strings.Contains(outBuf.String(), "code\":0") || strings.Contains(errBufString, "code\":0")
+		if successConditionMet {
+			break
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	if !successConditionMet {
+		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
+			txHash, command, outBuf.String(), errBuf.String(), err)
+	}
 
 	return outBuf, errBuf, nil
 }
@@ -328,4 +502,33 @@ func noRestart(config *docker.HostConfig) {
 	config.RestartPolicy = docker.RestartPolicy{
 		Name: "no",
 	}
+}
+
+func parseTxResponse(outStr string) (txResponse TxResponse, err error) {
+	if strings.Contains(outStr, "{\"height\":\"") {
+		startIdx := strings.Index(outStr, "{\"height\":\"")
+		if startIdx == -1 {
+			return txResponse, fmt.Errorf("start of JSON data not found")
+		}
+		// Trim the string to start from the identified index
+		outStrTrimmed := outStr[startIdx:]
+		// JSON format
+		err = json.Unmarshal([]byte(outStrTrimmed), &txResponse)
+		if err != nil {
+			return txResponse, fmt.Errorf("JSON Unmarshal error: %v", err)
+		}
+	} else {
+		// Find the start of the YAML data
+		startIdx := strings.Index(outStr, "code: ")
+		if startIdx == -1 {
+			return txResponse, fmt.Errorf("start of YAML data not found")
+		}
+		// Trim the string to start from the identified index
+		outStrTrimmed := outStr[startIdx:]
+		err = yaml.Unmarshal([]byte(outStrTrimmed), &txResponse)
+		if err != nil {
+			return txResponse, fmt.Errorf("YAML Unmarshal error: %v", err)
+		}
+	}
+	return txResponse, err
 }

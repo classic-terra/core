@@ -23,14 +23,14 @@ const (
 	// Pre-upgrade Terra repo/tag to pull.
 	// It should be uploaded to Docker Hub. Terra_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
-	previousVersionTerraRepository = "terra"
+	previousVersionTerraRepository = "terra-classic/terra"
 	previousVersionTerraTag        = "v2.3"
 	// Pre-upgrade repo/tag for Terra initialization (this should be one version below upgradeVersion)
-	previousVersionInitRepository = "terra-e2e-init-chain"
+	previousVersionInitRepository = "terra-classic/terra-e2e-init-chain"
 	previousVersionInitTag        = "v2.3.0"
 	// Hermes repo/version for relayer
 	relayerRepository = "informalsystems/hermes"
-	relayerTag        = "1.1.0"
+	relayerTag        = "1.5.1"
 )
 
 // Returns ImageConfig needed for running e2e test.

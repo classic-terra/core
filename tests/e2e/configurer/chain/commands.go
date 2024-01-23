@@ -54,7 +54,7 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 func (n *NodeConfig) QueryParams(subspace, key string, result any) {
 	cmd := []string{"terrad", "query", "params", "subspace", subspace, key, "--output=json"}
 
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 
 	err = json.Unmarshal(out.Bytes(), &result)
@@ -182,7 +182,7 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"terrad", "keys", "add", walletName, "--keyring-backend=test"}
-	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 	re := regexp.MustCompile("luna1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
@@ -194,7 +194,7 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 func (n *NodeConfig) GetWallet(walletName string) string {
 	n.LogActionF("retrieving wallet %s", walletName)
 	cmd := []string{"terrad", "keys", "show", walletName, "--keyring-backend=test"}
-	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	require.NoError(n.t, err)
 	re := regexp.MustCompile("luna1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
@@ -239,7 +239,7 @@ type resultStatus struct {
 
 func (n *NodeConfig) Status() (resultStatus, error) {
 	cmd := []string{"terrad", "status"}
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false, false)
 	if err != nil {
 		return resultStatus{}, err
 	}

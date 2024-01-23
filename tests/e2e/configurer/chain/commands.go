@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
 	"github.com/classic-terra/core/v2/tests/e2e/configurer/config"
-	// "github.com/classic-terra/core/v2/tests/e2e/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -154,23 +152,6 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
-func (n *NodeConfig) LockTokens(tokens string, duration string, from string) {
-	n.LogActionF("locking %s for %s", tokens, duration)
-	cmd := []string{"terrad", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully created lock")
-}
-
-func (n *NodeConfig) SuperfluidDelegate(lockNumber int, valAddress string, from string) {
-	lockStr := strconv.Itoa(lockNumber)
-	n.LogActionF("superfluid delegating lock %s to %s", lockStr, valAddress)
-	cmd := []string{"terrad", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully superfluid delegated lock %s to %s", lockStr, valAddress)
-}
-
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}
@@ -184,7 +165,7 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	cmd := []string{"terrad", "keys", "add", walletName, "--keyring-backend=test"}
 	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
-	re := regexp.MustCompile("luna1(.{38})")
+	re := regexp.MustCompile("terra1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
 	n.LogActionF("created wallet %s, waller address - %s", walletName, walletAddr)
@@ -196,7 +177,7 @@ func (n *NodeConfig) GetWallet(walletName string) string {
 	cmd := []string{"terrad", "keys", "show", walletName, "--keyring-backend=test"}
 	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
-	re := regexp.MustCompile("luna1(.{38})")
+	re := regexp.MustCompile("terra1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
 	n.LogActionF("wallet %s found, waller address - %s", walletName, walletAddr)

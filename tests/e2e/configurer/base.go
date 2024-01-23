@@ -119,34 +119,13 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
-
-	// Open the directory
-	dir, err := os.Open(hermesCfgPath)
-	if err != nil {
-		return err
-	}
-	defer dir.Close()
-
-	// Read the directory entries
-	entries, err := dir.ReadDir(0) // 0 means no limit on the number of entries
-	if err != nil {
-		fmt.Println("Error reading directory:", err)
-		return err
-	}
-
-	// Print the names of the files
-	fmt.Println("Files in", hermesCfgPath, ":")
-	for _, entry := range entries {
-		fmt.Println(entry.Name())
-	}
-
 	hermesResource, err := bc.containerManager.RunHermesResource(
 		chainConfigA.Id,
 		relayerNodeA.Name,
-		filepath.Join(hermesCfgPath, "mnemonicA.json"),
+		filepath.Join("/root/hermes", "mnemonicA.json"),
 		chainConfigB.Id,
 		relayerNodeB.Name,
-		filepath.Join(hermesCfgPath, "mnemonicB.json"),
+		filepath.Join("/root/hermes", "mnemonicB.json"),
 		hermesCfgPath)
 	if err != nil {
 		return err
@@ -198,7 +177,9 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
-	cmd := []string{"hermes", "create", "channel", chainA.ChainMeta.Id, chainB.ChainMeta.Id, "--port-a=transfer", "--port-b=transfer"}
+	
+	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection","--yes"}
+	fmt.Println("cmd:", cmd)
 	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "successfully opened init channel")
 	if err != nil {
 		return err

@@ -75,7 +75,7 @@ EOF
 # import keys
 
 hermes keys add --hd-path "m/44'/330'/0'/0/0" --chain ${TERRA_A_E2E_CHAIN_ID} --key-name "val01-terra-a" --mnemonic-file "${TERRA_A_E2E_VAL_MNEMONIC}" --overwrite
-hermes keys add --hd-path "m/44'/330'/0'/0/0" --chain ${TERRA_B_E2E_CHAIN_ID} --key-name "val01-terra-a" --mnemonic-file "${TERRA_B_E2E_VAL_MNEMONIC}" --overwrite
+hermes keys add --hd-path "m/44'/330'/0'/0/0" --chain ${TERRA_B_E2E_CHAIN_ID} --key-name "val01-terra-b" --mnemonic-file "${TERRA_B_E2E_VAL_MNEMONIC}" --overwrite
 # hermes keys restore ${TERRA_B_E2E_CHAIN_ID} -n "val01-terra-b" -m "${TERRA_B_E2E_VAL_MNEMONIC}"
 # hermes keys restore ${TERRA_A_E2E_CHAIN_ID} -n "val01-terra-a" -m "${TERRA_A_E2E_VAL_MNEMONIC}"
 

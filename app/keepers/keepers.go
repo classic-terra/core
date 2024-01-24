@@ -354,7 +354,7 @@ func NewAppKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
-		appKeepers.IBCHooksWrapper,
+		appKeepers.IBCFeeKeeper, // ICS4 Wrapper
 	)
 
 	// - contract keeper needs to be initialized after wasm

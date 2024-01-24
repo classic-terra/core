@@ -90,6 +90,8 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	nodeC, err := chainC.GetDefaultNode()
 	s.NoError(err)
 
+	transferAmount := sdkmath.NewInt(10000000)
+
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
 
@@ -97,20 +99,28 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	s.NoError(err)
 	s.T().Logf("balance validatorAddr: %v", balan)
 
-	receiver := nodeB.CreateWallet("receiver")
+	receiver := nodeB.GetWallet(initialization.ValidatorWalletName)
 
 	// query old bank balances
 	balanceReceiverOld, err := nodeC.QueryBalances(receiver)
 	s.NoError(err)
 	s.T().Logf("balance olld: %v", balanceReceiverOld)
 
-	nodeA.SendIBCTransfer(validatorAddr, receiver, "100uluna",
-		fmt.Sprintf(`{"forward":{"receiver":"%s","port":"transfer","channel":"channel-0"}}`, receiver))
+	nodeA.SendIBCTransfer(validatorAddr, receiver, fmt.Sprintf("%duluna", transferAmount.Int64()),
+		fmt.Sprintf(`{"forward":{"receiver":"%s","port":"transfer","channel":"channel-2"}}`, receiver))
 
-	// sleep 30s
+	// wait for ibc cycle
 	time.Sleep(30 * time.Second)
 
-	balanceReceiverNew, err := nodeC.QueryBalances(receiver)
-	s.NoError(err)
-	s.T().Logf("balance new: %v", balanceReceiverNew)
+	s.Eventually(func() bool {
+		balanceReceiver, err := nodeC.QueryBalances(receiver)
+		s.Require().NoError(err)
+		if len(balanceReceiver) == 0 {
+			return false
+		}
+		return balanceReceiver[0].Amount.Equal(transferAmount)
+	},
+		15*time.Second,
+		10*time.Millisecond,
+	)
 }

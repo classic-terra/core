@@ -179,7 +179,7 @@ func (n *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err != nil {
 		return err
 	}

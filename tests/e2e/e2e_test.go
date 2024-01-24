@@ -57,7 +57,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	var response map[string]interface{}
 	s.Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {}}`))
+		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
 		if err != nil {
 			return false
 		}

@@ -17,7 +17,7 @@ const (
 const (
 	HumanCoinUnit = "luna"
 	BaseCoinUnit  = "uluna"
-	TerraExponent  = 6
+	TerraExponent = 6
 
 	DefaultBondDenom = BaseCoinUnit
 

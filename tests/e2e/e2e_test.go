@@ -83,31 +83,36 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	chainB := s.configurer.GetChainConfig(1)
 	chainC := s.configurer.GetChainConfig(2)
 
-	_, err := chainA.GetDefaultNode()
+	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
 	nodeB, err := chainB.GetDefaultNode()
 	s.NoError(err)
-	_, err = chainC.GetDefaultNode()
+	nodeC, err := chainC.GetDefaultNode()
 	s.NoError(err)
 
-	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
+	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
 
+	balan, err := nodeA.QueryBalances(validatorAddr)
+	s.NoError(err)
+	s.T().Logf("balance validatorAddr: %v", balan)
+
 	receiver := nodeB.CreateWallet("receiver")
+
 	memo := "'{\"forward\":{\"receiver\":\"" + receiver + "\",\"port\":\"transfer\",\"channel\":\"channel-1\" }}'"
 
 	// query old bank balances
-	balanceReceiverOld, err := nodeB.QueryBalances(receiver)
+	balanceReceiverOld, err := nodeC.QueryBalances(receiver)
 	s.NoError(err)
 
 	s.T().Logf("balance olld: %v", balanceReceiverOld)
 
-	nodeB.SendIBCTransfer(validatorAddr, receiver, "100uluna", memo)
+	nodeA.SendIBCTransfer(validatorAddr, receiver, "100uluna", memo)
 
 	// sleep 30s
 	time.Sleep(30 * time.Second)
 
-	balanceReceiverNew, err := nodeB.QueryBalances(receiver)
+	balanceReceiverNew, err := nodeC.QueryBalances(receiver)
 	s.NoError(err)
 	s.T().Logf("balance new: %v", balanceReceiverNew)
 }

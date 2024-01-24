@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	ibchookskeeper "github.com/terra-money/core/v2/x/ibc-hooks/keeper"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 )
@@ -35,9 +35,9 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 
-	transferAmount := int64(10)
+	transferAmount := sdkmath.NewInt(10000000)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
-	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%dluna", transferAmount),
+	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duluna", transferAmount.Int64()),
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
@@ -47,23 +47,28 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		if len(balance) == 0 {
 			return false
 		}
-		return balance[0].Amount.Int64() == transferAmount
+		return balance[0].Amount.Equal(transferAmount)
 	},
 		1*time.Minute,
-		10*time.Millisecond,
-	)
+		10*time.Millisecond)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "terra")
+	// senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "terra")
 
 	var response map[string]interface{}
 	s.Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {}}`))
+		if err != nil {
+			return false
+		}
 		totalFunds := response["total_funds"].([]interface{})[0]
-		amount := totalFunds.(map[string]interface{})["amount"].(string)
+		amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
+		if err != nil {
+			return false
+		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom contains "luna"
-		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+		return sdkmath.NewInt(int64(amount)).Equal(transferAmount) && strings.Contains(denom, "ibc")
 	},
 		15*time.Second,
 		10*time.Millisecond,

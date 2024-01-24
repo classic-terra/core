@@ -71,14 +71,12 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 }
 
 func (bc *baseConfigurer) RunIBC() error {
-	// Run a relayer between every possible pair of chains.
-
+	bc.t.Log("Run relayer 1 between chain a and chain b")
 	if err := bc.runIBCRelayer1(bc.chainConfigs[0], bc.chainConfigs[1]); err != nil {
-		bc.t.Logf("coooooo %v and %v", bc.chainConfigs[0].ChainMeta.Id, bc.chainConfigs[1].ChainMeta.Id)
 		return err
 	}
+	bc.t.Log("Run relayer 2 between chain b and chain c")
 	if err := bc.runIBCRelayer2(bc.chainConfigs[1], bc.chainConfigs[2]); err != nil {
-		bc.t.Logf("coooooo %v and %v", bc.chainConfigs[1].ChainMeta.Id, bc.chainConfigs[2].ChainMeta.Id)
 		return err
 	}
 
@@ -86,9 +84,9 @@ func (bc *baseConfigurer) RunIBC() error {
 }
 
 func (bc *baseConfigurer) runIBCRelayer1(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
-	bc.t.Log("starting Hermes relayer container...")
+	bc.t.Log("starting Hermes relayer 1 container...")
 
-	tmpDir, err := os.MkdirTemp("", "terra-e2e-testnet-hermes-")
+	tmpDir, err := os.MkdirTemp("", "terra-e2e-testnet-hermes-1")
 	if err != nil {
 		return err
 	}
@@ -115,14 +113,12 @@ func (bc *baseConfigurer) runIBCRelayer1(chainConfigA *chain.Config, chainConfig
 		return err
 	}
 
-	fmt.Println("relayerNodeA.Mnemonic:", relayerNodeA.Mnemonic)
-
 	err = util.WritePublicFile(filepath.Join(hermesCfgPath, "mnemonicB.json"), []byte(relayerNodeB.Mnemonic))
 	if err != nil {
 		return err
 	}
 
-	hermesResource, err := bc.containerManager.RunHermesResource(
+	hermesResource, err := bc.containerManager.RunHermesResource1(
 		chainConfigA.Id,
 		relayerNodeA.Name,
 		filepath.Join("/root/hermes", "mnemonicA.json"),
@@ -193,7 +189,7 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 	}
 
 	_, err = util.CopyFile(
-		filepath.Join("./scripts/", "hermes1_bootstrap.sh"),
+		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
 		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
 	)
 	if err != nil {
@@ -202,8 +198,7 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 
 	relayerNodeA := chainConfigA.NodeConfigs[0]
 	relayerNodeB := chainConfigB.NodeConfigs[0]
-	bc.t.Logf("naeeeeeeee, %v", relayerNodeA.Name)
-	bc.t.Logf("naeeeeeeee, %v", relayerNodeB.Name)
+
 	err = util.WritePublicFile(filepath.Join(hermesCfgPath, "mnemonicA.json"), []byte(relayerNodeA.Mnemonic))
 	if err != nil {
 		return err
@@ -212,7 +207,7 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 	if err != nil {
 		return err
 	}
-	bc.t.Log("checkkkk0")
+
 	hermesResource, err := bc.containerManager.RunHermesResource2(
 		chainConfigA.Id,
 		relayerNodeA.Name,
@@ -221,7 +216,6 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 		relayerNodeB.Name,
 		filepath.Join("/root/hermes", "mnemonicB.json"),
 		hermesCfgPath)
-	bc.t.Log("checkkkk1")
 	if err != nil {
 		return err
 	}
@@ -259,7 +253,7 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 		1*time.Minute,
 		time.Second,
 		"hermes relayer not healthy")
-	bc.t.Log("checkkkk3")
+
 	bc.t.Logf("started Hermes relayer container: %s", hermesResource.Container.ID)
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
@@ -275,7 +269,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 
 	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
-	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "SUCCESS")
+	_, _, err := bc.containerManager.ExecHermesCmd1(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}

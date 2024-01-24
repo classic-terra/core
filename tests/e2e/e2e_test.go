@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
+		s.T().Skip("Skipping Packet Forward Middleware tests")
 	}
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
@@ -95,16 +95,13 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
 
-	balan, err := nodeA.QueryBalances(validatorAddr)
-	s.NoError(err)
-	s.T().Logf("balance validatorAddr: %v", balan)
-
 	receiver := nodeB.GetWallet(initialization.ValidatorWalletName)
 
 	// query old bank balances
 	balanceReceiverOld, err := nodeC.QueryBalances(receiver)
 	s.NoError(err)
-	s.T().Logf("balance olld: %v", balanceReceiverOld)
+	found, _ := balanceReceiverOld.Find("luna")
+	s.False(found)
 
 	nodeA.SendIBCTransfer(validatorAddr, receiver, fmt.Sprintf("%duluna", transferAmount.Int64()),
 		fmt.Sprintf(`{"forward":{"receiver":"%s","port":"transfer","channel":"channel-2"}}`, receiver))

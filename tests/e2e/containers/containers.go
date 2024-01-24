@@ -3,7 +3,6 @@ package containers
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -14,27 +13,10 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
 )
 
-type TxResponse struct {
-	Code      int      `yaml:"code" json:"code"`
-	Codespace string   `yaml:"codespace" json:"codespace"`
-	Data      string   `yaml:"data" json:"data"`
-	GasUsed   string   `yaml:"gas_used" json:"gas_used"`
-	GasWanted string   `yaml:"gas_wanted" json:"gas_wanted"`
-	Height    string   `yaml:"height" json:"height"`
-	Info      string   `yaml:"info" json:"info"`
-	Logs      []string `yaml:"logs" json:"logs"`
-	Timestamp string   `yaml:"timestamp" json:"timestamp"`
-	Tx        string   `yaml:"tx" json:"tx"`
-	TxHash    string   `yaml:"txhash" json:"txhash"`
-	RawLog    string   `yaml:"raw_log" json:"raw_log"`
-	Events    []string `yaml:"events" json:"events"`
-}
-
 const (
-	hermesContainerName  = "hermes-relayer"
+	hermesContainerName1 = "hermes-relayer"
 	hermesContainerName2 = "hermes-relayer2"
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
@@ -86,12 +68,12 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
-// ExecHermesCmd executes command on the hermes relaer container.
-func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
-	return m.ExecCmd(t, hermesContainerName, command, success)
+// ExecHermesCmd executes command on the hermes relaer 1 container.
+func (m *Manager) ExecHermesCmd1(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecCmd(t, hermesContainerName1, command, success)
 }
 
-// ExecHermesCmd executes command on the hermes relaer container.
+// ExecHermesCmd executes command on the hermes relaer 2 container.
 func (m *Manager) ExecHermesCmd2(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecCmd(t, hermesContainerName2, command, success)
 }
@@ -173,97 +155,12 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	return outBuf, errBuf, nil
 }
 
-func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, returnAsJson bool) (bytes.Buffer, bytes.Buffer, error) {
-	t.Helper()
-	if _, ok := m.resources[containerName]; !ok {
-		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
-	}
-	containerId := m.resources[containerName].Container.ID
-
-	var (
-		exec   *docker.Exec
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-		err    error
-	)
-
-	var command []string
-	if returnAsJson {
-		command = []string{"osmosisd", "query", "tx", txHash, "-o=json"}
-	} else {
-		command = []string{"osmosisd", "query", "tx", txHash}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	if m.isDebugLogEnabled {
-		t.Logf("\n\nRunning: \"%s\", success condition is \"code: 0\"", txHash)
-	}
-	maxDebugLogTriesLeft := maxDebugLogsPerCommand
-
-	successConditionMet := false
-	startTime := time.Now()
-	for time.Since(startTime) < time.Second*5 {
-		outBuf.Reset()
-		errBuf.Reset()
-
-		exec, err = m.pool.Client.CreateExec(docker.CreateExecOptions{
-			Context:      ctx,
-			AttachStdout: true,
-			AttachStderr: true,
-			Container:    containerId,
-			User:         "root",
-			Cmd:          command,
-		})
-		if err != nil {
-			return outBuf, errBuf, err
-		}
-
-		err = m.pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-			Context:      ctx,
-			Detach:       false,
-			OutputStream: &outBuf,
-			ErrorStream:  &errBuf,
-		})
-		if err != nil {
-			return outBuf, errBuf, err
-		}
-
-		errBufString := errBuf.String()
-
-		if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
-			!strings.Contains(errBufString, "not found") {
-			t.Log("\nstderr:")
-			t.Log(errBufString)
-
-			t.Log("\nstdout:")
-			t.Log(outBuf.String())
-			maxDebugLogTriesLeft--
-		}
-
-		successConditionMet = strings.Contains(outBuf.String(), "code: 0") || strings.Contains(errBufString, "code: 0") || strings.Contains(outBuf.String(), "code\":0") || strings.Contains(errBufString, "code\":0")
-		if successConditionMet {
-			break
-		}
-
-		time.Sleep(10 * time.Millisecond)
-	}
-
-	if !successConditionMet {
-		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" command %s was not met.\nstdout:\n %s\nstderr:\n %s\n \nerror: %v\n",
-			txHash, command, outBuf.String(), errBuf.String(), err)
-	}
-
-	return outBuf, errBuf, nil
-}
-
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource(chainAID, terraARelayerNodeName, terraAValMnemonic, chainBID, terraBRelayerNodeName, terraBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource1(chainAID, terraARelayerNodeName, terraAValMnemonic, chainBID, terraBRelayerNodeName, terraBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       hermesContainerName,
+			Name:       hermesContainerName1,
 			Repository: m.RelayerRepository,
 			Tag:        m.RelayerTag,
 			NetworkID:  m.network.Network.ID,
@@ -299,7 +196,7 @@ func (m *Manager) RunHermesResource(chainAID, terraARelayerNodeName, terraAValMn
 	if err != nil {
 		return nil, err
 	}
-	m.resources[hermesContainerName] = hermesResource
+	m.resources[hermesContainerName1] = hermesResource
 	return hermesResource, nil
 }
 
@@ -475,33 +372,4 @@ func noRestart(config *docker.HostConfig) {
 	config.RestartPolicy = docker.RestartPolicy{
 		Name: "no",
 	}
-}
-
-func parseTxResponse(outStr string) (txResponse TxResponse, err error) {
-	if strings.Contains(outStr, "{\"height\":\"") {
-		startIdx := strings.Index(outStr, "{\"height\":\"")
-		if startIdx == -1 {
-			return txResponse, fmt.Errorf("start of JSON data not found")
-		}
-		// Trim the string to start from the identified index
-		outStrTrimmed := outStr[startIdx:]
-		// JSON format
-		err = json.Unmarshal([]byte(outStrTrimmed), &txResponse)
-		if err != nil {
-			return txResponse, fmt.Errorf("JSON Unmarshal error: %v", err)
-		}
-	} else {
-		// Find the start of the YAML data
-		startIdx := strings.Index(outStr, "code: ")
-		if startIdx == -1 {
-			return txResponse, fmt.Errorf("start of YAML data not found")
-		}
-		// Trim the string to start from the identified index
-		outStrTrimmed := outStr[startIdx:]
-		err = yaml.Unmarshal([]byte(outStrTrimmed), &txResponse)
-		if err != nil {
-			return txResponse, fmt.Errorf("YAML Unmarshal error: %v", err)
-		}
-	}
-	return txResponse, err
 }

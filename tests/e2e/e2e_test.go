@@ -85,8 +85,29 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 
 	_, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	_, err = chainB.GetDefaultNode()
+	nodeB, err := chainB.GetDefaultNode()
 	s.NoError(err)
 	_, err = chainC.GetDefaultNode()
 	s.NoError(err)
+
+	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
+	s.Require().NotEqual(validatorAddr, "")
+
+	receiver := nodeB.CreateWallet("receiver")
+	memo := "'{\"forward\":{\"receiver\":\"" + receiver + "\",\"port\":\"transfer\",\"channel\":\"channel-1\" }}'"
+
+	// query old bank balances
+	balanceReceiverOld, err := nodeB.QueryBalances(receiver)
+	s.NoError(err)
+
+	s.T().Logf("balance olld: %v", balanceReceiverOld)
+
+	nodeB.SendIBCTransfer(validatorAddr, receiver, "100uluna", memo)
+
+	// sleep 30s
+	time.Sleep(30 * time.Second)
+
+	balanceReceiverNew, err := nodeB.QueryBalances(receiver)
+	s.NoError(err)
+	s.T().Logf("balance new: %v", balanceReceiverNew)
 }

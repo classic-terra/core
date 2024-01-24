@@ -50,3 +50,9 @@ terrad start
 sleep 7
 
 terrad q bank balances $(terrad keys show test -a --keyring-backend=test)
+
+terrad keys add newkey --keyring-backend test --algo secp256k1
+
+terrad tx bank send $(terrad keys show test -a --keyring-backend=test) $(terrad keys show newkey -a --keyring-backend=test) 1000stake --keyring-backend=test --chain-id testt -y
+sleep 7
+terrad q bank balances $(terrad keys show newkey -a --keyring-backend=test)

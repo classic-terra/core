@@ -99,15 +99,13 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 
 	receiver := nodeB.CreateWallet("receiver")
 
-	memo := "'{\"forward\":{\"receiver\":\"" + receiver + "\",\"port\":\"transfer\",\"channel\":\"channel-1\" }}'"
-
 	// query old bank balances
 	balanceReceiverOld, err := nodeC.QueryBalances(receiver)
 	s.NoError(err)
-
 	s.T().Logf("balance olld: %v", balanceReceiverOld)
 
-	nodeA.SendIBCTransfer(validatorAddr, receiver, "100uluna", memo)
+	nodeA.SendIBCTransfer(validatorAddr, receiver, "100uluna",
+		fmt.Sprintf(`{"forward":{"receiver":"%s","port":"transfer","channel":"channel-0"}}`, receiver))
 
 	// sleep 30s
 	time.Sleep(30 * time.Second)

@@ -68,6 +68,12 @@ const (
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
 	WalletFeeBalance  = 100000000
+	// chainC
+	ChainCID      = "terra-test-c"
+	TerraBalanceC = 500000000000
+	IonBalanceC   = 100000000000
+	StakeBalanceC = 440000000000
+	StakeAmountC  = 400000000000
 
 	EpochDayDuration      = time.Second * 60
 	EpochWeekDuration     = time.Second * 120
@@ -101,6 +107,7 @@ var (
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", TerraBalanceA, TerraDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceB, TerraDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
+	InitBalanceStrC = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceC, TerraDenom, StakeBalanceC, StakeDenom, IonBalanceC, IonDenom)
 	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
@@ -211,6 +218,10 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 			}
 		} else if chain.chainMeta.Id == ChainBID {
 			if err := addAccount(configDir, "", InitBalanceStrB+","+StridePoolBalances, accAdd, forkHeight); err != nil {
+				return err
+			}
+		} else if chain.chainMeta.Id == ChainCID {
+			if err := addAccount(configDir, "", InitBalanceStrC+","+StridePoolBalances, accAdd, forkHeight); err != nil {
 				return err
 			}
 		}

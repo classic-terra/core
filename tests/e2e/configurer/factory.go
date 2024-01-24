@@ -95,6 +95,35 @@ var (
 			IsValidator:        true,
 		},
 	}
+	validatorConfigsChainC = []*initialization.NodeConfig{
+		{
+			Name:               "prune-default-snapshot",
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+			IsValidator:        true,
+		},
+		{
+			Name:               "prune-nothing-snapshot",
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+			IsValidator:        true,
+		},
+		{
+			Name:               "prune-custom-snapshot",
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+			IsValidator:        true,
+		},
+	}
 )
 
 // New returns a new Configurer depending on the values of its parameters.
@@ -110,7 +139,6 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings Upg
 	if err != nil {
 		return nil, err
 	}
-
 	if isIBCEnabled && upgradeSettings.IsEnabled {
 		// skip none - configure two chains via Docker
 		// to utilize the older version of Terra to upgrade from
@@ -118,6 +146,7 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings Upg
 			[]*chain.Config{
 				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
 				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
+				chain.New(t, containerManager, initialization.ChainCID, validatorConfigsChainC),
 			},
 			withUpgrade(withIBC(baseSetup)), // base set up with IBC and upgrade
 			containerManager,
@@ -130,6 +159,7 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings Upg
 			[]*chain.Config{
 				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
 				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
+				chain.New(t, containerManager, initialization.ChainCID, validatorConfigsChainC),
 			},
 			withIBC(baseSetup), // base set up with IBC
 			containerManager,

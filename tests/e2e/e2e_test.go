@@ -74,3 +74,19 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		10*time.Millisecond,
 	)
 }
+
+func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+	chainC := s.configurer.GetChainConfig(2)
+
+	_, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	_, err = chainB.GetDefaultNode()
+	s.NoError(err)
+	_, err = chainC.GetDefaultNode()
+	s.NoError(err)
+}

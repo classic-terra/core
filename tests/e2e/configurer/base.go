@@ -72,8 +72,8 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 
 func (bc *baseConfigurer) RunIBC() error {
 	// Run a relayer between every possible pair of chains.
-	for i := 0; i < len(bc.chainConfigs); i++ {
-		for j := i + 1; j < len(bc.chainConfigs); j++ {
+	for i := 0; i < len(bc.chainConfigs)-1; i++ {
+		for j := i + 1; j < len(bc.chainConfigs)-1; j++ {
 			if err := bc.runIBCRelayer(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
 				return err
 			}

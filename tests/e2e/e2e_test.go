@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
@@ -35,7 +36,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 
-	transferAmount := sdkmath.NewInt(10000000)
+	transferAmount := sdk.NewInt(10000000)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
 	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duluna", transferAmount.Int64()),
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
@@ -68,7 +69,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom contains "luna"
-		return sdkmath.NewInt(int64(amount)).Equal(transferAmount) && strings.Contains(denom, "ibc")
+		return sdk.NewInt(int64(amount)).Equal(transferAmount) && strings.Contains(denom, "ibc")
 	},
 		15*time.Second,
 		10*time.Millisecond,
@@ -90,7 +91,7 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	nodeC, err := chainC.GetDefaultNode()
 	s.NoError(err)
 
-	transferAmount := sdkmath.NewInt(10000000)
+	transferAmount := sdk.NewInt(10000000)
 
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
@@ -116,6 +117,53 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 			return false
 		}
 		return balanceReceiver[0].Amount.Equal(transferAmount)
+	},
+		15*time.Second,
+		10*time.Millisecond,
+	)
+}
+
+func (s *IntegrationTestSuite) TestFeeTax() {
+	if s.skipIBC {
+		s.T().Skip("Skipping Packet Forward Middleware tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	nodeA, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	amountSend := sdk.NewInt(1000_000)
+
+	a := nodeA.CreateWallet("a")
+
+	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
+
+	balanceOld, err := nodeA.QueryBalances(validatorAddr)
+	s.Require().NoError(err)
+	s.T().Logf("check baaaa val old:%v", balanceOld)
+
+	found, junoAmoutOld := balanceOld.Find("juno")
+	s.True(found)
+
+	nodeA.BankSend(fmt.Sprintf("%djuno", amountSend.Int64()), validatorAddr, a)
+	// wait 7s
+	time.Sleep(7 * time.Second)
+
+	balanceReceiver, err := nodeA.QueryBalances(a)
+	s.Require().NoError(err)
+	s.T().Logf("check baaaa:%v", balanceReceiver)
+
+	balanceNew, err := nodeA.QueryBalances(validatorAddr)
+	s.Require().NoError(err)
+	s.T().Logf("check baaaa val new:%v", balanceNew)
+
+	found, junoAmoutNew := balanceNew.Find("juno")
+	s.True(found)
+	feeUsed := junoAmoutOld.Amount.Sub(junoAmoutNew.Amount).Sub(amountSend)
+	s.T().Logf("fees used:%v", feeUsed)
+
+	s.Eventually(func() bool {
+		feeUsed := junoAmoutOld.Amount.Sub(junoAmoutNew.Amount).Sub(amountSend)
+		s.T().Logf("fees used:%v", feeUsed)
+		return feeUsed.Equal(treasurytypes.DefaultTaxRate.Mul(sdk.NewDecFromInt(amountSend)).RoundInt())
 	},
 		15*time.Second,
 		10*time.Millisecond,

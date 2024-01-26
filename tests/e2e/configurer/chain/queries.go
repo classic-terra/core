@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -19,6 +20,7 @@ import (
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/classic-terra/core/v2/tests/e2e/util"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -81,6 +83,21 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	return balancesResp.GetBalances(), nil
 }
 
+// if coin is zero, return empty coin.
+func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (amt sdk.Coin, err error) {
+	balances, err := n.QueryBalances(addr)
+	if err != nil {
+		return amt, err
+	}
+	for _, c := range balances {
+		if strings.Contains(c.Denom, denom) {
+			amt = c
+			break
+		}
+	}
+	return amt, nil
+}
+
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
 	bz, err := n.QueryGRPCGateway(path)
@@ -91,6 +108,18 @@ func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 		return sdk.NewInt(0), err
 	}
 	return supplyResp.Amount.Amount, nil
+}
+
+func (n *NodeConfig) QueryTaxRate() (sdk.Dec, error) {
+	path := "terra/treasury/v1beta1/tax_rate"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var taxRateResp treasurytypes.QueryTaxRateResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
+		return sdk.ZeroDec(), err
+	}
+	return taxRateResp.TaxRate, nil
 }
 
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {

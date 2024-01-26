@@ -68,12 +68,12 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
-// ExecHermesCmd executes command on the hermes relaer 1 container.
+// ExecHermesCmd executes command on the hermes relayer 1 container.
 func (m *Manager) ExecHermesCmd1(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecCmd(t, hermesContainerName1, command, success)
 }
 
-// ExecHermesCmd executes command on the hermes relaer 2 container.
+// ExecHermesCmd executes command on the hermes relayer 2 container.
 func (m *Manager) ExecHermesCmd2(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecCmd(t, hermesContainerName2, command, success)
 }

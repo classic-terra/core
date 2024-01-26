@@ -22,6 +22,7 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/classic-terra/core/v2/tests/e2e/util"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -270,6 +271,11 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, treasurytypes.ModuleName, &treasurytypes.GenesisState{}, updateTreasuryGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govv1.GenesisState{}, updateGovGenesis(votingPeriod))
 	if err != nil {
 		return err
@@ -328,6 +334,15 @@ func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
 
 func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = TerraDenom
+}
+
+func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
+	treasuryGenState.TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
+	treasuryGenState.Params.TaxPolicy = treasurytypes.PolicyConstraints{
+		RateMin: sdk.NewDecWithPrec(2, 2), // 0.02
+		RateMax: sdk.NewDecWithPrec(1, 1), // 0.1
+		Cap:     sdk.NewCoin(TerraDenom, sdk.NewInt(100000000000000)),
+	}
 }
 
 func updateGovGenesis(votingPeriod time.Duration) func(*govv1.GenesisState) {

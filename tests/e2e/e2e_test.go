@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
@@ -124,48 +124,51 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 }
 
 func (s *IntegrationTestSuite) TestFeeTax() {
-	if s.skipIBC {
-		s.T().Skip("Skipping Packet Forward Middleware tests")
-	}
-	chainA := s.configurer.GetChainConfig(0)
-	nodeA, err := chainA.GetDefaultNode()
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
 	s.NoError(err)
-	amountSend := sdk.NewInt(1000_000)
 
-	a := nodeA.CreateWallet("a")
+	transferAmount := sdkmath.NewInt(10000000)
 
-	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
+	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
+	s.Require().NotEqual(validatorAddr, "")
 
-	balanceOld, err := nodeA.QueryBalances(validatorAddr)
+	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
+	s.NoError(err)
+
+	fmt.Println("validatorBalance ", validatorBalance)
+
+	testAddr := node.CreateWallet("test1")
+
+	// Test burn tax with bank send
+	node.BankSend(fmt.Sprintf("%duluna", transferAmount.Int64()), validatorAddr, testAddr)
+
+	// wait 10s
+	time.Sleep(10 * time.Second)
+
+	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
 	s.Require().NoError(err)
-	s.T().Logf("check baaaa val old:%v", balanceOld)
 
-	found, junoAmoutOld := balanceOld.Find("juno")
-	s.True(found)
+	fmt.Println("newValidatorBalance", newValidatorBalance)
+	subAmount := sdk.NewDecFromInt(transferAmount).Mul(sdk.NewDecWithPrec(102, 2)).TruncateInt()
+	fmt.Println("subAmount", subAmount)
 
-	nodeA.BankSend(fmt.Sprintf("%djuno", amountSend.Int64()), validatorAddr, a)
-	// wait 7s
-	time.Sleep(7 * time.Second)
-
-	balanceReceiver, err := nodeA.QueryBalances(a)
+	taxRate, err := node.QueryTaxRate()
 	s.Require().NoError(err)
-	s.T().Logf("check baaaa:%v", balanceReceiver)
-
-	balanceNew, err := nodeA.QueryBalances(validatorAddr)
-	s.Require().NoError(err)
-	s.T().Logf("check baaaa val new:%v", balanceNew)
-
-	found, junoAmoutNew := balanceNew.Find("juno")
-	s.True(found)
-	feeUsed := junoAmoutOld.Amount.Sub(junoAmoutNew.Amount).Sub(amountSend)
-	s.T().Logf("fees used:%v", feeUsed)
+	fmt.Println("taxRate", taxRate)
 
 	s.Eventually(func() bool {
-		feeUsed := junoAmoutOld.Amount.Sub(junoAmoutNew.Amount).Sub(amountSend)
-		s.T().Logf("fees used:%v", feeUsed)
-		return feeUsed.Equal(treasurytypes.DefaultTaxRate.Mul(sdk.NewDecFromInt(amountSend)).RoundInt())
+		decremented := validatorBalance.Sub(sdk.NewCoin("uluna", subAmount))
+		newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
+		s.Require().NoError(err)
+
+		balanceTest1, err := node.QuerySpecificBalance(testAddr, "uluna")
+		s.Require().NoError(err)
+
+		return balanceTest1.Amount.Equal(transferAmount) && newValidatorBalance.IsEqual(decremented)
 	},
 		15*time.Second,
 		10*time.Millisecond,
 	)
+
 }

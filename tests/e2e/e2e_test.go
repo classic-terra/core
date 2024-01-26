@@ -198,9 +198,9 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 
 	// Test 3: try bank send with BurnTaxExemption whitelist address
 	whitelistAddr1 := node.CreateWallet("whitelist1")
-	node.BankSend(transferCoin2.String(), validatorAddr, whitelistAddr1)
+	node.BankSend(transferCoin1.String(), validatorAddr, whitelistAddr1)
 	whitelistAddr2 := node.CreateWallet("whitelist2")
-	node.BankSend(transferCoin2.String(), validatorAddr, whitelistAddr2)
+	node.BankSend(transferCoin1.String(), validatorAddr, whitelistAddr2)
 
 	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr1, whitelistAddr2)
 
@@ -212,13 +212,13 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 
 	node.BankSendWithWallet(transferCoin2.String(), whitelistAddr1, whitelistAddr2, "whitelist1")
 
-	balancesWhitelistAddr1, err := node.QueryBalances(whitelistAddr1)
+	balancesWhitelistAddr1, err := node.QuerySpecificBalance(whitelistAddr1, "uluna")
 	s.Require().NoError(err)
-	s.Require().Len(balancesWhitelistAddr1, 0)
+	s.Require().Equal(balancesWhitelistAddr1.Amount, transferAmount2)
 
 	balancesWhitelistAddr2, err := node.QuerySpecificBalance(whitelistAddr2, "uluna")
 	s.Require().NoError(err)
-	s.Require().Equal(balancesWhitelistAddr2.Amount, transferAmount1) // transferAmount1 = 2 * transferAmount2
+	s.Require().Equal(balancesWhitelistAddr2.Amount, transferAmount2.Add(transferAmount1)) // transferAmount1 = 2 * transferAmount2
 
 	// Test 4: banktypes.MsgMultiSend
 	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")

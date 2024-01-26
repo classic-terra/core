@@ -5,7 +5,6 @@ import (
 	"flag"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 )
@@ -20,8 +19,6 @@ func main() {
 
 		chainId string
 
-		votingPeriod time.Duration
-
 		stateSyncRPCServersStr string
 
 		persistentPeersStr string
@@ -35,7 +32,6 @@ func main() {
 	flag.StringVar(&existingGenesisDir, "genesis-dir", "", "pre-existing genesis location")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.StringVar(&nodeConfigStr, "node-config", "", "serialized node config")
-	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
 	flag.StringVar(&stateSyncRPCServersStr, "rpc-servers", "", "state sync RPC servers")
 	flag.StringVar(&persistentPeersStr, "peers", "", "state sync RPC servers")
 	flag.Int64Var(&trustHeight, "trust-height", 0, "trust Height")
@@ -67,7 +63,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = initialization.InitSingleNode(chainId, dataDir, existingGenesisDir, &nodeConfig, votingPeriod, trustHeight, trustHash, stateSyncRPCServers, persistenrPeers)
+	_, err = initialization.InitSingleNode(chainId, dataDir, existingGenesisDir, &nodeConfig, trustHeight, trustHash, stateSyncRPCServers, persistenrPeers)
 	if err != nil {
 		panic(err)
 	}

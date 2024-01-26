@@ -5,27 +5,22 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 )
 
 func main() {
 	var (
-		valConfig             []*initialization.NodeConfig
-		dataDir               string
-		chainId               string
-		config                string
-		votingPeriod          time.Duration
-		expeditedVotingPeriod time.Duration
-		forkHeight            int
+		valConfig  []*initialization.NodeConfig
+		dataDir    string
+		chainId    string
+		config     string
+		forkHeight int
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.StringVar(&config, "config", "", "serialized config")
-	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
-	flag.DurationVar(&expeditedVotingPeriod, "expedited-voting-period", 20000000000, "expedited voting period")
 	flag.IntVar(&forkHeight, "fork-height", 0, "fork height")
 
 	flag.Parse()
@@ -43,7 +38,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := initialization.InitChain(chainId, dataDir, valConfig, votingPeriod, expeditedVotingPeriod, forkHeight)
+	createdChain, err := initialization.InitChain(chainId, dataDir, valConfig, forkHeight)
 	if err != nil {
 		panic(err)
 	}

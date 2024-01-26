@@ -3,7 +3,6 @@ package configurer
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/classic-terra/core/v2/tests/e2e/configurer/chain"
 	"github.com/classic-terra/core/v2/tests/e2e/containers"
@@ -45,7 +44,7 @@ func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *chain.Config) err
 	}
 	cb.t.Logf("temp directory for chain-id %v: %v", chainConfig.Id, tmpDir)
 
-	initializedChain, err := initialization.InitChain(chainConfig.Id, tmpDir, chainConfig.ValidatorInitConfigs, time.Duration(chainConfig.VotingPeriod*1000000000), time.Duration(chainConfig.ExpeditedVotingPeriod*1000000000), 0)
+	initializedChain, err := initialization.InitChain(chainConfig.Id, tmpDir, chainConfig.ValidatorInitConfigs, 0)
 	if err != nil {
 		return err
 	}

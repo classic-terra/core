@@ -3,6 +3,7 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -217,9 +218,26 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 	proposalJson, err := json.Marshal(proposal)
 	require.NoError(c.t, err)
 
-	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposal(string(proposalJson), initialization.ValidatorWalletName)
+	fmt.Println("proposalJson ", string(proposalJson))
+	wd, err := os.Getwd()
+	require.NoError(c.t, err)
+	localProposalFile := wd + "/scripts/add_burn_tax_exemption_address_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(c.t, err)
+	_, err = f.WriteString(string(proposalJson))
+	require.NoError(c.t, err)
+	err = f.Close()
+	require.NoError(c.t, err)
+
+	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposal(addresses, initialization.ValidatorWalletName)
+
 	chainANode.DepositProposal(propNumber, false)
 	AllValsVoteOnProposal(c, propNumber)
+
+	time.Sleep(2 * time.Minute)
+	status, err := chainANode.QueryPropStatus(propNumber)
+	require.NoError(c.t, err)
+	fmt.Println("status ", status)
 
 	require.Eventually(c.t, func() bool {
 		status, err := chainANode.QueryPropStatus(propNumber)
@@ -227,5 +245,5 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 			return false
 		}
 		return status == "PROPOSAL_STATUS_PASSED"
-	}, time.Minute*2, 10*time.Millisecond)
+	}, time.Minute*1, 10*time.Millisecond)
 }

@@ -113,6 +113,8 @@ var (
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
+
+	oneMin = time.Minute
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -205,7 +207,7 @@ func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage
 	return nil
 }
 
-func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight int) error {
+func initGenesis(chain *internalChain, forkHeight int) error {
 	// initialize a genesis file
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
@@ -276,7 +278,7 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govv1.GenesisState{}, updateGovGenesis(votingPeriod))
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govv1.GenesisState{}, updateGovGenesis)
 	if err != nil {
 		return err
 	}
@@ -345,11 +347,10 @@ func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 	}
 }
 
-func updateGovGenesis(votingPeriod time.Duration) func(*govv1.GenesisState) {
-	return func(govGenState *govv1.GenesisState) {
-		govGenState.VotingParams.VotingPeriod = &votingPeriod
-		govGenState.DepositParams.MinDeposit = tenTerra
-	}
+func updateGovGenesis(govGenState *govv1.GenesisState) {
+	govGenState.VotingParams.VotingPeriod = &oneMin
+	govGenState.TallyParams.Quorum = sdk.NewDecWithPrec(2, 1).String()
+	govGenState.DepositParams.MinDeposit = tenTerra
 }
 
 func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {

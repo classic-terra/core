@@ -160,7 +160,7 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().Equal(balanceTest1.Amount, transferAmount1)
 	s.Require().Equal(newValidatorBalance, decremented)
 
-	// try bank send with grant
+	// Test 2: try bank send with grant
 	test2Addr := node.CreateWallet("test2")
 	transferAmount2 := sdkmath.NewInt(10000000)
 	transferCoin2 := sdk.NewCoin("uluna", transferAmount2)
@@ -196,16 +196,39 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2))
 	s.Require().Equal(balanceTest2.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount2).TruncateInt())
 
-	// try bank send with BurnTaxExemption whitelist address
-	whitelistAddr := node.CreateWallet("whitelist")
-	node.BankSend(transferCoin2.String(), validatorAddr, whitelistAddr)
+	// Test 3: try bank send with BurnTaxExemption whitelist address
+	whitelistAddr1 := node.CreateWallet("whitelist1")
+	node.BankSend(transferCoin2.String(), validatorAddr, whitelistAddr1)
+	whitelistAddr2 := node.CreateWallet("whitelist2")
+	node.BankSend(transferCoin2.String(), validatorAddr, whitelistAddr2)
 
-	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr)
+	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr1, whitelistAddr2)
 
-	node.BankSend(transferCoin2.String(), whitelistAddr, validatorAddr)
-
-	balancesAddr, err := node.QueryBalances(whitelistAddr)
+	whitelistedAddresses, err := node.QueryBurnTaxExemptionList()
 	s.Require().NoError(err)
-	s.Require().Len(balancesAddr, 0)
-	// Test 2: banktypes.MsgMultiSend
+	s.Require().Len(whitelistedAddresses, 2)
+	s.Require().Contains(whitelistedAddresses, whitelistAddr1)
+	s.Require().Contains(whitelistedAddresses, whitelistAddr2)
+
+	node.BankSendWithWallet(transferCoin2.String(), whitelistAddr1, whitelistAddr2, "whitelist1")
+
+	balancesWhitelistAddr1, err := node.QueryBalances(whitelistAddr1)
+	s.Require().NoError(err)
+	s.Require().Len(balancesWhitelistAddr1, 0)
+
+	balancesWhitelistAddr2, err := node.QuerySpecificBalance(whitelistAddr2, "uluna")
+	s.Require().NoError(err)
+	s.Require().Equal(balancesWhitelistAddr2.Amount, transferAmount1) // transferAmount1 = 2 * transferAmount2
+
+	// Test 4: banktypes.MsgMultiSend
+	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	s.Require().NoError(err)
+
+	node.BankMultiSend(transferCoin1.String(), false, validatorAddr, test1Addr, test2Addr)
+
+	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	s.Require().NoError(err)
+
+	subAmount = sdk.NewDecWithPrec(202, 2).MulInt(transferAmount1).TruncateInt()
+	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin("uluna", subAmount)))
 }

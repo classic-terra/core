@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"time"
 
 	"github.com/classic-terra/core/v2/tests/e2e/util"
 )
 
-func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod, expeditedVotingPeriod time.Duration, forkHeight int) (*Chain, error) {
+func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, forkHeight int) (*Chain, error) {
 	chain, err := new(id, dataDir)
 	if err != nil {
 		return nil, err
@@ -23,7 +22,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod, expe
 		chain.nodes = append(chain.nodes, newNode)
 	}
 
-	if err := initGenesis(chain, votingPeriod, forkHeight); err != nil {
+	if err := initGenesis(chain, forkHeight); err != nil {
 		return nil, err
 	}
 
@@ -44,7 +43,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod, expe
 	return chain.export(), nil
 }
 
-func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, votingPeriod time.Duration, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
+func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
 	if nodeConfig.IsValidator {
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}

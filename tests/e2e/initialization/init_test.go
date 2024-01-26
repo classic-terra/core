@@ -6,7 +6,6 @@ import (
 	"path"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 	"github.com/stretchr/testify/require"
@@ -48,7 +47,7 @@ func TestChainInit(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, time.Second, forkHeight)
+	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, forkHeight)
 	require.NoError(t, err)
 
 	require.Equal(t, chain.ChainMeta.DataDir, dataDir)
@@ -107,10 +106,10 @@ func TestSingleNodeInit(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup
-	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, time.Second, forkHeight)
+	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, forkHeight)
 	require.NoError(t, err)
 
-	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, time.Second*3, 3, "testHash", []string{"some server"}, []string{"some server"})
+	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, 3, "testHash", []string{"some server"}, []string{"some server"})
 	require.NoError(t, err)
 
 	validateNode(t, id, dataDir, expectedConfig, actualNode)

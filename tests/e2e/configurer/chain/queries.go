@@ -14,7 +14,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
@@ -122,6 +121,20 @@ func (n *NodeConfig) QueryTaxRate() (sdk.Dec, error) {
 	return taxRateResp.TaxRate, nil
 }
 
+func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {
+	path := "terra/treasury/v1beta1/burn_tax_exemption_list"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var taxRateResp treasurytypes.QueryBurnTaxExemptionListResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
+		return  nil, err
+	}
+
+
+	return taxRateResp.Addresses, nil
+}
+
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/code/%d/contracts", codeId)
 	bz, err := n.QueryGRPCGateway(path)
@@ -180,13 +193,13 @@ func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var propResp govv1.QueryProposalResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
-		return "", err
-	}
-	proposalStatus := propResp.Proposal.Status
+	var resp map[string]interface{}
+	err = json.Unmarshal(bz, &resp)
+	require.NoError(n.t, err)
 
-	return proposalStatus.String(), nil
+	status := resp["proposal"].(map[string]interface{})["status"].(string)
+
+	return status, nil
 }
 
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.

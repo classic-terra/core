@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -19,9 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	app "github.com/classic-terra/core/v2/app"
-	"github.com/classic-terra/core/v2/tests/e2e/configurer/config"
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/tests/e2e/util"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -85,28 +82,17 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 
 	n.LogActionF("successfully submitted param change proposal")
 }
+func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(addresses []string, walletName string) int {
+	n.LogActionF("submitting add burn tax exemption address proposal %s", addresses)
 
-func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(proposalJson, walletName string) int {
-	n.LogActionF("submitting add burn tax exemption address proposal %s", proposalJson)
-	wd, err := os.Getwd()
-	require.NoError(n.t, err)
-	localProposalFile := wd + "/scripts/add_burn_tax_exemption_address_proposal.json"
-	f, err := os.Create(localProposalFile)
-	require.NoError(n.t, err)
-	_, err = f.WriteString(proposalJson)
-	require.NoError(n.t, err)
-	err = f.Close()
-	require.NoError(n.t, err)
-
-	path := n.ConfigDir
-	util.WritePublicFile(path + "/add_burn_tax_exemption_address_proposal.json", []byte(proposalJson))
-
-	cmd := []string{"terrad", "tx", "gov", "submit-proposal", path + "/add_burn_tax_exemption_address_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+	cmd := []string{"terrad", "tx", "gov", "submit-legacy-proposal",
+		"add-burn-tax-exemption-address", strings.Join(addresses, ","),
+		"--title=\"burn tax exemption address\"",
+		"--description=\"\"burn tax exemption address",
+		fmt.Sprintf("--from=%s", walletName),
+	}
 
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-
-	err = os.Remove(localProposalFile)
 	require.NoError(n.t, err)
 
 	proposalId, err := extractProposalIdFromResponse(resp.String())
@@ -159,7 +145,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin("luna", sdk.NewInt(config.MinDepositValue)).String()
+	deposit := sdk.NewCoin("luna", sdk.NewInt(20)).String()
 	// if isExpedited {
 	// 	deposit = sdk.NewCoin("luna", sdk.NewInt(config.MinExpeditedDepositValue)).String()
 	// }
@@ -215,7 +201,9 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, receiveAddress string, walletName string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	outbuf, errbuf, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	fmt.Println("outbuf ", outbuf.String())
+	fmt.Println("errbuf ", errbuf.String())
 	require.NoError(n.t, err)
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
@@ -223,12 +211,24 @@ func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, recei
 func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress string, receiveAddress string, feeGranter string, walletName string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--fee-granter=%s", feeGranter), fmt.Sprintf("--from=%s", walletName)}
-	outBuf, errBuf, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	fmt.Println("outBuf: ", outBuf.String())
-	fmt.Println("errBuf: ", errBuf.String())
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
+}
+
+func (n *NodeConfig) BankMultiSend(amount string, split bool, sendAddress string, receiveAddresses ...string) {
+	n.LogActionF("bank multisending from %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
+	cmd := []string{"terrad", "tx", "bank", "multi-send", sendAddress}
+	cmd = append(cmd, receiveAddresses...)
+	cmd = append(cmd, amount, "--from=val")
+	if split {
+		cmd = append(cmd, "--split")
+	}
+
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully multisent %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
 }
 
 func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, walletName string) {
@@ -261,26 +261,6 @@ func (n *NodeConfig) GetWallet(walletName string) string {
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
 	n.LogActionF("wallet %s found, waller address - %s", walletName, walletAddr)
 	return walletAddr
-}
-
-func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus string, totalTime chan time.Duration) {
-	start := time.Now()
-	require.Eventually(
-		n.t,
-		func() bool {
-			status, err := n.QueryPropStatus(proposalNumber)
-			if err != nil {
-				return false
-			}
-
-			return status == desiredStatus
-		},
-		1*time.Minute,
-		10*time.Millisecond,
-		"Terra node failed to retrieve prop tally",
-	)
-	elapsed := time.Since(start)
-	totalTime <- elapsed
 }
 
 type validatorInfo struct {

@@ -1,7 +1,9 @@
 package chain
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	"github.com/classic-terra/core/v2/tests/e2e/configurer/config"
 	"github.com/classic-terra/core/v2/tests/e2e/containers"
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
 type Config struct {
@@ -203,4 +206,26 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
+}
+
+func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addresses ...string) {
+	proposal := treasurytypes.AddBurnTaxExemptionAddressProposal{
+		Title:       "Add Burn Tax Exemption Address",
+		Description: fmt.Sprintf("Add %s to the burn tax exemption address list", strings.Join(addresses, ",")),
+		Addresses:   addresses,
+	}
+	proposalJson, err := json.Marshal(proposal)
+	require.NoError(c.t, err)
+
+	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposal(string(proposalJson), initialization.ValidatorWalletName)
+	chainANode.DepositProposal(propNumber, false)
+	AllValsVoteOnProposal(c, propNumber)
+
+	require.Eventually(c.t, func() bool {
+		status, err := chainANode.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == "PROPOSAL_STATUS_PASSED"
+	}, time.Minute*2, 10*time.Millisecond)
 }

@@ -192,8 +192,20 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 
 	fmt.Println("balanceTest2 ", balanceTest2)
 
-	subAmount = sdk.NewDecFromInt(transferAmount2).Mul(sdk.NewDecWithPrec(102, 2)).TruncateInt()
 	s.Require().Equal(balanceTest1.Amount, transferAmount1.Sub(transferAmount2))
 	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2))
-	s.Require().Equal(balanceTest2.Amount, subAmount)
+	s.Require().Equal(balanceTest2.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount2).TruncateInt())
+
+	// try bank send with BurnTaxExemption whitelist address
+	whitelistAddr := node.CreateWallet("whitelist")
+	node.BankSend(transferCoin2.String(), validatorAddr, whitelistAddr)
+
+	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr)
+
+	node.BankSend(transferCoin2.String(), whitelistAddr, validatorAddr)
+
+	balancesAddr, err := node.QueryBalances(whitelistAddr)
+	s.Require().NoError(err)
+	s.Require().Len(balancesAddr, 0)
+	// Test 2: banktypes.MsgMultiSend
 }

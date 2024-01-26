@@ -5,20 +5,23 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/tendermint/tendermint/libs/bytes"
+	"github.com/tendermint/tendermint/p2p"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/classic-terra/core/v2/tests/e2e/configurer/config"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	app "github.com/classic-terra/core/v2/app"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/p2p"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/classic-terra/core/v2/tests/e2e/configurer/config"
+	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	"github.com/classic-terra/core/v2/tests/e2e/util"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -72,7 +75,7 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	err = f.Close()
 	require.NoError(n.t, err)
 
-	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "param-change", "/terra/param_change_proposal.json", fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/param_change_proposal.json", fmt.Sprintf("--from=%s", from)}
 
 	_, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -81,6 +84,36 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted param change proposal")
+}
+
+func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(proposalJson, walletName string) int {
+	n.LogActionF("submitting add burn tax exemption address proposal %s", proposalJson)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/add_burn_tax_exemption_address_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.WriteString(proposalJson)
+	require.NoError(n.t, err)
+	err = f.Close()
+	require.NoError(n.t, err)
+
+	path := n.ConfigDir
+	util.WritePublicFile(path + "/add_burn_tax_exemption_address_proposal.json", []byte(proposalJson))
+
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", path + "/add_burn_tax_exemption_address_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	err = os.Remove(localProposalFile)
+	require.NoError(n.t, err)
+
+	proposalId, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted add burn tax exemption address proposal")
+	return proposalId
 }
 
 func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
@@ -150,6 +183,29 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
+}
+
+func AllValsVoteOnProposal(chain *Config, propNumber int) {
+	for _, n := range chain.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+	}
+}
+
+func extractProposalIdFromResponse(response string) (int, error) {
+	// Extract the proposal ID from the response
+	startIndex := strings.Index(response, `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
+	endIndex := strings.Index(response[startIndex:], `"`)
+
+	// Extract the proposal ID substring
+	proposalIDStr := response[startIndex : startIndex+endIndex]
+
+	// Convert the proposal ID from string to int
+	proposalID, err := strconv.Atoi(proposalIDStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return proposalID, nil
 }
 
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {

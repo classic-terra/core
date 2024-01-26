@@ -33,7 +33,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
 	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	s.Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 
 	transferAmount := sdk.NewInt(10000000)
@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		// check if denom contains "luna"
 		return sdk.NewInt(int64(amount)).Equal(transferAmount) && strings.Contains(denom, "ibc")
 	},
-		15*time.Second,
+		10*time.Second,
 		10*time.Millisecond,
 	)
 }
@@ -126,49 +126,74 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 func (s *IntegrationTestSuite) TestFeeTax() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
 
-	transferAmount := sdkmath.NewInt(10000000)
+	transferAmount1 := sdkmath.NewInt(20000000)
+	transferCoin1 := sdk.NewCoin("uluna", transferAmount1)
 
 	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
 
 	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	fmt.Println("validatorBalance ", validatorBalance)
 
-	testAddr := node.CreateWallet("test1")
+	test1Addr := node.CreateWallet("test1")
 
-	// Test burn tax with bank send
-	node.BankSend(fmt.Sprintf("%duluna", transferAmount.Int64()), validatorAddr, testAddr)
+	// Test 1: banktypes.MsgSend
+	// burn tax with bank send
+	node.BankSend(transferCoin1.String(), validatorAddr, test1Addr)
 
-	// wait 10s
-	time.Sleep(10 * time.Second)
+	subAmount := sdk.NewDecFromInt(transferAmount1).Mul(sdk.NewDecWithPrec(102, 2)).TruncateInt()
+	taxRate, err := node.QueryTaxRate()
+	s.Require().NoError(err)
+	s.Require().Equal(subAmount, taxRate.Add(sdk.OneDec()).MulInt(transferAmount1).TruncateInt())
 
+	decremented := validatorBalance.Sub(sdk.NewCoin("uluna", subAmount))
 	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
 	s.Require().NoError(err)
 
-	fmt.Println("newValidatorBalance", newValidatorBalance)
-	subAmount := sdk.NewDecFromInt(transferAmount).Mul(sdk.NewDecWithPrec(102, 2)).TruncateInt()
-	fmt.Println("subAmount", subAmount)
-
-	taxRate, err := node.QueryTaxRate()
+	balanceTest1, err := node.QuerySpecificBalance(test1Addr, "uluna")
 	s.Require().NoError(err)
-	fmt.Println("taxRate", taxRate)
 
-	s.Eventually(func() bool {
-		decremented := validatorBalance.Sub(sdk.NewCoin("uluna", subAmount))
-		newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
-		s.Require().NoError(err)
+	s.Require().Equal(balanceTest1.Amount, transferAmount1)
+	s.Require().Equal(newValidatorBalance, decremented)
 
-		balanceTest1, err := node.QuerySpecificBalance(testAddr, "uluna")
-		s.Require().NoError(err)
+	// try bank send with grant
+	test2Addr := node.CreateWallet("test2")
+	transferAmount2 := sdkmath.NewInt(10000000)
+	transferCoin2 := sdk.NewCoin("uluna", transferAmount2)
 
-		return balanceTest1.Amount.Equal(transferAmount) && newValidatorBalance.IsEqual(decremented)
-	},
-		15*time.Second,
-		10*time.Millisecond,
-	)
+	node.BankSend(transferCoin2.String(), validatorAddr, test2Addr)
+	node.GrantAddress(test2Addr, test1Addr, transferCoin2.String(), "test2")
 
+	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	s.Require().NoError(err)
+
+	node.BankSendFeeGrantWithWallet(transferCoin2.String(), test1Addr, validatorAddr, test2Addr, "test1")
+
+	fmt.Println("validatorBalance ", validatorBalance)
+
+	time.Sleep(10 * time.Second)
+
+	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	s.Require().NoError(err)
+
+	fmt.Println("newValidatorBalance ", newValidatorBalance)
+
+	balanceTest1, err = node.QuerySpecificBalance(test1Addr, "uluna")
+	s.Require().NoError(err)
+
+	fmt.Println("balanceTest1 ", balanceTest1)
+
+	balanceTest2, err := node.QuerySpecificBalance(test2Addr, "uluna")
+	s.Require().NoError(err)
+
+	fmt.Println("balanceTest2 ", balanceTest2)
+
+	subAmount = sdk.NewDecFromInt(transferAmount2).Mul(sdk.NewDecWithPrec(102, 2)).TruncateInt()
+	s.Require().Equal(balanceTest1.Amount, transferAmount1.Sub(transferAmount2))
+	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2))
+	s.Require().Equal(balanceTest2.Amount, subAmount)
 }

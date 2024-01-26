@@ -153,11 +153,34 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 }
 
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
+	n.BankSendWithWallet(amount, sendAddress, receiveAddress, "val")
+}
+
+func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, receiveAddress string, walletName string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
-	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}
+	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
+}
+
+func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress string, receiveAddress string, feeGranter string, walletName string) {
+	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
+	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--fee-granter=%s", feeGranter), fmt.Sprintf("--from=%s", walletName)}
+	outBuf, errBuf, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	fmt.Println("outBuf: ", outBuf.String())
+	fmt.Println("errBuf: ", errBuf.String())
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
+}
+
+func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, walletName string) {
+	n.LogActionF("granting for address %s", gratee)
+	cmd := []string{"terrad", "tx", "feegrant", "grant", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", spendLimit)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully granted for address %s", gratee)
 }
 
 func (n *NodeConfig) CreateWallet(walletName string) string {

@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -32,6 +33,17 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
 	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
+	n.LogActionF(strings.Join(cmd, " "))
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully initialized")
+}
+
+func (n *NodeConfig) Instantiate2WasmContract(codeId, initMsg, salt, from string) {
+	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
+	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
+	hex.Encode(encodedSalt, []byte(salt))
+	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeId, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin"}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -201,9 +213,7 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, receiveAddress string, walletName string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
-	outbuf, errbuf, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	fmt.Println("outbuf ", outbuf.String())
-	fmt.Println("errbuf ", errbuf.String())
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }

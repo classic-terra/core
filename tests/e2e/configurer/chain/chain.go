@@ -218,7 +218,6 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 	proposalJson, err := json.Marshal(proposal)
 	require.NoError(c.t, err)
 
-	fmt.Println("proposalJson ", string(proposalJson))
 	wd, err := os.Getwd()
 	require.NoError(c.t, err)
 	localProposalFile := wd + "/scripts/add_burn_tax_exemption_address_proposal.json"
@@ -235,10 +234,6 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 	AllValsVoteOnProposal(c, propNumber)
 
 	time.Sleep(2 * time.Minute)
-	status, err := chainANode.QueryPropStatus(propNumber)
-	require.NoError(c.t, err)
-	fmt.Println("status ", status)
-
 	require.Eventually(c.t, func() bool {
 		status, err := chainANode.QueryPropStatus(propNumber)
 		if err != nil {

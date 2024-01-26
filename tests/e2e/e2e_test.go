@@ -123,6 +123,23 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 	)
 }
 
+func (s *IntegrationTestSuite) TestAddBurnTaxExemptionAddress() {
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	whitelistAddr1 := node.CreateWallet("whitelist1")
+	whitelistAddr2 := node.CreateWallet("whitelist2")
+
+	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr1, whitelistAddr2)
+
+	whitelistedAddresses, err := node.QueryBurnTaxExemptionList()
+	s.Require().NoError(err)
+	s.Require().Len(whitelistedAddresses, 2)
+	s.Require().Contains(whitelistedAddresses, whitelistAddr1)
+	s.Require().Contains(whitelistedAddresses, whitelistAddr2)
+}
+
 func (s *IntegrationTestSuite) TestFeeTax() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
@@ -173,54 +190,20 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 
 	node.BankSendFeeGrantWithWallet(transferCoin2.String(), test1Addr, validatorAddr, test2Addr, "test1")
 
-	fmt.Println("validatorBalance ", validatorBalance)
-
-	time.Sleep(10 * time.Second)
-
 	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
 	s.Require().NoError(err)
-
-	fmt.Println("newValidatorBalance ", newValidatorBalance)
 
 	balanceTest1, err = node.QuerySpecificBalance(test1Addr, "uluna")
 	s.Require().NoError(err)
 
-	fmt.Println("balanceTest1 ", balanceTest1)
-
 	balanceTest2, err := node.QuerySpecificBalance(test2Addr, "uluna")
 	s.Require().NoError(err)
-
-	fmt.Println("balanceTest2 ", balanceTest2)
 
 	s.Require().Equal(balanceTest1.Amount, transferAmount1.Sub(transferAmount2))
 	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2))
 	s.Require().Equal(balanceTest2.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount2).TruncateInt())
 
-	// Test 3: try bank send with BurnTaxExemption whitelist address
-	whitelistAddr1 := node.CreateWallet("whitelist1")
-	node.BankSend(transferCoin1.String(), validatorAddr, whitelistAddr1)
-	whitelistAddr2 := node.CreateWallet("whitelist2")
-	node.BankSend(transferCoin1.String(), validatorAddr, whitelistAddr2)
-
-	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr1, whitelistAddr2)
-
-	whitelistedAddresses, err := node.QueryBurnTaxExemptionList()
-	s.Require().NoError(err)
-	s.Require().Len(whitelistedAddresses, 2)
-	s.Require().Contains(whitelistedAddresses, whitelistAddr1)
-	s.Require().Contains(whitelistedAddresses, whitelistAddr2)
-
-	node.BankSendWithWallet(transferCoin2.String(), whitelistAddr1, whitelistAddr2, "whitelist1")
-
-	balancesWhitelistAddr1, err := node.QuerySpecificBalance(whitelistAddr1, "uluna")
-	s.Require().NoError(err)
-	s.Require().Equal(balancesWhitelistAddr1.Amount, transferAmount2)
-
-	balancesWhitelistAddr2, err := node.QuerySpecificBalance(whitelistAddr2, "uluna")
-	s.Require().NoError(err)
-	s.Require().Equal(balancesWhitelistAddr2.Amount, transferAmount2.Add(transferAmount1)) // transferAmount1 = 2 * transferAmount2
-
-	// Test 4: banktypes.MsgMultiSend
+	// Test 3: banktypes.MsgMultiSend
 	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
 	s.Require().NoError(err)
 
@@ -229,6 +212,51 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
 	s.Require().NoError(err)
 
-	subAmount = sdk.NewDecWithPrec(202, 2).MulInt(transferAmount1).TruncateInt()
+	subAmount = sdk.NewDecWithPrec(204, 2).MulInt(transferAmount1).TruncateInt()
 	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin("uluna", subAmount)))
+}
+
+func (s *IntegrationTestSuite) TestFeeTaxWasm() {
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	testAddr := node.CreateWallet("test")
+	transferAmount := sdkmath.NewInt(10000000)
+	node.BankSend(transferAmount.String(), initialization.ValidatorWalletName, testAddr)
+
+	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	node.InstantiateWasmContract(
+		strconv.Itoa(chain.LatestCodeId),
+		`{"count": "0"}`,
+		"test")
+
+	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
+	s.Require().NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+
+	balance, err := node.QuerySpecificBalance(testAddr, "uluna")
+	s.Require().NoError(err)
+	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount).TruncateInt())
+
+	node.Instantiate2WasmContract(
+		strconv.Itoa(chain.LatestCodeId),
+		`{"count": "0"}`, "salt",
+		"test")
+
+	contracts, err = node.QueryContractsFromId(chain.LatestCodeId)
+	s.Require().NoError(err)
+	s.Require().Len(contracts, 2, "Wrong number of contracts for the counter")
+
+	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
+	s.Require().NoError(err)
+	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(96, 2).MulInt(transferAmount).TruncateInt())
+
+	contractAddr := contracts[0]
+	node.WasmExecute(contractAddr, `{"increment": {}}`, "test")
+
+	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
+	s.Require().NoError(err)
+	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(94, 2).MulInt(transferAmount).TruncateInt())
 }

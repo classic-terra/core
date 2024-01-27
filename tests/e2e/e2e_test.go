@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
 	nodeA.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeId),
-		`{"count": "0"}`,
+		`{"count": "0"}`, "",
 		initialization.ValidatorWalletName)
 
 	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
@@ -154,8 +154,6 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
 	s.Require().NoError(err)
 
-	fmt.Println("validatorBalance ", validatorBalance)
-
 	test1Addr := node.CreateWallet("test1")
 
 	// Test 1: banktypes.MsgSend
@@ -222,14 +220,15 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().NoError(err)
 
 	testAddr := node.CreateWallet("test")
-	transferAmount := sdkmath.NewInt(10000000)
-	node.BankSend(transferAmount.String(), initialization.ValidatorWalletName, testAddr)
+	transferAmount := sdkmath.NewInt(100000000)
+	transferCoin := sdk.NewCoin("uluna", transferAmount)
+	node.BankSend(fmt.Sprintf("%suluna", transferAmount.Mul(sdk.NewInt(4))), initialization.ValidatorWalletName, testAddr)
 
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
 	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
 	node.InstantiateWasmContract(
 		strconv.Itoa(chain.LatestCodeId),
-		`{"count": "0"}`,
+		`{"count": "0"}`, transferCoin.String(),
 		"test")
 
 	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
@@ -238,12 +237,12 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 
 	balance, err := node.QuerySpecificBalance(testAddr, "uluna")
 	s.Require().NoError(err)
-	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount).TruncateInt())
+	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount.MulRaw(2))).TruncateInt())
 
 	node.Instantiate2WasmContract(
 		strconv.Itoa(chain.LatestCodeId),
 		`{"count": "0"}`, "salt",
-		"test")
+		transferCoin.String(), "test")
 
 	contracts, err = node.QueryContractsFromId(chain.LatestCodeId)
 	s.Require().NoError(err)
@@ -251,10 +250,10 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 
 	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
 	s.Require().NoError(err)
-	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(96, 2).MulInt(transferAmount).TruncateInt())
+	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(96, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount)).TruncateInt())
 
 	contractAddr := contracts[0]
-	node.WasmExecute(contractAddr, `{"increment": {}}`, "test")
+	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), "test")
 
 	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
 	s.Require().NoError(err)

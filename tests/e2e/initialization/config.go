@@ -43,7 +43,7 @@ const (
 	// common
 	TerraDenom          = "uluna"
 	AtomDenom           = "uatom"
-	TerraIBCDenom       = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	TerraIBCDenom       = "ibc/4627AD2524E3E0523047E35BB76CC90E37D9D57ACF14F0FCBCEB2480705F3CB8"
 	MinGasPrice         = "0.000"
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
@@ -71,7 +71,6 @@ var (
 	StakeAmountCoinA = sdk.NewCoin(TerraDenom, StakeAmountIntA)
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
-
 
 	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)

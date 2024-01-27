@@ -3,7 +3,6 @@ package e2e
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -55,21 +54,26 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	// sender wasm addr
 	// senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "terra")
+	var response interface{}
+	response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
+	s.Require().NoError(err)
+	fmt.Println("response: ", response)
 
-	var response map[string]interface{}
 	s.Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
 		if err != nil {
 			return false
 		}
-		totalFunds := response["total_funds"].([]interface{})[0]
+
+		fmt.Println("response: ", response)
+		totalFunds := response.([]interface{})[0]
 		amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
 		if err != nil {
 			return false
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
-		// check if denom contains "luna"
-		return sdk.NewInt(int64(amount)).Equal(transferAmount) && strings.Contains(denom, "ibc")
+		// check if denom is luna token ibc
+		return sdk.NewInt(int64(amount)).Equal(transferAmount) && denom == initialization.TerraIBCDenom
 	},
 		10*time.Second,
 		10*time.Millisecond,
@@ -239,10 +243,13 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().NoError(err)
 	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount.MulRaw(2))).TruncateInt())
 
+	stabilityFee := sdk.NewDecWithPrec(2, 2).MulInt(transferAmount)
+
 	node.Instantiate2WasmContract(
 		strconv.Itoa(chain.LatestCodeId),
 		`{"count": "0"}`, "salt",
-		transferCoin.String(), "test")
+		transferCoin.String(),
+		fmt.Sprintf("%duluna", stabilityFee), "test")
 
 	contracts, err = node.QueryContractsFromId(chain.LatestCodeId)
 	s.Require().NoError(err)
@@ -253,7 +260,7 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(96, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount)).TruncateInt())
 
 	contractAddr := contracts[0]
-	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), "test")
+	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), fmt.Sprintf("%duluna", stabilityFee), "test")
 
 	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
 	s.Require().NoError(err)

@@ -68,38 +68,38 @@ echo ""
 # query burn tax exemption list through rest api
 curl -s http://localhost:1317/treasury/burn_tax_exemption_list | jq ".result.addresses"
 
-# ./_build/new/terrad tx gov submit-legacy-proposal remove-burn-tax-exemption-address "$test1" --title "burn tax exemption address" --description "burn tax exemption address"  --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
+./_build/new/terrad tx gov submit-legacy-proposal remove-burn-tax-exemption-address "$test1" --title "burn tax exemption address" --description "burn tax exemption address"  --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
 
-# sleep 5
+sleep 5
 
-# ./_build/new/terrad tx gov deposit 2 "20000000${DENOM}" --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
+./_build/new/terrad tx gov deposit 2 "20000000${DENOM}" --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
 
-# sleep 5
+sleep 5
 
-# ./_build/new/terrad tx gov vote 2 yes --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
+./_build/new/terrad tx gov vote 2 yes --from $KEY --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
 
-# sleep 5
+sleep 5
 
-# ./_build/new/terrad tx gov vote 2 yes --from $KEY1 --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
+./_build/new/terrad tx gov vote 2 yes --from $KEY1 --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME -y
 
-# sleep 5
+sleep 5
 
-# while true; do 
-#     PROPOSAL_STATUS=$(./_build/new/terrad q gov proposal 2 --output=json | jq ".status" -r)
-#     echo $PROPOSAL_STATUS
-#     if [ $PROPOSAL_STATUS = "PROPOSAL_STATUS_PASSED" ]; then
-#         break
-#     else
-#         sleep 10
-#     fi
-# done
+while true; do 
+    PROPOSAL_STATUS=$(./_build/new/terrad q gov proposal 2 --output=json | jq ".status" -r)
+    echo $PROPOSAL_STATUS
+    if [ $PROPOSAL_STATUS = "PROPOSAL_STATUS_PASSED" ]; then
+        break
+    else
+        sleep 10
+    fi
+done
 
-# echo ""
-# echo "CHECK ADDRESS AFTER REMOVING BURN TAX EXEMPTION LIST"
-# echo ""
+echo ""
+echo "CHECK ADDRESS AFTER REMOVING BURN TAX EXEMPTION LIST"
+echo ""
 
-# # check burn tax exemption address
-# ./_build/new/terrad q treasury burn-tax-exemption-list -o json | jq ".addresses"
+# check burn tax exemption address
+./_build/new/terrad q treasury burn-tax-exemption-list -o json | jq ".addresses"
 
-# # query burn tax exemption list through rest api
-# curl -s http://localhost:1317/treasury/burn_tax_exemption_list | jq ".result.addresses"
+# query burn tax exemption list through rest api
+curl -s http://localhost:1317/treasury/burn_tax_exemption_list | jq ".result.addresses"

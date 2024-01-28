@@ -273,7 +273,7 @@ func (n *internalNode) init() error {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
 
-	genDoc.chainID = n.chain.chainMeta.Id
+	genDoc.ChainID = n.chain.chainMeta.Id
 	genDoc.Validators = nil
 	genDoc.AppState = appState
 
@@ -365,7 +365,7 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 
 	// TODO: Find a better way to sign this tx with less code.
 	signerData := authsigning.SignerData{
-		chainID:       n.chain.chainMeta.Id,
+		ChainID:       n.chain.chainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
 	}

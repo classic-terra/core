@@ -13,13 +13,13 @@ func main() {
 	var (
 		valConfig  []*initialization.NodeConfig
 		dataDir    string
-		chainId    string
+		chainID    string
 		config     string
 		forkHeight int
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
-	flag.StringVar(&chainId, "chain-id", "", "chain ID")
+	flag.StringVar(&chainID, "chain-id", "", "chain ID")
 	flag.StringVar(&config, "config", "", "serialized config")
 	flag.IntVar(&forkHeight, "fork-height", 0, "fork height")
 
@@ -38,13 +38,13 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := initialization.InitChain(chainId, dataDir, valConfig, forkHeight)
+	createdChain, err := initialization.InitChain(chainID, dataDir, valConfig, forkHeight)
 	if err != nil {
 		panic(err)
 	}
 
 	b, _ := json.Marshal(createdChain)
-	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainId)
+	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainID)
 	if err = os.WriteFile(fileName, b, 0o777); err != nil {
 		panic(err)
 	}

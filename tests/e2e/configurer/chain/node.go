@@ -21,7 +21,7 @@ type NodeConfig struct {
 
 	OperatorAddress  string
 	SnapshotInterval uint64
-	chainId          string
+	chainID          string
 	rpcClient        *rpchttp.HTTP
 	t                *testing.T
 	containerManager *containers.Manager
@@ -31,11 +31,11 @@ type NodeConfig struct {
 }
 
 // NewNodeConfig returens new initialized NodeConfig.
-func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainId string, containerManager *containers.Manager) *NodeConfig {
+func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainID string, containerManager *containers.Manager) *NodeConfig {
 	return &NodeConfig{
 		Node:             *initNode,
 		SnapshotInterval: initConfig.SnapshotInterval,
-		chainId:          chainId,
+		chainID:          chainID,
 		containerManager: containerManager,
 		t:                t,
 		setupTime:        time.Now(),
@@ -47,7 +47,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // method.
 func (n *NodeConfig) Run() error {
 	n.t.Logf("starting node container: %s", n.Name)
-	resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
+	resource, err := n.containerManager.RunNodeResource(n.chainID, n.Name, n.ConfigDir)
 	if err != nil {
 		return err
 	}

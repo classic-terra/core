@@ -65,7 +65,7 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 	nodeConfig := &NodeConfig{
 		Node:             *initNode,
-		chainId:          c.Id,
+		chainID:          c.Id,
 		containerManager: c.containerManager,
 		t:                c.t,
 	}

@@ -128,9 +128,8 @@ func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {
 
 	var taxRateResp treasurytypes.QueryBurnTaxExemptionListResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
-		return  nil, err
+		return nil, err
 	}
-
 
 	return taxRateResp.Addresses, nil
 }

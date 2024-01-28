@@ -55,15 +55,15 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 }
 
 // ExecTxCmd Runs ExecTxCmdWithSuccessString searching for `code: 0`
-func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
-	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
+func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecTxCmdWithSuccessString(t, chainID, containerName, command, "code: 0")
 }
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
 // and searching for `successStr`
-func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
-	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainID), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
@@ -245,7 +245,7 @@ func (m *Manager) RunHermesResource2(chainAID, terraARelayerNodeName, terraAValM
 
 // RunNodeResource runs a node container. Assings containerName to the container.
 // Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
-func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunNodeResource(chainID string, containerName, valCondifDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -274,24 +274,24 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 	return resource, nil
 }
 
-// RunChainInitResource runs a chain init container to initialize genesis and configs for a chain with chainId.
+// RunChainInitResource runs a chain init container to initialize genesis and configs for a chain with chainID.
 // The chain is to be configured with chainVotingPeriod and validators deserialized from validatorConfigBytes.
 // The genesis and configs are to be mounted on the init container as volume on mountDir path.
 // Returns the container resource and error if any. This method does not Purge the container. The caller
 // must deal with removing the resource.
-func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod, chainExpeditedVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
+func (m *Manager) RunChainInitResource(chainID string, chainVotingPeriod, chainExpeditedVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 	expeditedVotingPeriodDuration := time.Duration(chainExpeditedVotingPeriod * 1000000000)
 
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       chainId,
+			Name:       chainID,
 			Repository: m.ImageConfig.InitRepository,
 			Tag:        m.ImageConfig.InitTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", mountDir),
-				fmt.Sprintf("--chain-id=%s", chainId),
+				fmt.Sprintf("--chain-id=%s", chainID),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
 				fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),

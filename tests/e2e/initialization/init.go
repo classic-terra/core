@@ -43,12 +43,12 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, forkHeight int) (*
 	return chain.export(), nil
 }
 
-func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
+func InitSingleNode(chainID, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
 	if nodeConfig.IsValidator {
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}
 
-	chain, err := new(chainId, dataDir)
+	chain, err := new(chainID, dataDir)
 	if err != nil {
 		return nil, err
 	}

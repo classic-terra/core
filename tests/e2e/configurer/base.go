@@ -61,7 +61,7 @@ func (bc *baseConfigurer) RunValidators() error {
 }
 
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
-	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
+	bc.t.Logf("starting %s validator containers...", chainConfig.ID)
 	for _, node := range chainConfig.NodeConfigs {
 		if err := node.Run(); err != nil {
 			return err
@@ -119,10 +119,10 @@ func (bc *baseConfigurer) runIBCRelayer1(chainConfigA *chain.Config, chainConfig
 	}
 
 	hermesResource, err := bc.containerManager.RunHermesResource1(
-		chainConfigA.Id,
+		chainConfigA.ID,
 		relayerNodeA.Name,
 		filepath.Join("/root/hermes", "mnemonicA.json"),
-		chainConfigB.Id,
+		chainConfigB.ID,
 		relayerNodeB.Name,
 		filepath.Join("/root/hermes", "mnemonicB.json"),
 		hermesCfgPath)
@@ -133,7 +133,7 @@ func (bc *baseConfigurer) runIBCRelayer1(chainConfigA *chain.Config, chainConfig
 	endpoint := fmt.Sprintf("http://%s/state", hermesResource.GetHostPort("3031/tcp"))
 
 	require.Eventually(bc.t, func() bool {
-		resp, err := http.Get(endpoint)
+		resp, err := http.Get(endpoint) //nolint
 		if err != nil {
 			return false
 		}
@@ -209,10 +209,10 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 	}
 
 	hermesResource, err := bc.containerManager.RunHermesResource2(
-		chainConfigA.Id,
+		chainConfigA.ID,
 		relayerNodeA.Name,
 		filepath.Join("/root/hermes", "mnemonicA.json"),
-		chainConfigB.Id,
+		chainConfigB.ID,
 		relayerNodeB.Name,
 		filepath.Join("/root/hermes", "mnemonicB.json"),
 		hermesCfgPath)
@@ -223,7 +223,7 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 	endpoint := fmt.Sprintf("http://%s/state", hermesResource.GetHostPort("3031/tcp"))
 
 	require.Eventually(bc.t, func() bool {
-		resp, err := http.Get(endpoint)
+		resp, err := http.Get(endpoint) //nolint
 		if err != nil {
 			return false
 		}
@@ -265,28 +265,28 @@ func (bc *baseConfigurer) runIBCRelayer2(chainConfigA *chain.Config, chainConfig
 }
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
-	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
+	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
 
-	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
+	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.ID, "--b-chain", chainB.ChainMeta.ID, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
 	_, _, err := bc.containerManager.ExecHermesCmd1(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}
-	bc.t.Logf("connected %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
+	bc.t.Logf("connected %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
 	return nil
 }
 
 func (bc *baseConfigurer) connectIBCChains2(chainA *chain.Config, chainB *chain.Config) error {
-	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
+	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
 
-	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
+	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.ID, "--b-chain", chainB.ChainMeta.ID, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
 	_, _, err := bc.containerManager.ExecHermesCmd2(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}
-	bc.t.Logf("connected %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
+	bc.t.Logf("connected %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
 	return nil
 }
 
@@ -295,7 +295,7 @@ func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *i
 	chainConfig.NodeConfigs = make([]*chain.NodeConfig, 0, len(initializedChain.Nodes))
 	setupTime := time.Now()
 	for i, validator := range initializedChain.Nodes {
-		conf := chain.NewNodeConfig(bc.t, validator, chainConfig.ValidatorInitConfigs[i], chainConfig.Id, bc.containerManager).WithSetupTime(setupTime)
+		conf := chain.NewNodeConfig(bc.t, validator, chainConfig.ValidatorInitConfigs[i], chainConfig.ID, bc.containerManager).WithSetupTime(setupTime)
 		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, conf)
 	}
 }

@@ -24,13 +24,13 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.NoError(err)
 
 	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
+	chainA.LatestCodeID = int(nodeA.QueryLatestWasmCodeID())
 	nodeA.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
+		strconv.Itoa(chainA.LatestCodeID),
 		`{"count": "0"}`, "",
 		initialization.ValidatorWalletName)
 
-	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
+	contracts, err := nodeA.QueryContractsFromID(chainA.LatestCodeID)
 	s.NoError(err)
 	s.Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom is luna token ibc
-		return sdk.NewInt(int64(amount)).Equal(transferAmount) && denom == initialization.TerraIBCDenom
+		return sdk.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom
 	},
 		10*time.Second,
 		10*time.Millisecond,
@@ -229,13 +229,13 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	node.BankSend(fmt.Sprintf("%suluna", transferAmount.Mul(sdk.NewInt(4))), initialization.ValidatorWalletName, testAddr)
 
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	chain.LatestCodeID = int(node.QueryLatestWasmCodeID())
 	node.InstantiateWasmContract(
-		strconv.Itoa(chain.LatestCodeId),
+		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, transferCoin.String(),
 		"test")
 
-	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
+	contracts, err := node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 
@@ -246,12 +246,12 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	stabilityFee := sdk.NewDecWithPrec(2, 2).MulInt(transferAmount)
 
 	node.Instantiate2WasmContract(
-		strconv.Itoa(chain.LatestCodeId),
+		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, "salt",
 		transferCoin.String(),
 		fmt.Sprintf("%duluna", stabilityFee), "test")
 
-	contracts, err = node.QueryContractsFromId(chain.LatestCodeId)
+	contracts, err = node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)
 	s.Require().Len(contracts, 2, "Wrong number of contracts for the counter")
 

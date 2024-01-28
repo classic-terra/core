@@ -29,7 +29,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, forkHeight int) (*
 	var peers []string
 	for _, peer := range chain.nodes {
 		peerID := fmt.Sprintf("%s@%s:26656", peer.getNodeKey().ID(), peer.moniker)
-		peer.peerId = peerID
+		peer.peerID = peerID
 		peers = append(peers, peerID)
 	}
 

@@ -30,9 +30,9 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, amount, from string) {
-	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
-	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from string) {
+	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
+	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeID, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
@@ -44,11 +44,11 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, amount, from strin
 	n.LogActionF("successfully initialized")
 }
 
-func (n *NodeConfig) Instantiate2WasmContract(codeId, initMsg, salt, amount, fee, from string) {
-	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
+func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee, from string) {
+	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
 	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
 	hex.Encode(encodedSalt, []byte(salt))
-	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeId, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeID, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
@@ -88,15 +88,15 @@ func (n *NodeConfig) QueryParams(subspace, key string, result any) {
 	require.NoError(n.t, err)
 }
 
-func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
-	n.LogActionF("submitting param change proposal %s", proposalJson)
+func (n *NodeConfig) SubmitParamChangeProposal(proposalJSON, from string) {
+	n.LogActionF("submitting param change proposal %s", proposalJSON)
 	// ToDo: Is there a better way to do this?
 	wd, err := os.Getwd()
 	require.NoError(n.t, err)
 	localProposalFile := wd + "/scripts/param_change_proposal.json"
 	f, err := os.Create(localProposalFile)
 	require.NoError(n.t, err)
-	_, err = f.WriteString(proposalJson)
+	_, err = f.WriteString(proposalJSON)
 	require.NoError(n.t, err)
 	err = f.Close()
 	require.NoError(n.t, err)
@@ -126,11 +126,11 @@ func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(addresses []string
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	proposalId, err := extractProposalIdFromResponse(resp.String())
+	proposalID, err := extractProposalIDFromResponse(resp.String())
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted add burn tax exemption address proposal")
-	return proposalId
+	return proposalID
 }
 
 func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
@@ -208,7 +208,7 @@ func AllValsVoteOnProposal(chain *Config, propNumber int) {
 	}
 }
 
-func extractProposalIdFromResponse(response string) (int, error) {
+func extractProposalIDFromResponse(response string) (int, error) {
 	// Extract the proposal ID from the response
 	startIndex := strings.Index(response, `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
 	endIndex := strings.Index(response[startIndex:], `"`)
@@ -306,7 +306,7 @@ type resultStatus struct {
 	ValidatorInfo validatorInfo
 }
 
-func (n *NodeConfig) Status() (resultStatus, error) {
+func (n *NodeConfig) Status() (resultStatus, error) { //nolint
 	cmd := []string{"terrad", "status"}
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	if err != nil {

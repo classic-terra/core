@@ -64,7 +64,7 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, 
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainID), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
-	txCommand := append(command, allTxArgs...)
+	txCommand := append(command, allTxArgs...)	//nolint
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
@@ -82,7 +82,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}
-	containerId := m.resources[containerName].Container.ID
+	containerID := m.resources[containerName].Container.ID
 
 	var (
 		outBuf bytes.Buffer
@@ -106,7 +106,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    containerId,
+				Container:    containerID,
 				User:         "root",
 				Cmd:          command,
 			})
@@ -328,12 +328,12 @@ func (m *Manager) GetNodeResource(containerName string) (*dockertest.Resource, e
 // necessary to connect to the portId exposed inside the container.
 // The container is determined by containerName.
 // Returns the host-port or error if any.
-func (m *Manager) GetHostPort(containerName string, portId string) (string, error) {
+func (m *Manager) GetHostPort(containerName string, portID string) (string, error) {
 	resource, err := m.GetNodeResource(containerName)
 	if err != nil {
 		return "", err
 	}
-	return resource.GetHostPort(portId), nil
+	return resource.GetHostPort(portID), nil
 }
 
 // RemoveNodeResource removes a node container specified by containerName.

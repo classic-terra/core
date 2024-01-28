@@ -78,7 +78,7 @@ var (
 	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
-	oneMin = time.Minute
+	oneMin = time.Minute //nolint
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -178,15 +178,17 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		if err != nil {
 			return err
 		}
-		if chain.chainMeta.Id == ChainAID {
+
+		switch chain.chainMeta.ID {
+		case ChainAID:
 			if err := addAccount(configDir, "", InitBalanceStrA, accAdd, forkHeight); err != nil {
 				return err
 			}
-		} else if chain.chainMeta.Id == ChainBID {
+		case ChainBID:
 			if err := addAccount(configDir, "", InitBalanceStrB, accAdd, forkHeight); err != nil {
 				return err
 			}
-		} else if chain.chainMeta.Id == ChainCID {
+		case ChainCID:
 			if err := addAccount(configDir, "", InitBalanceStrC, accAdd, forkHeight); err != nil {
 				return err
 			}
@@ -258,14 +260,14 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 
 	genDoc.AppState = bz
 
-	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
+	genesisJSON, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	if err != nil {
 		return err
 	}
 
 	// write the updated genesis file to each validator
 	for _, val := range chain.nodes {
-		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJSON); err != nil {
 			return err
 		}
 	}
@@ -325,7 +327,7 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 			}
 
 			stakeAmountCoin := StakeAmountCoinA
-			if c.chainMeta.Id != ChainAID {
+			if c.chainMeta.ID != ChainAID {
 				stakeAmountCoin = StakeAmountCoinB
 			}
 			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)

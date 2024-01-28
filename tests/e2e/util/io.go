@@ -47,5 +47,5 @@ func WritePublicFile(path string, body []byte) error {
 		return err
 	}
 
-	return os.WriteFile(path, body, 0o666)
+	return os.WriteFile(path, body, 0o600)
 }

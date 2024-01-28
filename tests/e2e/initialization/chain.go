@@ -14,7 +14,7 @@ type internalChain struct {
 
 func new(id, dataDir string) (*internalChain, error) {
 	chainMeta := ChainMeta{
-		Id:      id,
+		ID:      id,
 		DataDir: dataDir,
 	}
 	return &internalChain{

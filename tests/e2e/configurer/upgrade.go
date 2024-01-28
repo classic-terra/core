@@ -53,7 +53,7 @@ func (uc *UpgradeConfigurer) ConfigureChains() error {
 }
 
 func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
-	uc.t.Logf("starting upgrade e2e infrastructure for chain-id: %s", chainConfig.Id)
+	uc.t.Logf("starting upgrade e2e infrastructure for chain-id: %s", chainConfig.ID)
 	tmpDir, err := os.MkdirTemp("", "terra-e2e-testnet-")
 	if err != nil {
 		return err
@@ -66,16 +66,16 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 
 	forkHeight := uc.forkHeight
 	if forkHeight > 0 {
-		forkHeight = forkHeight - config.ForkHeightPreUpgradeOffset
+		forkHeight -= config.ForkHeightPreUpgradeOffset
 	}
 
-	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), int(chainConfig.ExpeditedVotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
+	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.ID, int(chainConfig.VotingPeriod), int(chainConfig.ExpeditedVotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
 	if err != nil {
 		return err
 	}
 
-	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainConfig.Id)
-	uc.t.Logf("serialized init file for chain-id %v: %v", chainConfig.Id, fileName)
+	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainConfig.ID)
+	uc.t.Logf("serialized init file for chain-id %v: %v", chainConfig.ID, fileName)
 
 	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
 	// without this, test attempts to unmarshal file before docker container is finished writing
@@ -127,7 +127,7 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 			// Check node status
 			_, err = node.Status()
 			if err != nil {
-				uc.t.Errorf("node is not running after upgrade, chain-id %s, node %s", chainConfig.Id, node.Name)
+				uc.t.Errorf("node is not running after upgrade, chain-id %s, node %s", chainConfig.ID, node.Name)
 				return err
 			}
 			uc.t.Logf("node %s upgraded successfully, address %s", node.Name, node.PublicAddress)
@@ -148,7 +148,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 				}
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin("luna", sdk.NewInt(config.MinDepositValue/4)))
-				chainConfig.LatestProposalNumber += 1
+				chainConfig.LatestProposalNumber++
 				node.DepositProposal(chainConfig.LatestProposalNumber, false)
 			}
 			node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)
@@ -157,9 +157,9 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {
-		uc.t.Logf("waiting to reach upgrade height on chain %s", chainConfig.Id)
+		uc.t.Logf("waiting to reach upgrade height on chain %s", chainConfig.ID)
 		chainConfig.WaitUntilHeight(chainConfig.UpgradePropHeight)
-		uc.t.Logf("upgrade height reached on chain %s", chainConfig.Id)
+		uc.t.Logf("upgrade height reached on chain %s", chainConfig.ID)
 	}
 
 	// remove all containers so we can upgrade them to the new version
@@ -183,16 +183,16 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 func (uc *UpgradeConfigurer) runForkUpgrade() error {
 	for _, chainConfig := range uc.chainConfigs {
-		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
+		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.ID)
 		chainConfig.WaitUntilHeight(uc.forkHeight)
-		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
+		uc.t.Logf("fork height reached on chain %s", chainConfig.ID)
 	}
 	return nil
 }
 
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
 	// upgrade containers to the locally compiled daemon
-	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
+	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.ID)
 	uc.containerManager.TerraRepository = containers.CurrentBranchTerraRepository
 	uc.containerManager.TerraTag = containers.CurrentBranchTerraTag
 
@@ -202,8 +202,8 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 		}
 	}
 
-	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.Id)
+	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.ID)
 	chainConfig.WaitUntilHeight(propHeight)
-	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
+	uc.t.Logf("upgrade successful on chain %s", chainConfig.ID)
 	return nil
 }

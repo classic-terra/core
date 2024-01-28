@@ -139,7 +139,7 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings Upg
 	if err != nil {
 		return nil, err
 	}
-	if isIBCEnabled && upgradeSettings.IsEnabled {
+	if isIBCEnabled && upgradeSettings.IsEnabled { //nolint
 		// skip none - configure two chains via Docker
 		// to utilize the older version of Terra to upgrade from
 		return NewUpgradeConfigurer(t,

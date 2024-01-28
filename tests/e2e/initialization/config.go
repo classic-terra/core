@@ -42,29 +42,19 @@ type NodeConfig struct {
 const (
 	// common
 	TerraDenom          = "uluna"
-	IonDenom            = "uion"
-	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
-	TerraIBCDenom       = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
-	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
-	E2EFeeToken         = "e2e-default-feetoken"
-	UstIBCDenom         = "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
-	LuncIBCDenom        = "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0"
+	TerraIBCDenom       = "ibc/4627AD2524E3E0523047E35BB76CC90E37D9D57ACF14F0FCBCEB2480705F3CB8"
 	MinGasPrice         = "0.000"
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
 	// chainA
 	ChainAID      = "terra-test-a"
 	TerraBalanceA = 20000000000000
-	IonBalanceA   = 100000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
-	UstBalanceA   = 500000000000000
-	LuncBalanceA  = 500000000000000
 	// chainB
 	ChainBID          = "terra-test-b"
 	TerraBalanceB     = 500000000000
-	IonBalanceB       = 100000000000
 	StakeBalanceB     = 440000000000
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
@@ -72,28 +62,8 @@ const (
 	// chainC
 	ChainCID      = "terra-test-c"
 	TerraBalanceC = 500000000000
-	IonBalanceC   = 100000000000
 	StakeBalanceC = 440000000000
 	StakeAmountC  = 400000000000
-
-	EpochDayDuration      = time.Second * 60
-	EpochWeekDuration     = time.Second * 120
-	TWAPPruningKeepPeriod = EpochDayDuration / 4
-
-	// Denoms for testing Stride migration in v15.
-	// Can be removed after v15 upgrade.
-	StTerraDenom              = "stTerra"
-	JunoDenom                 = "juno"
-	StJunoDenom               = "stJuno"
-	StarsDenom                = "stars"
-	StStarsDenom              = "stStars"
-	DefaultStrideDenomBalance = TerraBalanceA
-
-	// Stride pool ids to migrate
-	// Can be removed after v15 upgrade.
-	StTerra_TERRAPoolId = 833
-	StJUNO_JUNOPoolId   = 817
-	StSTARS_STARSPoolId = 810
 )
 
 var (
@@ -102,17 +72,11 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
-	// Pool balances for testing Stride migration in v15.
-	// Can be removed after v15 upgrade.
-	StridePoolBalances = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", DefaultStrideDenomBalance, StTerraDenom, DefaultStrideDenomBalance, JunoDenom, DefaultStrideDenomBalance, StJunoDenom, DefaultStrideDenomBalance, StarsDenom, DefaultStrideDenomBalance, StStarsDenom)
-
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", TerraBalanceA, TerraDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceB, TerraDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
-	InitBalanceStrC = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceC, TerraDenom, StakeBalanceC, StakeDenom, IonBalanceC, IonDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
+	InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
 	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
-	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
-	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 
 	oneMin = time.Minute
 )
@@ -129,7 +93,6 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 		return fmt.Errorf("failed to parse coins: %w", err)
 	}
 	coins = coins.Sort()
-	coins = coins.Add(sdk.NewCoin(E2EFeeToken, sdk.NewInt(GenesisFeeBalance)))
 
 	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
@@ -216,15 +179,15 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 			return err
 		}
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA+","+StridePoolBalances, accAdd, forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA, accAdd, forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB+","+StridePoolBalances, accAdd, forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB, accAdd, forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainCID {
-			if err := addAccount(configDir, "", InitBalanceStrC+","+StridePoolBalances, accAdd, forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrC, accAdd, forkHeight); err != nil {
 				return err
 			}
 		}
@@ -315,8 +278,7 @@ func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 
 func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
 	return func(bankGenState *banktypes.GenesisState) {
-		strideMigrationDenoms := []string{StTerraDenom, JunoDenom, StJunoDenom, StarsDenom, StStarsDenom}
-		denomsToRegister := append([]string{StakeDenom, IonDenom, TerraDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}, strideMigrationDenoms...)
+		denomsToRegister := []string{TerraDenom, AtomDenom}
 		for _, denom := range denomsToRegister {
 			setDenomMetadata(bankGenState, denom)
 		}

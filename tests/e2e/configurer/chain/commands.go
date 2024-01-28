@@ -24,35 +24,53 @@ import (
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
-	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0uluna", "--gas-adjustment=1.3"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
+func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, amount, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
-	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
+	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit",  "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	if amount != "" {
+		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
+	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+
 	require.NoError(n.t, err)
+
+
 	n.LogActionF("successfully initialized")
 }
 
-func (n *NodeConfig) Instantiate2WasmContract(codeId, initMsg, salt, from string) {
+func (n *NodeConfig) Instantiate2WasmContract(codeId, initMsg, salt, amount, fee, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
 	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
 	hex.Encode(encodedSalt, []byte(salt))
-	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeId, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin"}
+	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeId, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	if amount != "" {
+		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
+	}
+	if fee != "" {
+		cmd = append(cmd, fmt.Sprintf("--fees=%s", fee))
+	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully initialized")
 }
 
-func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
+func (n *NodeConfig) WasmExecute(contract, execMsg, amount, fee, from string) {
 	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
-	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	if amount != "" {
+		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
+	}
+	if fee != "" {
+		cmd = append(cmd, fmt.Sprintf("--fees=%s", fee))
+	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)

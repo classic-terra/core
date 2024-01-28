@@ -8,12 +8,12 @@ import (
 
 // RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces associates protoName with AccountI and VestingAccount
 // Interfaces and creates a registry of it's concrete implementations
-func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func RegisterInterfaces(_ codectypes.InterfaceRegistry) {
 }
 
 var (

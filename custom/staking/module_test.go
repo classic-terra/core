@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	apptesting "github.com/classic-terra/core/v2/app/testing"
+	"github.com/classic-terra/core/v2/types"
 	simapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -23,7 +24,7 @@ func TestStakingTestSuite(t *testing.T) {
 
 // go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v2/custom/staking
 func (s *StakingTestSuite) TestValidatorVPLimit() {
-	s.KeeperTestHelper.Setup(s.T())
+	s.KeeperTestHelper.Setup(s.T(), types.ColumbusChainID)
 
 	// construct new validators, to a total of 10 validators, each with 10% of the total voting power
 	num := 9

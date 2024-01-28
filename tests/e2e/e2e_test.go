@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom is luna token ibc
-		return sdk.NewInt(int64(amount)).Equal(transferAmount) && denom == initialization.TerraIBCDenom
+		return sdk.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom
 	},
 		10*time.Second,
 		10*time.Millisecond,

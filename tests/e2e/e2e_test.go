@@ -54,18 +54,13 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	// sender wasm addr
 	// senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "terra")
-	var response interface{}
-	response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
-	s.Require().NoError(err)
-	fmt.Println("response: ", response)
 
+	var response interface{}
 	s.Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
 		if err != nil {
 			return false
 		}
-
-		fmt.Println("response: ", response)
 		totalFunds := response.([]interface{})[0]
 		amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
 		if err != nil {

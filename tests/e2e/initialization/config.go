@@ -72,6 +72,7 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
+
 	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
 	InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)

@@ -38,10 +38,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, amount, from strin
 	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-
 	require.NoError(n.t, err)
-
-
 	n.LogActionF("successfully initialized")
 }
 
@@ -49,7 +46,7 @@ func (n *NodeConfig) Instantiate2WasmContract(codeId, initMsg, salt, amount, fee
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
 	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
 	hex.Encode(encodedSalt, []byte(salt))
-	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeId, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeId, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}

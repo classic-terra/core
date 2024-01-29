@@ -67,10 +67,10 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/ChainSafe/go-schnorrkel v1.0.0 h1:3aDA67lAykLaG1y3AOjs88dMxC88PgUuHRrLeDnvGIM=
 github.com/ChainSafe/go-schnorrkel v1.0.0/go.mod h1:dpzHYVxLZcp8pjlV+O+UR8K0Hp/z7vcchBSbMBEhCw4=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/Genuine-labs/go-substrate-rpc-client/v4 v4.0.0-terra h1:NWBPQewRpsA1riteLJH/B/izAauaeF1lvasXxayER78=
-github.com/Genuine-labs/go-substrate-rpc-client/v4 v4.0.0-terra/go.mod h1:3r3jfSmO4V+rduyDVgRQ+deww5XSGcI9rYEcjlntmkc=
-github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra h1:4vxGgHCL01pSkR/j/uFA1yeEu3ctg40A/7EL+VgsKU4=
-github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra/go.mod h1:P4Q5yyo4TN8ikI1jphdUSpxsw5mLgHkdhBDO61hFHwU=
+github.com/Genuine-labs/go-substrate-rpc-client/v4 v4.0.0-terra.1 h1:BtlSC6WDwljwv4T5HpbOee72b+wBXvKu1QDqUSvV9EQ=
+github.com/Genuine-labs/go-substrate-rpc-client/v4 v4.0.0-terra.1/go.mod h1:Nnn7mr+Dgy8zqmuX7q3Ye0ItS8obZj2MnsZ4R7bYugk=
+github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra.1 h1:20lnbvTDOL29sk3hx1FV0PdMNUbm8sToRVpEXVv7LQg=
+github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra.1/go.mod h1:d17c2tRver1bMmBJFTCmKUyKZLM69nsSjSsyK66AMGQ=
 github.com/Microsoft/go-winio v0.6.0 h1:slsWYD/zyx7lCXoZVlvQrj0hPTM1HI4+v1sIda2yDvg=
 github.com/Microsoft/go-winio v0.6.0/go.mod h1:cTAf44im0RAYeL23bpB+fzCyDH2MJiz2BO69KH/soAE=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=
@@ -173,8 +173,6 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.7 h1:ij32FaEnwxfEurtK0QKDNhTWFnz6NUmrI5gky/WnoY0=
 github.com/cosmos/iavl v0.19.7/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ibc-go/v5 v5.0.0-beta1 h1:YqC9giQlZId8Wui8xpaUFI+TpVmEupQZSoDlmxAu6yI=
-github.com/cosmos/ibc-go/v5 v5.0.0-beta1/go.mod h1:9mmcbzuidgX7nhafIKng/XhXAHDEnRqDjGy/60W1cvg=
 github.com/cosmos/ibc-go/v6 v6.2.0 h1:HKS5WNxQrlmjowHb73J9LqlNJfvTnvkbhXZ9QzNTU7Q=
 github.com/cosmos/ibc-go/v6 v6.2.0/go.mod h1:+S3sxcNwOhgraYDJAhIFDg5ipXHaUnJrg7tOQqGyWlc=
 github.com/cosmos/ledger-go v0.9.2 h1:Nnao/dLwaVTk1Q5U9THldpUMMXU94BOTWPddSmVB6pI=

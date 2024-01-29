@@ -3,7 +3,7 @@
 ARG source=./
 ARG GO_VERSION="1.20"
 ARG BUILDPLATFORM=linux/amd64
-ARG BASE_IMAGE="golang:${GO_VERSION}-alpine"
+ARG BASE_IMAGE="golang:${GO_VERSION}-alpine3.18"
 FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} as base
 
 ###############################################################################
@@ -104,7 +104,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM alpine as terra-core
 
-RUN apk update && apk add wget lz4 aria2 curl jq gawk coreutils "zlib>1.2.12-r2" "libssl1.1>1.1.1q-r0"
+RUN apk update && apk add wget lz4 aria2 curl jq gawk coreutils "zlib>1.2.12-r2" libssl3
 
 COPY --from=builder-stage-2 /go/bin/terrad /usr/local/bin/terrad
 

@@ -30,7 +30,7 @@ jobs:
             core:local
   test-terra-start:
     runs-on: ubuntu-latest
-    needs: build-and-push-image
+    needs: build-image
     steps:
       - name: Set up Go 1.20
         uses: actions/setup-go@v4
@@ -45,7 +45,7 @@ jobs:
 
   test-ibc-transfer:
     runs-on: ubuntu-latest
-    needs: build-and-push-image
+    needs: build-image
     steps:
       - name: Set up Go 1.20
         uses: actions/setup-go@v4
@@ -60,7 +60,7 @@ jobs:
 
   test-ibc-hooks:
     runs-on: ubuntu-latest
-    needs: build-and-push-image
+    needs: build-image
     steps:
       - name: Set up Go 1.20
         uses: actions/setup-go@v4
@@ -75,7 +75,7 @@ jobs:
     
   test-ibc-pfm:
     runs-on: ubuntu-latest
-    needs: build-and-push-image
+    needs: build-image
     steps:
       - name: Set up Go 1.20
         uses: actions/setup-go@v4
@@ -90,7 +90,7 @@ jobs:
 
   test-validator:
     runs-on: ubuntu-latest
-    needs: build-and-push-image
+    needs: build-image
     steps:
       - name: Set up Go 1.20
         uses: actions/setup-go@v4

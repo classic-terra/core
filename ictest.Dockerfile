@@ -12,6 +12,7 @@ COPY . /code/
 RUN LEDGER_ENABLED=false make build
 
 RUN cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/libwasmvm.aarch64.so /lib/libwasmvm.aarch64.so
+RUN cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/libwasmvm.x86_64.so /lib/libwasmvm.x86_64.so
 
 FROM ubuntu:22.04
 
@@ -19,6 +20,7 @@ WORKDIR /root
 
 COPY --from=go-builder /code/build/terrad /usr/local/bin/terrad
 COPY --from=go-builder /lib/libwasmvm.aarch64.so /lib/libwasmvm.aarch64.so
+COPY --from=go-builder /lib/libwasmvm.x86_64.so /lib/libwasmvm.x86_64.so
 
 # rest server
 EXPOSE 1317

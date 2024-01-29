@@ -71,8 +71,8 @@ github.com/ComposableFi/go-subkey/v2 v2.0.0-tm03420/go.mod h1:KYkiMX5AbOlXXYfxkr
 github.com/ComposableFi/go-substrate-rpc-client/v4 v4.0.1-0.20220921072213-b36dd716026d h1:dQbJo6PMzGltlkUgtYvB/K9/7eVR8tGTKIdL3Rq23lY=
 github.com/ComposableFi/go-substrate-rpc-client/v4 v4.0.1-0.20220921072213-b36dd716026d/go.mod h1:swRgltPLuxQuM1AnrlRRXkbtkcHN0BjlMvGC0iEkNjk=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra h1:4vxGgHCL01pSkR/j/uFA1yeEu3ctg40A/7EL+VgsKU4=
-github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra/go.mod h1:P4Q5yyo4TN8ikI1jphdUSpxsw5mLgHkdhBDO61hFHwU=
+github.com/Genuine-labs/interchaintest/v6 v6.0.1-0.20240129161054-ada588fb84e9 h1:YUHOxt06/liqyJf9a7gz5gZ0DFO7x31rYRnM361uUG4=
+github.com/Genuine-labs/interchaintest/v6 v6.0.1-0.20240129161054-ada588fb84e9/go.mod h1:RYrAFwLyDkr04xVJWjO95/+oMkYTR2Q3a0SzJduzQSs=
 github.com/Microsoft/go-winio v0.6.0 h1:slsWYD/zyx7lCXoZVlvQrj0hPTM1HI4+v1sIda2yDvg=
 github.com/Microsoft/go-winio v0.6.0/go.mod h1:cTAf44im0RAYeL23bpB+fzCyDH2MJiz2BO69KH/soAE=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=

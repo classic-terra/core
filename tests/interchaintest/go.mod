@@ -214,7 +214,7 @@ replace (
 	github.com/classic-terra/core/v2 => ../../
 	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.46.14-terra.4
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
-	github.com/strangelove-ventures/interchaintest/v6 => github.com/Genuine-labs/interchaintest/v6 v6.0.0-terra
+	github.com/strangelove-ventures/interchaintest/v6 => github.com/Genuine-labs/interchaintest/v6 v6.0.1-0.20240129161054-ada588fb84e9
 	// replace goleveldb to optimized one
 	github.com/syndtr/goleveldb => github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121
 	github.com/tendermint/tendermint => github.com/classic-terra/cometbft v0.34.29-terra.0

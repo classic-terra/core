@@ -1,16 +1,35 @@
 package app
 
 import (
-	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	ibcfee "github.com/cosmos/ibc-go/v6/modules/apps/29-fee"
-	ibcfeetypes "github.com/cosmos/ibc-go/v6/modules/apps/29-fee/types"
-	transfer "github.com/cosmos/ibc-go/v6/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v6/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v6/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	terraappparams "github.com/classic-terra/core/v2/app/params"
+	customauth "github.com/classic-terra/core/v2/custom/auth"
+	customauthsim "github.com/classic-terra/core/v2/custom/auth/simulation"
+	customauthz "github.com/classic-terra/core/v2/custom/authz"
+	custombank "github.com/classic-terra/core/v2/custom/bank"
+	customcrisis "github.com/classic-terra/core/v2/custom/crisis"
+	customdistr "github.com/classic-terra/core/v2/custom/distribution"
+	customevidence "github.com/classic-terra/core/v2/custom/evidence"
+	customfeegrant "github.com/classic-terra/core/v2/custom/feegrant"
+	customgov "github.com/classic-terra/core/v2/custom/gov"
+	custommint "github.com/classic-terra/core/v2/custom/mint"
+	customparams "github.com/classic-terra/core/v2/custom/params"
+	customslashing "github.com/classic-terra/core/v2/custom/slashing"
+	customstaking "github.com/classic-terra/core/v2/custom/staking"
+	customupgrade "github.com/classic-terra/core/v2/custom/upgrade"
+	customwasm "github.com/classic-terra/core/v2/custom/wasm"
+	"github.com/classic-terra/core/v2/x/dyncomm"
+	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
+	"github.com/classic-terra/core/v2/x/market"
+	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	"github.com/classic-terra/core/v2/x/oracle"
+	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v2/x/treasury"
+	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v2/x/vesting"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,42 +64,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	terraappparams "github.com/classic-terra/core/v2/app/params"
-
-	customauth "github.com/classic-terra/core/v2/custom/auth"
-	customauthsim "github.com/classic-terra/core/v2/custom/auth/simulation"
-	customauthz "github.com/classic-terra/core/v2/custom/authz"
-	custombank "github.com/classic-terra/core/v2/custom/bank"
-	customcrisis "github.com/classic-terra/core/v2/custom/crisis"
-	customdistr "github.com/classic-terra/core/v2/custom/distribution"
-	customevidence "github.com/classic-terra/core/v2/custom/evidence"
-	customfeegrant "github.com/classic-terra/core/v2/custom/feegrant"
-	customgov "github.com/classic-terra/core/v2/custom/gov"
-	custommint "github.com/classic-terra/core/v2/custom/mint"
-	customparams "github.com/classic-terra/core/v2/custom/params"
-	customslashing "github.com/classic-terra/core/v2/custom/slashing"
-	customstaking "github.com/classic-terra/core/v2/custom/staking"
-	customupgrade "github.com/classic-terra/core/v2/custom/upgrade"
-	customwasm "github.com/classic-terra/core/v2/custom/wasm"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v2/x/dyncomm"
-	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
-	"github.com/classic-terra/core/v2/x/market"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
-	"github.com/classic-terra/core/v2/x/oracle"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
-	"github.com/classic-terra/core/v2/x/treasury"
-	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
-	"github.com/classic-terra/core/v2/x/vesting"
-
+	forward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router"
+	forwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router/types"
+	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v6/modules/apps/29-fee"
+	ibcfeetypes "github.com/cosmos/ibc-go/v6/modules/apps/29-fee/types"
+	transfer "github.com/cosmos/ibc-go/v6/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v6/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v6/modules/core/02-client/client"
+	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v2/client/docs/statik"
-
 	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
 	ibchooktypes "github.com/terra-money/core/v2/x/ibc-hooks/types"
 )
@@ -117,6 +113,7 @@ var (
 		customfeegrant.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		forward.AppModuleBasic{},
 		customupgrade.AppModuleBasic{},
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -129,7 +126,6 @@ var (
 		dyncomm.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 	)
-
 	// module account permissions
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil, // just added to enable align fee
@@ -148,7 +144,6 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 		ibchooktypes.ModuleName:        nil,
 	}
-
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
 		oracletypes.ModuleName:       true,
@@ -162,7 +157,6 @@ func appModules(
 	skipGenesisInvariants bool,
 ) []module.AppModule {
 	appCodec := encodingConfig.Marshaler
-
 	return []module.AppModule{
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
@@ -192,6 +186,7 @@ func appModules(
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
+		app.ForwardModule,
 	}
 }
 
@@ -201,7 +196,6 @@ func simulationModules(
 	_ bool,
 ) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
-
 	return []module.AppModuleSimulation{
 		customauth.NewAppModule(appCodec, app.AccountKeeper, customauthsim.RandomGenesisAccounts),
 		custombank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
@@ -224,6 +218,7 @@ func simulationModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
+		app.ForwardModule,
 	}
 }
 
@@ -248,6 +243,7 @@ func orderBeginBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
 		// Terra Classic modules
@@ -258,7 +254,6 @@ func orderBeginBlockers() []string {
 		dyncommtypes.ModuleName,
 	}
 }
-
 func orderEndBlockers() []string {
 	return []string{
 		crisistypes.ModuleName,
@@ -280,6 +275,7 @@ func orderEndBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
 		// Terra Classic modules
@@ -290,7 +286,6 @@ func orderEndBlockers() []string {
 		dyncommtypes.ModuleName,
 	}
 }
-
 func orderInitGenesis() []string {
 	return []string{
 		capabilitytypes.ModuleName,
@@ -312,6 +307,7 @@ func orderInitGenesis() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		forwardtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchooktypes.ModuleName,
 		// Terra Classic modules

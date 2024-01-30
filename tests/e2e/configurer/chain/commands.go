@@ -20,6 +20,7 @@ import (
 
 	app "github.com/classic-terra/core/v2/app"
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	"github.com/classic-terra/core/v2/types/assets"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -176,10 +177,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin("luna", sdk.NewInt(20)).String()
-	// if isExpedited {
-	// 	deposit = sdk.NewCoin("luna", sdk.NewInt(config.MinExpeditedDepositValue)).String()
-	// }
+	deposit := sdk.NewCoin("uluna", sdk.NewInt(20*assets.MicroUnit)).String()
 	cmd := []string{"terrad", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)

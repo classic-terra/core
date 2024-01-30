@@ -1,6 +1,7 @@
 package assets
 
 const (
+	HumanLunaDenom = "luna"
 	MicroLunaDenom = "uluna"
 	MicroUSDDenom  = "uusd"
 	MicroKRWDenom  = "ukrw"
@@ -12,4 +13,5 @@ const (
 	MicroMNTDenom  = "umnt"
 
 	MicroUnit = int64(1e6)
+	ExponentUint = int64(6)
 )

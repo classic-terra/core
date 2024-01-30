@@ -1,7 +1,6 @@
 package assets
 
 const (
-	HumanLunaDenom = "luna"
 	MicroLunaDenom = "uluna"
 	MicroUSDDenom  = "uusd"
 	MicroKRWDenom  = "ukrw"

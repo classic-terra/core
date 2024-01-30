@@ -17,12 +17,6 @@ const (
 	BondDenom                 = "uluna"
 )
 
-const (
-	TerraExponent = 6
-
-	DefaultBondDenom = assets.MicroLunaDenom
-)
-
 func init() {
 	SetAddressPrefixes()
 	RegisterDenoms()
@@ -30,11 +24,7 @@ func init() {
 
 // RegisterDenoms registers token denoms.
 func RegisterDenoms() {
-	err := sdk.RegisterDenom(assets.HumanLunaDenom, sdk.OneDec())
-	if err != nil {
-		panic(err)
-	}
-	err = sdk.RegisterDenom(assets.MicroLunaDenom, sdk.NewDecWithPrec(1, assets.ExponentUint))
+	err := sdk.RegisterDenom(assets.MicroLunaDenom, sdk.NewDecWithPrec(1, assets.ExponentUint))
 	if err != nil {
 		panic(err)
 	}

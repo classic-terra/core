@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/classic-terra/core/v2/types/util"
 	"github.com/classic-terra/core/v2/types/assets"
+	"github.com/classic-terra/core/v2/types/util"
 )
 
 // Simulation parameter constants
@@ -18,11 +18,11 @@ const (
 )
 
 const (
-	
 	TerraExponent = 6
 
 	DefaultBondDenom = assets.MicroLunaDenom
 )
+
 func init() {
 	SetAddressPrefixes()
 	RegisterDenoms()

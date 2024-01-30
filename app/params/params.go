@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/classic-terra/core/v2/types/assets"
 	"github.com/classic-terra/core/v2/types/util"
 )
 
@@ -19,15 +18,6 @@ const (
 
 func init() {
 	SetAddressPrefixes()
-	RegisterDenoms()
-}
-
-// RegisterDenoms registers token denoms.
-func RegisterDenoms() {
-	err := sdk.RegisterDenom(assets.MicroLunaDenom, sdk.NewDecWithPrec(1, assets.ExponentUint))
-	if err != nil {
-		panic(err)
-	}
 }
 
 // SetAddressPrefixes builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts, validators, and consensus nodes and verifies that addreeses have correct format.

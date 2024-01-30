@@ -23,14 +23,10 @@ RUN if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
     fi; \
     cp /go/pkg/mod/github.com/classic-terra/wasmvm@v*/internal/api/${WASMVM_URL} /lib/${WASMVM_URL}
 
-FROM ubuntu:23.04
+FROM alpine:3.17
 
 COPY --from=go-builder /code/build/terrad /usr/local/bin/terrad
 COPY --from=go-builder /lib/${WASMVM_URL} /lib/${WASMVM_URL}
-
-RUN  apt-get update \
-  && apt-get install -y wget \
-  && rm -rf /var/lib/apt/lists/*
   
 ENV HOME /terra
 WORKDIR $HOME

@@ -254,6 +254,7 @@ func orderBeginBlockers() []string {
 		dyncommtypes.ModuleName,
 	}
 }
+
 func orderEndBlockers() []string {
 	return []string{
 		crisistypes.ModuleName,
@@ -286,6 +287,7 @@ func orderEndBlockers() []string {
 		dyncommtypes.ModuleName,
 	}
 }
+
 func orderInitGenesis() []string {
 	return []string{
 		capabilitytypes.ModuleName,

@@ -26665,6 +26665,57 @@ paths:
           type: string
       tags:
         - Query
+  /terra/classictax/v1beta1/params:
+    get:
+      summary: Params queries all parameters.
+      operationId: ClassicTaxParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params defines the parameters of the module.
+                type: object
+                properties:
+                  burn_tax:
+                    type: string
+                  gas_prices:
+                    type: array
+                    items:
+                      type: string
+                  taxable_msg_types:
+                    type: array
+                    items:
+                      type: string
+            description: >-
+              QueryParamsResponse is the response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /cosmwasm/wasm/v1/code:
     get:
       summary: Codes gets the metadata for all stored wasm codes
@@ -61069,6 +61120,38 @@ definitions:
       target:
         type: string
     description: QueryRateResponse is the response type for the Query/Rate RPC method.
+  terra.classictax.v1beta1.Params:
+    type: object
+    properties:
+      burn_tax:
+        type: string
+      gas_prices:
+        type: array
+        items:
+          type: string
+      taxable_msg_types:
+        type: array
+        items:
+          type: string
+    description: Params defines the parameters for the classictax module.
+  terra.classictax.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+        properties:
+          burn_tax:
+            type: string
+          gas_prices:
+            type: array
+            items:
+              type: string
+          taxable_msg_types:
+            type: array
+            items:
+              type: string
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmwasm.wasm.v1.AbsoluteTxPosition:
     type: object
     properties:

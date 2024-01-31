@@ -9,6 +9,10 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	expectedkeeper "github.com/classic-terra/core/v2/custom/auth/keeper"
+	classictax "github.com/classic-terra/core/v2/x/classictax/ante"
+	classictaxkeeper "github.com/classic-terra/core/v2/x/classictax/keeper"
+	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,11 +25,11 @@ import (
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
 	AccountKeeper          ante.AccountKeeper
-	BankKeeper             BankKeeper
+	BankKeeper             expectedkeeper.BankKeeper
 	ExtensionOptionChecker ante.ExtensionOptionChecker
 	FeegrantKeeper         ante.FeegrantKeeper
-	OracleKeeper           OracleKeeper
-	TreasuryKeeper         TreasuryKeeper
+	OracleKeeper           expectedkeeper.OracleKeeper
+	TreasuryKeeper         expectedkeeper.TreasuryKeeper
 	SignModeHandler        signing.SignModeHandler
 	SigGasConsumer         ante.SignatureVerificationGasConsumer
 	TxFeeChecker           ante.TxFeeChecker
@@ -34,6 +38,8 @@ type HandlerOptions struct {
 	GovKeeper              govkeeper.Keeper
 	WasmConfig             *wasmtypes.WasmConfig
 	TXCounterStoreKey      storetypes.StoreKey
+	DefaultOracleKeeper    oraclekeeper.Keeper
+	ClassicTaxKeeper       classictaxkeeper.Keeper
 	DyncommKeeper          dyncommkeeper.Keeper
 	StakingKeeper          stakingkeeper.Keeper
 }
@@ -83,7 +89,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// MinInitialDepositDecorator prevents submitting governance proposal low initial deposit
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper),
+		classictax.NewClassicTaxFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper, options.DefaultOracleKeeper, options.ClassicTaxKeeper),
 		dyncommante.NewDyncommDecorator(options.DyncommKeeper, options.StakingKeeper),
 
 		// Do not add any other decorators below this point unless explicitly explain.

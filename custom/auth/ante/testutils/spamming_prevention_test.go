@@ -1,4 +1,4 @@
-package ante_test
+package testutils
 
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

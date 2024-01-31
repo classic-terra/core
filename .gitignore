@@ -28,6 +28,7 @@ client/lcd/keys/*
 client/docs/statik/statik.go
 remote/ansible/testnets
 mytestnet
+proto/google
 
 # Testing
 coverage.txt

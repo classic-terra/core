@@ -67,6 +67,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v2/x/classictax"
+	classictaxtypes "github.com/classic-terra/core/v2/x/classictax/types"
 	"github.com/classic-terra/core/v2/x/dyncomm"
 	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
 	"github.com/classic-terra/core/v2/x/market"
@@ -123,6 +125,7 @@ var (
 		treasury.AppModuleBasic{},
 		customwasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
+		classictax.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
 	)
 
@@ -185,6 +188,7 @@ func appModules(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		classictax.NewAppModule(appCodec, app.ClassicTaxKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 	}
 }
@@ -217,6 +221,7 @@ func simulationModules(
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		classictax.NewAppModule(appCodec, app.ClassicTaxKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 	}
 }
@@ -248,6 +253,7 @@ func orderBeginBlockers() []string {
 		treasurytypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
+		classictaxtypes.ModuleName,
 		dyncommtypes.ModuleName,
 	}
 }
@@ -279,6 +285,7 @@ func orderEndBlockers() []string {
 		treasurytypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
+		classictaxtypes.ModuleName,
 		dyncommtypes.ModuleName,
 	}
 }
@@ -294,6 +301,8 @@ func orderInitGenesis() []string {
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
+		// needs to be before any genesis init that makes txs
+		classictaxtypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,

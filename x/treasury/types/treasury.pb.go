@@ -5,22 +5,19 @@ package types
 
 import (
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ = proto.Marshal
-	_ = fmt.Errorf
-	_ = math.Inf
-)
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -46,11 +43,9 @@ func (*Params) ProtoMessage() {}
 func (*Params) Descriptor() ([]byte, []int) {
 	return fileDescriptor_353bb3a9c554268e, []int{0}
 }
-
 func (m *Params) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
@@ -63,15 +58,12 @@ func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-
 func (m *Params) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Params.Merge(m, src)
 }
-
 func (m *Params) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *Params) XXX_DiscardUnknown() {
 	xxx_messageInfo_Params.DiscardUnknown(m)
 }
@@ -126,11 +118,9 @@ func (*PolicyConstraints) ProtoMessage() {}
 func (*PolicyConstraints) Descriptor() ([]byte, []int) {
 	return fileDescriptor_353bb3a9c554268e, []int{1}
 }
-
 func (m *PolicyConstraints) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *PolicyConstraints) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_PolicyConstraints.Marshal(b, m, deterministic)
@@ -143,15 +133,12 @@ func (m *PolicyConstraints) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-
 func (m *PolicyConstraints) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_PolicyConstraints.Merge(m, src)
 }
-
 func (m *PolicyConstraints) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *PolicyConstraints) XXX_DiscardUnknown() {
 	xxx_messageInfo_PolicyConstraints.DiscardUnknown(m)
 }
@@ -177,11 +164,9 @@ func (*EpochTaxProceeds) ProtoMessage()    {}
 func (*EpochTaxProceeds) Descriptor() ([]byte, []int) {
 	return fileDescriptor_353bb3a9c554268e, []int{2}
 }
-
 func (m *EpochTaxProceeds) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *EpochTaxProceeds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_EpochTaxProceeds.Marshal(b, m, deterministic)
@@ -194,15 +179,12 @@ func (m *EpochTaxProceeds) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-
 func (m *EpochTaxProceeds) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_EpochTaxProceeds.Merge(m, src)
 }
-
 func (m *EpochTaxProceeds) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *EpochTaxProceeds) XXX_DiscardUnknown() {
 	xxx_messageInfo_EpochTaxProceeds.DiscardUnknown(m)
 }
@@ -228,11 +210,9 @@ func (*EpochInitialIssuance) ProtoMessage()    {}
 func (*EpochInitialIssuance) Descriptor() ([]byte, []int) {
 	return fileDescriptor_353bb3a9c554268e, []int{3}
 }
-
 func (m *EpochInitialIssuance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *EpochInitialIssuance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_EpochInitialIssuance.Marshal(b, m, deterministic)
@@ -245,15 +225,12 @@ func (m *EpochInitialIssuance) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-
 func (m *EpochInitialIssuance) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_EpochInitialIssuance.Merge(m, src)
 }
-
 func (m *EpochInitialIssuance) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *EpochInitialIssuance) XXX_DiscardUnknown() {
 	xxx_messageInfo_EpochInitialIssuance.DiscardUnknown(m)
 }
@@ -379,7 +356,6 @@ func (this *Params) Equal(that interface{}) bool {
 	}
 	return true
 }
-
 func (this *PolicyConstraints) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -413,7 +389,6 @@ func (this *PolicyConstraints) Equal(that interface{}) bool {
 	}
 	return true
 }
-
 func (m *Params) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -660,7 +635,6 @@ func encodeVarintTreasury(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-
 func (m *Params) Size() (n int) {
 	if m == nil {
 		return 0
@@ -741,11 +715,9 @@ func (m *EpochInitialIssuance) Size() (n int) {
 func sovTreasury(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-
 func sozTreasury(x uint64) (n int) {
 	return sovTreasury(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
 func (m *Params) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1055,7 +1027,6 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *PolicyConstraints) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1241,7 +1212,6 @@ func (m *PolicyConstraints) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *EpochTaxProceeds) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1326,7 +1296,6 @@ func (m *EpochTaxProceeds) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *EpochInitialIssuance) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1411,7 +1380,6 @@ func (m *EpochInitialIssuance) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func skipTreasury(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

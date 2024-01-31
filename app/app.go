@@ -213,6 +213,7 @@ func NewTerraApp(
 			GovKeeper:          app.GovKeeper,
 			WasmConfig:         &wasmConfig,
 			TXCounterStoreKey:  app.GetKey(wasm.StoreKey),
+			ClassicTaxKeeper:   app.ClassicTaxKeeper,
 			DyncommKeeper:      app.DyncommKeeper,
 			StakingKeeper:      app.StakingKeeper,
 		},
@@ -223,7 +224,11 @@ func NewTerraApp(
 
 	postHandler, err := custompost.NewPostHandler(
 		custompost.HandlerOptions{
-			DyncommKeeper: app.DyncommKeeper,
+			TreasuryKeeper:   app.TreasuryKeeper,
+			BankKeeper:       app.BankKeeper,
+			OracleKeeper:     app.OracleKeeper,
+			ClassicTaxKeeper: app.ClassicTaxKeeper,
+			DyncommKeeper:    app.DyncommKeeper,
 		},
 	)
 	if err != nil {

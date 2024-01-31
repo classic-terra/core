@@ -1,0 +1,13 @@
+syntax = "proto3";
+package terra.classictax.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "terra/classictax/v1beta1/classictax.proto";
+
+option go_package = "github.com/classic-terra/core/v2/x/classictax/types";
+
+// GenesisState defines the classictax module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}

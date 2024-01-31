@@ -54,6 +54,8 @@ import (
 	customwasmkeeper "github.com/classic-terra/core/v2/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v2/wasmbinding"
 
+	classictaxkeeper "github.com/classic-terra/core/v2/x/classictax/keeper"
+	classictaxtypes "github.com/classic-terra/core/v2/x/classictax/types"
 	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
 	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
 	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
@@ -94,6 +96,7 @@ type AppKeepers struct {
 	MarketKeeper        marketkeeper.Keeper
 	TreasuryKeeper      treasurykeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
+	ClassicTaxKeeper    classictaxkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper
 
 	// make scoped keepers public for test purposes
@@ -140,6 +143,7 @@ func NewAppKeepers(
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
 		wasmtypes.StoreKey,
+		classictaxtypes.StoreKey,
 		dyncommtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -341,6 +345,18 @@ func NewAppKeepers(
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
 	)
 
+	// register the classictax keeper, needs to be before wasmkeeper
+	appKeepers.ClassicTaxKeeper = classictaxkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[classictaxtypes.StoreKey],
+		appKeepers.GetSubspace(classictaxtypes.ModuleName),
+		appKeepers.OracleKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		appKeepers.FeeGrantKeeper,
+	)
+
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
@@ -356,6 +372,7 @@ func NewAppKeepers(
 		appKeepers.AccountKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
+		appKeepers.ClassicTaxKeeper,
 	)
 	// the first slice will replace all default msh handler with custom one
 	wasmOpts = append([]wasmkeeper.Option{wasmkeeper.WithMessageHandler(wasmMsgHandler)}, wasmOpts...)
@@ -453,6 +470,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(classictaxtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
 
 	return paramsKeeper

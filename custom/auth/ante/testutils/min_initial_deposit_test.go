@@ -1,4 +1,4 @@
-package ante_test
+package testutils
 
 import (
 	// "fmt"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
+
 	// core "github.com/terra-money/core/types"
 	// treasury "github.com/terra-money/core/x/treasury/types"
 

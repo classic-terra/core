@@ -1,4 +1,4 @@
-package ante_test
+package testutils
 
 import (
 	"encoding/json"
@@ -18,8 +18,9 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v2/custom/auth/ante"
 	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v2/x/classictax/ante"
+	"github.com/classic-terra/core/v2/x/classictax/post"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
 )
@@ -28,8 +29,10 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -54,7 +57,10 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 	s.Require().Error(err)
 
 	// zero gas is accepted in simulation mode
-	_, err = antehandler(s.ctx, tx, true)
+	s.ctx, err = antehandler(s.ctx, tx, true)
+	s.Require().NoError(err)
+
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err)
 }
 
@@ -62,8 +68,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -96,14 +104,18 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// antehandler should not error since we do not check minGasPrice in simulation mode
 	cacheCtx, _ := s.ctx.CacheContext()
-	_, err = antehandler(cacheCtx, tx, true)
+	cacheCtx, err = antehandler(cacheCtx, tx, true)
+	s.Require().Nil(err, "Decorator should not have errored in simulation mode")
+	_, err = posthandler(cacheCtx, tx, false)
 	s.Require().Nil(err, "Decorator should not have errored in simulation mode")
 
 	// Set IsCheckTx to false
 	s.ctx = s.ctx.WithIsCheckTx(false)
 
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
 
 	// Set IsCheckTx back to true for testing sufficient mempool fee
@@ -113,7 +125,9 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
-	newCtx, err := antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
+	newCtx, err := posthandler(s.ctx, tx, false)
 	s.Require().Nil(err, "Decorator should not have errored on fee higher than local gasPrice")
 	// Priority is the smallest gas price amount in any denom. Since we have only 1 gas price
 	// of 10atom, the priority here is 10.
@@ -146,10 +160,13 @@ func (s *AnteTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 	s.Require().NoError(err)
 
-	dfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	dfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(dfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, _ = antehandler(s.ctx, tx, false)
+	_, err = posthandler(s.ctx, tx, false)
 
 	s.Require().NotNil(err, "Tx did not error when fee payer had insufficient funds")
 
@@ -158,8 +175,9 @@ func (s *AnteTestSuite) TestDeductFees() {
 	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
 	s.Require().NoError(err)
 
-	_, err = antehandler(s.ctx, tx, false)
-
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().Nil(err, "Tx errored after account has been set with sufficient funds")
 }
 
@@ -167,8 +185,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -200,20 +220,24 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
+	expectedTax := s.app.ClassicTaxKeeper.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
+	expectedStabilityTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedStabilityTax.GT(taxCap) {
+		expectedStabilityTax = taxCap
 	}
 
 	// set tax amount
-	feeAmount = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax))
+	feeAmount = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedStabilityTax)))
 	s.txBuilder.SetFeeAmount(feeAmount)
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
 	// must pass with tax
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
@@ -221,8 +245,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -254,19 +280,23 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
+	expectedTax := s.app.ClassicTaxKeeper.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
+	expectedStabilityTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedStabilityTax.GT(taxCap) {
+		expectedStabilityTax = taxCap
 	}
 
 	// set tax amount
-	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedStabilityTax))))
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
 	// must pass with tax
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
@@ -274,8 +304,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -316,24 +348,30 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
+	expectedTax := s.app.ClassicTaxKeeper.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
+	expectedStabilityTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedStabilityTax.GT(taxCap) {
+		expectedStabilityTax = taxCap
 	}
 
 	// set tax amount
-	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedStabilityTax))))
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
-	_, err = antehandler(s.ctx, tx, false)
-	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not errored on low fee for local gasPrice + tax")
+	_, err = posthandler(s.ctx, tx, false)
+	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + taxes")
 
 	// must pass with tax
-	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedTax))))
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedTax).Add(expectedStabilityTax).Add(expectedStabilityTax)))) // 2 times
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
@@ -341,8 +379,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -380,19 +420,23 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
+	expectedTax := s.app.ClassicTaxKeeper.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
+	expectedStabilityTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedStabilityTax.GT(taxCap) {
+		expectedStabilityTax = taxCap
 	}
 
 	// set tax amount
-	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedStabilityTax))))
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
 	// must pass with tax
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
@@ -400,8 +444,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -438,19 +484,23 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	_, err = antehandler(s.ctx, tx, false)
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
+	expectedTax := s.app.ClassicTaxKeeper.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
+	expectedStabilityTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedStabilityTax.GT(taxCap) {
+		expectedStabilityTax = taxCap
 	}
 
 	// set tax amount
-	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedStabilityTax))))
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
 	// must pass with tax
 	_, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
@@ -458,8 +508,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+	mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -488,22 +540,28 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	// antehandler errors with insufficient fees due to tax
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on low fee for local gasPrice + tax in ante")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
+	expectedTax := s.app.ClassicTaxKeeper.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
+	expectedStabilityTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedStabilityTax.GT(taxCap) {
+		expectedStabilityTax = taxCap
 	}
 
 	// set tax amount
-	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
+	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedStabilityTax))))
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
 	// must pass with tax
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
@@ -525,9 +583,11 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	sendAmt := int64(1000000)
 	sendCoin := sdk.NewInt64Coin(core.MicroSDRDenom, sendAmt)
 	feeAmt := int64(1000)
+	taxAmt := int64(5000)
 
 	cases := []struct {
 		name           string
+		account        sdk.AccAddress
 		msgSigner      cryptotypes.PrivKey
 		msgCreator     func() []sdk.Msg
 		minFeeAmount   int64
@@ -535,6 +595,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
+			account:   addrs[0],
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -544,10 +605,11 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			minFeeAmount:   0,
+			minFeeAmount:   feeAmt,
 			expectProceeds: 0,
 		}, {
 			name:      "MsgSend(normal -> normal)",
+			account:   addrs[2],
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -559,9 +621,10 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			},
 			// tax this one hence burn amount is fee amount
 			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			expectProceeds: taxAmt,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
+			account:   addrs[0],
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -574,10 +637,11 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			minFeeAmount:   feeAmt * 2,
+			expectProceeds: taxAmt,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
+			account:   addrs[0],
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -610,16 +674,17 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			minFeeAmount:   feeAmt * 2,
-			expectProceeds: feeAmt * 2,
+			minFeeAmount:   feeAmt * 3,
+			expectProceeds: taxAmt * 2,
 		}, {
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
+			account:   addrs[3],
 			msgSigner: privs[3],
 			msgCreator: func() []sdk.Msg {
 				sendAmount := int64(1000000)
 				sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
 				// get wasm code for wasm contract create and instantiate
-				wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
+				wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 				s.Require().NoError(err)
 				per := wasmkeeper.NewDefaultPermissionKeeper(s.app.WasmKeeper)
 				// set wasm default params
@@ -660,8 +725,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				msgs = append(msgs, msg2)
 				return msgs
 			},
-			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			minFeeAmount:   feeAmt * 2,
+			expectProceeds: taxAmt,
 		},
 	}
 
@@ -672,7 +737,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		tk := s.app.TreasuryKeeper
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
-		burnSplitRate := sdk.NewDecWithPrec(5, 1)
+		burnSplitRate := tk.GetBurnSplitRate(s.ctx)
 
 		// Set burn split rate to 50%
 		tk.SetBurnSplitRate(s.ctx, burnSplitRate)
@@ -683,35 +748,48 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
 		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
-		mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper)
+		// reset feecollector
+		feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
+
+		mfd := ante.NewClassicTaxFeeDecorator(s.app.AccountKeeper, bk, s.app.FeeGrantKeeper, tk, s.app.OracleKeeper, s.app.ClassicTaxKeeper)
 		antehandler := sdk.ChainAnteDecorators(mfd)
+		mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, tk, bk, s.app.OracleKeeper)
+		posthandler := sdk.ChainAnteDecorators(mpd)
 
 		for i := 0; i < 4; i++ {
 			coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(10000000)))
-			testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+			testutil.FundAccount(bk, s.ctx, addrs[i], coins)
 		}
 
 		// msg and signatures
-		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.minFeeAmount))
+		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.minFeeAmount+c.expectProceeds))
 		gasLimit := testdata.NewTestGasLimit()
 		require.NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
 		s.txBuilder.SetFeeAmount(feeAmount)
 		s.txBuilder.SetGasLimit(gasLimit)
 
-		privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{0}, []uint64{0}
+		account := ak.GetAccount(s.ctx, c.account)
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}
 		tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 		require.NoError(err)
 
-		_, err = antehandler(s.ctx, tx, false)
+		s.ctx, err = antehandler(s.ctx, tx, false)
 		require.NoError(err)
 
+		s.ctx, err = posthandler(s.ctx, tx, false)
+		require.NoError(err)
+
+		account.SetSequence(account.GetSequence() + 1)
+
 		// check fee collector
-		feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 		amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
-		require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
+		require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.expectProceeds).Mul(burnSplitRate).TruncateInt().Add(sdk.NewInt(c.minFeeAmount))))
 
 		// check tax proceeds
 		taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
+		if taxProceeds.IsZero() {
+			taxProceeds = sdk.Coins{}
+		}
 		require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))))
 	}
 }
@@ -733,11 +811,15 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	ak := s.app.AccountKeeper
 	bk := s.app.BankKeeper
 	tk := s.app.TreasuryKeeper
-	mfd := ante.NewFeeDecorator(ak, bk, s.app.FeeGrantKeeper, tk)
+	ctk := s.app.ClassicTaxKeeper
+	mfd := ante.NewClassicTaxFeeDecorator(ak, bk, s.app.FeeGrantKeeper, tk, s.app.OracleKeeper, ctk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(ctk, tk, bk, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// Set burn split tax
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+	tk.SetTaxRate(s.ctx, sdk.ZeroDec())
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -752,10 +834,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	gasLimit := testdata.NewTestGasLimit()
 	require.NoError(s.txBuilder.SetMsgs(msg))
 	s.txBuilder.SetGasLimit(gasLimit)
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
-	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
-		expectedTax = taxCap
-	}
+	expectedTax := ctk.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 
 	// set tax amount
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
@@ -782,15 +861,20 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 		amountFeeBefore,
 	)
 
-	// send tx to BurnTaxFeeDecorator antehandler
-	_, err = antehandler(s.ctx, tx, false)
+	// send tx to classictax antehandler
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	require.NoError(err)
+
+	_, err = posthandler(s.ctx, tx, false)
 	require.NoError(err)
 
 	// burn the burn account
 	tk.BurnCoinsFromBurnAccount(s.ctx)
 
 	feeCollectorAfter := sdk.NewDecCoinsFromCoins(bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))...)
-	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, msg)
+	taxes, _, _, err := s.app.ClassicTaxKeeper.GetTaxCoins(s.ctx, msg)
+	require.NoError(err)
+
 	burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 
 	if burnSplitRate.IsPositive() {
@@ -825,13 +909,17 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(
+	mfd := ante.NewClassicTaxFeeDecorator(
 		s.app.AccountKeeper,
 		s.app.BankKeeper,
 		s.app.FeeGrantKeeper,
 		s.app.TreasuryKeeper,
+		s.app.OracleKeeper,
+		s.app.ClassicTaxKeeper,
 	)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -861,7 +949,9 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
 	// IBC must pass without burn
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on IBC denoms")
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on IBC denoms")
 
 	// check if tax proceeds are empty
@@ -874,13 +964,17 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-	mfd := ante.NewFeeDecorator(
+	mfd := ante.NewClassicTaxFeeDecorator(
 		s.app.AccountKeeper,
 		s.app.BankKeeper,
 		s.app.FeeGrantKeeper,
 		s.app.TreasuryKeeper,
+		s.app.OracleKeeper,
+		s.app.ClassicTaxKeeper,
 	)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	mpd := post.NewClassicTaxPostDecorator(s.app.ClassicTaxKeeper, s.app.TreasuryKeeper, s.app.BankKeeper, s.app.OracleKeeper)
+	posthandler := sdk.ChainAnteDecorators(mpd)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -904,7 +998,9 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err)
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err)
 
 	// check fee collector empty
@@ -917,7 +1013,9 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
 
-	_, err = antehandler(s.ctx, tx, false)
+	s.ctx, err = antehandler(s.ctx, tx, false)
+	s.Require().NoError(err)
+	_, err = posthandler(s.ctx, tx, false)
 	s.Require().NoError(err)
 
 	// check fee collector empty

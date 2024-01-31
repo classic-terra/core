@@ -60,6 +60,8 @@ import (
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
+	taxexemptiontypes "github.com/classic-terra/core/v2/x/taxexemption/types"
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
@@ -93,6 +95,7 @@ type AppKeepers struct {
 	OracleKeeper        oraclekeeper.Keeper
 	MarketKeeper        marketkeeper.Keeper
 	TreasuryKeeper      treasurykeeper.Keeper
+	TaxExemptionKeeper  taxexemptionkeeper.Keeper
 	WasmKeeper          wasmkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper
 
@@ -139,6 +142,7 @@ func NewAppKeepers(
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
+		taxexemptiontypes.StoreKey,
 		wasmtypes.StoreKey,
 		dyncommtypes.StoreKey,
 	)
@@ -341,6 +345,13 @@ func NewAppKeepers(
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
 	)
 
+	appKeepers.TaxExemptionKeeper = taxexemptionkeeper.NewKeeper(
+		appCodec, appKeepers.keys[taxexemptiontypes.StoreKey],
+		appKeepers.GetSubspace(taxexemptiontypes.ModuleName),
+		appKeepers.AccountKeeper,
+		string(appKeepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+	)
+
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
@@ -352,6 +363,7 @@ func NewAppKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		scopedWasmKeeper,
 		appKeepers.BankKeeper,
+		appKeepers.TaxExemptionKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
 		appCodec,
@@ -451,6 +463,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
+	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)

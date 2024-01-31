@@ -3,6 +3,7 @@ package ante
 import (
 	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
 	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
@@ -26,6 +27,7 @@ type HandlerOptions struct {
 	FeegrantKeeper         ante.FeegrantKeeper
 	OracleKeeper           OracleKeeper
 	TreasuryKeeper         TreasuryKeeper
+	TaxExemptionKeeper     taxexemptionkeeper.Keeper
 	SignModeHandler        signing.SignModeHandler
 	SigGasConsumer         ante.SignatureVerificationGasConsumer
 	TxFeeChecker           ante.TxFeeChecker
@@ -83,7 +85,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// MinInitialDepositDecorator prevents submitting governance proposal low initial deposit
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper),
+		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TaxExemptionKeeper, options.TreasuryKeeper),
 		dyncommante.NewDyncommDecorator(options.DyncommKeeper, options.StakingKeeper),
 
 		// Do not add any other decorators below this point unless explicitly explain.

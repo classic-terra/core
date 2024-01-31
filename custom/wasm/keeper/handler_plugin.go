@@ -5,6 +5,7 @@ import (
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,11 +31,12 @@ type MessageRouter interface {
 
 // SDKMessageHandler can handles messages that can be encoded into sdk.Message types and routed.
 type SDKMessageHandler struct {
-	router         MessageRouter
-	encoders       msgEncoder
-	treasuryKeeper treasurykeeper.Keeper
-	accountKeeper  authkeeper.AccountKeeper
-	bankKeeper     bankKeeper.Keeper
+	router             MessageRouter
+	encoders           msgEncoder
+	treasuryKeeper     treasurykeeper.Keeper
+	accountKeeper      authkeeper.AccountKeeper
+	bankKeeper         bankKeeper.Keeper
+	taxexemptionKeeper taxexemptionkeeper.Keeper
 }
 
 func NewMessageHandler(
@@ -42,6 +44,7 @@ func NewMessageHandler(
 	channelKeeper wasmtypes.ChannelKeeper,
 	capabilityKeeper wasmtypes.CapabilityKeeper,
 	bankKeeper bankKeeper.Keeper,
+	taxexemptionKeeper taxexemptionkeeper.Keeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	accountKeeper authkeeper.AccountKeeper,
 	unpacker codectypes.AnyUnpacker,
@@ -53,19 +56,20 @@ func NewMessageHandler(
 		encoders = encoders.Merge(e)
 	}
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
+		NewSDKMessageHandler(router, encoders, taxexemptionKeeper, treasuryKeeper, accountKeeper, bankKeeper),
 		wasmkeeper.NewIBCRawPacketHandler(channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
 
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
+func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, taxexemptionKeeper taxexemptionkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
 	return SDKMessageHandler{
-		router:         router,
-		encoders:       encoders,
-		treasuryKeeper: treasuryKeeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
+		router:             router,
+		encoders:           encoders,
+		treasuryKeeper:     treasuryKeeper,
+		taxexemptionKeeper: taxexemptionKeeper,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
 	}
 }
 
@@ -77,7 +81,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 
 	for _, sdkMsg := range sdkMsgs {
 		// Charge tax on result msg
-		taxes := ante.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
+		taxes := ante.FilterMsgAndComputeTax(ctx, h.taxexemptionKeeper, h.treasuryKeeper, sdkMsg)
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
 			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)

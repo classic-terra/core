@@ -373,6 +373,11 @@ func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) e
 	return nil
 }
 
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}
+
+/*
 // HasBurnTaxExemptionAddress returns true if all provided addresses are in the
 // tax exemption whitelist
 func (k Keeper) HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool {
@@ -402,3 +407,4 @@ func (k Keeper) HasBurnTaxExemptionContract(ctx sdk.Context, address string) boo
 
 	return k.HasBurnTaxExemptionAddress(ctx, address)
 }
+*/

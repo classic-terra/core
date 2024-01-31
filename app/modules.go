@@ -73,6 +73,9 @@ import (
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	"github.com/classic-terra/core/v2/x/oracle"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v2/x/taxexemption"
+	taxexemptionclient "github.com/classic-terra/core/v2/x/taxexemption/client"
+	taxexemptiontypes "github.com/classic-terra/core/v2/x/taxexemption/types"
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasuryclient "github.com/classic-terra/core/v2/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
@@ -106,6 +109,11 @@ var (
 				ibcclientclient.UpgradeProposalHandler,
 				treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
 				treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
+				taxexemptionclient.ProposalAddTaxExemptionZoneHandler,
+				taxexemptionclient.ProposalRemoveTaxExemptionZoneHandler,
+				taxexemptionclient.ProposalModifyTaxExemptionZoneHandler,
+				taxexemptionclient.ProposalAddTaxExemptionAddressHandler,
+				taxexemptionclient.ProposalRemoveTaxExemptionAddressHandler,
 			),
 		),
 		customparams.AppModuleBasic{},
@@ -121,6 +129,7 @@ var (
 		oracle.AppModuleBasic{},
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
+		taxexemption.AppModuleBasic{},
 		customwasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
@@ -184,6 +193,7 @@ func appModules(
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 	}
@@ -216,6 +226,7 @@ func simulationModules(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 	}
@@ -246,6 +257,7 @@ func orderBeginBlockers() []string {
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
+		taxexemptiontypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
@@ -277,6 +289,7 @@ func orderEndBlockers() []string {
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
+		taxexemptiontypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
@@ -309,6 +322,7 @@ func orderInitGenesis() []string {
 		markettypes.ModuleName,
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
+		taxexemptiontypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
 	}

@@ -1,7 +1,6 @@
 package configurer
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/classic-terra/core/v2/tests/e2e/configurer/chain"
@@ -129,31 +128,12 @@ var (
 // New returns a new Configurer depending on the values of its parameters.
 // - If only isIBCEnabled, we want to have 2 chains initialized at the current
 // Git branch version of Terra  codebase.
-// - If only isUpgradeEnabled, that is invalid and an error is returned.
-// - If both isIBCEnabled and isUpgradeEnabled, we want 2 chains with IBC initialized
-// at the previous Terra version.
-// - If !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the current
-// Git branch version of the Terra code.
-func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings UpgradeSettings) (Configurer, error) {
-	containerManager, err := containers.NewManager(upgradeSettings.IsEnabled, upgradeSettings.ForkHeight > 0, isDebugLogEnabled)
+func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool) (Configurer, error) {
+	containerManager, err := containers.NewManager(isDebugLogEnabled)
 	if err != nil {
 		return nil, err
 	}
-	if isIBCEnabled && upgradeSettings.IsEnabled { //nolint
-		// skip none - configure two chains via Docker
-		// to utilize the older version of Terra to upgrade from
-		return NewUpgradeConfigurer(t,
-			[]*chain.Config{
-				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
-				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
-				chain.New(t, containerManager, initialization.ChainCID, validatorConfigsChainC),
-			},
-			withUpgrade(withIBC(baseSetup)), // base set up with IBC and upgrade
-			containerManager,
-			upgradeSettings.Version,
-			upgradeSettings.ForkHeight,
-		), nil
-	} else if isIBCEnabled {
+	if isIBCEnabled {
 		// configure two chains from current Git branch
 		return NewCurrentBranchConfigurer(t,
 			[]*chain.Config{
@@ -164,10 +144,6 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings Upg
 			withIBC(baseSetup), // base set up with IBC
 			containerManager,
 		), nil
-	} else if upgradeSettings.IsEnabled {
-		// invalid - IBC tests must be enabled for upgrade
-		// to function
-		return nil, errors.New("IBC tests must be enabled for upgrade to work")
 	} else {
 		// configure one chain from current Git branch
 		return NewCurrentBranchConfigurer(t,

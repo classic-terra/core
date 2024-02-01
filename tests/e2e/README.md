@@ -26,7 +26,7 @@ variables. See "Environment variables" section below for more details.
 
 ## How to run
 
-To run all e2e-tests in the package, run: 
+To run all e2e-tests in the package, run:
 
 ```sh
     make test-e2e
@@ -78,10 +78,6 @@ Some tests take a long time to run. Sometimes, we would like to disable them
 locally or in CI. The following are the environment variables to disable
 certain components of e2e testing.
 
-- `TERRA_E2E_SKIP_UPGRADE` - when true, skips the upgrade tests.
-If TERRA_E2E_SKIP_UPGRADE is true, this must also be set to true because upgrade
-tests require IBC logic.
-
 - `TERRA_E2E_SKIP_IBC` - when true, skips the IBC tests tests.
 
 - `TERRA_E2E_SKIP_STATE_SYNC` - when true, skips the state sync tests.
@@ -118,7 +114,6 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
     "buildFlags": "-tags e2e",
     "env": {
         "TERRA_E2E_SKIP_IBC": "true",
-        "TERRA_E2E_SKIP_UPGRADE": "true",
         "TERRA_E2E_SKIP_CLEANUP": "true",
         "TERRA_E2E_SKIP_STATE_SYNC": "true",
         "TERRA_E2E_UPGRADE_VERSION": "v5",

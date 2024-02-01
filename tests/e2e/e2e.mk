@@ -11,19 +11,19 @@ test-e2e: e2e-setup test-e2e-ci
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) TERRA_E2E=True TERRA_E2E_SKIP_UPGRADE=True TERRA_E2E_DEBUG_LOG=True  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) TERRA_E2E=True TERRA_E2E_DEBUG_LOG=True  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
 test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) TERRA_E2E=True TERRA_E2E_SKIP_UPGRADE=True TERRA_E2E_DEBUG_LOG=True TERRA_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) TERRA_E2E=True TERRA_E2E_DEBUG_LOG=True TERRA_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 # test-e2e-short runs the e2e test with only short tests.
 # Does not delete any of the containers after running.
 # Deletes any existing containers before running.
 # Does not use Go cache.
 test-e2e-short: e2e-setup
-	@VERSION=$(VERSION) TERRA_E2E=True TERRA_E2E_SKIP_UPGRADE=True TERRA_E2E_DEBUG_LOG=True TERRA_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) TERRA_E2E=True TERRA_E2E_DEBUG_LOG=True TERRA_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 build-e2e-script:
 	mkdir -p $(BUILDDIR)

@@ -37,9 +37,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
-	var (
-		err             error
-	)
+	var err error
 
 	// The e2e test flow is as follows:
 	//

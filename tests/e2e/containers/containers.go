@@ -64,7 +64,7 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, 
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainID), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
-	txCommand := append(command, allTxArgs...)	//nolint
+	txCommand := append(command, allTxArgs...) //nolint
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 

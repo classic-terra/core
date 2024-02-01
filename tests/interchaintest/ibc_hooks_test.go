@@ -139,8 +139,6 @@ func TestTerraIBCHooks(t *testing.T) {
 	terraHeight, err := terra.Height(ctx)
 	require.NoError(t, err)
 
-	// TODO: Remove when the relayer is fixed
-	r.Flush(ctx, eRep, path, channel.ChannelID)
 	_, err = testutil.PollForAck(ctx, terra, terraHeight-5, terraHeight+25, transferTx.Packet)
 	require.NoError(t, err)
 
@@ -150,8 +148,6 @@ func TestTerraIBCHooks(t *testing.T) {
 	terraHeight, err = terra.Height(ctx)
 	require.NoError(t, err)
 
-	// TODO: Remove when the relayer is fixed
-	r.Flush(ctx, eRep, path, channel.ChannelID)
 	_, err = testutil.PollForAck(ctx, terra, terraHeight-5, terraHeight+25, transferTx.Packet)
 	require.NoError(t, err)
 

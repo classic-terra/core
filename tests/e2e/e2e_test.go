@@ -102,11 +102,9 @@ func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
 
 	receiver := nodeB.GetWallet(initialization.ValidatorWalletName)
 
-	// query old bank balances
-	balanceReceiverOld, err := nodeC.QueryBalances(receiver)
-	s.NoError(err)
-	found, _ := balanceReceiverOld.Find("luna")
-	s.False(found)
+	balanceReceiverOld, err := nodeC.QuerySpecificBalance(receiver, initialization.TerraDenom)
+	s.Require().NoError(err)
+	s.Require().Equal(balanceReceiverOld, sdk.Coin{})
 
 	nodeA.SendIBCTransfer(validatorAddr, receiver, fmt.Sprintf("%duluna", transferAmount.Int64()),
 		fmt.Sprintf(`{"forward":{"receiver":"%s","port":"transfer","channel":"channel-2"}}`, receiver))

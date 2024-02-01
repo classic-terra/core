@@ -82,18 +82,17 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 }
 
 // if coin is zero, return empty coin.
-func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (amt sdk.Coin, err error) {
+func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (sdk.Coin, error) {
 	balances, err := n.QueryBalances(addr)
 	if err != nil {
-		return amt, err
+		return sdk.Coin{}, err
 	}
 	for _, c := range balances {
 		if c.Denom == denom {
-			amt = c
-			break
+			return c, nil
 		}
 	}
-	return amt, nil
+	return sdk.Coin{}, nil
 }
 
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {

@@ -59,14 +59,12 @@ func ExecuteMsgWithFee(t *testing.T, ctx context.Context, chain *cosmos.CosmosCh
 func StoreContract(ctx context.Context, chain *cosmos.CosmosChain, keyname string, fileName string) (string, error) {
 	_, file := filepath.Split(fileName)
 	chainNode := chain.FullNodes[0]
-	for _, node := range chain.Nodes() {
-		err := node.CopyFile(ctx, fileName, file)
-		if err != nil {
-			return "", fmt.Errorf("writing contract file to docker volume: %w", err)
-		}
+	err := chainNode.CopyFile(ctx, fileName, file)
+	if err != nil {
+		return "", fmt.Errorf("writing contract file to docker volume: %w", err)
 	}
 
-	_, err := chainNode.ExecTx(ctx, keyname, "wasm", "store", path.Join(chainNode.HomeDir(), file), "--gas", "2000000")
+	_, err = chainNode.ExecTx(ctx, keyname, "wasm", "store", path.Join(chainNode.HomeDir(), file), "--gas", "2000000")
 	if err != nil {
 		return "", fmt.Errorf("store contract: %w", err)
 	}

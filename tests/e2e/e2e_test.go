@@ -57,7 +57,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	var response interface{}
 	response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
 	s.Require().NoError(err)
-	fmt.Println("response: ", response)
 
 	s.Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
@@ -65,15 +64,24 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 			return false
 		}
 
-		fmt.Println("response: ", response)
+		
 		totalFunds := response.([]interface{})[0]
 		amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
 		if err != nil {
 			return false
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
+		
+		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_count": {}}`)
+		if err != nil {
+			return false
+		}
+		count, err := strconv.ParseInt(response.(string), 10, 64)
+		if err != nil {
+			return false
+		}
 		// check if denom is uluna token ibc
-		return sdk.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom
+		return sdk.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom && count == 1
 	},
 		10*time.Second,
 		10*time.Millisecond,

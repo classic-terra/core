@@ -47,7 +47,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // method.
 func (n *NodeConfig) Run() error {
 	n.t.Logf("starting node container: %s", n.Name)
-	resource, err := n.containerManager.RunNodeResource(n.chainID, n.Name, n.ConfigDir)
+	resource, err := n.containerManager.RunNodeResource(n.Name, n.ConfigDir)
 	if err != nil {
 		return err
 	}

@@ -192,7 +192,7 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 
 	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposal(addresses, initialization.ValidatorWalletName)
 
-	chainANode.DepositProposal(propNumber, false)
+	chainANode.DepositProposal(propNumber)
 	AllValsVoteOnProposal(c, propNumber)
 
 	time.Sleep(2 * time.Minute)

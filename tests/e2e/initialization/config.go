@@ -228,7 +228,7 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis(appGenState))
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis)
 	if err != nil {
 		return err
 	}
@@ -278,12 +278,10 @@ func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 	mintGenState.Params.MintDenom = TerraDenom
 }
 
-func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
-	return func(bankGenState *banktypes.GenesisState) {
-		denomsToRegister := []string{TerraDenom, AtomDenom}
-		for _, denom := range denomsToRegister {
-			setDenomMetadata(bankGenState, denom)
-		}
+func updateBankGenesis(bankGenState *banktypes.GenesisState) {
+	denomsToRegister := []string{TerraDenom, AtomDenom}
+	for _, denom := range denomsToRegister {
+		setDenomMetadata(bankGenState, denom)
 	}
 }
 

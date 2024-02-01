@@ -144,14 +144,14 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool) (Configurer, error)
 			withIBC(baseSetup), // base set up with IBC
 			containerManager,
 		), nil
-	} else {
-		// configure one chain from current Git branch
-		return NewCurrentBranchConfigurer(t,
-			[]*chain.Config{
-				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
-			},
-			baseSetup, // base set up only
-			containerManager,
-		), nil
 	}
+
+	// configure one chain from current Git branch
+	return NewCurrentBranchConfigurer(t,
+		[]*chain.Config{
+			chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
+		},
+		baseSetup, // base set up only
+		containerManager,
+	), nil
 }

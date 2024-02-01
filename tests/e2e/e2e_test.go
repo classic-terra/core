@@ -64,14 +64,13 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 			return false
 		}
 
-		
 		totalFunds := response.([]interface{})[0]
 		amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
 		if err != nil {
 			return false
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
-		
+
 		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_count": {}}`)
 		if err != nil {
 			return false

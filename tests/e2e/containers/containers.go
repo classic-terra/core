@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	hermesContainerName1 = "hermes-relayer"
-	hermesContainerName2 = "hermes-relayer2"
+	HermesContainerName1 = "hermes-relayer"
+	HermesContainerName2 = "hermes-relayer2"
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
@@ -69,13 +69,8 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, conta
 }
 
 // ExecHermesCmd executes command on the hermes relayer 1 container.
-func (m *Manager) ExecHermesCmd1(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
-	return m.ExecCmd(t, hermesContainerName1, command, success)
-}
-
-// ExecHermesCmd executes command on the hermes relayer 2 container.
-func (m *Manager) ExecHermesCmd2(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
-	return m.ExecCmd(t, hermesContainerName2, command, success)
+func (m *Manager) ExecHermesCmd(t *testing.T, command []string, hermesContainerName string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecCmd(t, hermesContainerName, command, success)
 }
 
 func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
@@ -157,10 +152,10 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource1(chainAID, terraARelayerNodeName, terraAValMnemonic, chainBID, terraBRelayerNodeName, terraBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(chainAID, terraARelayerNodeName, terraAValMnemonic, chainBID, terraBRelayerNodeName, terraBValMnemonic string, hermesContainerName string, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       hermesContainerName1,
+			Name:       hermesContainerName,
 			Repository: m.RelayerRepository,
 			Tag:        m.RelayerTag,
 			NetworkID:  m.network.Network.ID,
@@ -196,50 +191,7 @@ func (m *Manager) RunHermesResource1(chainAID, terraARelayerNodeName, terraAValM
 	if err != nil {
 		return nil, err
 	}
-	m.resources[hermesContainerName1] = hermesResource
-	return hermesResource, nil
-}
-
-func (m *Manager) RunHermesResource2(chainAID, terraARelayerNodeName, terraAValMnemonic, chainBID, terraBRelayerNodeName, terraBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
-	hermesResource, err := m.pool.RunWithOptions(
-		&dockertest.RunOptions{
-			Name:       hermesContainerName2,
-			Repository: m.RelayerRepository,
-			Tag:        m.RelayerTag,
-			NetworkID:  m.network.Network.ID,
-			Cmd: []string{
-				"start",
-			},
-			User: "root:root",
-			Mounts: []string{
-				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
-			},
-			ExposedPorts: []string{
-				"3031",
-			},
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
-			},
-			Env: []string{
-				fmt.Sprintf("TERRA_A_E2E_CHAIN_ID=%s", chainAID),
-				fmt.Sprintf("TERRA_B_E2E_CHAIN_ID=%s", chainBID),
-				fmt.Sprintf("TERRA_A_E2E_VAL_MNEMONIC=%s", terraAValMnemonic),
-				fmt.Sprintf("TERRA_B_E2E_VAL_MNEMONIC=%s", terraBValMnemonic),
-				fmt.Sprintf("TERRA_A_E2E_VAL_HOST=%s", terraARelayerNodeName),
-				fmt.Sprintf("TERRA_B_E2E_VAL_HOST=%s", terraBRelayerNodeName),
-			},
-			Entrypoint: []string{
-				"sh",
-				"-c",
-				"chmod +x /root/hermes/hermes_bootstrap.sh && /root/hermes/hermes_bootstrap.sh",
-			},
-		},
-		noRestart,
-	)
-	if err != nil {
-		return nil, err
-	}
-	m.resources[hermesContainerName2] = hermesResource
+	m.resources[hermesContainerName] = hermesResource
 	return hermesResource, nil
 }
 

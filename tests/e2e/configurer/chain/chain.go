@@ -114,7 +114,7 @@ func (c *Config) WaitForNumHeights(heightsToWait int64) {
 	c.WaitUntilHeight(currentHeight + heightsToWait)
 }
 
-func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
+func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin, hermesContainerName string) {
 	c.t.Logf("IBC sending %s from %s to %s (%s)", token, c.ID, dstChain.ID, recipient)
 
 	dstNode, err := dstChain.GetDefaultNode()
@@ -124,7 +124,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	require.NoError(c.t, err)
 
 	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.ID, c.ID, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	_, _, err = c.containerManager.ExecHermesCmd2(c.t, cmd, "Success")
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, hermesContainerName, "Success")
 	require.NoError(c.t, err)
 
 	require.Eventually(
@@ -140,43 +140,6 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			}
-			return false
-		},
-		5*time.Minute,
-		time.Second,
-		"tx not received on destination chain",
-	)
-
-	c.t.Log("successfully sent IBC tokens")
-}
-
-func (c *Config) SendIBC2(dstChain *Config, recipient string, token sdk.Coin) {
-	c.t.Logf("IBC sending %s from %s to %s (%s)", token, c.ID, dstChain.ID, recipient)
-
-	dstNode, err := dstChain.GetDefaultNode()
-	require.NoError(c.t, err)
-
-	balancesDstPre, err := dstNode.QueryBalances(recipient)
-	require.NoError(c.t, err)
-
-	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.ID, c.ID, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	_, _, err = c.containerManager.ExecHermesCmd2(c.t, cmd, "Success")
-	require.NoError(c.t, err)
-
-	require.Eventually(
-		c.t,
-		func() bool {
-			balancesDstPost, err := dstNode.QueryBalances(recipient)
-			require.NoError(c.t, err)
-			ibcCoin := balancesDstPost.Sub(balancesDstPre...)
-			if ibcCoin.Len() == 1 {
-				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := token.Amount
-				resPost := tokenPost.Sub(tokenPre)
-				return resPost.Uint64() == resPre.Uint64()
-			}
-
 			return false
 		},
 		5*time.Minute,

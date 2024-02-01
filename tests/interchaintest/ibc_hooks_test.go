@@ -15,6 +15,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 )
 
 // TestIBCHooks ensures the ibc-hooks middleware from osmosis works.
@@ -169,6 +171,15 @@ func TestTerraIBCHooks(t *testing.T) {
 		}
 	}
 	require.NotEmpty(t, ibcDenom)
+
+	channelsTerra, err := r.GetChannels(ctx, eRep, terra.Config().ChainID)
+	require.NoError(t, err)
+	channelTerraTerra2 := channelsTerra[0]
+	require.NotEmpty(t, channelTerraTerra2.ChannelID)
+
+	terraOnTerra2TokenDenom := transfertypes.GetPrefixedDenom(channelTerraTerra2.Counterparty.PortID, channelTerraTerra2.Counterparty.ChannelID, terra.Config().Denom)
+	terraOnTerra2IBCDenom := transfertypes.ParseDenomTrace(terraOnTerra2TokenDenom).IBCDenom()
+	require.Equal(t, ibcDenom, terraOnTerra2IBCDenom)
 
 	// ensure the count also increased to 1 as expected.
 	count := helpers.GetIBCHookCount(t, ctx, terra2, contractAddr, addr)

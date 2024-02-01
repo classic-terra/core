@@ -72,7 +72,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 			return false
 		}
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
-		// check if denom is luna token ibc
+		// check if denom is uluna token ibc
 		return sdk.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom
 	},
 		10*time.Second,
@@ -150,12 +150,12 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().NoError(err)
 
 	transferAmount1 := sdkmath.NewInt(20000000)
-	transferCoin1 := sdk.NewCoin("uluna", transferAmount1)
+	transferCoin1 := sdk.NewCoin(initialization.TerraDenom, transferAmount1)
 
 	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
 
-	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
+	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	test1Addr := node.CreateWallet("test1")
@@ -169,11 +169,11 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().NoError(err)
 	s.Require().Equal(subAmount, taxRate.Add(sdk.OneDec()).MulInt(transferAmount1).TruncateInt())
 
-	decremented := validatorBalance.Sub(sdk.NewCoin("uluna", subAmount))
-	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, "uluna")
+	decremented := validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount))
+	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
-	balanceTest1, err := node.QuerySpecificBalance(test1Addr, "uluna")
+	balanceTest1, err := node.QuerySpecificBalance(test1Addr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	s.Require().Equal(balanceTest1.Amount, transferAmount1)
@@ -182,23 +182,23 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	// Test 2: try bank send with grant
 	test2Addr := node.CreateWallet("test2")
 	transferAmount2 := sdkmath.NewInt(10000000)
-	transferCoin2 := sdk.NewCoin("uluna", transferAmount2)
+	transferCoin2 := sdk.NewCoin(initialization.TerraDenom, transferAmount2)
 
 	node.BankSend(transferCoin2.String(), validatorAddr, test2Addr)
 	node.GrantAddress(test2Addr, test1Addr, transferCoin2.String(), "test2")
 
-	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	node.BankSendFeeGrantWithWallet(transferCoin2.String(), test1Addr, validatorAddr, test2Addr, "test1")
 
-	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
-	balanceTest1, err = node.QuerySpecificBalance(test1Addr, "uluna")
+	balanceTest1, err = node.QuerySpecificBalance(test1Addr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
-	balanceTest2, err := node.QuerySpecificBalance(test2Addr, "uluna")
+	balanceTest2, err := node.QuerySpecificBalance(test2Addr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	s.Require().Equal(balanceTest1.Amount, transferAmount1.Sub(transferAmount2))
@@ -206,16 +206,16 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().Equal(balanceTest2.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount2).TruncateInt())
 
 	// Test 3: banktypes.MsgMultiSend
-	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	node.BankMultiSend(transferCoin1.String(), false, validatorAddr, test1Addr, test2Addr)
 
-	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, "uluna")
+	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	subAmount = sdk.NewDecWithPrec(204, 2).MulInt(transferAmount1).TruncateInt()
-	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin("uluna", subAmount)))
+	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount)))
 }
 
 func (s *IntegrationTestSuite) TestFeeTaxWasm() {
@@ -225,7 +225,7 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 
 	testAddr := node.CreateWallet("test")
 	transferAmount := sdkmath.NewInt(100000000)
-	transferCoin := sdk.NewCoin("uluna", transferAmount)
+	transferCoin := sdk.NewCoin(initialization.TerraDenom, transferAmount)
 	node.BankSend(fmt.Sprintf("%suluna", transferAmount.Mul(sdk.NewInt(4))), initialization.ValidatorWalletName, testAddr)
 
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
@@ -239,7 +239,7 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 
-	balance, err := node.QuerySpecificBalance(testAddr, "uluna")
+	balance, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount.MulRaw(2))).TruncateInt())
 
@@ -255,14 +255,14 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().NoError(err)
 	s.Require().Len(contracts, 2, "Wrong number of contracts for the counter")
 
-	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
+	balance, err = node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(96, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount)).TruncateInt())
 
 	contractAddr := contracts[0]
 	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), fmt.Sprintf("%duluna", stabilityFee), "test")
 
-	balance, err = node.QuerySpecificBalance(testAddr, "uluna")
+	balance, err = node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(94, 2).MulInt(transferAmount).TruncateInt())
 }

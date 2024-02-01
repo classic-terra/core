@@ -177,7 +177,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin("uluna", sdk.NewInt(20*assets.MicroUnit)).String()
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdk.NewInt(20*assets.MicroUnit)).String()
 	cmd := []string{"terrad", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)

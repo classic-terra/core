@@ -148,7 +148,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 					return err
 				}
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(initialization.TerraDenom, sdk.NewInt(config.MinDepositValue * assets.MicroUnit/4)))
+				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(initialization.TerraDenom, sdk.NewInt(config.MinDepositValue*assets.MicroUnit/4)))
 				chainConfig.LatestProposalNumber++
 				node.DepositProposal(chainConfig.LatestProposalNumber, false)
 			}

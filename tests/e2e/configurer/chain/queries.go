@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -89,7 +88,7 @@ func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (amt sdk.Coin, err
 		return amt, err
 	}
 	for _, c := range balances {
-		if strings.Contains(c.Denom, denom) {
+		if c.Denom == denom {
 			amt = c
 			break
 		}

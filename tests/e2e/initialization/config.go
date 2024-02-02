@@ -79,6 +79,7 @@ var (
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
 	oneMin = time.Minute //nolint
+	TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -301,7 +302,7 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 }
 
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
-	treasuryGenState.TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
+	treasuryGenState.TaxRate = TaxRate
 	treasuryGenState.Params.TaxPolicy = treasurytypes.PolicyConstraints{
 		RateMin: sdk.NewDecWithPrec(2, 2), // 0.02
 		RateMax: sdk.NewDecWithPrec(1, 1), // 0.1

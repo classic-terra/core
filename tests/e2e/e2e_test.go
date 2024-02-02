@@ -169,10 +169,10 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	// burn tax with bank send
 	node.BankSend(transferCoin1.String(), validatorAddr, test1Addr)
 
-	subAmount := sdk.NewDecFromInt(transferAmount1).Mul(sdk.NewDecWithPrec(102, 2)).TruncateInt()
+	subAmount := transferAmount1.Add(initialization.TaxRate.MulInt(transferAmount1).TruncateInt())
 	taxRate, err := node.QueryTaxRate()
 	s.Require().NoError(err)
-	s.Require().Equal(subAmount, taxRate.Add(sdk.OneDec()).MulInt(transferAmount1).TruncateInt())
+	s.Require().Equal(subAmount, transferAmount1.Add(taxRate.MulInt(transferAmount1).TruncateInt()))
 
 	decremented := validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount))
 	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
@@ -208,7 +208,7 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 
 	s.Require().Equal(balanceTest1.Amount, transferAmount1.Sub(transferAmount2))
 	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2))
-	s.Require().Equal(balanceTest2.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount2).TruncateInt())
+	s.Require().Equal(balanceTest2.Amount, transferAmount2.Sub(initialization.TaxRate.MulInt(transferAmount2).TruncateInt()))
 
 	// Test 3: banktypes.MsgMultiSend
 	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
@@ -219,7 +219,8 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
-	subAmount = sdk.NewDecWithPrec(204, 2).MulInt(transferAmount1).TruncateInt()
+	totalTransferAmount := transferAmount1.Mul(sdk.NewInt(2))
+	subAmount = totalTransferAmount.Add(initialization.TaxRate.MulInt(totalTransferAmount).TruncateInt())
 	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount)))
 }
 
@@ -235,6 +236,7 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
 	chain.LatestCodeID = int(node.QueryLatestWasmCodeID())
+	// instantiate contract and transfer 100000000uluna
 	node.InstantiateWasmContract(
 		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, transferCoin.String(),
@@ -244,9 +246,10 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().NoError(err)
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 
-	balance, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
+	balance1, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(98, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount.MulRaw(2))).TruncateInt())
+	// 400000000 - 100000000 - 100000000 * TaxRate = 300000000 - 10000000 * TaxRate
+	s.Require().Equal(balance1.Amount, transferAmount.Mul(sdk.NewInt(3)).Sub(initialization.TaxRate.MulInt(transferAmount).TruncateInt()))
 
 	stabilityFee := sdk.NewDecWithPrec(2, 2).MulInt(transferAmount)
 
@@ -260,14 +263,16 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	s.Require().NoError(err)
 	s.Require().Len(contracts, 2, "Wrong number of contracts for the counter")
 
-	balance, err = node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
+	balance2, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(96, 2).MulInt(transferAmount).Add(sdk.NewDecFromInt(transferAmount)).TruncateInt())
+	// balance1 - 100000000 - 100000000 * TaxRate
+	s.Require().Equal(balance2.Amount, balance1.Amount.Sub(transferAmount).Sub(initialization.TaxRate.MulInt(transferAmount).TruncateInt()))
 
 	contractAddr := contracts[0]
 	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), fmt.Sprintf("%duluna", stabilityFee), "test")
 
-	balance, err = node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
+	balance3, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	s.Require().Equal(balance.Amount, sdk.NewDecWithPrec(94, 2).MulInt(transferAmount).TruncateInt())
+	// balance2 - 100000000 - 100000000 * TaxRate
+	s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount).Sub(initialization.TaxRate.MulInt(transferAmount).TruncateInt()))
 }

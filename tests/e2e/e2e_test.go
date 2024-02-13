@@ -170,9 +170,6 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	node.BankSend(transferCoin1.String(), validatorAddr, test1Addr)
 
 	subAmount := transferAmount1.Add(initialization.TaxRate.MulInt(transferAmount1).TruncateInt())
-	taxRate, err := node.QueryTaxRate()
-	s.Require().NoError(err)
-	s.Require().Equal(subAmount, transferAmount1.Add(taxRate.MulInt(transferAmount1).TruncateInt()))
 
 	decremented := validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount))
 	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)

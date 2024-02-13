@@ -78,7 +78,9 @@ var (
 	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
-	oneMin = time.Minute //nolint
+	OneMin  = time.Minute
+	TwoMin  = 2 * time.Minute
+	FiveMin = 5 * time.Minute
 	TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
 )
 
@@ -311,7 +313,7 @@ func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 }
 
 func updateGovGenesis(govGenState *govv1.GenesisState) {
-	govGenState.VotingParams.VotingPeriod = &oneMin
+	govGenState.VotingParams.VotingPeriod = &OneMin
 	govGenState.TallyParams.Quorum = sdk.NewDecWithPrec(2, 1).String()
 	govGenState.DepositParams.MinDeposit = tenTerra
 }

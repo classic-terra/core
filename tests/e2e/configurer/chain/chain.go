@@ -142,7 +142,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin, her
 			}
 			return false
 		},
-		5*time.Minute,
+		initialization.FiveMin,
 		time.Second,
 		"tx not received on destination chain",
 	)
@@ -195,12 +195,12 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 	chainANode.DepositProposal(propNumber)
 	AllValsVoteOnProposal(c, propNumber)
 
-	time.Sleep(2 * time.Minute)
+	time.Sleep(initialization.TwoMin)
 	require.Eventually(c.t, func() bool {
 		status, err := chainANode.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
 		return status == "PROPOSAL_STATUS_PASSED"
-	}, time.Minute*1, 10*time.Millisecond)
+	}, initialization.OneMin, 10*time.Millisecond)
 }

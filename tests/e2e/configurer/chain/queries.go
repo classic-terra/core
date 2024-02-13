@@ -17,7 +17,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 	"github.com/classic-terra/core/v2/tests/e2e/util"
+
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 )
 
@@ -54,7 +56,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		}
 
 		return resp.StatusCode != http.StatusServiceUnavailable
-	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
+	}, initialization.OneMin, time.Millisecond*10, "failed to execute HTTP request")
 
 	defer resp.Body.Close()
 

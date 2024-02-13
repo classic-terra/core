@@ -161,7 +161,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 		return status == "success" && len(chains) == 2
 	},
-		1*time.Minute,
+		initialization.OneMin,
 		time.Second,
 		"hermes relayer not healthy")
 

@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		}
 		return balance[0].Amount.Equal(transferAmount)
 	},
-		1*time.Minute,
+		initialization.OneMin,
 		10*time.Millisecond)
 
 	// sender wasm addr

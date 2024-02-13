@@ -304,8 +304,8 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 	treasuryGenState.TaxRate = TaxRate
 	treasuryGenState.Params.TaxPolicy = treasurytypes.PolicyConstraints{
-		RateMin: sdk.NewDecWithPrec(2, 2), // 0.02
-		RateMax: sdk.NewDecWithPrec(1, 1), // 0.1
+		RateMin: TaxRate, // 0.02 (fixed)
+		RateMax: TaxRate, // 0.02 (fixed)
 		Cap:     sdk.NewCoin(TerraDenom, sdk.NewInt(100000000000000)),
 	}
 }

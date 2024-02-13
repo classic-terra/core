@@ -13,8 +13,6 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
-
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 )
 
 const (
@@ -86,7 +84,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		errBuf bytes.Buffer
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), initialization.FiveMin)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	if m.isDebugLogEnabled {
@@ -143,7 +141,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 			return true
 		},
-		initialization.OneMin,
+		time.Minute,
 		50*time.Millisecond,
 		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
 			success, outBuf.String(), errBuf.String()),

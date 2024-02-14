@@ -249,6 +249,31 @@ benchmark:
 .PHONY: test test-all test-cover test-unit test-race
 
 ###############################################################################
+###                               Interchain test                           ###
+###############################################################################
+# Executes basic chain tests via interchaintest
+ictest-start: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraStart .
+
+ictest-validator: ictest-build
+	@cd tests/interchaintest && go test -timeout=25m -race -v -run TestValidator .
+
+ictest-ibc: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaIBCTranfer .
+
+ictest-ibc-hooks: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraIBCHooks .
+
+ictest-ibc-pfm: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaOsmoPFM .
+
+ictest-ibc-pfm-terra: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
+
+ictest-build: 
+	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
+
+###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
 

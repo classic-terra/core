@@ -53,6 +53,7 @@ func TestMigrate(t *testing.T) {
 				{Denom: "usgd", Amount: sdk.NewInt(500000000000000000)},
 				{Denom: "uthb", Amount: sdk.NewInt(500000000000000000)},
 				{Denom: "uusd", Amount: sdk.NewInt(9797700474387101)},
+				{Denom: "uarb", Amount: sdk.NewInt(500000000000000)},
 			},
 			PercentageSupplyMaxDescending: sdk.NewDecWithPrec(30, 2), // 30%
 		},
@@ -161,7 +162,10 @@ func TestMigrate(t *testing.T) {
 			{
 			  "denom": "uusd",
 			  "amount": "9797700474387101"
-			}
+			},{
+				"denom": "uarb",
+				"amount": "500000000000000"
+			  }
 		  ],
 		  "percentage_supply_max_descending": "0.300000000000000000"
 		},

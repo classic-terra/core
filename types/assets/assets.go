@@ -10,6 +10,7 @@ const (
 	MicroEURDenom  = "ueur"
 	MicroGBPDenom  = "ugbp"
 	MicroMNTDenom  = "umnt"
+	MicroARBDenom  = "uarb"
 
 	MicroUnit = int64(1e6)
 )

@@ -41,6 +41,7 @@ var (
 		{Name: core.MicroUSDDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroMNTDenom, TobinTax: DefaultTobinTax.MulInt64(8)},
 		{Name: core.MicroEURDenom, TobinTax: DefaultTobinTax},
+		{Name: core.MicroARBDenom, TobinTax: DefaultTobinTax},
 		// {Name: core.MicroJPYDenom, TobinTax: DefaultTobinTax},
 		// {Name: core.MicroCNYDenom, TobinTax: DefaultTobinTax},
 		// {Name: core.MicroGBPDenom, TobinTax: DefaultTobinTax},

@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	whitelist   = []string{core.MicroKRWDenom, core.MicroUSDDenom, core.MicroSDRDenom}
+	whitelist   = []string{core.MicroKRWDenom, core.MicroUSDDenom, core.MicroSDRDenom,core.MicroARBDenom}
 	voteHashMap = make(map[string]string)
 )
 

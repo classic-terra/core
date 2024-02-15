@@ -116,6 +116,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				{Name: core.MicroUSDDenom, TobinTax: types.DefaultTobinTax},
 				{Name: core.MicroMNTDenom, TobinTax: sdk.NewDecWithPrec(2, 2)},
 				{Name: core.MicroEURDenom, TobinTax: types.DefaultTobinTax},
+				{Name: core.MicroARBDenom, TobinTax: types.DefaultTobinTax},
 				// {Name: core.MicroJPYDenom, TobinTax: types.DefaultTobinTax},
 				// {Name: core.MicroCNYDenom, TobinTax: types.DefaultTobinTax},
 				// {Name: core.MicroGBPDenom, TobinTax: types.DefaultTobinTax},

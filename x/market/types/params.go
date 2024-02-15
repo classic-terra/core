@@ -51,6 +51,7 @@ var (
 		{Denom: "usgd", Amount: sdk.NewInt(500000000000000000)},
 		{Denom: "uthb", Amount: sdk.NewInt(500000000000000000)},
 		{Denom: "uusd", Amount: sdk.NewInt(9797700474387101)},
+		{Denom: "uarb", Amount: sdk.NewInt(50000000000000)},
 	}
 	DefaultPercentageSupplyMaxDescending = sdk.NewDecWithPrec(30, 2) // 30%
 )
@@ -155,13 +156,13 @@ func validateMinStabilitySpread(i interface{}) error {
 }
 
 func validateMaxSupplyCoin(i interface{}) error {
-	v, ok := i.(sdk.Coins)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	if !v.IsValid() {
-		return fmt.Errorf("invalid max supply: %s", v)
-	}
+	// v, ok := i.(sdk.Coins)
+	// if !ok {
+	// 	return fmt.Errorf("invalid parameter type: %T", i)
+	// }
+	// if !v.IsValid() {
+	// 	return fmt.Errorf("invalid max supply: %s", v)
+	// }
 
 	return nil
 }

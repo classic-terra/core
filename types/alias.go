@@ -20,6 +20,7 @@ const (
 	MicroEURDenom        = assets.MicroEURDenom
 	MicroGBPDenom        = assets.MicroGBPDenom
 	MicroMNTDenom        = assets.MicroMNTDenom
+	MicroARBDenom        = assets.MicroARBDenom
 	MicroUnit            = assets.MicroUnit
 	BlocksPerMinute      = util.BlocksPerMinute
 	BlocksPerHour        = util.BlocksPerHour

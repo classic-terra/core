@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+include tests/e2e/e2e.mk
+
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
@@ -247,6 +249,31 @@ benchmark:
 	@go test -mod=readonly -bench=. ./...
 
 .PHONY: test test-all test-cover test-unit test-race
+
+###############################################################################
+###                               Interchain test                           ###
+###############################################################################
+# Executes basic chain tests via interchaintest
+ictest-start: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraStart .
+
+ictest-validator: ictest-build
+	@cd tests/interchaintest && go test -timeout=25m -race -v -run TestValidator .
+
+ictest-ibc: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaIBCTranfer .
+
+ictest-ibc-hooks: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraIBCHooks .
+
+ictest-ibc-pfm: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaOsmoPFM .
+
+ictest-ibc-pfm-terra: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
+
+ictest-build: 
+	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###

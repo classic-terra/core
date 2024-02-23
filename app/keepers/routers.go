@@ -1,6 +1,7 @@
 package keepers
 
 import (
+	forwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router/keeper"
 	icacontroller "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller"
 	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host"
@@ -11,6 +12,8 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v6/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router"
 
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
@@ -24,6 +27,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+
+	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
 )
 
 func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
@@ -43,8 +48,20 @@ func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
 func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 	// Create Transfer Stack
 	var transferStack porttypes.IBCModule
+	var transferHookStack porttypes.IBCModule
+	var transferHookFeeStack porttypes.IBCModule
+	var transferFwdHookFeeStack porttypes.IBCModule
+
 	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
-	transferStack = ibcfee.NewIBCMiddleware(transferStack, appKeepers.IBCFeeKeeper)
+	transferHookStack = ibchooks.NewIBCMiddleware(transferStack, appKeepers.IBCHooksWrapper)
+	transferHookFeeStack = ibcfee.NewIBCMiddleware(transferHookStack, appKeepers.IBCFeeKeeper)
+	transferFwdHookFeeStack = packetforward.NewIBCMiddleware(
+		transferHookFeeStack,
+		&appKeepers.ForwardKeeper,
+		5,
+		forwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
+		forwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
+	)
 
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
@@ -69,7 +86,7 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
-		AddRoute(ibctransfertypes.ModuleName, transferStack).
+		AddRoute(ibctransfertypes.ModuleName, transferFwdHookFeeStack).
 		AddRoute(wasm.ModuleName, wasmStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack)

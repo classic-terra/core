@@ -44,7 +44,7 @@ require (
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
-	github.com/opencontainers/runc v1.1.5 // indirect
+	github.com/opencontainers/runc v1.1.12 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect

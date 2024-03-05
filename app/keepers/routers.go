@@ -1,7 +1,6 @@
 package keepers
 
 import (
-	forwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router/keeper"
 	icacontroller "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller"
 	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host"
@@ -12,8 +11,6 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v6/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
-
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router"
 
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
@@ -50,18 +47,10 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 	var transferStack porttypes.IBCModule
 	var transferHookStack porttypes.IBCModule
 	var transferHookFeeStack porttypes.IBCModule
-	var transferFwdHookFeeStack porttypes.IBCModule
 
 	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
 	transferHookStack = ibchooks.NewIBCMiddleware(transferStack, appKeepers.IBCHooksWrapper)
 	transferHookFeeStack = ibcfee.NewIBCMiddleware(transferHookStack, appKeepers.IBCFeeKeeper)
-	transferFwdHookFeeStack = packetforward.NewIBCMiddleware(
-		transferHookFeeStack,
-		&appKeepers.ForwardKeeper,
-		5,
-		forwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
-		forwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
-	)
 
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
@@ -86,7 +75,7 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
-		AddRoute(ibctransfertypes.ModuleName, transferFwdHookFeeStack).
+		AddRoute(ibctransfertypes.ModuleName, transferHookFeeStack).
 		AddRoute(wasm.ModuleName, wasmStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack)

@@ -133,7 +133,6 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	// ante handler should not error for v1 proposal
 	_, err = antehandler(suite.ctx, txv1, false)
 	suite.Require().NoError(err, "error: v1 proposal with sufficient initial deposit should have gone through")
-
 }
 
 func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() {
@@ -191,5 +190,4 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	// ante handler should not error for v1 proposal
 	_, err = antehandler(suite.ctx, txv1, false)
 	suite.Require().Error(err, "error: v1 proposal with insufficient initial deposit should have failed")
-
 }

@@ -3,9 +3,6 @@ package keepers
 import (
 	"path/filepath"
 
-	forward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router"
-	forwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router/keeper"
-	forwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/router/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
 	icahostkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/keeper"
@@ -104,12 +101,10 @@ type AppKeepers struct {
 	WasmKeeper          wasmkeeper.Keeper
 	DyncommKeeper       dyncommkeeper.Keeper
 	IBCHooksKeeper      *ibchookskeeper.Keeper
-	ForwardKeeper       forwardkeeper.Keeper
 
 	Ics20WasmHooks  *ibchooks.WasmHooks
 	IBCHooksWrapper *ibchooks.ICS4Middleware
 	TransferStack   ibctransfer.IBCModule
-	ForwardModule   forward.AppModule
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -152,7 +147,6 @@ func NewAppKeepers(
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 		ibchooktypes.StoreKey,
-		forwardtypes.StoreKey,
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
@@ -346,17 +340,6 @@ func NewAppKeepers(
 	)
 	appKeepers.IBCHooksKeeper = &hooksKeeper
 
-	appKeepers.ForwardKeeper = *forwardkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[forwardtypes.StoreKey],
-		appKeepers.GetSubspace(forwardtypes.ModuleName),
-		appKeepers.TransferKeeper,
-		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.DistrKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.IBCFeeKeeper, // ICS4 Wrapper
-	)
-
 	// - contract keeper needs to be initialized after wasm
 	// - transfer needs to be initialized before wasm
 	// - hooks needs to be initialized before transfer
@@ -377,14 +360,13 @@ func NewAppKeepers(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		&appKeepers.ForwardKeeper,
+		appKeepers.IBCFeeKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		scopedTransferKeeper,
 	)
-	appKeepers.ForwardKeeper.SetTransferKeeper(appKeepers.TransferKeeper)
 
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -474,8 +456,6 @@ func NewAppKeepers(
 	appKeepers.ScopedIBCFeeKeeper = scopedIBCFeeKeeper
 	appKeepers.ScopedWasmKeeper = scopedWasmKeeper
 
-	appKeepers.ForwardModule = forward.NewAppModule(&appKeepers.ForwardKeeper)
-
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := appKeepers.newIBCRouter()
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
@@ -510,7 +490,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
 	paramsKeeper.Subspace(ibchooktypes.ModuleName)
-	paramsKeeper.Subspace(forwardtypes.ModuleName).WithKeyTable(forwardtypes.ParamKeyTable())
 
 	return paramsKeeper
 }

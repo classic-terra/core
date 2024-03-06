@@ -87,51 +87,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	)
 }
 
-func (s *IntegrationTestSuite) TestPacketForwardMiddleware() {
-	if s.skipIBC {
-		s.T().Skip("Skipping Packet Forward Middleware tests")
-	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
-	chainC := s.configurer.GetChainConfig(2)
-
-	nodeA, err := chainA.GetDefaultNode()
-	s.NoError(err)
-	nodeB, err := chainB.GetDefaultNode()
-	s.NoError(err)
-	nodeC, err := chainC.GetDefaultNode()
-	s.NoError(err)
-
-	transferAmount := sdk.NewInt(10000000)
-
-	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
-	s.Require().NotEqual(validatorAddr, "")
-
-	receiver := nodeB.GetWallet(initialization.ValidatorWalletName)
-
-	balanceReceiverOld, err := nodeC.QuerySpecificBalance(receiver, initialization.TerraDenom)
-	s.Require().NoError(err)
-	s.Require().Equal(balanceReceiverOld, sdk.Coin{})
-
-	nodeA.SendIBCTransfer(validatorAddr, receiver, fmt.Sprintf("%duluna", transferAmount.Int64()),
-		fmt.Sprintf(`{"forward":{"receiver":"%s","port":"transfer","channel":"channel-2"}}`, receiver))
-
-	// wait for ibc cycle
-	time.Sleep(30 * time.Second)
-
-	s.Eventually(func() bool {
-		balanceReceiver, err := nodeC.QueryBalances(receiver)
-		s.Require().NoError(err)
-		if len(balanceReceiver) == 0 {
-			return false
-		}
-		return balanceReceiver[0].Amount.Equal(transferAmount)
-	},
-		15*time.Second,
-		10*time.Millisecond,
-	)
-}
-
 func (s *IntegrationTestSuite) TestAddBurnTaxExemptionAddress() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()

@@ -73,7 +73,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	txv1, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// ante handler should not error for v1 proposal
+	// ante handler should not error for v1 proposal with sufficient deposit
 	_, err = antehandler(suite.ctx, txv1, false)
 	suite.Require().NoError(err, "error: v1 proposal whithout initial deposit should have gone through")
 }
@@ -130,7 +130,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	txv1, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// ante handler should not error for v1 proposal
+	// ante handler should not error for v1 proposal with sufficient deposit
 	_, err = antehandler(suite.ctx, txv1, false)
 	suite.Require().NoError(err, "error: v1 proposal with sufficient initial deposit should have gone through")
 }
@@ -172,7 +172,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// antehandler should not error
+	// antehandler should error with insufficient deposit
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "error: Proposal with insufficient initial deposit should have failed")
 
@@ -187,7 +187,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	txv1, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// ante handler should not error for v1 proposal
+	// ante handler should error for v1 proposal with insufficient deposit
 	_, err = antehandler(suite.ctx, txv1, false)
 	suite.Require().Error(err, "error: v1 proposal with insufficient initial deposit should have failed")
 }

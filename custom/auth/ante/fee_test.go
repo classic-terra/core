@@ -561,6 +561,20 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:   feeAmt,
 			expectProceeds: feeAmt,
 		}, {
+			name:      "MsgExec(MsgSend(normal -> normal))",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := authz.NewMsgExec(addrs[1], []sdk.Msg{banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin))})
+				msgs = append(msgs, &msg1)
+
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			minFeeAmount:   feeAmt,
+			expectProceeds: feeAmt,
+		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {

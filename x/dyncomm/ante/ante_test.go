@@ -274,23 +274,20 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
 	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
-	//validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
 
-	// invalid tx fails
+	// prepare invalid tx -> expect it fails
 	editmsg := stakingtypes.NewMsgEditValidator(
 		val1.GetOperator(),
 		val1.Description, &invalidtarget, &val1.MinSelfDelegation,
 	)
-
 	data, err := icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg})
 	suite.Require().NoError(err)
-
 	icaPacketData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
 	}
 	packetData := icaPacketData.GetBytes()
-	//packetData, err := icatypes.ModuleCdc.MarshalJSON(&icaPacketData)
 	packet := channeltypes.NewPacket(
 		packetData, 1, "source-port", "source-channel",
 		"dest-port", "dest-channel",
@@ -307,19 +304,33 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 	_, err = antehandler(suite.Ctx, tx, false)
 	suite.Require().Error(err)
 
-	// valid tx passes
-	/*editmsg = stakingtypes.NewMsgEditValidator(
+	// prepare valid tx -> expect it passes
+	editmsg = stakingtypes.NewMsgEditValidator(
 		val1.GetOperator(),
 		val1.Description, &validtarget, &val1.MinSelfDelegation,
 	)
-	execmsg = authz.NewMsgExec(acc2, []sdk.Msg{editmsg})
+	data, err = icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg})
+	suite.Require().NoError(err)
+	icaPacketData = icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+	}
+	packetData = icaPacketData.GetBytes()
+	packet = channeltypes.NewPacket(
+		packetData, 1, "source-port", "source-channel",
+		"dest-port", "dest-channel",
+		clienttypes.NewHeight(1, 1), 0,
+	)
+	recvmsg = channeltypes.NewMsgRecvPacket(
+		packet, []byte{}, clienttypes.NewHeight(1, 1), "signer",
+	)
 
 	err = suite.txBuilder.SetMsgs(editmsg)
 	suite.Require().NoError(err)
 	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
 	suite.Require().NoError(err)
 	_, err = antehandler(suite.Ctx, tx, false)
-	suite.Require().NoError(err)*/
+	suite.Require().NoError(err)
 }
 
 // go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v2/x/dyncomm/ante

@@ -325,7 +325,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 		packet, []byte{}, clienttypes.NewHeight(1, 1), "signer",
 	)
 
-	err = suite.txBuilder.SetMsgs(editmsg)
+	err = suite.txBuilder.SetMsgs(recvmsg)
 	suite.Require().NoError(err)
 	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
 	suite.Require().NoError(err)

@@ -6,6 +6,7 @@ import (
 	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -41,9 +42,14 @@ func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk.Msg) (err error) {
 	for _, msg := range msgs {
 
-		switch msg.(type) {
+		switch msg := msg.(type) {
 		case *stakingtypes.MsgEditValidator:
 			err = dd.ProcessEditValidator(ctx, msg)
+		case *authz.MsgExec:
+			messages, msgerr := msg.GetMessages()
+			if msgerr == nil {
+				err = dd.FilterMsgsAndProcessMsgs(ctx, messages...)
+			}
 		default:
 			continue
 		}

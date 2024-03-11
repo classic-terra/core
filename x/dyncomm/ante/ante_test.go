@@ -21,6 +21,7 @@ import (
 	apptesting "github.com/classic-terra/core/v2/app/testing"
 	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -200,6 +201,54 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	err = suite.txBuilder.SetMsgs(editmsg)
 	suite.Require().NoError(err)
 	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.Ctx, tx, false)
+	suite.Require().NoError(err)
+}
+
+func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommAuthz() {
+	suite.SetupTest() // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.txBuilder.SetGasLimit(400_000)
+	suite.Ctx = suite.Ctx.WithIsCheckTx(false)
+
+	_, _, val1, _ := suite.CreateValidator(50_000_000_000)
+	priv2, _, acc2 := testdata.KeyTestPubAddr()
+	suite.CreateValidator(50_000_000_000)
+	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
+
+	mfd := dyncommante.NewDyncommDecorator(suite.App.DyncommKeeper, suite.App.StakingKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
+	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
+	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+
+	// invalid tx fails
+	editmsg := stakingtypes.NewMsgEditValidator(
+		val1.GetOperator(),
+		val1.Description, &invalidtarget, &val1.MinSelfDelegation,
+	)
+
+	execmsg := authz.NewMsgExec(acc2, []sdk.Msg{editmsg})
+
+	err := suite.txBuilder.SetMsgs(&execmsg)
+	suite.Require().NoError(err)
+	tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.Ctx, tx, false)
+	suite.Require().Error(err)
+
+	// valid tx passes
+	editmsg = stakingtypes.NewMsgEditValidator(
+		val1.GetOperator(),
+		val1.Description, &validtarget, &val1.MinSelfDelegation,
+	)
+	execmsg = authz.NewMsgExec(acc2, []sdk.Msg{editmsg})
+
+	err = suite.txBuilder.SetMsgs(editmsg)
+	suite.Require().NoError(err)
+	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
 	suite.Require().NoError(err)
 	_, err = antehandler(suite.Ctx, tx, false)
 	suite.Require().NoError(err)

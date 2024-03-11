@@ -3,6 +3,7 @@ package ante
 import (
 	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
 	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	"github.com/cosmos/cosmos-sdk/codec"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
@@ -36,6 +37,7 @@ type HandlerOptions struct {
 	TXCounterStoreKey      storetypes.StoreKey
 	DyncommKeeper          dyncommkeeper.Keeper
 	StakingKeeper          stakingkeeper.Keeper
+	Cdc                    codec.BinaryCodec
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -84,7 +86,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper),
-		dyncommante.NewDyncommDecorator(options.DyncommKeeper, options.StakingKeeper),
+		dyncommante.NewDyncommDecorator(options.Cdc, options.DyncommKeeper, options.StakingKeeper),
 
 		// Do not add any other decorators below this point unless explicitly explain.
 		ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators

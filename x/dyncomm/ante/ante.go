@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 )
 
 // DyncommDecorator checks for EditValidator and rejects
@@ -16,12 +19,14 @@ import (
 type DyncommDecorator struct {
 	dyncommKeeper dyncommkeeper.Keeper
 	stakingKeeper stakingkeeper.Keeper
+	cdc           codec.BinaryCodec
 }
 
-func NewDyncommDecorator(dk dyncommkeeper.Keeper, sk stakingkeeper.Keeper) DyncommDecorator {
+func NewDyncommDecorator(cdc codec.BinaryCodec, dk dyncommkeeper.Keeper, sk stakingkeeper.Keeper) DyncommDecorator {
 	return DyncommDecorator{
 		dyncommKeeper: dk,
 		stakingKeeper: sk,
+		cdc:           cdc,
 	}
 }
 
@@ -47,6 +52,19 @@ func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk
 			err = dd.ProcessEditValidator(ctx, msg)
 		case *authz.MsgExec:
 			messages, msgerr := msg.GetMessages()
+			if msgerr == nil {
+				err = dd.FilterMsgsAndProcessMsgs(ctx, messages...)
+			}
+		case *channeltypes.MsgRecvPacket:
+			var data icatypes.InterchainAccountPacketData
+			err = icatypes.ModuleCdc.UnmarshalJSON(msg.Packet.GetData(), &data)
+			if err != nil {
+				continue
+			}
+			if data.Type != icatypes.EXECUTE_TX {
+				continue
+			}
+			messages, msgerr := icatypes.DeserializeCosmosTx(dd.cdc, data.Data)
 			if msgerr == nil {
 				err = dd.FilterMsgsAndProcessMsgs(ctx, messages...)
 			}

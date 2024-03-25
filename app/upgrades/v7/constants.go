@@ -2,8 +2,8 @@ package v7
 
 import (
 	"github.com/classic-terra/core/v2/app/upgrades"
+	ibc_hooks_types "github.com/classic-terra/core/v2/x/ibc-hooks/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	ibc_hooks_types "github.com/terra-money/core/v2/x/ibc-hooks/types"
 )
 
 const UpgradeName = "v7"

@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -12,8 +13,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/terra-money/core/v2/x/ibc-hooks/client/cli"
-	"github.com/terra-money/core/v2/x/ibc-hooks/types"
+	"github.com/classic-terra/core/v2/x/ibc-hooks/client/cli"
+	"github.com/classic-terra/core/v2/x/ibc-hooks/types"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 

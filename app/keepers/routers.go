@@ -25,7 +25,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
+	ibchooks "github.com/classic-terra/core/v2/x/ibc-hooks"
 )
 
 func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {

@@ -2,14 +2,15 @@ package cli
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/classic-terra/core/v2/x/ibc-hooks/keeper"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
-	"github.com/terra-money/core/v2/x/ibc-hooks/keeper"
-	"strings"
 
-	"github.com/terra-money/core/v2/x/ibc-hooks/types"
+	"github.com/classic-terra/core/v2/x/ibc-hooks/types"
 )
 
 func indexRunCmd(cmd *cobra.Command, args []string) error {

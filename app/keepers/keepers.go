@@ -64,9 +64,9 @@ import (
 	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 
-	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
-	ibchookskeeper "github.com/terra-money/core/v2/x/ibc-hooks/keeper"
-	ibchooktypes "github.com/terra-money/core/v2/x/ibc-hooks/types"
+	ibchooks "github.com/classic-terra/core/v2/x/ibc-hooks"
+	ibchookskeeper "github.com/classic-terra/core/v2/x/ibc-hooks/keeper"
+	ibchooktypes "github.com/classic-terra/core/v2/x/ibc-hooks/types"
 )
 
 type AppKeepers struct {

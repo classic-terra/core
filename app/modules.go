@@ -76,8 +76,8 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v2/client/docs/statik"
-	ibchooks "github.com/terra-money/core/v2/x/ibc-hooks"
-	ibchooktypes "github.com/terra-money/core/v2/x/ibc-hooks/types"
+	ibchooks "github.com/classic-terra/core/v2/x/ibc-hooks"
+	ibchooktypes "github.com/classic-terra/core/v2/x/ibc-hooks/types"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/x/treasury/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/classic-terra/core/v2/tests/e2e/configurer/config"
 	"github.com/classic-terra/core/v2/tests/e2e/containers"

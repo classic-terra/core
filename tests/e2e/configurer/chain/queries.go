@@ -14,8 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	tmabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
-	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"
 	"github.com/classic-terra/core/v2/tests/e2e/util"

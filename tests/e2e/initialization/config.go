@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -17,7 +18,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
@@ -78,9 +78,9 @@ var (
 	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
-	OneMin  = time.Minute // nolint
-	TwoMin  = 2 * time.Minute // nolint
-	FiveMin = 5 * time.Minute // nolint
+	OneMin  = time.Minute              // nolint
+	TwoMin  = 2 * time.Minute          // nolint
+	FiveMin = 5 * time.Minute          // nolint
 	TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
 )
 

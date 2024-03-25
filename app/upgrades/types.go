@@ -1,11 +1,11 @@
 package upgrades
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/classic-terra/core/v2/app/keepers"
 )

@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/math v1.0.0-rc.0
 	github.com/cosmos/cosmos-sdk v0.46.13
-	github.com/cosmos/ibc-go/v6 v6.2.0
+	github.com/cosmos/ibc-go/v7 v6.2.0
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/strangelove-ventures/interchaintest/v6 v6.0.0
@@ -156,8 +156,8 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.34.29 // indirect
-	github.com/tendermint/tm-db v0.6.7 // indirect
+	github.com/cometbft/cometbft v0.34.29 // indirect
+	github.com/cometbft/cometbft-db v0.6.7 // indirect
 	github.com/tidwall/btree v1.5.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/vedhavyas/go-subkey/v2 v2.0.0 // indirect
@@ -215,7 +215,7 @@ replace (
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	// replace goleveldb to optimized one
 	github.com/syndtr/goleveldb => github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121
-	github.com/tendermint/tendermint => github.com/classic-terra/cometbft v0.34.29-terra.0
+	github.com/cometbft/cometbft => github.com/classic-terra/cometbft v0.34.29-terra.0
 )
 
 replace (

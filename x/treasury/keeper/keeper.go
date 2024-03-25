@@ -11,7 +11,7 @@ import (
 
 	core "github.com/classic-terra/core/v2/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/classic-terra/core/v2/x/treasury/types"
 

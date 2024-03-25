@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/classic-terra/core/v2/tests/e2e/containers"
 	"github.com/classic-terra/core/v2/tests/e2e/initialization"

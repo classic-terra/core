@@ -14,10 +14,10 @@ import (
 // edits that do not conform with dyncomm
 type DyncommDecorator struct {
 	dyncommKeeper dyncommkeeper.Keeper
-	stakingKeeper stakingkeeper.Keeper
+	stakingKeeper *stakingkeeper.Keeper
 }
 
-func NewDyncommDecorator(dk dyncommkeeper.Keeper, sk stakingkeeper.Keeper) DyncommDecorator {
+func NewDyncommDecorator(dk dyncommkeeper.Keeper, sk *stakingkeeper.Keeper) DyncommDecorator {
 	return DyncommDecorator{
 		dyncommKeeper: dk,
 		stakingKeeper: sk,

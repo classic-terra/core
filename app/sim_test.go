@@ -67,7 +67,7 @@ func setupSimulationApp(b *testing.B, msg string) (simtypes.Config, dbm.DB, simt
 
 	app := terraapp.NewTerraApp(
 		logger, db, nil, true, map[int64]bool{},
-		dir, simcli.FlagPeriodValue, terraapp.MakeEncodingConfig(),
+		dir, terraapp.MakeEncodingConfig(),
 		appOptions, emptyWasmOpts, interBlockCacheOpt(), fauxMerkleModeOpt(), baseapp.SetChainID(SimAppChainID),
 	)
 	require.Equal(b, "WasmApp", app.Name())
@@ -139,7 +139,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			var emptyWasmOpts []wasm.Option
 			app := terraapp.NewTerraApp(
 				logger, db, nil, true, map[int64]bool{}, terraapp.DefaultNodeHome,
-				simcli.FlagPeriodValue, terraapp.MakeEncodingConfig(),
+				terraapp.MakeEncodingConfig(),
 				simtestutil.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt(), fauxMerkleModeOpt(),
 			)
 

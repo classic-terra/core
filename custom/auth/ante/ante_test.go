@@ -20,7 +20,6 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 
 	terraapp "github.com/classic-terra/core/v2/app"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
@@ -45,7 +44,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	var wasmOpts []wasm.Option
 	app := terraapp.NewTerraApp(
 		log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{},
-		tempDir, simcli.FlagPeriodValue, terraapp.MakeEncodingConfig(),
+		tempDir, terraapp.MakeEncodingConfig(),
 		simtestutil.EmptyAppOptions{}, wasmOpts,
 	)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})

@@ -33,16 +33,16 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
-	var sendEnabledParams types.SendEnabledParams
+	var sendEnabledParams []types.SendEnabled
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, string(types.KeySendEnabled), &sendEnabledParams, simState.Rand,
-		func(r *rand.Rand) { sendEnabledParams = simulation.RandomGenesisSendParams(r) },
+		func(r *rand.Rand) { sendEnabledParams = simulation.RandomGenesisSendEnabled(r) },
 	)
 
 	var defaultSendEnabledParam bool
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,
-		func(r *rand.Rand) { defaultSendEnabledParam = simulation.RandomGenesisDefaultSendParam(r) },
+		func(r *rand.Rand) { defaultSendEnabledParam = simulation.RandomGenesisDefaultSendEnabledParam(r) },
 	)
 
 	numAccs := int64(len(simState.Accounts))
@@ -54,12 +54,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	bankGenesis := types.GenesisState{
-		Params: types.Params{
-			SendEnabled:        sendEnabledParams,
-			DefaultSendEnabled: defaultSendEnabledParam,
-		},
+		Params: types.NewParams(defaultSendEnabledParam),
 		Balances: RandomGenesisBalances(simState),
 		Supply:   supply,
+		SendEnabled:        sendEnabledParams,
 	}
 
 	paramsBytes, err := json.MarshalIndent(&bankGenesis.Params, "", " ")

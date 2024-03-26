@@ -8,12 +8,13 @@ import (
 
 	core "github.com/classic-terra/core/v2/types"
 
-	// "cosmossdk.io/simapp/helpers"
 	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/classic-terra/core/v2/x/market/types"
@@ -35,7 +36,7 @@ func WeightedOperations(
 	var weightMsgSwap int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSwap, &weightMsgSwap, nil,
 		func(*rand.Rand) {
-			weightMsgSwap = simappparams.DefaultWeightMsgSend
+			weightMsgSwap = banksim.DefaultWeightMsgSend
 		},
 	)
 
@@ -95,12 +96,12 @@ func SimulateMsgSwap(
 		msg := types.NewMsgSwap(simAccount.Address, sdk.NewCoin(offerDenom, amount), askDenom)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -173,12 +174,12 @@ func SimulateMsgSwapSend(
 		msg := types.NewMsgSwapSend(simAccount.Address, receiverAccount.Address, sdk.NewCoin(offerDenom, amount), askDenom)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

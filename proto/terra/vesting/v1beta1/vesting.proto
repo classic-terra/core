@@ -1,8 +1,9 @@
 syntax = "proto3";
 package terra.vesting.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "cosmos/vesting/v1beta1/vesting.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/classic-terra/core/v2/x/vesting/types";
 
@@ -27,6 +28,7 @@ message Schedule {
   int64  start_time = 1 [(gogoproto.moretags) = "yaml:\"start_time\""];
   int64  end_time   = 2 [(gogoproto.moretags) = "yaml:\"end_time\""];
   string ratio      = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"ratio\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

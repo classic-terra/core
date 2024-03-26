@@ -2,7 +2,7 @@ package v7
 
 import (
 	"github.com/classic-terra/core/v2/app/upgrades"
-	ibc_hooks_types "github.com/classic-terra/core/v2/x/ibc-hooks/types"
+	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -13,7 +13,7 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateV7UpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
-			ibc_hooks_types.StoreKey,
+			ibchookstypes.StoreKey,
 		},
 	},
 }

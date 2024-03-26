@@ -6,24 +6,21 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ = proto.Marshal
-	_ = fmt.Errorf
-	_ = math.Inf
-)
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -45,11 +42,9 @@ func (*MsgAggregateExchangeRatePrevote) ProtoMessage()    {}
 func (*MsgAggregateExchangeRatePrevote) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ade38ec3545c6da7, []int{0}
 }
-
 func (m *MsgAggregateExchangeRatePrevote) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *MsgAggregateExchangeRatePrevote) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgAggregateExchangeRatePrevote.Marshal(b, m, deterministic)
@@ -62,15 +57,12 @@ func (m *MsgAggregateExchangeRatePrevote) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-
 func (m *MsgAggregateExchangeRatePrevote) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgAggregateExchangeRatePrevote.Merge(m, src)
 }
-
 func (m *MsgAggregateExchangeRatePrevote) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *MsgAggregateExchangeRatePrevote) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgAggregateExchangeRatePrevote.DiscardUnknown(m)
 }
@@ -78,7 +70,8 @@ func (m *MsgAggregateExchangeRatePrevote) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAggregateExchangeRatePrevote proto.InternalMessageInfo
 
 // MsgAggregateExchangeRatePrevoteResponse defines the Msg/AggregateExchangeRatePrevote response type.
-type MsgAggregateExchangeRatePrevoteResponse struct{}
+type MsgAggregateExchangeRatePrevoteResponse struct {
+}
 
 func (m *MsgAggregateExchangeRatePrevoteResponse) Reset() {
 	*m = MsgAggregateExchangeRatePrevoteResponse{}
@@ -88,11 +81,9 @@ func (*MsgAggregateExchangeRatePrevoteResponse) ProtoMessage()    {}
 func (*MsgAggregateExchangeRatePrevoteResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ade38ec3545c6da7, []int{1}
 }
-
 func (m *MsgAggregateExchangeRatePrevoteResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *MsgAggregateExchangeRatePrevoteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgAggregateExchangeRatePrevoteResponse.Marshal(b, m, deterministic)
@@ -105,15 +96,12 @@ func (m *MsgAggregateExchangeRatePrevoteResponse) XXX_Marshal(b []byte, determin
 		return b[:n], nil
 	}
 }
-
 func (m *MsgAggregateExchangeRatePrevoteResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgAggregateExchangeRatePrevoteResponse.Merge(m, src)
 }
-
 func (m *MsgAggregateExchangeRatePrevoteResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *MsgAggregateExchangeRatePrevoteResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgAggregateExchangeRatePrevoteResponse.DiscardUnknown(m)
 }
@@ -135,11 +123,9 @@ func (*MsgAggregateExchangeRateVote) ProtoMessage()    {}
 func (*MsgAggregateExchangeRateVote) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ade38ec3545c6da7, []int{2}
 }
-
 func (m *MsgAggregateExchangeRateVote) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *MsgAggregateExchangeRateVote) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgAggregateExchangeRateVote.Marshal(b, m, deterministic)
@@ -152,15 +138,12 @@ func (m *MsgAggregateExchangeRateVote) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-
 func (m *MsgAggregateExchangeRateVote) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgAggregateExchangeRateVote.Merge(m, src)
 }
-
 func (m *MsgAggregateExchangeRateVote) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *MsgAggregateExchangeRateVote) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgAggregateExchangeRateVote.DiscardUnknown(m)
 }
@@ -168,7 +151,8 @@ func (m *MsgAggregateExchangeRateVote) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgAggregateExchangeRateVote proto.InternalMessageInfo
 
 // MsgAggregateExchangeRateVoteResponse defines the Msg/AggregateExchangeRateVote response type.
-type MsgAggregateExchangeRateVoteResponse struct{}
+type MsgAggregateExchangeRateVoteResponse struct {
+}
 
 func (m *MsgAggregateExchangeRateVoteResponse) Reset()         { *m = MsgAggregateExchangeRateVoteResponse{} }
 func (m *MsgAggregateExchangeRateVoteResponse) String() string { return proto.CompactTextString(m) }
@@ -176,11 +160,9 @@ func (*MsgAggregateExchangeRateVoteResponse) ProtoMessage()    {}
 func (*MsgAggregateExchangeRateVoteResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ade38ec3545c6da7, []int{3}
 }
-
 func (m *MsgAggregateExchangeRateVoteResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *MsgAggregateExchangeRateVoteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgAggregateExchangeRateVoteResponse.Marshal(b, m, deterministic)
@@ -193,15 +175,12 @@ func (m *MsgAggregateExchangeRateVoteResponse) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-
 func (m *MsgAggregateExchangeRateVoteResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgAggregateExchangeRateVoteResponse.Merge(m, src)
 }
-
 func (m *MsgAggregateExchangeRateVoteResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *MsgAggregateExchangeRateVoteResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgAggregateExchangeRateVoteResponse.DiscardUnknown(m)
 }
@@ -221,11 +200,9 @@ func (*MsgDelegateFeedConsent) ProtoMessage()    {}
 func (*MsgDelegateFeedConsent) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ade38ec3545c6da7, []int{4}
 }
-
 func (m *MsgDelegateFeedConsent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *MsgDelegateFeedConsent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgDelegateFeedConsent.Marshal(b, m, deterministic)
@@ -238,15 +215,12 @@ func (m *MsgDelegateFeedConsent) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-
 func (m *MsgDelegateFeedConsent) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgDelegateFeedConsent.Merge(m, src)
 }
-
 func (m *MsgDelegateFeedConsent) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *MsgDelegateFeedConsent) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgDelegateFeedConsent.DiscardUnknown(m)
 }
@@ -254,7 +228,8 @@ func (m *MsgDelegateFeedConsent) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgDelegateFeedConsent proto.InternalMessageInfo
 
 // MsgDelegateFeedConsentResponse defines the Msg/DelegateFeedConsent response type.
-type MsgDelegateFeedConsentResponse struct{}
+type MsgDelegateFeedConsentResponse struct {
+}
 
 func (m *MsgDelegateFeedConsentResponse) Reset()         { *m = MsgDelegateFeedConsentResponse{} }
 func (m *MsgDelegateFeedConsentResponse) String() string { return proto.CompactTextString(m) }
@@ -262,11 +237,9 @@ func (*MsgDelegateFeedConsentResponse) ProtoMessage()    {}
 func (*MsgDelegateFeedConsentResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ade38ec3545c6da7, []int{5}
 }
-
 func (m *MsgDelegateFeedConsentResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *MsgDelegateFeedConsentResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgDelegateFeedConsentResponse.Marshal(b, m, deterministic)
@@ -279,15 +252,12 @@ func (m *MsgDelegateFeedConsentResponse) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-
 func (m *MsgDelegateFeedConsentResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgDelegateFeedConsentResponse.Merge(m, src)
 }
-
 func (m *MsgDelegateFeedConsentResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *MsgDelegateFeedConsentResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgDelegateFeedConsentResponse.DiscardUnknown(m)
 }
@@ -342,10 +312,8 @@ var fileDescriptor_ade38ec3545c6da7 = []byte{
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ context.Context
-	_ grpc.ClientConn
-)
+var _ context.Context
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
@@ -413,16 +381,15 @@ type MsgServer interface {
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
-type UnimplementedMsgServer struct{}
+type UnimplementedMsgServer struct {
+}
 
 func (*UnimplementedMsgServer) AggregateExchangeRatePrevote(ctx context.Context, req *MsgAggregateExchangeRatePrevote) (*MsgAggregateExchangeRatePrevoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AggregateExchangeRatePrevote not implemented")
 }
-
 func (*UnimplementedMsgServer) AggregateExchangeRateVote(ctx context.Context, req *MsgAggregateExchangeRateVote) (*MsgAggregateExchangeRateVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AggregateExchangeRateVote not implemented")
 }
-
 func (*UnimplementedMsgServer) DelegateFeedConsent(ctx context.Context, req *MsgDelegateFeedConsent) (*MsgDelegateFeedConsentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegateFeedConsent not implemented")
 }
@@ -718,7 +685,6 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-
 func (m *MsgAggregateExchangeRatePrevote) Size() (n int) {
 	if m == nil {
 		return 0
@@ -812,11 +778,9 @@ func (m *MsgDelegateFeedConsentResponse) Size() (n int) {
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
 func (m *MsgAggregateExchangeRatePrevote) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -963,7 +927,6 @@ func (m *MsgAggregateExchangeRatePrevote) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *MsgAggregateExchangeRatePrevoteResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1014,7 +977,6 @@ func (m *MsgAggregateExchangeRatePrevoteResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *MsgAggregateExchangeRateVote) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1193,7 +1155,6 @@ func (m *MsgAggregateExchangeRateVote) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *MsgAggregateExchangeRateVoteResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1244,7 +1205,6 @@ func (m *MsgAggregateExchangeRateVoteResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *MsgDelegateFeedConsent) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1359,7 +1319,6 @@ func (m *MsgDelegateFeedConsent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *MsgDelegateFeedConsentResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1410,7 +1369,6 @@ func (m *MsgDelegateFeedConsentResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func skipTx(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

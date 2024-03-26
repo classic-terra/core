@@ -65,7 +65,10 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas
@@ -155,7 +158,10 @@ Using the '--split' flag, the [amount] is split equally between the addresses.`,
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package terra.dyncomm.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "terra/dyncomm/v1beta1/dyncomm.proto";
 
@@ -16,7 +17,13 @@ message GenesisState {
 // MinDynCommission defines a validator - min commission rate
 // pair to be enforced by the blockchain
 message ValidatorCommissionRate {
-  string validator_address = 1;
-  string min_commission_rate = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  string target_commission_rate = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string min_commission_rate = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"
+  ];
+  string target_commission_rate = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"
+  ];
 }

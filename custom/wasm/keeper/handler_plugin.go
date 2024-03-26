@@ -39,6 +39,7 @@ type SDKMessageHandler struct {
 
 func NewMessageHandler(
 	router MessageRouter,
+	ics4Wrapper wasmtypes.ICS4Wrapper,
 	channelKeeper wasmtypes.ChannelKeeper,
 	capabilityKeeper wasmtypes.CapabilityKeeper,
 	bankKeeper bankKeeper.Keeper,
@@ -54,7 +55,7 @@ func NewMessageHandler(
 	}
 	return wasmkeeper.NewMessageHandlerChain(
 		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
-		wasmkeeper.NewIBCRawPacketHandler(channelKeeper, capabilityKeeper),
+		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }

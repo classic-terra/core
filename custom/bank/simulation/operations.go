@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"strings"
 
-	// "cosmossdk.io/simapp/helpers"
 	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,7 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -30,13 +31,13 @@ func WeightedOperations(
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(*rand.Rand) {
-			weightMsgSend = simappparams.DefaultWeightMsgSend
+			weightMsgSend = banksim.DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(*rand.Rand) {
-			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
+			weightMsgMultiSend = banksim.DefaultWeightMsgMultiSend
 		},
 	)
 
@@ -113,12 +114,12 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -273,12 +274,12 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

@@ -29,7 +29,6 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"cosmossdk.io/simapp"
 	simparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -37,6 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -48,6 +48,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -92,7 +93,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 }
 
 var (
-	ValPubKeys = simapp.CreateTestPubKeys(5)
+	ValPubKeys = simtestutil.CreateTestPubKeys(5)
 
 	PubKeys = []crypto.PubKey{
 		secp256k1.GenPrivKey().PubKey(),
@@ -123,7 +124,7 @@ type TestInput struct {
 	AccountKeeper  authkeeper.AccountKeeper
 	BankKeeper     bankkeeper.Keeper
 	DistrKeeper    distrkeeper.Keeper
-	StakingKeeper  stakingkeeper.Keeper
+	StakingKeeper  *stakingkeeper.Keeper
 	MarketKeeper   types.MarketKeeper
 	OracleKeeper   types.OracleKeeper
 }
@@ -186,8 +187,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix())
-	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(banktypes.ModuleName), blackListAddrs)
+	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)*10))))
 	bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
@@ -197,7 +198,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		keyStaking,
 		accountKeeper,
 		bankKeeper,
-		paramsKeeper.Subspace(stakingtypes.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	stakingParams := stakingtypes.DefaultParams()
@@ -205,16 +206,15 @@ func CreateTestInput(t *testing.T) TestInput {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec,
-		keyDistr, paramsKeeper.Subspace(distrtypes.ModuleName),
+		appCodec, keyDistr,
 		accountKeeper, bankKeeper, stakingKeeper,
-		authtypes.FeeCollectorName)
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	distrKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
 	distrParams := distrtypes.DefaultParams()
 	distrParams.CommunityTax = sdk.NewDecWithPrec(2, 2)
-	distrParams.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
-	distrParams.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
 	distrKeeper.SetParams(ctx, distrParams)
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks()))
 
@@ -260,11 +260,11 @@ func CreateTestInput(t *testing.T) TestInput {
 	wasmOpts := []wasmkeeper.Option{}
 	wasmKeeper := wasmkeeper.NewKeeper(
 		appCodec, keyWasm,
-		paramsKeeper.Subspace(wasmtypes.ModuleName),
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		distrKeeper,
+		distrkeeper.NewQuerier(distrKeeper),
+		nil,
 		nil,
 		nil,
 		scopedWasmKeeper,
@@ -274,6 +274,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		"",
 		wasmConfig,
 		supportedFeatures,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
 

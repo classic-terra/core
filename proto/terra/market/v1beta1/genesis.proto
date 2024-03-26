@@ -1,6 +1,7 @@
 syntax = "proto3";
 package terra.market.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "terra/market/v1beta1/market.proto";
 
@@ -12,6 +13,9 @@ message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
 
   // the gap between the TerraPool and the BasePool
-  bytes terra_pool_delta = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  bytes terra_pool_delta = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
+    (gogoproto.nullable) = false
+  ];
 }

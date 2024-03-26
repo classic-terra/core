@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/simapp"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/classic-terra/core/v2/app"
 	appparams "github.com/classic-terra/core/v2/app/params"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -69,8 +69,8 @@ func (ao EmptyBaseAppOptions) Get(_ string) interface{} {
 
 // DefaultConsensusParams defines the default Tendermint consensus params used
 // in app testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
@@ -162,7 +162,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*app.TerraApp, app.GenesisSta
 		app.DefaultNodeHome,
 		invCheckPeriod,
 		encCdc,
-		simapp.EmptyAppOptions{},
+		simtestutil.EmptyAppOptions{},
 		emptyWasmOpts,
 	)
 	if withGenesis {
@@ -246,6 +246,7 @@ func genesisStateWithValSet(t *testing.T,
 		balances,
 		totalSupply,
 		[]banktypes.Metadata{},
+		[]banktypes.SendEnabled{},
 	)
 
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)

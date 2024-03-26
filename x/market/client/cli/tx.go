@@ -53,7 +53,10 @@ $ terrad market swap "1000ukrw" "uusd" "terra1..."
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			offerCoinStr := args[0]
 			offerCoin, err := sdk.ParseCoinNormalized(offerCoinStr)

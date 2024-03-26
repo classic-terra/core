@@ -47,7 +47,7 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkee
 	default:
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")
 	}
-	minDeposit := govKeeper.GetDepositParams(ctx).MinDeposit
+	minDeposit := govKeeper.GetParams(ctx).MinDeposit
 	requiredAmount := sdk.NewDecFromInt(minDeposit[0].Amount).Mul(treasuryKeeper.GetMinInitialDepositRatio(ctx)).TruncateInt()
 
 	requiredDepositCoins := sdk.NewCoins(

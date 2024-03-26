@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ibcxfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibccoretypes "github.com/cosmos/ibc-go/v7/modules/core/types"
 
@@ -137,7 +137,7 @@ $ terrad migrate /path/to/genesis.json --chain-id=cosmoshub-4 --genesis-time=201
 			stakingGenesis.Params.HistoricalEntries = 10000
 
 			newGenState[ibcxfertypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(ibcTransferGenesis)
-			newGenState[host.ModuleName] = clientCtx.Codec.MustMarshalJSON(ibcCoreGenesis)
+			newGenState[ibcexported.ModuleName] = clientCtx.Codec.MustMarshalJSON(ibcCoreGenesis)
 			newGenState[captypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(capGenesis)
 			newGenState[evtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(evGenesis)
 			newGenState[staking.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenesis)

@@ -173,7 +173,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.CreateValidator(50_000_000_000)
 	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
 
-	mfd := dyncommante.NewDyncommDecorator(suite.App.DyncommKeeper, suite.App.StakingKeeper)
+	mfd := dyncommante.NewDyncommDecorator(suite.App.DyncommKeeper, *suite.App.StakingKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)

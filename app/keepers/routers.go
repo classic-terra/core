@@ -14,8 +14,6 @@ import (
 
 	"github.com/classic-terra/core/v2/x/treasury"
 	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -25,7 +23,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	ibchooks "github.com/classic-terra/core/v2/x/ibc-hooks"
+	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7"
 )
 
 func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
@@ -33,11 +31,9 @@ func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
 	govRouter.
 		AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(appKeepers.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
-		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(appKeepers.TreasuryKeeper)).
-		AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasm.EnableAllProposals))
+		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(appKeepers.TreasuryKeeper))
 
 	return govRouter
 }

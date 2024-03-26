@@ -14,8 +14,8 @@ type HandlerOptions struct {
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
-func NewPostHandler(options HandlerOptions) (sdk.AnteHandler, error) {
-	return sdk.ChainAnteDecorators(
+func NewPostHandler(options HandlerOptions) (sdk.PostHandler, error) {
+	return sdk.ChainPostDecorators(
 		dyncommpost.NewDyncommPostDecorator(options.DyncommKeeper),
 	), nil
 }

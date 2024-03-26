@@ -68,7 +68,10 @@ Example:
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
 			if err := msg.ValidateBasic(); err != nil {
 				return err

@@ -4,8 +4,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+
 
 	customsim "github.com/classic-terra/core/v2/custom/auth/simulation"
 	customtypes "github.com/classic-terra/core/v2/custom/auth/types"
@@ -38,9 +40,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn) AppModule {
+func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, subspace exported.Subspace) AppModule {
 	return AppModule{
-		AppModule:         auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn),
+		AppModule:         auth.NewAppModule(cdc, accountKeeper, randGenAccountsFn, subspace),
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 	}

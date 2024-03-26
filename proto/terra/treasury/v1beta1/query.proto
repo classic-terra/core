@@ -1,11 +1,14 @@
 syntax = "proto3";
 package terra.treasury.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
+
 import "terra/treasury/v1beta1/treasury.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/classic-terra/core/v2/x/treasury/types";
 
@@ -63,7 +66,11 @@ message QueryTaxRateRequest {}
 // QueryTaxRateResponse is response type for the
 // Query/TaxRate RPC method.
 message QueryTaxRateResponse {
-  string tax_rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string tax_rate = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryTaxCapRequest is the request type for the Query/TaxCap RPC method.
@@ -78,7 +85,11 @@ message QueryTaxCapRequest {
 // QueryTaxCapResponse is response type for the
 // Query/TaxCap RPC method.
 message QueryTaxCapResponse {
-  string tax_cap = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string tax_cap = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryTaxCapsRequest is the request type for the Query/TaxCaps RPC method.
@@ -91,7 +102,11 @@ message QueryTaxCapsRequest {
 // Query/TaxCaps RPC method.
 message QueryTaxCapsResponseItem {
   string denom   = 1;
-  string tax_cap = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string tax_cap = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryTaxCapsResponse is response type for the
@@ -106,8 +121,11 @@ message QueryRewardWeightRequest {}
 // QueryRewardWeightResponse is response type for the
 // Query/RewardWeight RPC method.
 message QueryRewardWeightResponse {
-  string reward_weight = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string reward_weight = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryTaxProceedsRequest is the request type for the Query/TaxProceeds RPC method.
@@ -126,8 +144,11 @@ message QuerySeigniorageProceedsRequest {}
 // QuerySeigniorageProceedsResponse is response type for the
 // Query/SeigniorageProceeds RPC method.
 message QuerySeigniorageProceedsResponse {
-  string seigniorage_proceeds = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string seigniorage_proceeds = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryIndicatorsRequest is the request type for the Query/Indicators RPC method.
@@ -137,11 +158,13 @@ message QueryIndicatorsRequest {}
 // Query/Indicators RPC method.
 message QueryIndicatorsResponse {
   string trl_year = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "TRLYear"
   ];
   string trl_month = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "TRLMonth"

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 
 	customcli "github.com/classic-terra/core/v2/custom/bank/client/cli"
 	customsim "github.com/classic-terra/core/v2/custom/bank/simulation"
@@ -45,9 +46,9 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, subspace exported.Subspace) AppModule {
 	return AppModule{
-		AppModule:     bank.NewAppModule(cdc, keeper, accountKeeper),
+		AppModule:     bank.NewAppModule(cdc, keeper, accountKeeper, subspace),
 		keeper:        keeper,
 		accountKeeper: accountKeeper,
 	}

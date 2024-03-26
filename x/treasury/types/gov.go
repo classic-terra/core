@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
 )
 
 const (
@@ -15,9 +16,9 @@ const (
 
 func init() {
 	govv1beta1.RegisterProposalType(ProposalTypeAddBurnTaxExemptionAddress)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&AddBurnTaxExemptionAddressProposal{}, "treasury/AddBurnTaxExemptionAddressProposal", nil)
+	govcodec.ModuleCdc.LegacyAmino.RegisterConcrete(&AddBurnTaxExemptionAddressProposal{}, "treasury/AddBurnTaxExemptionAddressProposal", nil)
 	govv1beta1.RegisterProposalType(ProposalTypeRemoveBurnTaxExemptionAddress)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&RemoveBurnTaxExemptionAddressProposal{}, "treasury/RemoveBurnTaxExemptionAddressProposal", nil)
+	govcodec.ModuleCdc.LegacyAmino.RegisterConcrete(&RemoveBurnTaxExemptionAddressProposal{}, "treasury/RemoveBurnTaxExemptionAddressProposal", nil)
 }
 
 var (

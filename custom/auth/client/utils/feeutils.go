@@ -41,7 +41,10 @@ type ComputeReqParams struct {
 func ComputeFeesWithCmd(
 	clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg,
 ) (*legacytx.StdFee, error) {
-	txf := tx.NewFactoryCLI(clientCtx, flagSet)
+	txf, err := tx.NewFactoryCLI(clientCtx, flagSet)
+	if err != nil {
+		return nil, err
+	}
 
 	gas := txf.Gas()
 	if txf.SimulateAndExecute() {

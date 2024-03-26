@@ -35,7 +35,7 @@ type HandlerOptions struct {
 	WasmConfig             *wasmtypes.WasmConfig
 	TXCounterStoreKey      storetypes.StoreKey
 	DyncommKeeper          dyncommkeeper.Keeper
-	StakingKeeper          stakingkeeper.Keeper
+	StakingKeeper          *stakingkeeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -84,7 +84,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper),
-		dyncommante.NewDyncommDecorator(options.DyncommKeeper, options.StakingKeeper),
+		dyncommante.NewDyncommDecorator(options.DyncommKeeper, *options.StakingKeeper),
 
 		// Do not add any other decorators below this point unless explicitly explain.
 		ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators

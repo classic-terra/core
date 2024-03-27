@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v2/app"
 	appparams "github.com/classic-terra/core/v2/app/params"
 	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
 	markettypes "github.com/classic-terra/core/v2/x/market/types"
 	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -258,10 +260,7 @@ func genesisStateWithValSet(t *testing.T,
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	// update mint genesis state
-	mintGenesis := minttypes.NewGenesisState(
-		minttypes.DefaultInitialMinter(),
-		minttypes.DefaultParams(),
-	)
+	mintGenesis := minttypes.DefaultGenesisState()
 	genesisState[minttypes.ModuleName] = app.AppCodec().MustMarshalJSON(mintGenesis)
 
 	// update distribution genesis state
@@ -279,6 +278,16 @@ func genesisStateWithValSet(t *testing.T,
 	// update dyncomm genesis state
 	dyncommGenesis := dyncommtypes.DefaultGenesisState()
 	genesisState[dyncommtypes.ModuleName] = app.AppCodec().MustMarshalJSON(dyncommGenesis)
+
+	// update treasury genesis state
+	treasuryGensis := treasurytypes.DefaultGenesisState()
+	genesisState[treasurytypes.ModuleName] = app.AppCodec().MustMarshalJSON(treasuryGensis)
+
+	// update wasm genesis state
+	wasmGenesis := &wasmtypes.GenesisState{
+		Params: wasmtypes.DefaultParams(),
+	}
+	genesisState[wasmtypes.ModuleName] = app.AppCodec().MustMarshalJSON(wasmGenesis)
 
 	return genesisState
 }

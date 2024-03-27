@@ -78,7 +78,7 @@ func TestGetVestingCoinsLazyVestingAcc(t *testing.T) {
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = lgva.GetVestingCoins(endTime)
-	require.Nil(t, vestingCoins)
+	require.Equal(t, vestingCoins, sdk.Coins{})
 
 	// require 50% of coins vesting
 	vestingCoins = lgva.GetVestingCoins(now.Add(12 * time.Hour))

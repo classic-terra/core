@@ -8,6 +8,9 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/classic-terra/core/v2/app"
 	appparams "github.com/classic-terra/core/v2/app/params"
+	dyncommtypes "github.com/classic-terra/core/v2/x/dyncomm/types"
+	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -26,6 +29,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -52,7 +57,7 @@ type KeeperTestHelper struct {
 }
 
 func (s *KeeperTestHelper) Setup(_ *testing.T, chainID string) {
-	s.App = SetupApp(s.T())
+	s.App = SetupApp(s.T(), chainID)
 	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 	s.CheckCtx = s.App.BaseApp.NewContext(true, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
@@ -91,7 +96,7 @@ type EmptyAppOptions struct{}
 
 func (EmptyAppOptions) Get(_ string) interface{} { return nil }
 
-func SetupApp(t *testing.T) *app.TerraApp {
+func SetupApp(t *testing.T, chainId string) *app.TerraApp {
 	t.Helper()
 
 	privVal := NewPV()
@@ -109,7 +114,7 @@ func SetupApp(t *testing.T) *app.TerraApp {
 		Coins:   sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(100000000000000))),
 	}
 	genesisAccounts := []authtypes.GenesisAccount{acc}
-	app := SetupWithGenesisValSet(t, valSet, genesisAccounts, balance)
+	app := SetupWithGenesisValSet(t, chainId, valSet, genesisAccounts, balance)
 
 	return app
 }
@@ -118,10 +123,10 @@ func SetupApp(t *testing.T) *app.TerraApp {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in app.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
+func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
 	t.Helper()
 
-	terraApp, genesisState := setup()
+	terraApp, genesisState := setup(chainId)
 	genesisState = genesisStateWithValSet(t, terraApp, genesisState, valSet, genAccs, balances...)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "")
@@ -130,6 +135,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// init chain will set the validator set and initialize the genesis accounts
 	terraApp.InitChain(
 		abci.RequestInitChain{
+			ChainId:         chainId,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -139,6 +145,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// commit genesis changes
 	terraApp.Commit()
 	terraApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		ChainID:            chainId,
 		Height:             terraApp.LastBlockHeight() + 1,
 		AppHash:            terraApp.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -148,7 +155,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return terraApp
 }
 
-func setup() (*app.TerraApp, app.GenesisState) {
+func setup(chainId string) (*app.TerraApp, app.GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
 	appOptions := make(simtestutil.AppOptionsMap, 0)
@@ -165,6 +172,7 @@ func setup() (*app.TerraApp, app.GenesisState) {
 		encCdc,
 		simtestutil.EmptyAppOptions{},
 		emptyWasmOpts,
+		baseapp.SetChainID(chainId),
 	)
 
 	return terraapp, app.GenesisState{}
@@ -248,6 +256,29 @@ func genesisStateWithValSet(t *testing.T,
 	)
 
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
+
+	// update mint genesis state
+	mintGenesis := minttypes.NewGenesisState(
+		minttypes.DefaultInitialMinter(),
+		minttypes.DefaultParams(),
+	)
+	genesisState[minttypes.ModuleName] = app.AppCodec().MustMarshalJSON(mintGenesis)
+
+	// update distribution genesis state
+	distGenesis := distrtypes.DefaultGenesisState()
+	genesisState[distrtypes.ModuleName] = app.AppCodec().MustMarshalJSON(distGenesis)
+
+	// update oracle genesis state
+	oracleGenesis := oracletypes.DefaultGenesisState()
+	genesisState[oracletypes.ModuleName] = app.AppCodec().MustMarshalJSON(oracleGenesis)
+
+	// update market gensis state
+	marketGenesis := markettypes.DefaultGenesisState()
+	genesisState[markettypes.ModuleName] = app.AppCodec().MustMarshalJSON(marketGenesis)
+
+	// update dyncomm genesis state
+	dyncommGenesis := dyncommtypes.DefaultGenesisState()
+	genesisState[dyncommtypes.ModuleName] = app.AppCodec().MustMarshalJSON(dyncommGenesis)
 
 	return genesisState
 }

@@ -38,6 +38,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -120,6 +122,7 @@ var (
 		ibcfee.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
+		consensus.AppModuleBasic{},
 	)
 	// module account permissions
 	maccPerms = map[string][]string{
@@ -180,6 +183,7 @@ func appModules(
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
+		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	}
 }
@@ -244,6 +248,8 @@ func orderBeginBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
+		// consensus module
+		consensusparamtypes.ModuleName,
 	}
 }
 
@@ -276,6 +282,8 @@ func orderEndBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
+		// consensus module
+		consensusparamtypes.ModuleName,
 	}
 }
 
@@ -308,5 +316,7 @@ func orderInitGenesis() []string {
 		treasurytypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
+		// consensus module
+		consensusparamtypes.ModuleName,
 	}
 }

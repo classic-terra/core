@@ -313,9 +313,9 @@ func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 }
 
 func updateGovGenesis(govGenState *govv1.GenesisState) {
-	govGenState.VotingParams.VotingPeriod = &OneMin
-	govGenState.TallyParams.Quorum = sdk.NewDecWithPrec(2, 1).String()
-	govGenState.DepositParams.MinDeposit = tenTerra
+	govGenState.Params.VotingPeriod = &OneMin
+	govGenState.Params.Quorum = sdk.NewDecWithPrec(2, 1).String()
+	govGenState.Params.MinDeposit = tenTerra
 }
 
 func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {

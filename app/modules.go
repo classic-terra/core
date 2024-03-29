@@ -88,7 +88,7 @@ var (
 	ModuleBasics = module.NewBasicManager(
 		customauth.AppModuleBasic{},
 		customauthz.AppModuleBasic{},
-		genutil.AppModuleBasic{},
+		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		custombank.AppModuleBasic{},
 		capability.AppModuleBasic{},
 		customstaking.AppModuleBasic{},

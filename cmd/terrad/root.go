@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	tmcfg "github.com/cometbft/cometbft/config"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -226,7 +227,20 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		genDocFile := filepath.Join(homeDir, cast.ToString(appOpts.Get("genesis_file")))
+		appGenesis, err := tmtypes.GenesisDocFromFile(genDocFile)
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
+
+	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
 	err = os.MkdirAll(snapshotDir, os.ModePerm)
 	if err != nil {
 		panic(err)
@@ -255,6 +269,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		a.encodingConfig,
 		appOpts,
 		wasmOpts,
+		baseapp.SetChainID(chainID),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),

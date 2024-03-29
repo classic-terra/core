@@ -130,6 +130,7 @@ func NewAppKeepers(
 	appOpts servertypes.AppOptions,
 ) *AppKeepers {
 	keys := sdk.NewKVStoreKeys(
+		crisistypes.StoreKey,
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		stakingtypes.StoreKey,

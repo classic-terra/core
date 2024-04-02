@@ -74,6 +74,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
@@ -111,6 +112,7 @@ var (
 		customfeegrant.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		ibctm.AppModuleBasic{},
 		customupgrade.AppModuleBasic{},
 		customevidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},

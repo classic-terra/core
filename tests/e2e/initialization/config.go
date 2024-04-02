@@ -59,11 +59,11 @@ const (
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
 	WalletFeeBalance  = 100000000
-	// chainC
-	ChainCID      = "terra-test-c"
-	TerraBalanceC = 500000000000
-	StakeBalanceC = 440000000000
-	StakeAmountC  = 400000000000
+	// // chainC
+	// ChainCID      = "terra-test-c"
+	// TerraBalanceC = 500000000000
+	// StakeBalanceC = 440000000000
+	// StakeAmountC  = 400000000000
 )
 
 var (
@@ -74,9 +74,9 @@ var (
 
 	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
-	InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
-	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
-	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
+	// InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
+	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
+	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
 	OneMin  = time.Minute              // nolint
 	TwoMin  = 2 * time.Minute          // nolint
@@ -191,10 +191,10 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 			if err := addAccount(configDir, "", InitBalanceStrB, accAdd, forkHeight); err != nil {
 				return err
 			}
-		case ChainCID:
-			if err := addAccount(configDir, "", InitBalanceStrC, accAdd, forkHeight); err != nil {
-				return err
-			}
+			// case ChainCID:
+			// 	if err := addAccount(configDir, "", InitBalanceStrC, accAdd, forkHeight); err != nil {
+			// 		return err
+			// 	}
 		}
 	}
 

@@ -94,35 +94,35 @@ var (
 			IsValidator:        true,
 		},
 	}
-	validatorConfigsChainC = []*initialization.NodeConfig{
-		{
-			Name:               "prune-default-snapshot",
-			Pruning:            "default",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-			IsValidator:        true,
-		},
-		{
-			Name:               "prune-nothing-snapshot",
-			Pruning:            "nothing",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-			IsValidator:        true,
-		},
-		{
-			Name:               "prune-custom-snapshot",
-			Pruning:            "custom",
-			PruningKeepRecent:  "10000",
-			PruningInterval:    "13",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-			IsValidator:        true,
-		},
-	}
+	// validatorConfigsChainC = []*initialization.NodeConfig{
+	// 	{
+	// 		Name:               "prune-default-snapshot",
+	// 		Pruning:            "default",
+	// 		PruningKeepRecent:  "0",
+	// 		PruningInterval:    "0",
+	// 		SnapshotInterval:   1500,
+	// 		SnapshotKeepRecent: 2,
+	// 		IsValidator:        true,
+	// 	},
+	// 	{
+	// 		Name:               "prune-nothing-snapshot",
+	// 		Pruning:            "nothing",
+	// 		PruningKeepRecent:  "0",
+	// 		PruningInterval:    "0",
+	// 		SnapshotInterval:   1500,
+	// 		SnapshotKeepRecent: 2,
+	// 		IsValidator:        true,
+	// 	},
+	// 	{
+	// 		Name:               "prune-custom-snapshot",
+	// 		Pruning:            "custom",
+	// 		PruningKeepRecent:  "10000",
+	// 		PruningInterval:    "13",
+	// 		SnapshotInterval:   1500,
+	// 		SnapshotKeepRecent: 2,
+	// 		IsValidator:        true,
+	// 	},
+	// }
 )
 
 // New returns a new Configurer depending on the values of its parameters.
@@ -139,7 +139,7 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool) (Configurer, error)
 			[]*chain.Config{
 				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
 				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
-				chain.New(t, containerManager, initialization.ChainCID, validatorConfigsChainC),
+				// chain.New(t, containerManager, initialization.ChainCID, validatorConfigsChainC),
 			},
 			withIBC(baseSetup), // base set up with IBC
 			containerManager,

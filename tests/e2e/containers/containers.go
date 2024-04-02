@@ -16,6 +16,8 @@ import (
 )
 
 const (
+	hermesContainerName = "hermes-relayer"
+
 	HermesContainerName1 = "hermes-relayer"
 	HermesContainerName2 = "hermes-relayer2"
 	// The maximum number of times debug logs are printed to console
@@ -69,7 +71,7 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, conta
 }
 
 // ExecHermesCmd executes command on the hermes relayer 1 container.
-func (m *Manager) ExecHermesCmd(t *testing.T, command []string, hermesContainerName string, success string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecCmd(t, hermesContainerName, command, success)
 }
 

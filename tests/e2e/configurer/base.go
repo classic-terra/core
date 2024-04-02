@@ -172,15 +172,14 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	time.Sleep(10 * time.Second)
 
 	// create the client, connection and channel between the two Terra chains
-	return bc.connectIBCChains(chainConfigA, chainConfigB, hermesContainerName)
+	return bc.connectIBCChains(chainConfigA, chainConfigB)
 }
 
-func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config, hermesContainerName string) error {
+func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
-
 	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.ID, "--b-chain", chainB.ChainMeta.ID, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
-	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, hermesContainerName, "SUCCESS")
+	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}

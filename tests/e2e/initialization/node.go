@@ -182,10 +182,6 @@ func (n *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
 		return err
 	}
 
-	if err != nil {
-		return err
-	}
-
 	privKeyArmor, err := kb.ExportPrivKeyArmor(name, keyringPassphrase)
 	if err != nil {
 		return err

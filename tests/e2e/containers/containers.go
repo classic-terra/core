@@ -30,7 +30,7 @@ const (
 
 var (
 	defaultErrRegex  = regexp.MustCompile(`(E|e)rror`)
-	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), "--fees=100000000uluna"}
+	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), "--fees=0uluna"}
 )
 
 // Manager is a wrapper around all Docker instances, and the Docker API.

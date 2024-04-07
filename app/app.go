@@ -53,7 +53,7 @@ import (
 	v6 "github.com/classic-terra/core/v2/app/upgrades/v6"
 	v6_1 "github.com/classic-terra/core/v2/app/upgrades/v6_1"
 	v7 "github.com/classic-terra/core/v2/app/upgrades/v7"
-	v8 "github.com/classic-terra/core/v2/app/upgrades/v7"
+	v8 "github.com/classic-terra/core/v2/app/upgrades/v8"
 
 	customante "github.com/classic-terra/core/v2/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v2/custom/auth/post"

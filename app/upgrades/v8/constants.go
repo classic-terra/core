@@ -4,6 +4,7 @@ import (
 	"github.com/classic-terra/core/v2/app/upgrades"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	crisistpyes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 const UpgradeName = "v8"
@@ -14,6 +15,7 @@ var Upgrade = upgrades.Upgrade{
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			consensustypes.ModuleName,
+			crisistpyes.ModuleName,
 		},
 	},
 }

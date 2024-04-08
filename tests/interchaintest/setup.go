@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/icza/dyno"
 
-	"cosmossdk.io/math"
-	simappparams "cosmossdk.io/simapp/params"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
 var (
@@ -25,13 +25,14 @@ var (
 		UidGid:     "1025:1025",
 	}
 
-	pathTerraGaia       = "terra-gaia"
-	pathTerraOsmo       = "terra-osmo"
-	pathGaiaOsmo        = "gaia-osmo"
-	genesisWalletAmount = math.NewInt(10_000_000_000)
-	votingPeriod        = "30s"
-	maxDepositPeriod    = "10s"
-	signedBlocksWindow  = int64(20)
+	pathTerraGaia        = "terra-gaia"
+	pathTerraOsmo        = "terra-osmo"
+	pathGaiaOsmo         = "gaia-osmo"
+	genesisWalletAmount  = int64(10000000000)
+	genesisWalletBalance = math.NewInt(genesisWalletAmount)
+	votingPeriod         = "30s"
+	maxDepositPeriod     = "10s"
+	signedBlocksWindow   = int64(20)
 )
 
 func createConfig() (ibc.ChainConfig, error) {
@@ -56,7 +57,7 @@ func createConfig() (ibc.ChainConfig, error) {
 
 // coreEncoding registers the Terra Classic specific module codecs so that the associated types and msgs
 // will be supported when writing to the blocksdb sqlite database.
-func coreEncoding() *simappparams.EncodingConfig {
+func coreEncoding() *testutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
 
 	// register custom types
@@ -71,13 +72,13 @@ func ModifyGenesis() func(ibc.ChainConfig, []byte) ([]byte, error) {
 			return nil, fmt.Errorf("failed to unmarshal genesis file: %w", err)
 		}
 		// Modify short proposal
-		if err := dyno.Set(g, votingPeriod, "app_state", "gov", "voting_params", "voting_period"); err != nil {
+		if err := dyno.Set(g, votingPeriod, "app_state", "gov", "params", "voting_period"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
 		}
-		if err := dyno.Set(g, maxDepositPeriod, "app_state", "gov", "deposit_params", "max_deposit_period"); err != nil {
+		if err := dyno.Set(g, maxDepositPeriod, "app_state", "gov", "params", "max_deposit_period"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
 		}
-		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "deposit_params", "min_deposit", 0, "denom"); err != nil {
+		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "params", "min_deposit", 0, "denom"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
 		}
 		// Modify signed blocks window

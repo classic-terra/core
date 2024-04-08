@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strconv"
 
-	simappparams "cosmossdk.io/simapp/params"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func UnmarshalValidators(config simappparams.EncodingConfig, data []byte) (stakingtypes.Validators, []cryptotypes.PubKey, error) {
+func UnmarshalValidators(config testutil.TestEncodingConfig, data []byte) (stakingtypes.Validators, []cryptotypes.PubKey, error) {
 	var validators stakingtypes.Validators
 	var pubKeys []cryptotypes.PubKey
 

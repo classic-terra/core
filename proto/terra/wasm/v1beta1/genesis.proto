@@ -4,7 +4,7 @@ package terra.wasm.v1beta1;
 import "gogoproto/gogo.proto";
 import "terra/wasm/v1beta1/wasm.proto";
 
-option go_package = "github.com/classic-terra/core/v2/custom/wasm/types/legacy";
+option go_package = "github.com/classic-terra/core/v3/custom/wasm/types/legacy";
 
 // Model is a struct that holds a KV pair
 message Model {

@@ -9,16 +9,16 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	customauth "github.com/classic-terra/core/v2/custom/auth"
-	custombank "github.com/classic-terra/core/v2/custom/bank"
-	customdistr "github.com/classic-terra/core/v2/custom/distribution"
-	customparams "github.com/classic-terra/core/v2/custom/params"
-	customstaking "github.com/classic-terra/core/v2/custom/staking"
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/market/types"
-	"github.com/classic-terra/core/v2/x/oracle"
-	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	customauth "github.com/classic-terra/core/v3/custom/auth"
+	custombank "github.com/classic-terra/core/v3/custom/bank"
+	customdistr "github.com/classic-terra/core/v3/custom/distribution"
+	customparams "github.com/classic-terra/core/v3/custom/params"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/market/types"
+	"github.com/classic-terra/core/v3/x/oracle"
+	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto"
@@ -186,7 +186,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec, keyDistr, 
+		appCodec, keyDistr,
 		accountKeeper, bankKeeper, stakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

@@ -18,7 +18,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm/client/cli"
-	feeutils "github.com/classic-terra/core/v2/custom/auth/client/utils"
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
 )
 
 const (

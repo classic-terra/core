@@ -4,8 +4,8 @@ package staking_test
 // 	"testing"
 
 // 	simapp "cosmossdk.io/simapp"
-// 	apptesting "github.com/classic-terra/core/v2/app/testing"
-// 	"github.com/classic-terra/core/v2/types"
+// 	apptesting "github.com/classic-terra/core/v3/app/testing"
+// 	"github.com/classic-terra/core/v3/types"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 // 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 // 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -22,7 +22,7 @@ package staking_test
 // 	suite.Run(t, new(StakingTestSuite))
 // }
 
-// // go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v2/custom/staking
+// // go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v3/custom/staking
 // func (s *StakingTestSuite) TestValidatorVPLimit() {
 // 	s.KeeperTestHelper.Setup(s.T(), types.ColumbusChainID)
 

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/classic-terra/core/v2/x/dyncomm/client/cli"
-	"github.com/classic-terra/core/v2/x/dyncomm/keeper"
-	"github.com/classic-terra/core/v2/x/dyncomm/types"
-	"github.com/classic-terra/core/v2/x/market/simulation"
+	"github.com/classic-terra/core/v3/x/dyncomm/client/cli"
+	"github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	"github.com/classic-terra/core/v3/x/dyncomm/types"
+	"github.com/classic-terra/core/v3/x/market/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 

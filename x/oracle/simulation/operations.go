@@ -16,9 +16,9 @@ import (
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/oracle/keeper"
-	"github.com/classic-terra/core/v2/x/oracle/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/oracle/keeper"
+	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // Simulation operation weights constants

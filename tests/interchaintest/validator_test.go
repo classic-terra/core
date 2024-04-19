@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/classic-terra/core/v2/test/interchaintest/helpers"
+	"github.com/classic-terra/core/v3/test/interchaintest/helpers"
 )
 
 // TestValidator is a basic test to accrue enough token to join active validator set, gets slashed for missing or tombstoned for double signing

@@ -11,8 +11,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
-	customcli "github.com/classic-terra/core/v2/custom/wasm/client/cli"
-	customtypes "github.com/classic-terra/core/v2/custom/wasm/types/legacy"
+	customcli "github.com/classic-terra/core/v3/custom/wasm/client/cli"
+	customtypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

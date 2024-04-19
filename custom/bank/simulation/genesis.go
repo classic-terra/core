@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 )
 
 // RandomGenesisBalances returns a slice of account balances. Each account has
@@ -54,10 +54,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	bankGenesis := types.GenesisState{
-		Params: types.NewParams(defaultSendEnabledParam),
-		Balances: RandomGenesisBalances(simState),
-		Supply:   supply,
-		SendEnabled:        sendEnabledParams,
+		Params:      types.NewParams(defaultSendEnabledParam),
+		Balances:    RandomGenesisBalances(simState),
+		Supply:      supply,
+		SendEnabled: sendEnabledParams,
 	}
 
 	paramsBytes, err := json.MarshalIndent(&bankGenesis.Params, "", " ")

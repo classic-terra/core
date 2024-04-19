@@ -18,10 +18,10 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	core "github.com/classic-terra/core/v2/types"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -507,7 +507,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
-// go test -v -run ^TestAnteTestSuite/TestTaxExemption$ github.com/classic-terra/core/v2/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestTaxExemption$ github.com/classic-terra/core/v3/custom/auth/ante
 func (s *AnteTestSuite) TestTaxExemption() {
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
@@ -730,7 +730,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	}
 }
 
-// go test -v -run ^TestAnteTestSuite/TestBurnSplitTax$ github.com/classic-terra/core/v2/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestBurnSplitTax$ github.com/classic-terra/core/v3/custom/auth/ante
 func (s *AnteTestSuite) TestBurnSplitTax() {
 	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0))  // 100%
 	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1))  // 10%
@@ -833,7 +833,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec) {
 	)
 }
 
-// go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v2/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v3/custom/auth/ante
 // TestEnsureIBCUntaxed tests that IBC transactions are not taxed, but fee is still deducted
 func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	s.SetupTest(true) // setup
@@ -883,7 +883,7 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	s.Require().True(taxProceeds.Empty())
 }
 
-// go test -v -run ^TestAnteTestSuite/TestOracleZeroFee$ github.com/classic-terra/core/v2/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestOracleZeroFee$ github.com/classic-terra/core/v3/custom/auth/ante
 func (s *AnteTestSuite) TestOracleZeroFee() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()

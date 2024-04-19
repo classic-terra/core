@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	feeutils "github.com/classic-terra/core/v2/custom/auth/client/utils"
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
 )
 
 var FlagSplit = "split"

@@ -10,7 +10,7 @@ import "google/api/annotations.proto";
 
 import "terra/treasury/v1beta1/treasury.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/treasury/types";
+option go_package = "github.com/classic-terra/core/v3/x/treasury/types";
 
 // Query defines the gRPC querier service.
 service Query {

@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 
 	ibcxfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibccoretypes "github.com/cosmos/ibc-go/v7/modules/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,7 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 const (

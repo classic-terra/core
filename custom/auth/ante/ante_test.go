@@ -21,8 +21,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	terraapp "github.com/classic-terra/core/v2/app"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	terraapp "github.com/classic-terra/core/v3/app"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 )

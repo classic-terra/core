@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v2/app"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/app"
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,9 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	appparams "github.com/classic-terra/core/v2/app/params"
-	apptesting "github.com/classic-terra/core/v2/app/testing"
-	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
+	appparams "github.com/classic-terra/core/v3/app/params"
+	apptesting "github.com/classic-terra/core/v3/app/testing"
+	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -205,7 +205,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.Require().NoError(err)
 }
 
-// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v2/x/dyncomm/ante
+// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v3/x/dyncomm/ante
 // check that account keeper sequence no longer increases when editing validator unsuccessfully
 func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	suite.SetupTest() // setup

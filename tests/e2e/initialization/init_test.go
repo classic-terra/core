@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 	"github.com/stretchr/testify/require"
 )
 

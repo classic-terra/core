@@ -7,9 +7,9 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
-	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
-	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
+	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
+	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
 
 func RegisterCustomPlugins(

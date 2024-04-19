@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	treasury "github.com/classic-terra/core/v2/x/treasury/types"
+	treasury "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // BurnTaxSplit splits

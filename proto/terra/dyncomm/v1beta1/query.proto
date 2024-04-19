@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "terra/dyncomm/v1beta1/dyncomm.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/dyncomm/types";
+option go_package = "github.com/classic-terra/core/v3/x/dyncomm/types";
 
 // Query defines the gRPC querier service.
 service Query {

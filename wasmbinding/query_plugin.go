@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/classic-terra/core/v2/wasmbinding/bindings"
-	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	"github.com/classic-terra/core/v3/wasmbinding/bindings"
+	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
 )
 
 // TaxCapQueryResponse - tax cap query response for wasm module

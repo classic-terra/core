@@ -1,6 +1,6 @@
 go 1.20
 
-module github.com/classic-terra/core/v2
+module github.com/classic-terra/core/v3
 
 require (
 	cosmossdk.io/math v1.3.0

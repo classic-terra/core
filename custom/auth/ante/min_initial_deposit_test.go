@@ -9,8 +9,8 @@ import (
 
 	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
 
 	// core "github.com/terra-money/core/types"
 	// treasury "github.com/terra-money/core/x/treasury/types"

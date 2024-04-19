@@ -18,9 +18,9 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	app "github.com/classic-terra/core/v2/app"
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/types/assets"
+	app "github.com/classic-terra/core/v3/app"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/types/assets"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {

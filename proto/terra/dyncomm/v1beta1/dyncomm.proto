@@ -4,7 +4,7 @@ package terra.dyncomm.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/dyncomm/types";
+option go_package = "github.com/classic-terra/core/v3/x/dyncomm/types";
 
 // Params defines the parameters for the dyncomm module.
 message Params {

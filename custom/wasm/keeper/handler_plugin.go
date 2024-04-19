@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"

@@ -37,11 +37,11 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	terraapp "github.com/classic-terra/core/v2/app"
-	terralegacy "github.com/classic-terra/core/v2/app/legacy"
-	"github.com/classic-terra/core/v2/app/params"
-	authcustomcli "github.com/classic-terra/core/v2/custom/auth/client/cli"
-	core "github.com/classic-terra/core/v2/types"
+	terraapp "github.com/classic-terra/core/v3/app"
+	terralegacy "github.com/classic-terra/core/v3/app/legacy"
+	"github.com/classic-terra/core/v3/app/params"
+	authcustomcli "github.com/classic-terra/core/v3/custom/auth/client/cli"
+	core "github.com/classic-terra/core/v3/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"

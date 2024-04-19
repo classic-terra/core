@@ -1,8 +1,8 @@
 package post
 
 import (
-	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
-	dyncommpost "github.com/classic-terra/core/v2/x/dyncomm/post"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	dyncommpost "github.com/classic-terra/core/v3/x/dyncomm/post"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

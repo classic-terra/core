@@ -1,8 +1,8 @@
 package ante
 
 import (
-	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
-	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"

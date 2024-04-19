@@ -12,8 +12,8 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 
-	"github.com/classic-terra/core/v2/x/treasury"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/x/treasury"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"

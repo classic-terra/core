@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	configurer "github.com/classic-terra/core/v2/tests/e2e/configurer"
+	configurer "github.com/classic-terra/core/v3/tests/e2e/configurer"
 )
 
 const (

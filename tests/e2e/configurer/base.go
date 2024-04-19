@@ -13,10 +13,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/classic-terra/core/v2/tests/e2e/configurer/chain"
-	"github.com/classic-terra/core/v2/tests/e2e/containers"
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/tests/e2e/util"
+	"github.com/classic-terra/core/v3/tests/e2e/configurer/chain"
+	"github.com/classic-terra/core/v3/tests/e2e/containers"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
 )
 
 // baseConfigurer is the base implementation for the

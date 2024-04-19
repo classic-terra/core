@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 	"github.com/stretchr/testify/require"
 )
 

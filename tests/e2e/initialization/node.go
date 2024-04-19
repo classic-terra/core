@@ -29,8 +29,8 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
 
-	terraApp "github.com/classic-terra/core/v2/app"
-	"github.com/classic-terra/core/v2/tests/e2e/util"
+	terraApp "github.com/classic-terra/core/v3/app"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
 )
 
 type internalNode struct {

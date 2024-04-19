@@ -3,8 +3,8 @@ package forks
 import (
 	"fmt"
 
-	"github.com/classic-terra/core/v2/app/keepers"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/app/keepers"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"

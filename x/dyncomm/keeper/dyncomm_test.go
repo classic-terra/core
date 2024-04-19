@@ -4,7 +4,7 @@ package keeper
 // 	"testing"
 // 	"time"
 
-// 	core "github.com/classic-terra/core/v2/types"
+// 	core "github.com/classic-terra/core/v3/types"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 // 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 // 	"github.com/stretchr/testify/require"

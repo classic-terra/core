@@ -10,8 +10,8 @@ import (
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	customtypes "github.com/classic-terra/core/v2/custom/gov/types"
-	core "github.com/classic-terra/core/v2/types"
+	customtypes "github.com/classic-terra/core/v3/custom/gov/types"
+	core "github.com/classic-terra/core/v3/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

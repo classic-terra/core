@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v2/test/interchaintest/helpers"
+	"github.com/classic-terra/core/v3/test/interchaintest/helpers"
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"

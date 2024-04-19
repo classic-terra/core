@@ -1,7 +1,7 @@
 package v5
 
 import (
-	"github.com/classic-terra/core/v2/app/upgrades"
+	"github.com/classic-terra/core/v3/app/upgrades"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"

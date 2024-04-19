@@ -17,10 +17,10 @@ import (
 	tmabcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/tests/e2e/util"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
 
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {

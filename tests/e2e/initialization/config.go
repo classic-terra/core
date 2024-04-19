@@ -21,8 +21,8 @@ import (
 
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/classic-terra/core/v2/tests/e2e/util"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner

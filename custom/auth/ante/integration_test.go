@@ -13,12 +13,12 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	customante "github.com/classic-terra/core/v2/custom/auth/ante"
-	core "github.com/classic-terra/core/v2/types"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	customante "github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
-// go test -v -run ^TestAnteTestSuite/TestIntegrationTaxExemption$ github.com/classic-terra/core/v2/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestIntegrationTaxExemption$ github.com/classic-terra/core/v3/custom/auth/ante
 func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	// keys and addresses
 	var privs []cryptotypes.PrivKey

@@ -3,7 +3,7 @@ package ante
 import (
 	"fmt"
 
-	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"

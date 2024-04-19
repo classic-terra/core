@@ -2,8 +2,8 @@ package v8
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v2/app/keepers"
-	"github.com/classic-terra/core/v2/app/upgrades"
+	"github.com/classic-terra/core/v3/app/keepers"
+	"github.com/classic-terra/core/v3/app/upgrades"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"

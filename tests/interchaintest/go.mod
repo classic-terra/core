@@ -1,4 +1,4 @@
-module github.com/classic-terra/core/v2/test/interchaintest
+module github.com/classic-terra/core/v3/test/interchaintest
 
 go 1.20
 
@@ -246,7 +246,7 @@ replace (
 
 replace (
 	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-classic
-	github.com/classic-terra/core/v2 => ../../
+	github.com/classic-terra/core/v3 => ../../
 	github.com/cometbft/cometbft => github.com/classic-terra/cometbft v0.37.4-classic
 	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.47.10-classic
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2

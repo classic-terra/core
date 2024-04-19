@@ -9,8 +9,8 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	terraapp "github.com/classic-terra/core/v2/app"
-	helpers "github.com/classic-terra/core/v2/app/testing"
+	terraapp "github.com/classic-terra/core/v3/app"
+	helpers "github.com/classic-terra/core/v3/app/testing"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"

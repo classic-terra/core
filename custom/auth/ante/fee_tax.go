@@ -9,8 +9,8 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	marketexported "github.com/classic-terra/core/v2/x/market/exported"
-	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
+	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")

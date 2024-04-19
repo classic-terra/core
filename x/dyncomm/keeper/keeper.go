@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/classic-terra/core/v2/x/dyncomm/types"
+	"github.com/classic-terra/core/v3/x/dyncomm/types"
 )
 
 // Keeper of the market store

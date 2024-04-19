@@ -355,6 +355,8 @@ github.com/classic-terra/cosmos-sdk v0.47.10-classic h1:HJMcVfw4b3t9jOFUxwQuFwgx
 github.com/classic-terra/cosmos-sdk v0.47.10-classic/go.mod h1:fLbF9OIrgXq5W7LxvOSzAM9tOMfqxYeprlMH7RFmozs=
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121 h1:fjpWDB0hm225wYg9vunyDyTH8ftd5xEUgINJKidj+Tw=
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
+github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae h1:dPxkxNcORnKN/ZWqzH4zxfi42FK2bes02LgIj5P/f4k=
+github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae/go.mod h1:L/KaEhzV5TGUCTfGysVgMBQtl5Dm7hHitfpk+GIeoAo=
 github.com/classic-terra/wasmd v0.45.0-classic h1:6yZZuYybnzg5nOo6bHHO7/In/XJJDuPwfIewmW3PYuY=
 github.com/classic-terra/wasmd v0.45.0-classic/go.mod h1:h+dgrilC9naGP0NKFWOZ691qpY07BMbWnF4X1FwPVik=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=
@@ -415,8 +417,6 @@ github.com/cosmos/iavl v0.20.1 h1:rM1kqeG3/HBT85vsZdoSNsehciqUQPWrR4BYmqE2+zg=
 github.com/cosmos/iavl v0.20.1/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
 github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99 h1:AC05pevT3jIVTxJ0mABlN3hxyHESPpELhVQjwQVT6Pw=
 github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99/go.mod h1:JwHFbo1oX/ht4fPpnPvmhZr+dCkYK1Vihw+vZE9umR4=
-github.com/cosmos/ibc-go/v7 v7.4.0 h1:8FqYMptvksgMvlbN4UW9jFxTXzsPyfAzEZurujXac8M=
-github.com/cosmos/ibc-go/v7 v7.4.0/go.mod h1:L/KaEhzV5TGUCTfGysVgMBQtl5Dm7hHitfpk+GIeoAo=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=

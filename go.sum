@@ -340,6 +340,8 @@ github.com/classic-terra/cosmos-sdk v0.46.14-terra.4 h1:GRgKTxC5n+5CqxtqkoJ+fNwG
 github.com/classic-terra/cosmos-sdk v0.46.14-terra.4/go.mod h1:3VKRzlOtvuqZA29wRqdx6rPsJmYhvxjJyc3tvQWpjf4=
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121 h1:fjpWDB0hm225wYg9vunyDyTH8ftd5xEUgINJKidj+Tw=
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
+github.com/classic-terra/ibc-go/v6 v6.3.0-classic.0 h1:xtfxQBJM1tSzDh/uxx7SWIRzBoU5PhsBKB+J8O7GLt0=
+github.com/classic-terra/ibc-go/v6 v6.3.0-classic.0/go.mod h1:Dm14j9s094bGyCEE8W4fD+2t8IneHv+cz+80Mvwjr1w=
 github.com/classic-terra/wasmd v0.30.0-terra.3 h1:qruhiaAIRl14UVtHzfh81pr0YmW94QE4+hqivIi9AYg=
 github.com/classic-terra/wasmd v0.30.0-terra.3/go.mod h1:Ug607EsX+EkW3/xOFaP56kZA7WklN+ZrwUEsaJ22xH0=
 github.com/classic-terra/wasmvm v1.1.1-terra.2-rc.0 h1:nx6mpQuwGkY6aata/4QTVGe19ziHPSMkXC9k3pGh8wQ=
@@ -393,8 +395,6 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.7 h1:ij32FaEnwxfEurtK0QKDNhTWFnz6NUmrI5gky/WnoY0=
 github.com/cosmos/iavl v0.19.7/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ibc-go/v6 v6.2.1 h1:NiaDXTRhKwf3n9kELD4VRIe5zby1yk1jBvaz9tXTQ6k=
-github.com/cosmos/ibc-go/v6 v6.2.1/go.mod h1:XLsARy4Y7+GtAqzMcxNdlQf6lx+ti1e8KcMGv5NIK7A=
 github.com/cosmos/interchain-accounts v0.4.3 h1:WedxEa/Hj/2GY7AF6CafkEPJ/Z9rhl3rT1mRwNHsdts=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
 github.com/cosmos/keyring v1.2.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=

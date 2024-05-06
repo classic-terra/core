@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/classic-terra/core/v3/app"
 	core "github.com/classic-terra/core/v3/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"

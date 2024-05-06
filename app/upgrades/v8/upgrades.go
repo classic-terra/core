@@ -18,6 +18,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 )
 
 func CreateV8UpgradeHandler(
@@ -61,6 +62,10 @@ func CreateV8UpgradeHandler(
 
 		legacyBaseAppSubspace := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 		baseapp.MigrateParams(ctx, legacyBaseAppSubspace, &keepers.ConsensusParamsKeeper)
+
+		params := keepers.IBCKeeper.ClientKeeper.GetParams(ctx)
+		params.AllowedClients = append(params.AllowedClients, exported.Localhost)
+		keepers.IBCKeeper.ClientKeeper.SetParams(ctx, params)
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

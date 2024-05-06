@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v3/app"
 	appparams "github.com/classic-terra/core/v3/app/params"
@@ -43,7 +43,7 @@ const (
 	SimAppChainID = "terra-app"
 )
 
-var emptyWasmOpts []wasm.Option
+var emptyWasmOpts []wasmkeeper.Option
 
 // EmptyBaseAppOptions is a stub implementing AppOptions
 type EmptyBaseAppOptions struct{}

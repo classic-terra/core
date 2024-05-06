@@ -24,7 +24,7 @@ import (
 	terraapp "github.com/classic-terra/core/v3/app"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -41,7 +41,7 @@ type AnteTestSuite struct {
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Context) {
 	// TODO: we need to feed in custom binding here?
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	app := terraapp.NewTerraApp(
 		log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{},
 		tempDir, terraapp.MakeEncodingConfig(),

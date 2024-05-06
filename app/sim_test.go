@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	terraapp "github.com/classic-terra/core/v3/app"
 	helpers "github.com/classic-terra/core/v3/app/testing"
@@ -136,7 +135,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			var emptyWasmOpts []wasm.Option
+			var emptyWasmOpts []wasmkeeper.Option
 			app := terraapp.NewTerraApp(
 				logger, db, nil, true, map[int64]bool{}, terraapp.DefaultNodeHome,
 				terraapp.MakeEncodingConfig(),

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -xeu
 
 # always returns true so set -e doesn't exit if it is not running.
 killall terrad || true
@@ -7,6 +7,7 @@ rm -rf $HOME/.terrad/
 
 # make four terra directories
 mkdir $HOME/.terrad
+cd $HOME/.terrad/
 mkdir $HOME/.terrad/validator1
 mkdir $HOME/.terrad/validator2
 mkdir $HOME/.terrad/validator3
@@ -23,8 +24,25 @@ terrad keys add validator3 --keyring-backend=test --home=$HOME/.terrad/validator
 
 # create validator node with tokens to transfer to the three other nodes
 terrad add-genesis-account $(terrad keys show validator1 -a --keyring-backend=test --home=$HOME/.terrad/validator1) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator1
-terrad gentx validator1 1000000000000000000000uluna --keyring-backend=test --home=$HOME/.terrad/validator1 --chain-id=testing
-terrad collect-gentxs --home=$HOME/.terrad/validator1
+terrad add-genesis-account $(terrad keys show validator2 -a --keyring-backend=test --home=$HOME/.terrad/validator2) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator1
+terrad add-genesis-account $(terrad keys show validator3 -a --keyring-backend=test --home=$HOME/.terrad/validator3) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator1
+terrad add-genesis-account $(terrad keys show validator1 -a --keyring-backend=test --home=$HOME/.terrad/validator1) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator2
+terrad add-genesis-account $(terrad keys show validator2 -a --keyring-backend=test --home=$HOME/.terrad/validator2) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator2
+terrad add-genesis-account $(terrad keys show validator3 -a --keyring-backend=test --home=$HOME/.terrad/validator3) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator2
+terrad add-genesis-account $(terrad keys show validator1 -a --keyring-backend=test --home=$HOME/.terrad/validator1) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator3
+terrad add-genesis-account $(terrad keys show validator2 -a --keyring-backend=test --home=$HOME/.terrad/validator2) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator3
+terrad add-genesis-account $(terrad keys show validator3 -a --keyring-backend=test --home=$HOME/.terrad/validator3) 10000000000000000000000000000000uluna --home=$HOME/.terrad/validator3
+terrad gentx validator1 100000000000000000uluna --keyring-backend=test --home=$HOME/.terrad/validator1 --chain-id=testing
+terrad gentx validator2 100000000000000000uluna --keyring-backend=test --home=$HOME/.terrad/validator2 --chain-id=testing
+terrad gentx validator3 100000000000000000uluna --keyring-backend=test --home=$HOME/.terrad/validator3 --chain-id=testing
+
+cp validator2/config/gentx/*.json $HOME/.terrad/validator1/config/gentx/
+cp validator3/config/gentx/*.json $HOME/.terrad/validator1/config/gentx/
+terrad collect-gentxs --home=$HOME/.terrad/validator1 
+
+cp validator1/config/genesis.json $HOME/.terrad/validator2/config/genesis.json
+cp validator1/config/genesis.json $HOME/.terrad/validator3/config/genesis.json
+
 
 # change app.toml values
 VALIDATOR1_APP_TOML=$HOME/.terrad/validator1/config/app.toml
@@ -83,19 +101,15 @@ cp $HOME/.terrad/validator1/config/genesis.json $HOME/.terrad/validator2/config/
 cp $HOME/.terrad/validator1/config/genesis.json $HOME/.terrad/validator3/config/genesis.json
 
 # copy tendermint node id of validator1 to persistent peers of validator2-3
-sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(terrad tendermint show-node-id --home=$HOME/.terrad/validator1)@localhost:26656\"|g" $HOME/.terrad/validator2/config/config.toml
-sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(terrad tendermint show-node-id --home=$HOME/.terrad/validator1)@localhost:26656\"|g" $HOME/.terrad/validator3/config/config.toml
+node1=$(terrad tendermint show-node-id --home=$HOME/.terrad/validator1)
+node2=$(terrad tendermint show-node-id --home=$HOME/.terrad/validator2)
+node3=$(terrad tendermint show-node-id --home=$HOME/.terrad/validator3)
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$node1@localhost:26656,$node2@localhost:26656,$node3@localhost:26656\"|g" $HOME/.terrad/validator1/config/config.toml
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$node1@localhost:26656,$node2@localhost:26656,$node3@localhost:26656\"|g" $HOME/.terrad/validator2/config/config.toml
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$node1@localhost:26656,$node2@localhost:26656,$node3@localhost:26656\"|g" $HOME/.terrad/validator3/config/config.toml
 
 
 # # start all three validators
-# tmux new -s validator1 -d terrad start --home=$HOME/.terrad/validator1
-# tmux new -s validator2 -d terrad start --home=$HOME/.terrad/validator2
-# tmux new -s validator3 -d terrad start --home=$HOME/.terrad/validator3
-
-
-# # # # send uluna from first validator to second validator
-# echo "Waiting 7 seconds to send funds to validators 2, 3, and 4..."
-# sleep 7
-# terrad tx bank send validator1 $(terrad keys show validator2 -a --keyring-backend=test --home=$HOME/.terrad/validator2) 500000000uluna --keyring-backend=test --home=$HOME/.terrad/validator1 --chain-id=testing  --node http://localhost:26657 --yes --fees 1000000uluna
-
-# echo "All 3 Validators are up and running!"
+screen -S terra1 -t terra1 -d -m terrad start --home=$HOME/.terrad/validator1
+screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
+screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3

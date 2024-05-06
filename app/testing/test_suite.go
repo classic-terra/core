@@ -40,7 +40,7 @@ import (
 
 // SimAppChainID hardcoded chainID for simulation
 const (
-	SimAppChainID = "terra-app"
+	SimAppChainID = ""
 )
 
 var emptyWasmOpts []wasm.Option

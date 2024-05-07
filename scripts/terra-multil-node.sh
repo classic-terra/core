@@ -5,7 +5,7 @@ set -xeu
 killall terrad || true
 rm -rf $HOME/.terrad/
 
-# start version 2.0.0
+# start with version 2.0.0
 git clone https://github.com/classic-terra/core
 cd core
 git checkout v2.0.0

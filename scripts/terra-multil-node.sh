@@ -207,7 +207,7 @@ screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
 
 sleep 7
 
-terrad tx gov submit-proposal  software-upgrade v6  --upgrade-info v6 --upgrade-height 30  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+terrad tx gov submit-legacy-proposal  software-upgrade v6    --upgrade-info v6 --upgrade-height 30 --title upgrade --description upgrade --from validator2 --keyring-backend test --home  ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y --no-validate 
 
 sleep 7
 
@@ -236,7 +236,7 @@ screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
 
 sleep 7
 
-terrad tx gov submit-proposal  software-upgrade v7  --upgrade-info v7 --upgrade-height 40  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+terrad tx gov submit-legacy-proposal  software-upgrade v7    --upgrade-info v7 --upgrade-height 40 --title upgrade --description upgrade --from validator2 --keyring-backend test --home  ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y --no-validate 
 
 sleep 7
 
@@ -266,7 +266,7 @@ screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
 
 sleep 7
 
-terrad tx gov submit-proposal  software-upgrade v8  --upgrade-info v8 --upgrade-height 40  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+terrad tx gov submit-legacy-proposal  software-upgrade v8 --upgrade-info v8 --upgrade-height 50 --title upgrade --description upgrade --from validator2 --keyring-backend test --home  ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y --no-validate 
 
 sleep 7
 
@@ -277,3 +277,22 @@ terrad tx gov vote 5 yes  --from validator2 --keyring-backend test --home ~/.ter
 terrad tx gov vote 5 yes  --from validator3 --keyring-backend test --home ~/.terrad/validator3 --chain-id testing -y 
 
 sleep 50
+
+
+echo "=========================================================upgrade to v3.0.1-rc.2================================================================="
+# upgrade v3.0.1-rc.2
+killall terrad || true
+git clone https://github.com/classic-terra/core
+cd core
+git checkout v3.0.1-rc.2
+make install
+cd ..
+rm -rf core
+
+# # start all three validators/
+screen -S terra1 -t terra1 -d -m terrad start --home=$HOME/.terrad/validator1
+screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
+screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
+
+sleep 7
+

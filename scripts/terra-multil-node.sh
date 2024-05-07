@@ -5,6 +5,14 @@ set -xeu
 killall terrad || true
 rm -rf $HOME/.terrad/
 
+# start version 2.0.0
+git clone https://github.com/classic-terra/core
+cd core
+git checkout v2.0.0
+make install
+cd ..
+rm -rf core
+
 # make four terra directories
 mkdir $HOME/.terrad
 cd $HOME/.terrad/
@@ -152,3 +160,120 @@ terrad tx gov vote 1 yes  --from validator3 --keyring-backend test --home ~/.ter
 
 sleep 50
 
+echo "=========================================================upgrade to 2.1.0================================================================="
+
+# upgrade 2.1.0
+killall terrad || true
+git clone https://github.com/classic-terra/core
+cd core
+git checkout v2.1.0
+make install
+cd ..
+rm -rf core
+
+# # start all three validators/
+screen -S terra1 -t terra1 -d -m terrad start --home=$HOME/.terrad/validator1
+screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
+screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
+
+sleep 7
+
+terrad tx gov submit-proposal  software-upgrade v5  --upgrade-info v5 --upgrade-height 20  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+
+sleep 7
+
+terrad tx gov vote 2 yes  --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing -y 
+
+terrad tx gov vote 2 yes  --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing -y 
+
+terrad tx gov vote 2 yes  --from validator3 --keyring-backend test --home ~/.terrad/validator3 --chain-id testing -y 
+
+sleep 50
+
+echo "=========================================================upgrade to 2.2.0================================================================="
+# upgrade 2.2.0
+killall terrad || true
+git clone https://github.com/classic-terra/core
+cd core
+git checkout v2.2.0
+make install
+cd ..
+rm -rf core
+
+# # start all three validators/
+screen -S terra1 -t terra1 -d -m terrad start --home=$HOME/.terrad/validator1
+screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
+screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
+
+sleep 7
+
+terrad tx gov submit-proposal  software-upgrade v6  --upgrade-info v6 --upgrade-height 30  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+
+sleep 7
+
+terrad tx gov vote 3 yes  --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing -y 
+
+terrad tx gov vote 3 yes  --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing -y 
+
+terrad tx gov vote 3 yes  --from validator3 --keyring-backend test --home ~/.terrad/validator3 --chain-id testing -y 
+
+sleep 50
+
+echo "=========================================================upgrade to 2.3.0================================================================="
+# upgrade 2.3.0
+killall terrad || true
+git clone https://github.com/classic-terra/core
+cd core
+git checkout v2.3.0
+make install
+cd ..
+rm -rf core
+
+# # start all three validators/
+screen -S terra1 -t terra1 -d -m terrad start --home=$HOME/.terrad/validator1
+screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
+screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
+
+sleep 7
+
+terrad tx gov submit-proposal  software-upgrade v7  --upgrade-info v7 --upgrade-height 40  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+
+sleep 7
+
+terrad tx gov vote 4 yes  --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing -y 
+
+terrad tx gov vote 4 yes  --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing -y 
+
+terrad tx gov vote 4 yes  --from validator3 --keyring-backend test --home ~/.terrad/validator3 --chain-id testing -y 
+
+sleep 50
+
+
+echo "=========================================================upgrade to 2.4.0================================================================="
+# upgrade 2.4.0
+killall terrad || true
+git clone https://github.com/classic-terra/core
+cd core
+git checkout v2.4.0
+make install
+cd ..
+rm -rf core
+
+# # start all three validators/
+screen -S terra1 -t terra1 -d -m terrad start --home=$HOME/.terrad/validator1
+screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
+screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
+
+sleep 7
+
+terrad tx gov submit-proposal  software-upgrade v8  --upgrade-info v8 --upgrade-height 40  --title upgrade --description upgrade --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing --deposit 10000000uluna -y
+
+sleep 7
+
+terrad tx gov vote 5 yes  --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing -y 
+
+terrad tx gov vote 5 yes  --from validator2 --keyring-backend test --home ~/.terrad/validator2 --chain-id testing -y 
+
+terrad tx gov vote 5 yes  --from validator3 --keyring-backend test --home ~/.terrad/validator3 --chain-id testing -y 
+
+sleep 50

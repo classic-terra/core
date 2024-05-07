@@ -134,9 +134,15 @@ sleep 7
 
 terrad tx wasm store /Users/donglieu/52024/core/scripts/hackatom.wasm --from validator1 --output json --gas auto --gas-adjustment 2.4 --fees 100000000uluna --chain-id testing --home ~/.terrad/validator1 --keyring-backend test -y
 
+sleep 7
+
 terrad tx wasm instantiate 1 '{"verifier":"terra1au3y48s4ezv3j0n77m53h0lf9vnju59vevqvqx","beneficiary":"terra1hxxtn2lhuv9qf2s77llsemtayer5exhmkwh4le"}' --from validator1 --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id testing --home ~/.terrad/validator1 --keyring-backend  test --admin "" -y
 
-terrad tx gov submit-proposal  software-upgrade v4  --upgrade-info v4 --upgrade-height 30  --title upgrade --description upgrade --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing --deposit 10000000uluna -y
+sleep 7
+
+terrad tx gov submit-proposal  software-upgrade v4  --upgrade-info v4 --upgrade-height 10  --title upgrade --description upgrade --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing --deposit 10000000uluna -y
+
+sleep 7
 
 terrad tx gov vote 1 yes  --from validator1 --keyring-backend test --home ~/.terrad/validator1 --chain-id testing -y 
 
@@ -144,5 +150,5 @@ terrad tx gov vote 1 yes  --from validator2 --keyring-backend test --home ~/.ter
 
 terrad tx gov vote 1 yes  --from validator3 --keyring-backend test --home ~/.terrad/validator3 --chain-id testing -y 
 
-sleep 7
+sleep 50
 

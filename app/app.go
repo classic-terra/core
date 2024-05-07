@@ -61,6 +61,7 @@ import (
 	customauthtx "github.com/classic-terra/core/v3/custom/auth/tx"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v3/client/docs/statik"
@@ -122,7 +123,7 @@ func init() {
 func NewTerraApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, encodingConfig terraappparams.EncodingConfig, appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option, baseAppOptions ...func(*baseapp.BaseApp),
+	wasmOpts []wasmkeeper.Option, baseAppOptions ...func(*baseapp.BaseApp),
 ) *TerraApp {
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino

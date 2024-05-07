@@ -44,7 +44,7 @@ import (
 	core "github.com/classic-terra/core/v3/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 // NewRootCmd creates a new root command for terrad. It is called once in the
@@ -58,7 +58,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	sdkConfig.SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
 	sdkConfig.SetBech32PrefixForValidator(core.Bech32PrefixValAddr, core.Bech32PrefixValPub)
 	sdkConfig.SetBech32PrefixForConsensusNode(core.Bech32PrefixConsAddr, core.Bech32PrefixConsPub)
-	sdkConfig.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 	sdkConfig.Seal()
 
 	initClientCtx := client.Context{}.
@@ -261,7 +260,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	)
 
 	// TODO: We want to parse legacy wasm options from app.toml in [wasm] section here or not?
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 
 	return terraapp.NewTerraApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
@@ -290,7 +289,7 @@ func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")

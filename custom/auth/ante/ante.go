@@ -31,6 +31,7 @@ type HandlerOptions struct {
 	SigGasConsumer         ante.SignatureVerificationGasConsumer
 	TxFeeChecker           ante.TxFeeChecker
 	IBCKeeper              ibckeeper.Keeper
+	WasmKeeper             *wasmkeeper.Keeper
 	DistributionKeeper     distributionkeeper.Keeper
 	GovKeeper              govkeeper.Keeper
 	WasmConfig             *wasmtypes.WasmConfig
@@ -76,6 +77,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
+		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),

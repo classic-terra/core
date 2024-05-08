@@ -220,6 +220,7 @@ func NewTerraApp(
 			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 			IBCKeeper:          *app.IBCKeeper,
+			WasmKeeper:         &app.WasmKeeper,
 			DistributionKeeper: app.DistrKeeper,
 			GovKeeper:          app.GovKeeper,
 			WasmConfig:         &wasmConfig,

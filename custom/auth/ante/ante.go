@@ -37,6 +37,7 @@ type HandlerOptions struct {
 	TXCounterStoreKey      storetypes.StoreKey
 	DyncommKeeper          dyncommkeeper.Keeper
 	StakingKeeper          *stakingkeeper.Keeper
+	WasmKeeper             *wasmkeeper.Keeper
 	Cdc                    codec.BinaryCodec
 }
 
@@ -76,6 +77,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
+		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),

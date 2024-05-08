@@ -225,6 +225,7 @@ func NewTerraApp(
 			TXCounterStoreKey:  app.GetKey(wasm.StoreKey),
 			DyncommKeeper:      app.DyncommKeeper,
 			StakingKeeper:      app.StakingKeeper,
+			WasmKeeper:         &app.WasmKeeper,
 			Cdc:                app.appCodec,
 		},
 	)

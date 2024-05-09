@@ -279,12 +279,12 @@ terrad tx gov vote 5 yes  --from validator3 --keyring-backend test --home ~/.ter
 sleep 50
 
 
-echo "=========================================================upgrade to v3.0.1-rc.2================================================================="
-# upgrade v3.0.1-rc.2
+echo "=========================================================upgrade to v3.0.1-rc.4================================================================="
+# upgrade v3.0.1-rc.4
 killall terrad || true
 git clone https://github.com/classic-terra/core
 cd core
-git checkout v3.0.1-rc.2
+git checkout v3.0.1-rc.4
 make install
 cd ..
 rm -rf core
@@ -295,4 +295,10 @@ screen -S terra2 -t terra2 -d -m terrad start --home=$HOME/.terrad/validator2
 screen -S terra3 -t terra3 -d -m terrad start --home=$HOME/.terrad/validator3
 
 sleep 7
+
+echo "=====================tx======================="
+
+terrad tx bank send $(terrad keys show validator1 -a --keyring-backend=test --home=$HOME/.terrad/validator1) $(terrad keys show validator2 -a --keyring-backend=test --home=$HOME/.terrad/validator2) 200000uluna --keyring-backend=test --home=$HOME/.terrad/validator1 --chain-id=testing -y
+
+terrad tx bank multi-send $(terrad keys show validator1 -a --keyring-backend=test --home=$HOME/.terrad/validator1) $(terrad keys show validator2 -a --keyring-backend=test --home=$HOME/.terrad/validator2) $(terrad keys show validator3 -a --keyring-backend=test --home=$HOME/.terrad/validator3) 200000uluna --keyring-backend=test --home=$HOME/.terrad/validator1 --chain-id=testing -y
 

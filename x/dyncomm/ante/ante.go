@@ -3,15 +3,18 @@ package ante
 import (
 	"fmt"
 
-	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 )
 
 // DyncommDecorator checks for EditValidator and rejects
@@ -73,7 +76,7 @@ func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk
 		}
 
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
 		}
 
 	}

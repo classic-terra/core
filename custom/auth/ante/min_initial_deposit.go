@@ -3,12 +3,14 @@ package ante
 import (
 	"fmt"
 
-	core "github.com/classic-terra/core/v3/types"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
+	core "github.com/classic-terra/core/v3/types"
 )
 
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
@@ -75,7 +77,7 @@ func (midd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 
 		err := HandleCheckMinInitialDeposit(ctx, msg, midd.govKeeper, midd.treasuryKeeper)
 		if err != nil {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
 		}
 	}
 

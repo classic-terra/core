@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -84,5 +85,5 @@ func (ok dummyOracleKeeper) ValidateFeeder(_ sdk.Context, feederAddr sdk.AccAddr
 		return nil
 	}
 
-	return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot ensure feeder right")
+	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "cannot ensure feeder right")
 }

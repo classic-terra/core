@@ -8,12 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )

@@ -38,7 +38,7 @@ type AppModule struct {
 	wasm.AppModule
 	appModuleBasic     AppModuleBasic
 	cdc                codec.Codec
-	keeper             *wasm.Keeper
+	keeper             *keeper.Keeper
 	validatorSetSource keeper.ValidatorSetSource
 	accountKeeper      types.AccountKeeper // for simulation
 	bankKeeper         simulation.BankKeeper
@@ -47,7 +47,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec,
-	keeper *wasm.Keeper,
+	keeper *keeper.Keeper,
 	validatorSetSource keeper.ValidatorSetSource,
 	ak types.AccountKeeper,
 	bk simulation.BankKeeper,

@@ -1,6 +1,7 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -30,7 +31,7 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 			treasury.BurnModuleName,
 			taxes,
 		); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 

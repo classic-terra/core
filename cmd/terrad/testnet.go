@@ -49,7 +49,7 @@ var (
 )
 
 // get cmd to initialize all files for tendermint testnet and application
-func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator, validator genutiltypes.MessageValidator) *cobra.Command {
+func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a terrad testnet",
@@ -81,7 +81,7 @@ Example:
 
 			return InitTestnet(
 				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators, validator,
+				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
 		},
 	}
@@ -117,7 +117,6 @@ func InitTestnet(
 	keyringBackend,
 	algoStr string,
 	numValidators int,
-	validator genutiltypes.MessageValidator,
 ) error {
 	if chainID == "" {
 		chainID = "chain-" + tmrand.NewRand().Str(6)

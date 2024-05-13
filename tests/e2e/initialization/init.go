@@ -45,7 +45,7 @@ func SetAddressPrefixes() {
 }
 
 func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, forkHeight int) (*Chain, error) {
-	chain, err := new(id, dataDir)
+	chain, err := newChain(id, dataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func InitSingleNode(chainID, dataDir string, existingGenesisDir string, nodeConf
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}
 
-	chain, err := new(chainID, dataDir)
+	chain, err := newChain(chainID, dataDir)
 	if err != nil {
 		return nil, err
 	}

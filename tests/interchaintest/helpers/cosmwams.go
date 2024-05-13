@@ -27,7 +27,8 @@ func SetupContract(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain,
 func ExecuteMsgWithAmount(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, contractAddr, amount, message string) {
 	chainNode := chain.FullNodes[0]
 
-	cmd := []string{"terrad", "tx", "wasm", "execute", contractAddr, message,
+	cmd := []string{
+		"terrad", "tx", "wasm", "execute", contractAddr, message,
 		"--amount", amount,
 	}
 	_, err := chainNode.ExecTx(ctx, user.KeyName(), cmd...)
@@ -40,7 +41,8 @@ func ExecuteMsgWithAmount(t *testing.T, ctx context.Context, chain *cosmos.Cosmo
 func ExecuteMsgWithFee(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, contractAddr, amount, feeCoin, message string) {
 	chainNode := chain.FullNodes[0]
 
-	cmd := []string{"terrad", "tx", "wasm", "execute", contractAddr, message,
+	cmd := []string{
+		"terrad", "tx", "wasm", "execute", contractAddr, message,
 		"--fees", feeCoin,
 	}
 

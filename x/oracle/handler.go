@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -26,7 +27,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.AggregateExchangeRateVote(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized oracle message type: %T", msg)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized oracle message type: %T", msg)
 		}
 	}
 }

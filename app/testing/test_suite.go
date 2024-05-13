@@ -98,7 +98,7 @@ type EmptyAppOptions struct{}
 
 func (EmptyAppOptions) Get(_ string) interface{} { return nil }
 
-func SetupApp(t *testing.T, chainId string) *app.TerraApp {
+func SetupApp(t *testing.T, chainID string) *app.TerraApp {
 	t.Helper()
 
 	privVal := NewPV()
@@ -116,7 +116,7 @@ func SetupApp(t *testing.T, chainId string) *app.TerraApp {
 		Coins:   sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(100000000000000))),
 	}
 	genesisAccounts := []authtypes.GenesisAccount{acc}
-	app := SetupWithGenesisValSet(t, chainId, valSet, genesisAccounts, balance)
+	app := SetupWithGenesisValSet(t, chainID, valSet, genesisAccounts, balance)
 
 	return app
 }
@@ -125,10 +125,10 @@ func SetupApp(t *testing.T, chainId string) *app.TerraApp {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in app.
-func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
+func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
 	t.Helper()
 
-	terraApp, genesisState := setup(chainId)
+	terraApp, genesisState := setup(chainID)
 	genesisState = genesisStateWithValSet(t, terraApp, genesisState, valSet, genAccs, balances...)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "")
@@ -137,7 +137,7 @@ func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.Valida
 	// init chain will set the validator set and initialize the genesis accounts
 	terraApp.InitChain(
 		abci.RequestInitChain{
-			ChainId:         chainId,
+			ChainId:         chainID,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -147,7 +147,7 @@ func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.Valida
 	// commit genesis changes
 	terraApp.Commit()
 	terraApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		ChainID:            chainId,
+		ChainID:            chainID,
 		Height:             terraApp.LastBlockHeight() + 1,
 		AppHash:            terraApp.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -157,7 +157,7 @@ func SetupWithGenesisValSet(t *testing.T, chainId string, valSet *tmtypes.Valida
 	return terraApp
 }
 
-func setup(chainId string) (*app.TerraApp, app.GenesisState) {
+func setup(chainID string) (*app.TerraApp, app.GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
 	appOptions := make(simtestutil.AppOptionsMap, 0)
@@ -174,7 +174,7 @@ func setup(chainId string) (*app.TerraApp, app.GenesisState) {
 		encCdc,
 		simtestutil.EmptyAppOptions{},
 		emptyWasmOpts,
-		baseapp.SetChainID(chainId),
+		baseapp.SetChainID(chainID),
 	)
 
 	return terraapp, app.GenesisState{}

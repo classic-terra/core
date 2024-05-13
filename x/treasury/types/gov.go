@@ -3,10 +3,11 @@ package types
 import (
 	fmt "fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -63,7 +64,7 @@ func (p *AddBurnTaxExemptionAddressProposal) ValidateBasic() error {
 	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 
@@ -107,7 +108,7 @@ func (p *RemoveBurnTaxExemptionAddressProposal) ValidateBasic() error {
 	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 

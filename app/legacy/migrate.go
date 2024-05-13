@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ibcxfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibccoretypes "github.com/cosmos/ibc-go/v7/modules/core/types"
 
@@ -133,7 +132,7 @@ $ terrad migrate /path/to/genesis.json --chain-id=cosmoshub-4 --genesis-time=201
 			ibcTransferGenesis.Params.ReceiveEnabled = false
 			ibcTransferGenesis.Params.SendEnabled = false
 
-			ibcCoreGenesis.ClientGenesis.Params.AllowedClients = []string{exported.Tendermint}
+			ibcCoreGenesis.ClientGenesis.Params.AllowedClients = []string{ibcexported.Tendermint}
 			stakingGenesis.Params.HistoricalEntries = 10000
 
 			newGenState[ibcxfertypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(ibcTransferGenesis)

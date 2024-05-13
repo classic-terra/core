@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	abci "github.com/cometbft/cometbft/abci/types"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
 	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
@@ -57,7 +60,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		var contractQuery bindings.TerraQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
-			return nil, sdkerrors.Wrap(err, "terra query")
+			return nil, errorsmod.Wrap(err, "terra query")
 		}
 
 		switch {
@@ -73,7 +76,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			bz, err := json.Marshal(bindings.SwapQueryResponse{Receive: ConvertSdkCoinToWasmCoin(res.ReturnCoin)})
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+				return nil, errorsmod.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}
 
 			return bz, nil
@@ -105,7 +108,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 				ExchangeRates: items,
 			})
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+				return nil, errorsmod.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}
 
 			return bz, nil
@@ -114,7 +117,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			taxRate := qp.treasuryKeeper.GetTaxRate(ctx)
 			bz, err := json.Marshal(bindings.TaxRateQueryResponse{Rate: taxRate.String()})
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+				return nil, errorsmod.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}
 
 			return bz, nil
@@ -123,7 +126,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			taxCap := qp.treasuryKeeper.GetTaxCap(ctx, contractQuery.TaxCap.Denom)
 			bz, err := json.Marshal(TaxCapQueryResponse{Cap: taxCap.String()})
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+				return nil, errorsmod.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 			}
 
 			return bz, nil

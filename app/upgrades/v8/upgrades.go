@@ -28,7 +28,6 @@ func CreateV8UpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// Set param key table for params module migration
 		for _, subspace := range keepers.ParamsKeeper.GetSubspaces() {
 			subspace := subspace
@@ -36,23 +35,23 @@ func CreateV8UpgradeHandler(
 			var keyTable paramstypes.KeyTable
 			switch subspace.Name() {
 			case authtypes.ModuleName:
-				keyTable = authtypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = authtypes.ParamKeyTable()
 			case banktypes.ModuleName:
-				keyTable = banktypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = banktypes.ParamKeyTable()
 			case stakingtypes.ModuleName:
-				keyTable = stakingtypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = stakingtypes.ParamKeyTable()
 			case minttypes.ModuleName:
-				keyTable = minttypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = minttypes.ParamKeyTable()
 			case distrtypes.ModuleName:
-				keyTable = distrtypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = distrtypes.ParamKeyTable()
 			case slashingtypes.ModuleName:
-				keyTable = slashingtypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = slashingtypes.ParamKeyTable()
 			case govtypes.ModuleName:
-				keyTable = govv1.ParamKeyTable() //nolint:staticcheck
+				keyTable = govv1.ParamKeyTable()
 			case wasmtypes.ModuleName:
 				keyTable = wasmtypes.ParamKeyTable()
 			case crisistypes.ModuleName:
-				keyTable = crisistypes.ParamKeyTable() //nolint:staticcheck
+				keyTable = crisistypes.ParamKeyTable()
 			}
 
 			if !subspace.HasKeyTable() {

@@ -129,7 +129,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(terraapp.ModuleBasics),
 		AddGenesisAccountCmd(terraapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(terraapp.ModuleBasics, banktypes.GenesisBalancesIterator{}, gentxModule.GenTxValidator),
+		testnetCmd(terraapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		pruning.Cmd(a.newApp, terraapp.DefaultNodeHome),
 		snapshot.Cmd(a.newApp),

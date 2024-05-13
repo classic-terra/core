@@ -216,7 +216,7 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string) (b
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}
-	containerId := m.resources[containerName].Container.ID
+	containerID := m.resources[containerName].Container.ID
 
 	var (
 		exec   *docker.Exec
@@ -245,7 +245,7 @@ func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string) (b
 			Context:      ctx,
 			AttachStdout: true,
 			AttachStderr: true,
-			Container:    containerId,
+			Container:    containerID,
 			User:         "root",
 			Cmd:          command,
 		})

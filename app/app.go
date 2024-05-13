@@ -61,6 +61,7 @@ import (
 	customauthtx "github.com/classic-terra/core/v3/custom/auth/tx"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	// unnamed import of statik for swagger UI support
@@ -224,7 +225,7 @@ func NewTerraApp(
 			DistributionKeeper: app.DistrKeeper,
 			GovKeeper:          app.GovKeeper,
 			WasmConfig:         &wasmConfig,
-			TXCounterStoreKey:  app.GetKey(wasm.StoreKey),
+			TXCounterStoreKey:  app.GetKey(wasmtypes.StoreKey),
 			DyncommKeeper:      app.DyncommKeeper,
 			StakingKeeper:      app.StakingKeeper,
 			Cdc:                app.appCodec,
@@ -278,8 +279,8 @@ func NewTerraApp(
 func (app *TerraApp) Name() string { return app.BaseApp.Name() }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
-func (a *TerraApp) DefaultGenesis() map[string]json.RawMessage {
-	return ModuleBasics.DefaultGenesis(a.appCodec)
+func (app *TerraApp) DefaultGenesis() map[string]json.RawMessage {
+	return ModuleBasics.DefaultGenesis(app.appCodec)
 }
 
 // BeginBlocker application updates every begin block
@@ -434,7 +435,8 @@ func (app *TerraApp) setupUpgradeStoreLoaders() {
 
 	for _, upgrade := range Upgrades {
 		if upgradeInfo.Name == upgrade.UpgradeName {
-			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
+			storeUpgrades := upgrade.StoreUpgrades
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 		}
 	}
 }

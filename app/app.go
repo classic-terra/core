@@ -61,8 +61,8 @@ import (
 	customauthtx "github.com/classic-terra/core/v3/custom/auth/tx"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v3/client/docs/statik"

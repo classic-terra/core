@@ -68,8 +68,8 @@ message QueryTaxRateRequest {}
 message QueryTaxRateResponse {
   string tax_rate = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
 }
 
@@ -87,8 +87,8 @@ message QueryTaxCapRequest {
 message QueryTaxCapResponse {
   string tax_cap = 1 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
   ];
 }
 
@@ -104,8 +104,8 @@ message QueryTaxCapsResponseItem {
   string denom   = 1;
   string tax_cap = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
   ];
 }
 
@@ -123,8 +123,8 @@ message QueryRewardWeightRequest {}
 message QueryRewardWeightResponse {
   string reward_weight = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
 }
 
@@ -146,8 +146,8 @@ message QuerySeigniorageProceedsRequest {}
 message QuerySeigniorageProceedsResponse {
   string seigniorage_proceeds = 1 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
   ];
 }
 

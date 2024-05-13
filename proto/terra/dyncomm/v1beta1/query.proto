@@ -15,7 +15,7 @@ service Query {
     option (google.api.http).get = "/terra/dyncomm/v1beta1/params";
   }
 
-  rpc Rate(QueryRateRequest) returns (QueryRateResponse){
+  rpc Rate(QueryRateRequest) returns (QueryRateResponse) {
     option (google.api.http).get = "/terra/dyncomm/v1beta1/rate/{validator_addr}";
   }
 }
@@ -37,12 +37,8 @@ message QueryRateRequest {
 
 // QueryRateResponse is the response type for the Query/Rate RPC method.
 message QueryRateResponse {
-  string rate = 1 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",  
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"
-  ];
-  string target = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"
-  ];
+  string rate = 1
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string target = 2
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

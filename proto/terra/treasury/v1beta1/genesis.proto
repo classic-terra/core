@@ -14,13 +14,13 @@ message GenesisState {
   Params params   = 1 [(gogoproto.nullable) = false];
   string tax_rate = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
   string reward_weight = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
   repeated TaxCap tax_caps                       = 4 [(gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.Coin tax_proceeds = 5
@@ -35,8 +35,8 @@ message TaxCap {
   string denom   = 1;
   string tax_cap = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
   ];
 }
 
@@ -45,17 +45,17 @@ message EpochState {
   uint64 epoch      = 1;
   string tax_reward = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
   string seigniorage_reward = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
   string total_staked_luna = 4 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
   ];
 }

@@ -311,7 +311,7 @@ proto-gen:
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(CONTAINER_PROTO_IMAGE) find ./proto -name "*.proto" -exec clang-format -i {} \; ; fi
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(CONTAINER_PROTO_IMAGE) find ./proto -name "*.proto" -exec clang-format -i {} \;
 	
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json

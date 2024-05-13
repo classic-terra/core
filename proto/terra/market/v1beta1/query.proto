@@ -53,8 +53,8 @@ message QueryTerraPoolDeltaResponse {
   // terra_pool_delta defines the gap between the TerraPool and the TerraBasePool
   bytes terra_pool_delta = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
-    (gogoproto.nullable) = false
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
   ];
 }
 

@@ -230,7 +230,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		genDocFile := filepath.Join(homeDir, cast.ToString(appOpts.Get("genesis_file")))
+		genDocFile := filepath.Join(homeDir, "config", "genesis.json")
 		appGenesis, err := tmtypes.GenesisDocFromFile(genDocFile)
 		if err != nil {
 			panic(err)

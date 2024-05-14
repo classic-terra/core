@@ -123,6 +123,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
 		dk := s.app.DistrKeeper
+		wk := s.app.WasmKeeper
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
@@ -138,6 +139,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 			customante.HandlerOptions{
 				AccountKeeper:      ak,
 				BankKeeper:         bk,
+				WasmKeeper:         &wk,
 				FeegrantKeeper:     s.app.FeeGrantKeeper,
 				OracleKeeper:       s.app.OracleKeeper,
 				TreasuryKeeper:     s.app.TreasuryKeeper,

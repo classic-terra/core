@@ -3,7 +3,7 @@ package terra.wasm.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/classic-terra/core/v2/custom/wasm/types/legacy";
+option go_package = "github.com/classic-terra/core/v3/custom/wasm/types/legacy";
 
 // CodeInfo is data for the uploaded contract WASM code
 message LegacyCodeInfo {

@@ -3,10 +3,11 @@ package legacy
 import (
 	"encoding/json"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	wasm "github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // ensure Msg interface compliance at compile time
@@ -47,7 +48,7 @@ func NewMsgStoreCode(sender sdk.AccAddress, wasmByteCode []byte) *MsgStoreCode {
 }
 
 // Route implements sdk.Msg
-func (msg MsgStoreCode) Route() string { return wasm.RouterKey }
+func (msg MsgStoreCode) Route() string { return wasmtypes.RouterKey }
 
 // Type implements sdk.Msg
 func (msg MsgStoreCode) Type() string { return TypeMsgStoreCode }
@@ -71,15 +72,15 @@ func (msg MsgStoreCode) GetSigners() []sdk.AccAddress {
 func (msg MsgStoreCode) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if len(msg.WASMByteCode) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty wasm code")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty wasm code")
 	}
 
 	if uint64(len(msg.WASMByteCode)) > EnforcedMaxContractSize {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm code too large")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm code too large")
 	}
 
 	return nil
@@ -96,7 +97,7 @@ func NewMsgMigrateCode(codeID uint64, sender sdk.AccAddress, wasmByteCode []byte
 }
 
 // Route implements sdk.Msg
-func (msg MsgMigrateCode) Route() string { return wasm.RouterKey }
+func (msg MsgMigrateCode) Route() string { return wasmtypes.RouterKey }
 
 // Type implements sdk.Msg
 func (msg MsgMigrateCode) Type() string { return TypeMsgMigrateCode }
@@ -120,15 +121,15 @@ func (msg MsgMigrateCode) GetSigners() []sdk.AccAddress {
 func (msg MsgMigrateCode) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if len(msg.WASMByteCode) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty wasm code")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty wasm code")
 	}
 
 	if uint64(len(msg.WASMByteCode)) > EnforcedMaxContractSize {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm code too large")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm code too large")
 	}
 
 	return nil
@@ -152,7 +153,7 @@ func NewMsgInstantiateContract(sender, admin sdk.AccAddress, codeID uint64, init
 
 // Route implements sdk.Msg
 func (msg MsgInstantiateContract) Route() string {
-	return wasm.RouterKey
+	return wasmtypes.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -164,26 +165,26 @@ func (msg MsgInstantiateContract) Type() string {
 func (msg MsgInstantiateContract) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if len(msg.Admin) != 0 {
 		_, err := sdk.AccAddressFromBech32(msg.Admin)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid admin address (%s)", err)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid admin address (%s)", err)
 		}
 	}
 
 	if !msg.InitCoins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitCoins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.InitCoins.String())
 	}
 
 	if uint64(len(msg.InitMsg)) > EnforcedMaxContractMsgSize {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte size is too huge")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte size is too huge")
 	}
 
 	if !json.Valid(msg.InitMsg) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte format is invalid json")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte format is invalid json")
 	}
 
 	return nil
@@ -216,7 +217,7 @@ func NewMsgExecuteContract(sender sdk.AccAddress, contract sdk.AccAddress, execM
 
 // Route implements sdk.Msg
 func (msg MsgExecuteContract) Route() string {
-	return wasm.RouterKey
+	return wasmtypes.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -228,24 +229,24 @@ func (msg MsgExecuteContract) Type() string {
 func (msg MsgExecuteContract) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.Contract)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
 	}
 
 	if !msg.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Coins.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Coins.String())
 	}
 
 	if uint64(len(msg.ExecuteMsg)) > EnforcedMaxContractMsgSize {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte size is too huge")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte size is too huge")
 	}
 
 	if !json.Valid(msg.ExecuteMsg) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte format is invalid json")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte format is invalid json")
 	}
 
 	return nil
@@ -278,7 +279,7 @@ func NewMsgMigrateContract(admin, contract sdk.AccAddress, newCodeID uint64, mig
 
 // Route implements sdk.Msg
 func (msg MsgMigrateContract) Route() string {
-	return wasm.RouterKey
+	return wasmtypes.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -289,25 +290,25 @@ func (msg MsgMigrateContract) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgMigrateContract) ValidateBasic() error {
 	if msg.NewCodeID == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing new_code_id")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing new_code_id")
 	}
 
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid admin address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid admin address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.Contract)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
 	}
 
 	if uint64(len(msg.MigrateMsg)) > EnforcedMaxContractMsgSize {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte size is too huge")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte size is too huge")
 	}
 
 	if !json.Valid(msg.MigrateMsg) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte format is invalid json")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "wasm msg byte format is invalid json")
 	}
 
 	return nil
@@ -339,7 +340,7 @@ func NewMsgUpdateContractAdmin(admin, newAdmin, contract sdk.AccAddress) *MsgUpd
 
 // Route implements sdk.Msg
 func (msg MsgUpdateContractAdmin) Route() string {
-	return wasm.RouterKey
+	return wasmtypes.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -351,17 +352,17 @@ func (msg MsgUpdateContractAdmin) Type() string {
 func (msg MsgUpdateContractAdmin) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid admin address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid admin address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.NewAdmin)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid new admin address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid new admin address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.Contract)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
 	}
 
 	return nil
@@ -391,7 +392,7 @@ func NewMsgClearContractAdmin(admin, contract sdk.AccAddress) *MsgClearContractA
 
 // Route implements sdk.Msg
 func (msg MsgClearContractAdmin) Route() string {
-	return wasm.RouterKey
+	return wasmtypes.RouterKey
 }
 
 // Type implements sdk.Msg
@@ -403,12 +404,12 @@ func (msg MsgClearContractAdmin) Type() string {
 func (msg MsgClearContractAdmin) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.Contract)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid contract address (%s)", err)
 	}
 
 	return nil

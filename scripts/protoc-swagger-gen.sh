@@ -13,7 +13,7 @@ mkdir -p ./tmp-swagger-gen
 
 # Get the path of the cosmos-sdk repo from go/pkg/mod
 cosmos_sdk_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/cosmos-sdk)
-ibc_go_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/ibc-go/v6)
+ibc_go_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/ibc-go/v7)
 wasm_dir=$(go list -f '{{ .Dir }}' -m github.com/CosmWasm/wasmd)
 
 proto_dirs=$(find ./proto "$cosmos_sdk_dir"/proto "$ibc_go_dir"/proto "$wasm_dir"/proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)

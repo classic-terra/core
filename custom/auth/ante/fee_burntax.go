@@ -1,11 +1,12 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	treasury "github.com/classic-terra/core/v2/x/treasury/types"
+	treasury "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // BurnTaxSplit splits
@@ -30,7 +31,7 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 			treasury.BurnModuleName,
 			taxes,
 		); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 

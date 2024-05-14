@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	terraapp "github.com/classic-terra/core/v2/app"
+	terraapp "github.com/classic-terra/core/v3/app"
 )
 
 func main() {

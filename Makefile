@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+include tests/e2e/e2e.mk
+
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
@@ -249,6 +251,31 @@ benchmark:
 .PHONY: test test-all test-cover test-unit test-race
 
 ###############################################################################
+###                               Interchain test                           ###
+###############################################################################
+# Executes basic chain tests via interchaintest
+ictest-start: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraStart .
+
+ictest-validator: ictest-build
+	@cd tests/interchaintest && go test -timeout=25m -race -v -run TestValidator .
+
+ictest-ibc: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaIBCTranfer .
+
+ictest-ibc-hooks: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraIBCHooks .
+
+ictest-ibc-pfm: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraGaiaOsmoPFM .
+
+ictest-ibc-pfm-terra: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
+
+ictest-build: 
+	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
+
+###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
 
@@ -273,9 +300,8 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-CONTAINER_PROTO_VER=v0.7
-CONTAINER_PROTO_IMAGE=tendermintdev/sdk-proto-gen:$(CONTAINER_PROTO_VER)
-CONTAINER_PROTO_FMT=cosmos-sdk-proto-fmt-$(CONTAINER_PROTO_VER)
+CONTAINER_PROTO_VER=0.13.1
+CONTAINER_PROTO_IMAGE=ghcr.io/cosmos/proto-builder:$(CONTAINER_PROTO_VER)
 
 proto-all: proto-format proto-lint proto-gen
 
@@ -285,8 +311,7 @@ proto-gen:
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_PROTO_FMT}$$"; then docker start -a $(CONTAINER_PROTO_FMT); else docker run --name $(CONTAINER_PROTO_FMT) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./proto -name "*.proto" -exec clang-format -i {} \; ; fi
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(CONTAINER_PROTO_IMAGE) find ./proto -name "*.proto" -exec clang-format -i {} \;
 	
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json

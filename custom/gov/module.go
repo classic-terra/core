@@ -7,11 +7,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	customtypes "github.com/classic-terra/core/v2/custom/gov/types"
-	core "github.com/classic-terra/core/v2/types"
+	customtypes "github.com/classic-terra/core/v3/custom/gov/types"
+	core "github.com/classic-terra/core/v3/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}
@@ -29,7 +29,7 @@ func NewAppModuleBasic(proposalHandlers []govclient.ProposalHandler) AppModuleBa
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
-	*v1beta1.ModuleCdc = *customtypes.ModuleCdc
+	*govcodec.ModuleCdc = *customtypes.ModuleCdc
 	v1.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -38,7 +38,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func (am AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	// customize to set default genesis state deposit denom to uluna
 	defaultGenesisState := v1.DefaultGenesisState()
-	defaultGenesisState.DepositParams.MinDeposit[0].Denom = core.MicroLunaDenom
+	defaultGenesisState.Params.MinDeposit[0].Denom = core.MicroLunaDenom
 
 	return cdc.MustMarshalJSON(defaultGenesisState)
 }

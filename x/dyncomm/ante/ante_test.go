@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v2/app"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/app"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,13 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	appparams "github.com/classic-terra/core/v2/app/params"
-	apptesting "github.com/classic-terra/core/v2/app/testing"
-	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
+	appparams "github.com/classic-terra/core/v3/app/params"
+	apptesting "github.com/classic-terra/core/v3/app/testing"
+	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -173,7 +178,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.CreateValidator(50_000_000_000)
 	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
 
-	mfd := dyncommante.NewDyncommDecorator(suite.App.DyncommKeeper, suite.App.StakingKeeper)
+	mfd := dyncommante.NewDyncommDecorator(suite.App.AppCodec(), suite.App.DyncommKeeper, suite.App.StakingKeeper)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
@@ -205,7 +210,130 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	suite.Require().NoError(err)
 }
 
-// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v2/x/dyncomm/ante
+func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommAuthz() {
+	suite.SetupTest() // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.txBuilder.SetGasLimit(400_000)
+	suite.Ctx = suite.Ctx.WithIsCheckTx(false)
+
+	_, _, val1, _ := suite.CreateValidator(50_000_000_000)
+	priv2, _, acc2 := testdata.KeyTestPubAddr()
+	suite.CreateValidator(50_000_000_000)
+	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
+
+	mfd := dyncommante.NewDyncommDecorator(suite.App.AppCodec(), suite.App.DyncommKeeper, suite.App.StakingKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
+	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
+	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+
+	// invalid tx fails
+	editmsg := stakingtypes.NewMsgEditValidator(
+		val1.GetOperator(),
+		val1.Description, &invalidtarget, &val1.MinSelfDelegation,
+	)
+
+	execmsg := authz.NewMsgExec(acc2, []sdk.Msg{editmsg})
+
+	err := suite.txBuilder.SetMsgs(&execmsg)
+	suite.Require().NoError(err)
+	tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.Ctx, tx, false)
+	suite.Require().Error(err)
+
+	// valid tx passes
+	editmsg = stakingtypes.NewMsgEditValidator(
+		val1.GetOperator(),
+		val1.Description, &validtarget, &val1.MinSelfDelegation,
+	)
+	execmsg = authz.NewMsgExec(acc2, []sdk.Msg{editmsg})
+
+	err = suite.txBuilder.SetMsgs(editmsg)
+	suite.Require().NoError(err)
+	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.Ctx, tx, false)
+	suite.Require().NoError(err)
+}
+
+func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
+	suite.SetupTest() // setup
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	suite.txBuilder.SetGasLimit(400_000)
+	suite.Ctx = suite.Ctx.WithIsCheckTx(false)
+
+	_, _, val1, _ := suite.CreateValidator(50_000_000_000)
+	priv2, _, _ := testdata.KeyTestPubAddr()
+	suite.CreateValidator(50_000_000_000)
+	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
+
+	mfd := dyncommante.NewDyncommDecorator(suite.App.AppCodec(), suite.App.DyncommKeeper, suite.App.StakingKeeper)
+	antehandler := sdk.ChainAnteDecorators(mfd)
+
+	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
+	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
+	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+
+	// prepare invalid tx -> expect it fails
+	editmsg := stakingtypes.NewMsgEditValidator(
+		val1.GetOperator(),
+		val1.Description, &invalidtarget, &val1.MinSelfDelegation,
+	)
+	data, err := icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg})
+	suite.Require().NoError(err)
+	icaPacketData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+	}
+	packetData := icaPacketData.GetBytes()
+	packet := channeltypes.NewPacket(
+		packetData, 1, "source-port", "source-channel",
+		"dest-port", "dest-channel",
+		clienttypes.NewHeight(1, 1), 0,
+	)
+	recvmsg := channeltypes.NewMsgRecvPacket(
+		packet, []byte{}, clienttypes.NewHeight(1, 1), "signer",
+	)
+
+	err = suite.txBuilder.SetMsgs(recvmsg)
+	suite.Require().NoError(err)
+	tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.Ctx, tx, false)
+	suite.Require().Error(err)
+
+	// prepare valid tx -> expect it passes
+	editmsg = stakingtypes.NewMsgEditValidator(
+		val1.GetOperator(),
+		val1.Description, &validtarget, &val1.MinSelfDelegation,
+	)
+	data, err = icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg})
+	suite.Require().NoError(err)
+	icaPacketData = icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+	}
+	packetData = icaPacketData.GetBytes()
+	packet = channeltypes.NewPacket(
+		packetData, 1, "source-port", "source-channel",
+		"dest-port", "dest-channel",
+		clienttypes.NewHeight(1, 1), 0,
+	)
+	recvmsg = channeltypes.NewMsgRecvPacket(
+		packet, []byte{}, clienttypes.NewHeight(1, 1), "signer",
+	)
+
+	err = suite.txBuilder.SetMsgs(recvmsg)
+	suite.Require().NoError(err)
+	tx, err = suite.CreateTestTx([]cryptotypes.PrivKey{priv2}, []uint64{0}, []uint64{0}, suite.Ctx.ChainID())
+	suite.Require().NoError(err)
+	_, err = antehandler(suite.Ctx, tx, false)
+	suite.Require().NoError(err)
+}
+
+// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v3/x/dyncomm/ante
 // check that account keeper sequence no longer increases when editing validator unsuccessfully
 func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	suite.SetupTest() // setup

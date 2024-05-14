@@ -4,14 +4,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	marketexported "github.com/classic-terra/core/v2/x/market/exported"
-	oracleexported "github.com/classic-terra/core/v2/x/oracle/exported"
-	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
+	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
@@ -55,21 +55,21 @@ func FilterMsgAndComputeTax(ctx sdk.Context, te taxexemptionkeeper.Keeper, tk Tr
 		case *marketexported.MsgSwapSend:
 			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin))...)
 
-		case *wasm.MsgInstantiateContract:
+		case *wasmtypes.MsgInstantiateContract:
 			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 
-		case *wasm.MsgInstantiateContract2:
+		case *wasmtypes.MsgInstantiateContract2:
 			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 
-		case *wasm.MsgExecuteContract:
+		case *wasmtypes.MsgExecuteContract:
 			if !te.IsExemptedFromTax(ctx, msg.Sender, msg.Contract) {
 				taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
 			}
 
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
-			if err != nil {
-				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, te, tk, messages...)...)
+			if err == nil {
+				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, messages...)...)
 			}
 		}
 	}

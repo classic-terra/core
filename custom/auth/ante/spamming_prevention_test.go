@@ -1,13 +1,14 @@
 package ante_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 func (suite *AnteTestSuite) TestOracleSpamming() {
@@ -84,5 +85,5 @@ func (ok dummyOracleKeeper) ValidateFeeder(_ sdk.Context, feederAddr sdk.AccAddr
 		return nil
 	}
 
-	return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot ensure feeder right")
+	return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "cannot ensure feeder right")
 }

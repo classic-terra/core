@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	customante "github.com/classic-terra/core/v2/custom/auth/ante"
-	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
+	customante "github.com/classic-terra/core/v3/custom/auth/ante"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

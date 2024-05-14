@@ -26,7 +26,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
           check-latest: true
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
           check-latest: true
@@ -46,7 +46,7 @@ jobs:
         run: go version
       - name: Install runsim
         run: export GO111MODULE="on" && go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v3.3.2
+      - uses: actions/cache@v4.0.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -56,7 +56,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
           check-latest: true
@@ -68,7 +68,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - uses: actions/cache@v3.3.2
+      - uses: actions/cache@v4.0.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -83,7 +83,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
           check-latest: true
@@ -97,7 +97,7 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3.3.2
+      - uses: actions/cache@v4.0.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -112,7 +112,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
           check-latest: true
@@ -126,7 +126,7 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3.3.2
+      - uses: actions/cache@v4.0.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -141,7 +141,7 @@ jobs:
     needs: [build, install-runsim]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20"
           check-latest: true
@@ -155,7 +155,7 @@ jobs:
             go.sum
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
-      - uses: actions/cache@v3.3.2
+      - uses: actions/cache@v4.0.2
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary

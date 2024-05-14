@@ -1,10 +1,11 @@
 syntax = "proto3";
 package terra.oracle.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "terra/oracle/v1beta1/oracle.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/oracle/types";
+option go_package = "github.com/classic-terra/core/v3/x/oracle/types";
 
 // GenesisState defines the oracle module's genesis state.
 message GenesisState {
@@ -22,14 +23,14 @@ message GenesisState {
 // delegated to. By default this struct is only used at genesis to feed in
 // default feeder addresses.
 message FeederDelegation {
-  string feeder_address    = 1;
-  string validator_address = 2;
+  string feeder_address    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MissCounter defines an miss counter and validator address pair used in
 // oracle module's genesis state
 message MissCounter {
-  string validator_address = 1;
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   uint64 miss_counter      = 2;
 }
 
@@ -37,6 +38,9 @@ message MissCounter {
 // oracle module's genesis state
 message TobinTax {
   string denom     = 1;
-  string tobin_tax = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string tobin_tax = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

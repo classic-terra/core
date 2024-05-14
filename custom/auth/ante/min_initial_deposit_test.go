@@ -9,8 +9,9 @@ import (
 
 	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
+
 	// core "github.com/terra-money/core/types"
 	// treasury "github.com/terra-money/core/x/treasury/types"
 
@@ -30,12 +31,12 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
-	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
+	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	// set initial deposit ratio to 0.0
 	ratio := sdk.ZeroDec()
@@ -60,6 +61,21 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	// antehandler should not error
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "error: Proposal whithout initial deposit should have gone through")
+
+	// create v1 proposal
+	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata", "title", "summary")
+	feeAmountv1 := testdata.NewTestFeeAmount()
+	gasLimitv1 := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgv1))
+	suite.txBuilder.SetFeeAmount(feeAmountv1)
+	suite.txBuilder.SetGasLimit(gasLimitv1)
+	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	txv1, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// ante handler should not error for v1 proposal with sufficient deposit
+	_, err = antehandler(suite.ctx, txv1, false)
+	suite.Require().NoError(err, "error: v1 proposal whithout initial deposit should have gone through")
 }
 
 func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
@@ -70,12 +86,12 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
-	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
+	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	// set initial deposit ratio to 0.2
 	ratio := sdk.NewDecWithPrec(2, 1)
@@ -102,6 +118,21 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	// antehandler should not error
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().NoError(err, "error: Proposal with sufficient initial deposit should have gone through")
+
+	// create v1 proposal
+	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata", "title", "summary")
+	feeAmountv1 := testdata.NewTestFeeAmount()
+	gasLimitv1 := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgv1))
+	suite.txBuilder.SetFeeAmount(feeAmountv1)
+	suite.txBuilder.SetGasLimit(gasLimitv1)
+	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	txv1, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// ante handler should not error for v1 proposal with sufficient deposit
+	_, err = antehandler(suite.ctx, txv1, false)
+	suite.Require().NoError(err, "error: v1 proposal with sufficient initial deposit should have gone through")
 }
 
 func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() {
@@ -112,12 +143,12 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
-	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
+	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	// set initial deposit ratio to 0.2
 	ratio := sdk.NewDecWithPrec(2, 1)
@@ -141,7 +172,22 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
 	suite.Require().NoError(err)
 
-	// antehandler should not error
+	// antehandler should error with insufficient deposit
 	_, err = antehandler(suite.ctx, tx, false)
 	suite.Require().Error(err, "error: Proposal with insufficient initial deposit should have failed")
+
+	// create v1 proposal
+	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata", "title", "summary")
+	feeAmountv1 := testdata.NewTestFeeAmount()
+	gasLimitv1 := testdata.NewTestGasLimit()
+	suite.Require().NoError(suite.txBuilder.SetMsgs(msgv1))
+	suite.txBuilder.SetFeeAmount(feeAmountv1)
+	suite.txBuilder.SetGasLimit(gasLimitv1)
+	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	txv1, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// ante handler should error for v1 proposal with insufficient deposit
+	_, err = antehandler(suite.ctx, txv1, false)
+	suite.Require().Error(err, "error: v1 proposal with insufficient initial deposit should have failed")
 }

@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/market/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/market/types"
 )
 
 // ApplySwapToPool updates each pool with offerCoin and askCoin taken from swap operation,
@@ -52,7 +52,7 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (retDecCoin sdk.DecCoin, spread sdk.Dec, err error) {
 	// Return invalid recursive swap err
 	if offerCoin.Denom == askDenom {
-		return sdk.DecCoin{}, sdk.ZeroDec(), sdkerrors.Wrap(types.ErrRecursiveSwap, askDenom)
+		return sdk.DecCoin{}, sdk.ZeroDec(), errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
 
 	// Swap offer coin to base denom for simplicity of swap process
@@ -140,17 +140,17 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 
 	offerRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
 	if err != nil {
-		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
+		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, offerCoin.Denom)
 	}
 
 	askRate, err := k.OracleKeeper.GetLunaExchangeRate(ctx, askDenom)
 	if err != nil {
-		return sdk.DecCoin{}, sdkerrors.Wrap(types.ErrNoEffectivePrice, askDenom)
+		return sdk.DecCoin{}, errorsmod.Wrap(types.ErrNoEffectivePrice, askDenom)
 	}
 
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
 	if retAmount.LTE(sdk.ZeroDec()) {
-		return sdk.DecCoin{}, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, offerCoin.String())
+		return sdk.DecCoin{}, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, offerCoin.String())
 	}
 
 	return sdk.NewDecCoinFromDec(askDenom, retAmount), nil
@@ -159,16 +159,16 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 // simulateSwap interface for simulate swap
 func (k Keeper) simulateSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (sdk.Coin, error) {
 	if askDenom == offerCoin.Denom {
-		return sdk.Coin{}, sdkerrors.Wrap(types.ErrRecursiveSwap, askDenom)
+		return sdk.Coin{}, errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
 
 	if offerCoin.Amount.BigInt().BitLen() > 100 {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, offerCoin.String())
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, offerCoin.String())
 	}
 
 	swapCoin, spread, err := k.ComputeSwap(ctx, offerCoin, askDenom)
 	if err != nil {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrPanic, err.Error())
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrPanic, err.Error())
 	}
 
 	if spread.IsPositive() {

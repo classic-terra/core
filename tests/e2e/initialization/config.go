@@ -319,6 +319,7 @@ func updateGovGenesis(govGenState *govv1.GenesisState) {
 }
 
 func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
+	genutilErr := "genutil genesis setup failed: "
 	return func(genUtilGenState *genutiltypes.GenesisState) {
 		// generate genesis txs
 		genTxs := make([]json.RawMessage, 0, len(c.nodes))
@@ -333,17 +334,17 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 			}
 			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genutilErr + err.Error())
 			}
 
 			signedTx, err := node.signMsg(createValmsg)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genutilErr + err.Error())
 			}
 
 			txRaw, err := util.Cdc.MarshalJSON(signedTx)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genutilErr + err.Error())
 			}
 			genTxs = append(genTxs, txRaw)
 		}

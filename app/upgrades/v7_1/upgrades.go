@@ -1,4 +1,4 @@
-package v7_1
+package v71
 
 import (
 	"github.com/classic-terra/core/v3/app/keepers"

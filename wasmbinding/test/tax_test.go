@@ -5,11 +5,11 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v2/wasmbinding/test
+// go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v3/wasmbinding/test
 func (s *WasmTestSuite) TestTax() {
 	s.SetupTest()
 	taxRate := sdk.NewDecWithPrec(11, 2)            // 11%

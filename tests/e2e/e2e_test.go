@@ -8,7 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 )
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
@@ -185,7 +185,6 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	transferAmount := sdkmath.NewInt(100000000)
 	transferCoin := sdk.NewCoin(initialization.TerraDenom, transferAmount)
 	node.BankSend(fmt.Sprintf("%suluna", transferAmount.Mul(sdk.NewInt(4))), initialization.ValidatorWalletName, testAddr)
-
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
 	chain.LatestCodeID = int(node.QueryLatestWasmCodeID())
 	// instantiate contract and transfer 100000000uluna

@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	customtypes "github.com/classic-terra/core/v2/custom/staking/types"
-	core "github.com/classic-terra/core/v2/types"
+	customtypes "github.com/classic-terra/core/v3/custom/staking/types"
+	core "github.com/classic-terra/core/v3/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

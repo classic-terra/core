@@ -12,8 +12,8 @@ type TreasuryKeeper interface {
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
-	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
-	HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
+	// HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
+	// HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
 	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
 }
 
@@ -24,6 +24,7 @@ type OracleKeeper interface {
 
 // BankKeeper defines the contract needed for supply related APIs (noalias)
 type BankKeeper interface {
+	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 	SendCoins(ctx sdk.Context, from, to sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error

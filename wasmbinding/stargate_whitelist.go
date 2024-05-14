@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

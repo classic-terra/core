@@ -5,37 +5,45 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/classic-terra/core/v2/app"
-	appparams "github.com/classic-terra/core/v2/app/params"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v3/app"
+	appparams "github.com/classic-terra/core/v3/app/params"
+	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/server"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // SimAppChainID hardcoded chainID for simulation
 const (
-	SimAppChainID = "terra-app"
+	SimAppChainID = ""
 )
 
-var emptyWasmOpts []wasm.Option
+var emptyWasmOpts []wasmkeeper.Option
 
 // EmptyBaseAppOptions is a stub implementing AppOptions
 type EmptyBaseAppOptions struct{}
@@ -51,7 +59,7 @@ type KeeperTestHelper struct {
 }
 
 func (s *KeeperTestHelper) Setup(_ *testing.T, chainID string) {
-	s.App = SetupApp(s.T())
+	s.App = SetupApp(s.T(), chainID)
 	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 	s.CheckCtx = s.App.BaseApp.NewContext(true, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
@@ -69,8 +77,8 @@ func (ao EmptyBaseAppOptions) Get(_ string) interface{} {
 
 // DefaultConsensusParams defines the default Tendermint consensus params used
 // in app testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
@@ -90,7 +98,7 @@ type EmptyAppOptions struct{}
 
 func (EmptyAppOptions) Get(_ string) interface{} { return nil }
 
-func SetupApp(t *testing.T) *app.TerraApp {
+func SetupApp(t *testing.T, chainID string) *app.TerraApp {
 	t.Helper()
 
 	privVal := NewPV()
@@ -107,8 +115,8 @@ func SetupApp(t *testing.T) *app.TerraApp {
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(appparams.BondDenom, sdk.NewInt(100000000000000))),
 	}
-
-	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisAccounts := []authtypes.GenesisAccount{acc}
+	app := SetupWithGenesisValSet(t, chainID, valSet, genesisAccounts, balance)
 
 	return app
 }
@@ -117,19 +125,19 @@ func SetupApp(t *testing.T) *app.TerraApp {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in app.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
+func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *app.TerraApp {
 	t.Helper()
 
-	terraApp, genesisState := setup(true, 5)
+	terraApp, genesisState := setup(chainID)
 	genesisState = genesisStateWithValSet(t, terraApp, genesisState, valSet, genAccs, balances...)
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := json.MarshalIndent(genesisState, "", "")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
 	terraApp.InitChain(
 		abci.RequestInitChain{
-			ChainId:         SimAppChainID,
+			ChainId:         chainID,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -139,7 +147,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	// commit genesis changes
 	terraApp.Commit()
 	terraApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		ChainID:            SimAppChainID,
+		ChainID:            chainID,
 		Height:             terraApp.LastBlockHeight() + 1,
 		AppHash:            terraApp.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -149,9 +157,12 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return terraApp
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*app.TerraApp, app.GenesisState) {
+func setup(chainID string) (*app.TerraApp, app.GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[server.FlagInvCheckPeriod] = 5
+	appOptions[server.FlagMinGasPrices] = "0luna"
 
 	terraapp := app.NewTerraApp(
 		log.NewNopLogger(),
@@ -160,14 +171,11 @@ func setup(withGenesis bool, invCheckPeriod uint) (*app.TerraApp, app.GenesisSta
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		invCheckPeriod,
 		encCdc,
-		simapp.EmptyAppOptions{},
+		simtestutil.EmptyAppOptions{},
 		emptyWasmOpts,
+		baseapp.SetChainID(chainID),
 	)
-	if withGenesis {
-		return terraapp, app.NewDefaultGenesisState()
-	}
 
 	return terraapp, app.GenesisState{}
 }
@@ -246,9 +254,40 @@ func genesisStateWithValSet(t *testing.T,
 		balances,
 		totalSupply,
 		[]banktypes.Metadata{},
+		[]banktypes.SendEnabled{},
 	)
 
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
+
+	// update mint genesis state
+	mintGenesis := minttypes.DefaultGenesisState()
+	genesisState[minttypes.ModuleName] = app.AppCodec().MustMarshalJSON(mintGenesis)
+
+	// update distribution genesis state
+	distGenesis := distrtypes.DefaultGenesisState()
+	genesisState[distrtypes.ModuleName] = app.AppCodec().MustMarshalJSON(distGenesis)
+
+	// update oracle genesis state
+	oracleGenesis := oracletypes.DefaultGenesisState()
+	genesisState[oracletypes.ModuleName] = app.AppCodec().MustMarshalJSON(oracleGenesis)
+
+	// update market gensis state
+	marketGenesis := markettypes.DefaultGenesisState()
+	genesisState[markettypes.ModuleName] = app.AppCodec().MustMarshalJSON(marketGenesis)
+
+	// update dyncomm genesis state
+	dyncommGenesis := dyncommtypes.DefaultGenesisState()
+	genesisState[dyncommtypes.ModuleName] = app.AppCodec().MustMarshalJSON(dyncommGenesis)
+
+	// update treasury genesis state
+	treasuryGensis := treasurytypes.DefaultGenesisState()
+	genesisState[treasurytypes.ModuleName] = app.AppCodec().MustMarshalJSON(treasuryGensis)
+
+	// update wasm genesis state
+	wasmGenesis := &wasmtypes.GenesisState{
+		Params: wasmtypes.DefaultParams(),
+	}
+	genesisState[wasmtypes.ModuleName] = app.AppCodec().MustMarshalJSON(wasmGenesis)
 
 	return genesisState
 }

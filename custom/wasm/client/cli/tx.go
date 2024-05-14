@@ -18,7 +18,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm/client/cli"
-	feeutils "github.com/classic-terra/core/v2/custom/auth/client/utils"
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
 )
 
 const (
@@ -66,7 +66,10 @@ func ExecuteContractCmd() *cobra.Command {
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			msg, err := parseExecuteArgs(args[0], args[1], clientCtx.GetFromAddress(), cmd.Flags())
 			if err != nil {
@@ -128,7 +131,10 @@ $ %s tx wasm instantiate 1 '{"foo":"bar"}' --admin="$(%s keys show mykey -a)" \
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas
@@ -208,7 +214,10 @@ $ %s tx wasm instantiate2 1 '{"foo":"bar"}' $(echo -n "testing" | xxd -ps) --adm
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas

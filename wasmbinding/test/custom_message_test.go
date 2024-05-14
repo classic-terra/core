@@ -7,12 +7,12 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/wasmbinding/bindings"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/wasmbinding/bindings"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
 )
 
-// go test -v -run ^TestSwap$ github.com/classic-terra/core/v2/wasmbinding/test
+// go test -v -run ^TestSwap$ github.com/classic-terra/core/v3/wasmbinding/test
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract
@@ -59,7 +59,7 @@ func (s *WasmTestSuite) Swap(contractPath string, executeFunc func(contract sdk.
 	s.Require().Equal(contractBeforeSwap.AmountOf(core.MicroSDRDenom).Add(expectedSwappedSDR.TruncateInt()), contractAfterSwap.AmountOf(core.MicroSDRDenom))
 }
 
-// go test -v -run ^TestSwapSend$ github.com/classic-terra/core/v2/wasmbinding/test
+// go test -v -run ^TestSwapSend$ github.com/classic-terra/core/v3/wasmbinding/test
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into which goes back to contract

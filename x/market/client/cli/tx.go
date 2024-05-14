@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	feeutils "github.com/classic-terra/core/v2/custom/auth/client/utils"
-	"github.com/classic-terra/core/v2/x/market/types"
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	"github.com/classic-terra/core/v3/x/market/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -53,7 +53,10 @@ $ terrad market swap "1000ukrw" "uusd" "terra1..."
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			offerCoinStr := args[0]
 			offerCoin, err := sdk.ParseCoinNormalized(offerCoinStr)

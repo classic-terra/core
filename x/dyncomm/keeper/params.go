@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/x/dyncomm/types"
+	"github.com/classic-terra/core/v3/x/dyncomm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

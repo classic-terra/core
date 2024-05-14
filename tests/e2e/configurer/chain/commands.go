@@ -11,21 +11,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/p2p"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cometbft/cometbft/p2p"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	app "github.com/classic-terra/core/v2/app"
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/types/assets"
+	app "github.com/classic-terra/core/v3/app"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/types/assets"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
-	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
@@ -33,7 +33,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 
 func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
-	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeID, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeID, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
@@ -49,7 +49,7 @@ func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee
 	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
 	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
 	hex.Encode(encodedSalt, []byte(salt))
-	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeID, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit", "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "instantiate2", codeID, initMsg, string(encodedSalt), fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
@@ -64,7 +64,7 @@ func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee
 
 func (n *NodeConfig) WasmExecute(contract, execMsg, amount, fee, from string) {
 	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
-	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.0uluna", "--gas-adjustment=1.3"}
+	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
@@ -82,7 +82,7 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, amount, fee, from string) {
 func (n *NodeConfig) QueryParams(subspace, key string, result any) {
 	cmd := []string{"terrad", "query", "params", "subspace", subspace, key, "--output=json"}
 
-	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	require.NoError(n.t, err)
 
 	err = json.Unmarshal(out.Bytes(), &result)
@@ -127,6 +127,7 @@ func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(addresses []string
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 
+	fmt.Println("resp: ", resp.String())
 	proposalID, err := extractProposalIDFromResponse(resp.String())
 	require.NoError(n.t, err)
 
@@ -150,7 +151,7 @@ func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
 
 	cmd := []string{"terrad", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
 
-	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainID, n.Name, cmd, "code: 0")
+	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainID, n.Name, cmd, "\"code\":0")
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted sent IBC transfer")
@@ -258,7 +259,7 @@ func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, wal
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"terrad", "keys", "add", walletName, "--keyring-backend=test"}
-	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	require.NoError(n.t, err)
 	re := regexp.MustCompile("terra1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
@@ -270,7 +271,7 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 func (n *NodeConfig) GetWallet(walletName string) string {
 	n.LogActionF("retrieving wallet %s", walletName)
 	cmd := []string{"terrad", "keys", "show", walletName, "--keyring-backend=test"}
-	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	require.NoError(n.t, err)
 	re := regexp.MustCompile("terra1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
@@ -295,7 +296,7 @@ type resultStatus struct {
 
 func (n *NodeConfig) Status() (resultStatus, error) { //nolint
 	cmd := []string{"terrad", "status"}
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	if err != nil {
 		return resultStatus{}, err
 	}

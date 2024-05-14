@@ -6,10 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/classic-terra/core/v2/x/dyncomm/keeper"
-	"github.com/classic-terra/core/v2/x/dyncomm/types"
+	"github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	"github.com/classic-terra/core/v3/x/dyncomm/types"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 )
 
 // EndBlocker is called at the end of every block

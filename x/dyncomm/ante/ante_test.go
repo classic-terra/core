@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v2/app"
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/gogo/protobuf/proto"
+	"github.com/classic-terra/core/v3/app"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,17 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	appparams "github.com/classic-terra/core/v2/app/params"
-	apptesting "github.com/classic-terra/core/v2/app/testing"
-	dyncommante "github.com/classic-terra/core/v2/x/dyncomm/ante"
+	appparams "github.com/classic-terra/core/v3/app/params"
+	apptesting "github.com/classic-terra/core/v3/app/testing"
+	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -333,7 +333,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 	suite.Require().NoError(err)
 }
 
-// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v2/x/dyncomm/ante
+// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v3/x/dyncomm/ante
 // check that account keeper sequence no longer increases when editing validator unsuccessfully
 func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	suite.SetupTest() // setup

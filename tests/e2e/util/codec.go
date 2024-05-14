@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	terraApp "github.com/classic-terra/core/v2/app"
-	"github.com/classic-terra/core/v2/app/params"
+	terraApp "github.com/classic-terra/core/v3/app"
+	"github.com/classic-terra/core/v3/app/params"
 )
 
 var (

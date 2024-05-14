@@ -1,9 +1,10 @@
 syntax = "proto3";
 package terra.market.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/market/types";
+option go_package = "github.com/classic-terra/core/v3/x/market/types";
 
 // Params defines the parameters for the market module.
 message Params {
@@ -11,12 +12,14 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
 
   bytes base_pool = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"base_pool\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   uint64 pool_recovery_period = 2 [(gogoproto.moretags) = "yaml:\"pool_recovery_period\""];
   bytes  min_stability_spread = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"min_stability_spread\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

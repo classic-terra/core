@@ -3,8 +3,8 @@ package oracle
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/classic-terra/core/v2/x/oracle/keeper"
-	"github.com/classic-terra/core/v2/x/oracle/types"
+	"github.com/classic-terra/core/v3/x/oracle/keeper"
+	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // Tally calculates the median and returns it. Sets the set of voters to be rewarded, i.e. voted within

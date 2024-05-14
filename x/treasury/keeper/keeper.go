@@ -9,11 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
@@ -373,6 +373,11 @@ func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) e
 	return nil
 }
 
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}
+
+/*
 // HasBurnTaxExemptionAddress returns true if all provided addresses are in the
 // tax exemption whitelist
 func (k Keeper) HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool {
@@ -402,3 +407,4 @@ func (k Keeper) HasBurnTaxExemptionContract(ctx sdk.Context, address string) boo
 
 	return k.HasBurnTaxExemptionAddress(ctx, address)
 }
+*/

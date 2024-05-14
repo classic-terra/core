@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 
 	"github.com/stretchr/testify/require"
 

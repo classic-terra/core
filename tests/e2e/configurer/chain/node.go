@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/classic-terra/core/v2/tests/e2e/containers"
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/containers"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -119,7 +119,7 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 
 	cmd := []string{"terrad", "debug", "addr", n.PublicKey}
 	n.t.Logf("extracting validator operator addresses for validator: %s", n.Name)
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	if err != nil {
 		return err
 	}

@@ -5,26 +5,26 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	terraapp "github.com/classic-terra/core/v2/app"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	terraapp "github.com/classic-terra/core/v3/app"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -41,11 +41,11 @@ type AnteTestSuite struct {
 // returns context and app with params set on account keeper
 func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Context) {
 	// TODO: we need to feed in custom binding here?
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	app := terraapp.NewTerraApp(
 		log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{},
-		tempDir, simapp.FlagPeriodValue, terraapp.MakeEncodingConfig(),
-		simapp.EmptyAppOptions{}, wasmOpts,
+		tempDir, terraapp.MakeEncodingConfig(),
+		simtestutil.EmptyAppOptions{}, wasmOpts,
 	)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
@@ -69,8 +69,8 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 		WithTxConfig(encodingConfig.TxConfig)
 }
 
-func (suite *AnteTestSuite) SetupEncoding() simappparams.EncodingConfig {
-	encodingConfig := simapp.MakeTestEncodingConfig()
+func (suite *AnteTestSuite) SetupEncoding() testutil.TestEncodingConfig {
+	encodingConfig := testutil.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/classic-terra/core/v2/x/dyncomm/types"
+	"github.com/classic-terra/core/v3/x/dyncomm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
-var ErrNoSuchBurnTaxExemptionAddress = sdkerrors.Register(ModuleName, 1, "no such address in extemption list")
+var ErrNoSuchBurnTaxExemptionAddress = errorsmod.Register(ModuleName, 1, "no such address in extemption list")

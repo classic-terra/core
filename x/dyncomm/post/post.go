@@ -1,7 +1,7 @@
 package post
 
 import (
-	dyncommkeeper "github.com/classic-terra/core/v2/x/dyncomm/keeper"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -18,19 +18,19 @@ func NewDyncommPostDecorator(dk dyncommkeeper.Keeper) DyncommDecorator {
 	}
 }
 
-func (dd DyncommDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (dd DyncommDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (sdk.Context, error) {
 	if simulate {
-		return next(ctx, tx, simulate)
+		return next(ctx, tx, simulate, success)
 	}
 
 	if ctx.IsCheckTx() {
-		return next(ctx, tx, simulate)
+		return next(ctx, tx, simulate, success)
 	}
 
 	msgs := tx.GetMsgs()
 	dd.FilterMsgsAndProcessMsgs(ctx, msgs...)
 
-	return next(ctx, tx, simulate)
+	return next(ctx, tx, simulate, success)
 }
 
 func (dd DyncommDecorator) FilterMsgsAndProcessMsgs(ctx sdk.Context, msgs ...sdk.Msg) {

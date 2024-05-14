@@ -7,15 +7,15 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/oracle/keeper"
-	sim "github.com/classic-terra/core/v2/x/oracle/simulation"
-	"github.com/classic-terra/core/v2/x/oracle/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/oracle/keeper"
+	sim "github.com/classic-terra/core/v3/x/oracle/simulation"
+	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 var (

@@ -11,8 +11,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
-	customcli "github.com/classic-terra/core/v2/custom/wasm/client/cli"
-	customtypes "github.com/classic-terra/core/v2/custom/wasm/types/legacy"
+	customcli "github.com/classic-terra/core/v3/custom/wasm/client/cli"
+	customtypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}
@@ -38,7 +38,7 @@ type AppModule struct {
 	wasm.AppModule
 	appModuleBasic     AppModuleBasic
 	cdc                codec.Codec
-	keeper             *wasm.Keeper
+	keeper             *keeper.Keeper
 	validatorSetSource keeper.ValidatorSetSource
 	accountKeeper      types.AccountKeeper // for simulation
 	bankKeeper         simulation.BankKeeper
@@ -47,7 +47,7 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec,
-	keeper *wasm.Keeper,
+	keeper *keeper.Keeper,
 	validatorSetSource keeper.ValidatorSetSource,
 	ak types.AccountKeeper,
 	bk simulation.BankKeeper,

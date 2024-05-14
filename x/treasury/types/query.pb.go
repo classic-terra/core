@@ -6,28 +6,26 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
+	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ = proto.Marshal
-	_ = fmt.Errorf
-	_ = math.Inf
-)
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -36,7 +34,8 @@ var (
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // QueryTaxRateRequest is the request type for the Query/TaxRate RPC method.
-type QueryTaxRateRequest struct{}
+type QueryTaxRateRequest struct {
+}
 
 func (m *QueryTaxRateRequest) Reset()         { *m = QueryTaxRateRequest{} }
 func (m *QueryTaxRateRequest) String() string { return proto.CompactTextString(m) }
@@ -44,11 +43,9 @@ func (*QueryTaxRateRequest) ProtoMessage()    {}
 func (*QueryTaxRateRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{0}
 }
-
 func (m *QueryTaxRateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxRateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxRateRequest.Marshal(b, m, deterministic)
@@ -61,15 +58,12 @@ func (m *QueryTaxRateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxRateRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxRateRequest.Merge(m, src)
 }
-
 func (m *QueryTaxRateRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxRateRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxRateRequest.DiscardUnknown(m)
 }
@@ -88,11 +82,9 @@ func (*QueryTaxRateResponse) ProtoMessage()    {}
 func (*QueryTaxRateResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{1}
 }
-
 func (m *QueryTaxRateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxRateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxRateResponse.Marshal(b, m, deterministic)
@@ -105,15 +97,12 @@ func (m *QueryTaxRateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxRateResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxRateResponse.Merge(m, src)
 }
-
 func (m *QueryTaxRateResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxRateResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxRateResponse.DiscardUnknown(m)
 }
@@ -132,11 +121,9 @@ func (*QueryTaxCapRequest) ProtoMessage()    {}
 func (*QueryTaxCapRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{2}
 }
-
 func (m *QueryTaxCapRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxCapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxCapRequest.Marshal(b, m, deterministic)
@@ -149,15 +136,12 @@ func (m *QueryTaxCapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxCapRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxCapRequest.Merge(m, src)
 }
-
 func (m *QueryTaxCapRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxCapRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxCapRequest.DiscardUnknown(m)
 }
@@ -176,11 +160,9 @@ func (*QueryTaxCapResponse) ProtoMessage()    {}
 func (*QueryTaxCapResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{3}
 }
-
 func (m *QueryTaxCapResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxCapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxCapResponse.Marshal(b, m, deterministic)
@@ -193,15 +175,12 @@ func (m *QueryTaxCapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxCapResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxCapResponse.Merge(m, src)
 }
-
 func (m *QueryTaxCapResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxCapResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxCapResponse.DiscardUnknown(m)
 }
@@ -209,7 +188,8 @@ func (m *QueryTaxCapResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryTaxCapResponse proto.InternalMessageInfo
 
 // QueryTaxCapsRequest is the request type for the Query/TaxCaps RPC method.
-type QueryTaxCapsRequest struct{}
+type QueryTaxCapsRequest struct {
+}
 
 func (m *QueryTaxCapsRequest) Reset()         { *m = QueryTaxCapsRequest{} }
 func (m *QueryTaxCapsRequest) String() string { return proto.CompactTextString(m) }
@@ -217,11 +197,9 @@ func (*QueryTaxCapsRequest) ProtoMessage()    {}
 func (*QueryTaxCapsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{4}
 }
-
 func (m *QueryTaxCapsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxCapsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxCapsRequest.Marshal(b, m, deterministic)
@@ -234,15 +212,12 @@ func (m *QueryTaxCapsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxCapsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxCapsRequest.Merge(m, src)
 }
-
 func (m *QueryTaxCapsRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxCapsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxCapsRequest.DiscardUnknown(m)
 }
@@ -262,11 +237,9 @@ func (*QueryTaxCapsResponseItem) ProtoMessage()    {}
 func (*QueryTaxCapsResponseItem) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{5}
 }
-
 func (m *QueryTaxCapsResponseItem) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxCapsResponseItem) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxCapsResponseItem.Marshal(b, m, deterministic)
@@ -279,15 +252,12 @@ func (m *QueryTaxCapsResponseItem) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxCapsResponseItem) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxCapsResponseItem.Merge(m, src)
 }
-
 func (m *QueryTaxCapsResponseItem) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxCapsResponseItem) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxCapsResponseItem.DiscardUnknown(m)
 }
@@ -313,11 +283,9 @@ func (*QueryTaxCapsResponse) ProtoMessage()    {}
 func (*QueryTaxCapsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{6}
 }
-
 func (m *QueryTaxCapsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxCapsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxCapsResponse.Marshal(b, m, deterministic)
@@ -330,15 +298,12 @@ func (m *QueryTaxCapsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxCapsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxCapsResponse.Merge(m, src)
 }
-
 func (m *QueryTaxCapsResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxCapsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxCapsResponse.DiscardUnknown(m)
 }
@@ -353,7 +318,8 @@ func (m *QueryTaxCapsResponse) GetTaxCaps() []QueryTaxCapsResponseItem {
 }
 
 // QueryRewardWeightRequest is the request type for the Query/RewardWeight RPC method.
-type QueryRewardWeightRequest struct{}
+type QueryRewardWeightRequest struct {
+}
 
 func (m *QueryRewardWeightRequest) Reset()         { *m = QueryRewardWeightRequest{} }
 func (m *QueryRewardWeightRequest) String() string { return proto.CompactTextString(m) }
@@ -361,11 +327,9 @@ func (*QueryRewardWeightRequest) ProtoMessage()    {}
 func (*QueryRewardWeightRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{7}
 }
-
 func (m *QueryRewardWeightRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryRewardWeightRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryRewardWeightRequest.Marshal(b, m, deterministic)
@@ -378,15 +342,12 @@ func (m *QueryRewardWeightRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-
 func (m *QueryRewardWeightRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryRewardWeightRequest.Merge(m, src)
 }
-
 func (m *QueryRewardWeightRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryRewardWeightRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryRewardWeightRequest.DiscardUnknown(m)
 }
@@ -405,11 +366,9 @@ func (*QueryRewardWeightResponse) ProtoMessage()    {}
 func (*QueryRewardWeightResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{8}
 }
-
 func (m *QueryRewardWeightResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryRewardWeightResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryRewardWeightResponse.Marshal(b, m, deterministic)
@@ -422,15 +381,12 @@ func (m *QueryRewardWeightResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-
 func (m *QueryRewardWeightResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryRewardWeightResponse.Merge(m, src)
 }
-
 func (m *QueryRewardWeightResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryRewardWeightResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryRewardWeightResponse.DiscardUnknown(m)
 }
@@ -438,7 +394,8 @@ func (m *QueryRewardWeightResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryRewardWeightResponse proto.InternalMessageInfo
 
 // QueryTaxProceedsRequest is the request type for the Query/TaxProceeds RPC method.
-type QueryTaxProceedsRequest struct{}
+type QueryTaxProceedsRequest struct {
+}
 
 func (m *QueryTaxProceedsRequest) Reset()         { *m = QueryTaxProceedsRequest{} }
 func (m *QueryTaxProceedsRequest) String() string { return proto.CompactTextString(m) }
@@ -446,11 +403,9 @@ func (*QueryTaxProceedsRequest) ProtoMessage()    {}
 func (*QueryTaxProceedsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{9}
 }
-
 func (m *QueryTaxProceedsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxProceedsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxProceedsRequest.Marshal(b, m, deterministic)
@@ -463,15 +418,12 @@ func (m *QueryTaxProceedsRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxProceedsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxProceedsRequest.Merge(m, src)
 }
-
 func (m *QueryTaxProceedsRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxProceedsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxProceedsRequest.DiscardUnknown(m)
 }
@@ -490,11 +442,9 @@ func (*QueryTaxProceedsResponse) ProtoMessage()    {}
 func (*QueryTaxProceedsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{10}
 }
-
 func (m *QueryTaxProceedsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryTaxProceedsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryTaxProceedsResponse.Marshal(b, m, deterministic)
@@ -507,15 +457,12 @@ func (m *QueryTaxProceedsResponse) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-
 func (m *QueryTaxProceedsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryTaxProceedsResponse.Merge(m, src)
 }
-
 func (m *QueryTaxProceedsResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryTaxProceedsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryTaxProceedsResponse.DiscardUnknown(m)
 }
@@ -530,7 +477,8 @@ func (m *QueryTaxProceedsResponse) GetTaxProceeds() github_com_cosmos_cosmos_sdk
 }
 
 // QuerySeigniorageProceedsRequest is the request type for the Query/SeigniorageProceeds RPC method.
-type QuerySeigniorageProceedsRequest struct{}
+type QuerySeigniorageProceedsRequest struct {
+}
 
 func (m *QuerySeigniorageProceedsRequest) Reset()         { *m = QuerySeigniorageProceedsRequest{} }
 func (m *QuerySeigniorageProceedsRequest) String() string { return proto.CompactTextString(m) }
@@ -538,11 +486,9 @@ func (*QuerySeigniorageProceedsRequest) ProtoMessage()    {}
 func (*QuerySeigniorageProceedsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{11}
 }
-
 func (m *QuerySeigniorageProceedsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QuerySeigniorageProceedsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QuerySeigniorageProceedsRequest.Marshal(b, m, deterministic)
@@ -555,15 +501,12 @@ func (m *QuerySeigniorageProceedsRequest) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-
 func (m *QuerySeigniorageProceedsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QuerySeigniorageProceedsRequest.Merge(m, src)
 }
-
 func (m *QuerySeigniorageProceedsRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QuerySeigniorageProceedsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QuerySeigniorageProceedsRequest.DiscardUnknown(m)
 }
@@ -582,11 +525,9 @@ func (*QuerySeigniorageProceedsResponse) ProtoMessage()    {}
 func (*QuerySeigniorageProceedsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{12}
 }
-
 func (m *QuerySeigniorageProceedsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QuerySeigniorageProceedsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QuerySeigniorageProceedsResponse.Marshal(b, m, deterministic)
@@ -599,15 +540,12 @@ func (m *QuerySeigniorageProceedsResponse) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-
 func (m *QuerySeigniorageProceedsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QuerySeigniorageProceedsResponse.Merge(m, src)
 }
-
 func (m *QuerySeigniorageProceedsResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QuerySeigniorageProceedsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QuerySeigniorageProceedsResponse.DiscardUnknown(m)
 }
@@ -615,7 +553,8 @@ func (m *QuerySeigniorageProceedsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QuerySeigniorageProceedsResponse proto.InternalMessageInfo
 
 // QueryIndicatorsRequest is the request type for the Query/Indicators RPC method.
-type QueryIndicatorsRequest struct{}
+type QueryIndicatorsRequest struct {
+}
 
 func (m *QueryIndicatorsRequest) Reset()         { *m = QueryIndicatorsRequest{} }
 func (m *QueryIndicatorsRequest) String() string { return proto.CompactTextString(m) }
@@ -623,11 +562,9 @@ func (*QueryIndicatorsRequest) ProtoMessage()    {}
 func (*QueryIndicatorsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{13}
 }
-
 func (m *QueryIndicatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryIndicatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryIndicatorsRequest.Marshal(b, m, deterministic)
@@ -640,15 +577,12 @@ func (m *QueryIndicatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-
 func (m *QueryIndicatorsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryIndicatorsRequest.Merge(m, src)
 }
-
 func (m *QueryIndicatorsRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryIndicatorsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryIndicatorsRequest.DiscardUnknown(m)
 }
@@ -668,11 +602,9 @@ func (*QueryIndicatorsResponse) ProtoMessage()    {}
 func (*QueryIndicatorsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{14}
 }
-
 func (m *QueryIndicatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryIndicatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryIndicatorsResponse.Marshal(b, m, deterministic)
@@ -685,15 +617,12 @@ func (m *QueryIndicatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-
 func (m *QueryIndicatorsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryIndicatorsResponse.Merge(m, src)
 }
-
 func (m *QueryIndicatorsResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryIndicatorsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryIndicatorsResponse.DiscardUnknown(m)
 }
@@ -701,7 +630,8 @@ func (m *QueryIndicatorsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryIndicatorsResponse proto.InternalMessageInfo
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
-type QueryParamsRequest struct{}
+type QueryParamsRequest struct {
+}
 
 func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
@@ -709,11 +639,9 @@ func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{15}
 }
-
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
@@ -726,15 +654,12 @@ func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-
 func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
 }
-
 func (m *QueryParamsRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
 }
@@ -753,11 +678,9 @@ func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{16}
 }
-
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
@@ -770,15 +693,12 @@ func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-
 func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
 }
-
 func (m *QueryParamsResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
 }
@@ -803,11 +723,9 @@ func (*QueryBurnTaxExemptionListRequest) ProtoMessage()    {}
 func (*QueryBurnTaxExemptionListRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{17}
 }
-
 func (m *QueryBurnTaxExemptionListRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryBurnTaxExemptionListRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryBurnTaxExemptionListRequest.Marshal(b, m, deterministic)
@@ -820,15 +738,12 @@ func (m *QueryBurnTaxExemptionListRequest) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-
 func (m *QueryBurnTaxExemptionListRequest) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryBurnTaxExemptionListRequest.Merge(m, src)
 }
-
 func (m *QueryBurnTaxExemptionListRequest) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryBurnTaxExemptionListRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryBurnTaxExemptionListRequest.DiscardUnknown(m)
 }
@@ -854,11 +769,9 @@ func (*QueryBurnTaxExemptionListResponse) ProtoMessage()    {}
 func (*QueryBurnTaxExemptionListResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_699c8c29293c9a9b, []int{18}
 }
-
 func (m *QueryBurnTaxExemptionListResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-
 func (m *QueryBurnTaxExemptionListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_QueryBurnTaxExemptionListResponse.Marshal(b, m, deterministic)
@@ -871,15 +784,12 @@ func (m *QueryBurnTaxExemptionListResponse) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-
 func (m *QueryBurnTaxExemptionListResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_QueryBurnTaxExemptionListResponse.Merge(m, src)
 }
-
 func (m *QueryBurnTaxExemptionListResponse) XXX_Size() int {
 	return m.Size()
 }
-
 func (m *QueryBurnTaxExemptionListResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryBurnTaxExemptionListResponse.DiscardUnknown(m)
 }
@@ -927,80 +837,79 @@ func init() {
 }
 
 var fileDescriptor_699c8c29293c9a9b = []byte{
-	// 1042 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x97, 0xcd, 0x6f, 0x1b, 0x45,
-	0x1f, 0xc7, 0xbd, 0x7d, 0x9e, 0x3a, 0xc9, 0x38, 0x5c, 0x26, 0xa6, 0x24, 0x56, 0xb5, 0x76, 0x57,
-	0x6d, 0x6a, 0xe5, 0x65, 0x37, 0x36, 0x95, 0x4a, 0x2b, 0x4e, 0x2e, 0x50, 0x45, 0x04, 0xa9, 0xdd,
-	0x58, 0xaa, 0xe0, 0x80, 0x35, 0x5e, 0x8f, 0x36, 0x0b, 0xf6, 0xce, 0x76, 0x66, 0xdc, 0xda, 0x42,
-	0x5c, 0x90, 0x90, 0x80, 0x03, 0x42, 0xea, 0x89, 0x0b, 0xaa, 0x38, 0x72, 0xe7, 0xca, 0x89, 0x43,
-	0x8e, 0x95, 0xb8, 0x20, 0x0e, 0x01, 0x25, 0x1c, 0xf8, 0x33, 0xd0, 0xbc, 0xac, 0x77, 0xdd, 0x7a,
-	0xed, 0x4d, 0x38, 0x65, 0x33, 0xf3, 0x7b, 0xf9, 0xcc, 0xdb, 0xf7, 0x2b, 0x03, 0x8b, 0x63, 0x4a,
-	0x91, 0xc3, 0x29, 0x46, 0x6c, 0x48, 0xc7, 0xce, 0x93, 0x46, 0x17, 0x73, 0xd4, 0x70, 0x1e, 0x0f,
-	0x31, 0x1d, 0xdb, 0x11, 0x25, 0x9c, 0xc0, 0x2b, 0x32, 0xc6, 0x8e, 0x63, 0x6c, 0x1d, 0x53, 0x29,
-	0xfb, 0xc4, 0x27, 0x32, 0xc4, 0x11, 0x5f, 0x2a, 0xba, 0x72, 0xd5, 0x27, 0xc4, 0xef, 0x63, 0x07,
-	0x45, 0x81, 0x83, 0xc2, 0x90, 0x70, 0xc4, 0x03, 0x12, 0x32, 0x3d, 0xbb, 0xe5, 0x11, 0x36, 0x20,
-	0xcc, 0xe9, 0x22, 0x86, 0x55, 0x93, 0x49, 0xcb, 0x08, 0xf9, 0x41, 0x28, 0x83, 0x75, 0xec, 0x8d,
-	0x0c, 0xb6, 0x09, 0x88, 0x0a, 0x33, 0xd3, 0x25, 0xe3, 0x18, 0x8f, 0x04, 0xba, 0x8c, 0xf5, 0x3a,
-	0x58, 0x7b, 0x28, 0x1a, 0xb5, 0xd1, 0xc8, 0x45, 0x1c, 0xbb, 0xf8, 0xf1, 0x10, 0x33, 0x6e, 0x21,
-	0x50, 0x9e, 0x1e, 0x66, 0x11, 0x09, 0x19, 0x86, 0xfb, 0x60, 0x99, 0xa3, 0x51, 0x87, 0x22, 0x8e,
-	0xd7, 0x8d, 0x9a, 0x51, 0x5f, 0x69, 0xd9, 0xc7, 0x27, 0xd5, 0xc2, 0x1f, 0x27, 0xd5, 0x4d, 0x3f,
-	0xe0, 0x47, 0xc3, 0xae, 0xed, 0x91, 0x81, 0xa3, 0x7b, 0xaa, 0x3f, 0xbb, 0xac, 0xf7, 0xa9, 0xc3,
-	0xc7, 0x11, 0x66, 0xf6, 0x3b, 0xd8, 0x73, 0x97, 0xb8, 0x2a, 0x69, 0xdd, 0x02, 0x30, 0x6e, 0x71,
-	0x0f, 0x45, 0xba, 0x31, 0x2c, 0x83, 0xcb, 0x3d, 0x1c, 0x92, 0x81, 0xaa, 0xee, 0xaa, 0x7f, 0xee,
-	0x2e, 0x7f, 0xf5, 0xbc, 0x5a, 0xf8, 0xe7, 0x79, 0xb5, 0x60, 0x7d, 0x9c, 0xf0, 0xca, 0x2c, 0xcd,
-	0x75, 0x1f, 0x88, 0xba, 0x1d, 0x0f, 0x45, 0x17, 0xc0, 0xda, 0x0f, 0xb9, 0x5b, 0xe4, 0xb2, 0xa0,
-	0x55, 0x9d, 0xaa, 0xcf, 0x34, 0x56, 0x0a, 0x60, 0x0c, 0xd6, 0xa7, 0x03, 0x14, 0xc1, 0x3e, 0xc7,
-	0x83, 0xd9, 0xf0, 0x69, 0xb6, 0x4b, 0xff, 0x89, 0x2d, 0x48, 0x0e, 0x25, 0xdd, 0x1a, 0x3e, 0x54,
-	0x87, 0xe2, 0xa1, 0x88, 0xad, 0x1b, 0xb5, 0xff, 0xd5, 0x4b, 0xcd, 0x3d, 0x7b, 0xf6, 0xad, 0xb4,
-	0xb3, 0xd0, 0x5b, 0xff, 0x17, 0x4c, 0xf2, 0x70, 0xc4, 0x94, 0x55, 0xd1, 0xab, 0x74, 0xf1, 0x53,
-	0x44, 0x7b, 0x8f, 0x70, 0xe0, 0x1f, 0xf1, 0xf8, 0x6e, 0x44, 0x60, 0x63, 0xc6, 0x9c, 0x66, 0x39,
-	0x04, 0xaf, 0x51, 0x39, 0xde, 0x79, 0x2a, 0x27, 0x2e, 0x78, 0x4b, 0x56, 0x69, 0xaa, 0xb8, 0xb5,
-	0x01, 0xde, 0x88, 0xc1, 0x1f, 0x50, 0xe2, 0x61, 0xdc, 0x8b, 0x0f, 0xc6, 0xfa, 0xc6, 0x48, 0xce,
-	0x23, 0x99, 0xd3, 0x30, 0x21, 0x58, 0x15, 0x1b, 0x13, 0xe9, 0x71, 0xbd, 0x39, 0x1b, 0xb6, 0x6a,
-	0x69, 0x8b, 0x37, 0x31, 0xd9, 0x99, 0x7b, 0x24, 0x08, 0x5b, 0x7b, 0x02, 0xf3, 0xa7, 0x3f, 0xab,
-	0xf5, 0x1c, 0x98, 0x22, 0x81, 0xb9, 0x25, 0x9e, 0xf4, 0xb5, 0xae, 0x81, 0xaa, 0x64, 0x39, 0xc4,
-	0x81, 0x1f, 0x06, 0x84, 0x22, 0x1f, 0xbf, 0xcc, 0xfb, 0xa5, 0x01, 0x6a, 0xd9, 0x31, 0x9a, 0x1b,
-	0x81, 0x32, 0x4b, 0xa6, 0xd3, 0xfc, 0x17, 0xb9, 0x3e, 0x6b, 0xec, 0xd5, 0x56, 0xd6, 0x3a, 0xb8,
-	0x22, 0x31, 0xf6, 0xc3, 0x5e, 0xe0, 0x21, 0x4e, 0xe8, 0x84, 0xf0, 0xd8, 0xd0, 0xbb, 0x9d, 0x9e,
-	0xd2, 0x60, 0x6d, 0xb0, 0xcc, 0x69, 0xbf, 0x33, 0xc6, 0x88, 0x6a, 0x98, 0x3b, 0xe7, 0x3b, 0xd8,
-	0xd3, 0x93, 0xea, 0x52, 0xdb, 0x3d, 0xf8, 0x10, 0x23, 0xea, 0x2e, 0x71, 0xda, 0x17, 0x1f, 0xf0,
-	0x11, 0x58, 0x11, 0x55, 0x07, 0x24, 0xe4, 0x47, 0xfa, 0x89, 0xdc, 0x3d, 0x77, 0xd9, 0xe5, 0xb6,
-	0x7b, 0xf0, 0x81, 0xa8, 0xe0, 0x0a, 0x44, 0xf9, 0x65, 0x95, 0xb5, 0xc4, 0x3c, 0x40, 0x14, 0x0d,
-	0x26, 0x0b, 0x3c, 0xd4, 0x4f, 0x3c, 0x1e, 0xd5, 0x6b, 0x7b, 0x1b, 0x14, 0x23, 0x39, 0x22, 0x57,
-	0x56, 0x6a, 0x9a, 0x59, 0x6f, 0x48, 0xe5, 0xe9, 0x17, 0xa3, 0x73, 0xac, 0x4f, 0xf4, 0xb1, 0xb6,
-	0x86, 0x34, 0x6c, 0xa3, 0xd1, 0xbb, 0x23, 0x3c, 0x88, 0x84, 0x5a, 0x1f, 0x04, 0x2c, 0x7e, 0x38,
-	0xf0, 0x3d, 0x00, 0x12, 0x19, 0x97, 0x0b, 0x2d, 0x35, 0x37, 0xa7, 0x2e, 0xa3, 0x32, 0x96, 0xa4,
-	0x91, 0x1f, 0x0b, 0xb2, 0x9b, 0xca, 0x14, 0x77, 0xfe, 0xda, 0x9c, 0x66, 0x7a, 0x3d, 0x57, 0xc1,
-	0x0a, 0xea, 0xf5, 0x28, 0x66, 0x0c, 0xab, 0x9b, 0xbf, 0xe2, 0x26, 0x03, 0xf0, 0xfe, 0x0c, 0x96,
-	0x9b, 0x0b, 0x59, 0x54, 0xe9, 0x34, 0x4c, 0xf3, 0xe7, 0x12, 0xb8, 0x2c, 0x61, 0xe0, 0xb7, 0x06,
-	0x58, 0xd2, 0x7e, 0x01, 0xb7, 0x17, 0x09, 0x50, 0xca, 0x6c, 0x2a, 0x3b, 0xf9, 0x82, 0x55, 0x73,
-	0xab, 0xfe, 0xc5, 0x6f, 0x7f, 0x3f, 0xbb, 0x64, 0xc1, 0x9a, 0x93, 0xe5, 0x80, 0xda, 0xa0, 0xe0,
-	0x33, 0x03, 0x14, 0x95, 0xd6, 0xc1, 0xad, 0x1c, 0x82, 0x18, 0xe3, 0x6c, 0xe7, 0x8a, 0xd5, 0x34,
-	0x7b, 0x92, 0x66, 0x0b, 0xd6, 0xe7, 0xd1, 0x08, 0x65, 0x76, 0x3e, 0x93, 0x6e, 0xf0, 0x79, 0xbc,
-	0x4d, 0x42, 0x66, 0xe1, 0x76, 0x3e, 0x9d, 0xce, 0xb9, 0x4d, 0x69, 0x51, 0xcf, 0xb7, 0x4d, 0x02,
-	0x0c, 0xfe, 0x68, 0x80, 0xd5, 0xb4, 0x96, 0xc3, 0xf9, 0xee, 0x31, 0xc3, 0x12, 0x2a, 0x8d, 0x73,
-	0x64, 0x68, 0xbe, 0x5d, 0xc9, 0x77, 0x13, 0xde, 0xc8, 0xe2, 0x9b, 0xb2, 0x11, 0xf8, 0x8b, 0x01,
-	0xd6, 0x66, 0x48, 0x26, 0xbc, 0x3d, 0xb7, 0x73, 0xb6, 0x10, 0x57, 0xde, 0x3a, 0x7f, 0xa2, 0x26,
-	0xbf, 0x25, 0xc9, 0x6d, 0xb8, 0x93, 0x45, 0x3e, 0x4b, 0xbb, 0xe1, 0x0f, 0x06, 0x28, 0xa5, 0x3c,
-	0x0a, 0x3a, 0x8b, 0x4e, 0xf3, 0x65, 0xe0, 0xbd, 0xfc, 0x09, 0x1a, 0x74, 0x47, 0x82, 0x6e, 0xc2,
-	0xeb, 0xf3, 0xae, 0xc0, 0x04, 0xf0, 0x7b, 0x03, 0x80, 0x44, 0xf2, 0xa1, 0x3d, 0xb7, 0xdd, 0x2b,
-	0xb6, 0x51, 0x71, 0x72, 0xc7, 0x6b, 0xba, 0x2d, 0x49, 0x77, 0x1d, 0x5a, 0x59, 0x74, 0x41, 0x02,
-	0xf3, 0xab, 0x01, 0xca, 0xb3, 0xc4, 0x0e, 0xce, 0x3f, 0xc5, 0x39, 0x62, 0x5c, 0xb9, 0x73, 0x81,
-	0x4c, 0x4d, 0x7e, 0x5b, 0x92, 0x37, 0xa0, 0x93, 0x45, 0xde, 0x1d, 0xd2, 0xb0, 0x23, 0x36, 0x17,
-	0xc7, 0xf9, 0x9d, 0xbe, 0xa0, 0xfd, 0xda, 0x00, 0x45, 0xe5, 0x1e, 0x0b, 0x04, 0x69, 0xca, 0xb0,
-	0x16, 0x08, 0xd2, 0xb4, 0x8d, 0x59, 0x9b, 0x12, 0xae, 0x06, 0xcd, 0x2c, 0x38, 0x65, 0x58, 0xad,
-	0xf7, 0x8f, 0x4f, 0x4d, 0xe3, 0xc5, 0xa9, 0x69, 0xfc, 0x75, 0x6a, 0x1a, 0xdf, 0x9d, 0x99, 0x85,
-	0x17, 0x67, 0x66, 0xe1, 0xf7, 0x33, 0xb3, 0xf0, 0x51, 0x23, 0xed, 0xb9, 0x7d, 0xc4, 0x58, 0xe0,
-	0xed, 0xaa, 0x5a, 0x1e, 0xa1, 0xd8, 0x79, 0xd2, 0x74, 0x46, 0x49, 0x55, 0x69, 0xc1, 0xdd, 0xa2,
-	0xfc, 0x31, 0xf1, 0xe6, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x68, 0xd9, 0x8a, 0xef, 0x31, 0x0d,
-	0x00, 0x00,
+	// 1067 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x97, 0x4d, 0x6f, 0x1b, 0x45,
+	0x18, 0xc7, 0xbd, 0x85, 0x3a, 0xc9, 0x38, 0x5c, 0x26, 0xa6, 0x24, 0x56, 0xb5, 0x76, 0x57, 0x6d,
+	0x6a, 0xe5, 0x65, 0x37, 0x4e, 0x2b, 0x15, 0x50, 0x4f, 0x6e, 0xa1, 0x44, 0x04, 0xa9, 0xdd, 0x06,
+	0x55, 0x70, 0xb1, 0xc6, 0xeb, 0xd1, 0x66, 0xc1, 0xde, 0xd9, 0xce, 0x8c, 0x5b, 0x47, 0x08, 0x0e,
+	0x5c, 0x78, 0x39, 0x20, 0xa4, 0x9c, 0xb8, 0xa0, 0x8a, 0x23, 0x67, 0xb8, 0x72, 0xe2, 0xd0, 0x63,
+	0x05, 0x17, 0xc4, 0x21, 0xa0, 0xa4, 0x07, 0x3e, 0x06, 0x9a, 0x97, 0xf5, 0xae, 0x13, 0xaf, 0xbd,
+	0x69, 0x73, 0x4a, 0x76, 0xe6, 0x79, 0xf9, 0x3d, 0xcf, 0xcc, 0x3c, 0x7f, 0x19, 0x58, 0x1c, 0x53,
+	0x8a, 0x1c, 0x4e, 0x31, 0x62, 0x7d, 0xba, 0xe7, 0x3c, 0x6a, 0xb4, 0x31, 0x47, 0x0d, 0xe7, 0x61,
+	0x1f, 0xd3, 0x3d, 0x3b, 0xa2, 0x84, 0x13, 0x78, 0x41, 0xda, 0xd8, 0xb1, 0x8d, 0xad, 0x6d, 0x2a,
+	0x4b, 0x1e, 0x61, 0x3d, 0xc2, 0x5a, 0xd2, 0xca, 0x51, 0x1f, 0xca, 0xa5, 0xb2, 0xa2, 0xbe, 0x9c,
+	0x36, 0x62, 0x58, 0xc5, 0x1a, 0x46, 0x8e, 0x90, 0x1f, 0x84, 0x88, 0x07, 0x24, 0xd4, 0xb6, 0x66,
+	0xda, 0x36, 0xb6, 0xf2, 0x48, 0x10, 0xef, 0x97, 0x7d, 0xe2, 0x13, 0x95, 0x43, 0xfc, 0xa7, 0x57,
+	0x2f, 0xfa, 0x84, 0xf8, 0x5d, 0xec, 0xa0, 0x28, 0x70, 0x50, 0x18, 0x12, 0x2e, 0x43, 0xc6, 0xf9,
+	0xaf, 0x64, 0x94, 0x35, 0xac, 0x41, 0x9a, 0x59, 0xaf, 0x83, 0x85, 0x7b, 0x02, 0x6e, 0x07, 0x0d,
+	0x5c, 0xc4, 0xb1, 0x8b, 0x1f, 0xf6, 0x31, 0xe3, 0x16, 0x01, 0xe5, 0xd1, 0x65, 0x16, 0x91, 0x90,
+	0x61, 0xf8, 0x00, 0xcc, 0x72, 0x34, 0x68, 0x51, 0xc4, 0xf1, 0xa2, 0x51, 0x33, 0xea, 0x73, 0xcd,
+	0x9b, 0x4f, 0x0f, 0xaa, 0x85, 0xbf, 0x0f, 0xaa, 0xcb, 0x7e, 0xc0, 0x77, 0xfb, 0x6d, 0xdb, 0x23,
+	0x3d, 0xdd, 0x08, 0xfd, 0x67, 0x9d, 0x75, 0x3e, 0x75, 0xf8, 0x5e, 0x84, 0x99, 0x7d, 0x1b, 0x7b,
+	0x7f, 0xfc, 0xb2, 0x0e, 0x74, 0x9f, 0x6e, 0x63, 0xcf, 0x9d, 0xe1, 0x2a, 0x81, 0x75, 0x1d, 0xc0,
+	0x38, 0xe1, 0x2d, 0x14, 0x69, 0x0c, 0x58, 0x06, 0xe7, 0x3b, 0x38, 0x24, 0x3d, 0x95, 0xcb, 0x55,
+	0x1f, 0x6f, 0xcf, 0x7e, 0xfd, 0xa4, 0x5a, 0xf8, 0xef, 0x49, 0xb5, 0x60, 0x75, 0x13, 0x7a, 0xe9,
+	0xa5, 0x29, 0x3f, 0x04, 0x22, 0x6e, 0xcb, 0x43, 0xd1, 0x0b, 0x40, 0x6e, 0x85, 0x3c, 0x05, 0xb9,
+	0x15, 0x72, 0xb7, 0xc8, 0x65, 0x78, 0xab, 0x3a, 0x92, 0x8d, 0x69, 0xc8, 0x14, 0xce, 0x57, 0x06,
+	0x58, 0x1c, 0xb5, 0x50, 0x40, 0x5b, 0x1c, 0xf7, 0xc6, 0xd7, 0x92, 0x46, 0x3d, 0x77, 0x86, 0xa8,
+	0x41, 0x72, 0x7e, 0x69, 0x10, 0x78, 0x4f, 0x9d, 0x9f, 0x87, 0x22, 0xb6, 0x68, 0xd4, 0x5e, 0xa9,
+	0x97, 0x36, 0x37, 0xec, 0xf1, 0x77, 0xdb, 0xce, 0x2a, 0xa4, 0xf9, 0xaa, 0x20, 0x94, 0x27, 0x27,
+	0xb6, 0xac, 0x8a, 0xae, 0xd9, 0xc5, 0x8f, 0x11, 0xed, 0x3c, 0xc0, 0x81, 0xbf, 0xcb, 0xe3, 0x6b,
+	0xf4, 0x05, 0x58, 0x1a, 0xb3, 0xa7, 0x59, 0x10, 0x78, 0x8d, 0xca, 0xf5, 0xd6, 0x63, 0xb9, 0x71,
+	0x26, 0x17, 0x6a, 0x9e, 0xa6, 0x52, 0x59, 0x4b, 0xe0, 0x8d, 0xb8, 0x8c, 0xbb, 0x94, 0x78, 0x18,
+	0x77, 0xe2, 0x53, 0xb3, 0xbe, 0x4d, 0x9d, 0x55, 0xb2, 0xa7, 0xd1, 0x42, 0x30, 0x2f, 0xda, 0x14,
+	0xe9, 0x75, 0xdd, 0xaa, 0x25, 0x5b, 0x27, 0x12, 0xef, 0x74, 0xd8, 0xa7, 0x5b, 0x24, 0x08, 0x9b,
+	0x1b, 0x02, 0xfa, 0xe7, 0x7f, 0xaa, 0xf5, 0x1c, 0xd0, 0xc2, 0x81, 0xb9, 0x25, 0x9e, 0xe4, 0xb5,
+	0x2e, 0x81, 0xaa, 0x64, 0xb9, 0x8f, 0x03, 0x3f, 0x0c, 0x08, 0x45, 0x3e, 0x3e, 0xce, 0xbb, 0x6f,
+	0x80, 0x5a, 0xb6, 0x8d, 0xe6, 0x26, 0xa0, 0xcc, 0x92, 0xed, 0x34, 0xff, 0xcb, 0x5f, 0xad, 0x05,
+	0x76, 0x32, 0xb1, 0xb5, 0x08, 0x2e, 0x48, 0xa8, 0xad, 0xb0, 0x13, 0x78, 0x88, 0x13, 0x3a, 0xe4,
+	0x7d, 0x6e, 0xe8, 0xde, 0xa7, 0xb7, 0x34, 0x66, 0x1b, 0xcc, 0x72, 0xda, 0x6d, 0xed, 0x61, 0x44,
+	0x35, 0xda, 0x9d, 0xd3, 0x1d, 0xfa, 0xe1, 0x41, 0x75, 0x66, 0xc7, 0xdd, 0xfe, 0x08, 0x23, 0x7a,
+	0x62, 0xa0, 0xd0, 0xae, 0x58, 0x86, 0x18, 0xcc, 0x89, 0x1c, 0x3d, 0x12, 0xf2, 0x5d, 0xfd, 0xb4,
+	0xde, 0x3b, 0x75, 0x92, 0xd9, 0x1d, 0x77, 0xfb, 0x03, 0x11, 0xe1, 0x58, 0x16, 0x81, 0x2f, 0xd7,
+	0xad, 0xb2, 0x9e, 0x5b, 0x77, 0x11, 0x45, 0xbd, 0x61, 0xf1, 0xf7, 0xf5, 0xa4, 0x88, 0x57, 0x75,
+	0xdd, 0x37, 0x41, 0x31, 0x92, 0x2b, 0xb2, 0xea, 0xd2, 0xa6, 0x99, 0xf5, 0xf6, 0x94, 0x9f, 0x7e,
+	0x69, 0xda, 0xc7, 0xfa, 0x44, 0x5f, 0x80, 0x66, 0x9f, 0x86, 0x3b, 0x68, 0xf0, 0xce, 0x00, 0xf7,
+	0x22, 0x31, 0xf1, 0xb7, 0x03, 0x16, 0x3f, 0x38, 0xf8, 0x2e, 0x00, 0x89, 0xba, 0xc8, 0xb2, 0x4b,
+	0x9b, 0xcb, 0x23, 0xd7, 0x56, 0xc9, 0x5a, 0x92, 0xc8, 0x8f, 0x67, 0xbe, 0x9b, 0xf2, 0x14, 0xaf,
+	0xe3, 0xd2, 0x84, 0x64, 0xba, 0x9e, 0x8b, 0x60, 0x0e, 0x75, 0x3a, 0x14, 0x33, 0x86, 0xd5, 0x1b,
+	0x99, 0x73, 0x93, 0x05, 0x78, 0x67, 0x0c, 0xcb, 0xd5, 0xa9, 0x2c, 0x2a, 0x74, 0x1a, 0x66, 0xf3,
+	0xd7, 0x12, 0x38, 0x2f, 0x61, 0xe0, 0x77, 0x06, 0x98, 0xd1, 0x92, 0x04, 0x57, 0xa7, 0x0d, 0xae,
+	0x94, 0x9e, 0x55, 0xd6, 0xf2, 0x19, 0xab, 0xe4, 0x56, 0xfd, 0xcb, 0x3f, 0x9f, 0xef, 0x9f, 0xb3,
+	0x60, 0xcd, 0xc9, 0x12, 0x51, 0xad, 0x81, 0x70, 0xdf, 0x00, 0x45, 0x35, 0x23, 0xe1, 0x4a, 0x8e,
+	0x41, 0x1a, 0xe3, 0xac, 0xe6, 0xb2, 0xd5, 0x34, 0x1b, 0x92, 0x66, 0x05, 0xd6, 0x27, 0xd1, 0x88,
+	0x89, 0xee, 0x7c, 0x26, 0x35, 0xe5, 0xf3, 0xb8, 0x4d, 0x62, 0x3c, 0xc3, 0xd5, 0x7c, 0xf3, 0x3d,
+	0x67, 0x9b, 0xd2, 0x62, 0x90, 0xaf, 0x4d, 0x02, 0x0c, 0xfe, 0x64, 0x80, 0xf9, 0xb4, 0x06, 0xc0,
+	0xc9, 0xaa, 0x33, 0x46, 0x4a, 0x2a, 0x8d, 0x53, 0x78, 0x68, 0xbe, 0x75, 0xc9, 0x77, 0x15, 0x5e,
+	0xc9, 0xe2, 0x1b, 0x91, 0x1f, 0xf8, 0x9b, 0x01, 0x16, 0xc6, 0x0c, 0x57, 0x78, 0x63, 0x62, 0xe6,
+	0xec, 0x91, 0x5d, 0x79, 0xf3, 0xf4, 0x8e, 0x9a, 0xfc, 0xba, 0x24, 0xb7, 0xe1, 0x5a, 0x16, 0xf9,
+	0xb8, 0x29, 0x0f, 0x7f, 0x34, 0x40, 0x29, 0xa5, 0x66, 0xd0, 0x99, 0x76, 0x9a, 0xc7, 0x81, 0x37,
+	0xf2, 0x3b, 0x68, 0xd0, 0x35, 0x09, 0xba, 0x0c, 0x2f, 0x4f, 0xba, 0x02, 0x43, 0xc0, 0x1f, 0x0c,
+	0x00, 0x12, 0x39, 0x80, 0xf6, 0xc4, 0x74, 0x27, 0x24, 0xa5, 0xe2, 0xe4, 0xb6, 0xd7, 0x74, 0x2b,
+	0x92, 0xee, 0x32, 0xb4, 0xb2, 0xe8, 0x82, 0x04, 0xe6, 0x77, 0x03, 0x94, 0xc7, 0x0d, 0x3b, 0x38,
+	0xf9, 0x14, 0x27, 0x0c, 0xe3, 0xca, 0x5b, 0x2f, 0xe0, 0xa9, 0xc9, 0x6f, 0x48, 0xf2, 0x06, 0x74,
+	0xb2, 0xc8, 0xdb, 0x7d, 0x1a, 0xb6, 0x44, 0x73, 0x71, 0xec, 0xdf, 0xea, 0x0a, 0xda, 0x6f, 0x0c,
+	0x50, 0x54, 0xea, 0x31, 0x65, 0x20, 0x8d, 0x08, 0xd6, 0x94, 0x81, 0x34, 0x2a, 0x63, 0xd6, 0xb2,
+	0x84, 0xab, 0x41, 0x33, 0x0b, 0x4e, 0x09, 0x56, 0xf3, 0xfd, 0xa7, 0x87, 0xa6, 0xf1, 0xec, 0xd0,
+	0x34, 0xfe, 0x3d, 0x34, 0x8d, 0xef, 0x8f, 0xcc, 0xc2, 0xb3, 0x23, 0xb3, 0xf0, 0xd7, 0x91, 0x59,
+	0xf8, 0xb8, 0x91, 0x56, 0xe0, 0x2e, 0x62, 0x2c, 0xf0, 0xd6, 0x55, 0x2c, 0x8f, 0x50, 0xec, 0x3c,
+	0xba, 0xe6, 0x0c, 0x92, 0xa8, 0x52, 0x90, 0xdb, 0x45, 0xf9, 0x7b, 0xe5, 0xda, 0xff, 0x01, 0x00,
+	0x00, 0xff, 0xff, 0xa5, 0x62, 0x9f, 0xba, 0xaf, 0x0d, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
-var (
-	_ context.Context
-	_ grpc.ClientConn
-)
+var _ context.Context
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
@@ -1142,40 +1051,33 @@ type QueryServer interface {
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
-type UnimplementedQueryServer struct{}
+type UnimplementedQueryServer struct {
+}
 
 func (*UnimplementedQueryServer) TaxRate(ctx context.Context, req *QueryTaxRateRequest) (*QueryTaxRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaxRate not implemented")
 }
-
 func (*UnimplementedQueryServer) TaxCap(ctx context.Context, req *QueryTaxCapRequest) (*QueryTaxCapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaxCap not implemented")
 }
-
 func (*UnimplementedQueryServer) TaxCaps(ctx context.Context, req *QueryTaxCapsRequest) (*QueryTaxCapsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaxCaps not implemented")
 }
-
 func (*UnimplementedQueryServer) RewardWeight(ctx context.Context, req *QueryRewardWeightRequest) (*QueryRewardWeightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RewardWeight not implemented")
 }
-
 func (*UnimplementedQueryServer) SeigniorageProceeds(ctx context.Context, req *QuerySeigniorageProceedsRequest) (*QuerySeigniorageProceedsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SeigniorageProceeds not implemented")
 }
-
 func (*UnimplementedQueryServer) TaxProceeds(ctx context.Context, req *QueryTaxProceedsRequest) (*QueryTaxProceedsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaxProceeds not implemented")
 }
-
 func (*UnimplementedQueryServer) Indicators(ctx context.Context, req *QueryIndicatorsRequest) (*QueryIndicatorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Indicators not implemented")
 }
-
 func (*UnimplementedQueryServer) BurnTaxExemptionList(ctx context.Context, req *QueryBurnTaxExemptionListRequest) (*QueryBurnTaxExemptionListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BurnTaxExemptionList not implemented")
 }
-
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
@@ -1994,7 +1896,6 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-
 func (m *QueryTaxRateRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2219,11 +2120,9 @@ func (m *QueryBurnTaxExemptionListResponse) Size() (n int) {
 func sovQuery(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-
 func (m *QueryTaxRateRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2274,7 +2173,6 @@ func (m *QueryTaxRateRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxRateResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2359,7 +2257,6 @@ func (m *QueryTaxRateResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxCapRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2442,7 +2339,6 @@ func (m *QueryTaxCapRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxCapResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2527,7 +2423,6 @@ func (m *QueryTaxCapResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxCapsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2578,7 +2473,6 @@ func (m *QueryTaxCapsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxCapsResponseItem) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2695,7 +2589,6 @@ func (m *QueryTaxCapsResponseItem) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxCapsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2780,7 +2673,6 @@ func (m *QueryTaxCapsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryRewardWeightRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2831,7 +2723,6 @@ func (m *QueryRewardWeightRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryRewardWeightResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2916,7 +2807,6 @@ func (m *QueryRewardWeightResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxProceedsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2967,7 +2857,6 @@ func (m *QueryTaxProceedsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryTaxProceedsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3052,7 +2941,6 @@ func (m *QueryTaxProceedsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QuerySeigniorageProceedsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3103,7 +2991,6 @@ func (m *QuerySeigniorageProceedsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QuerySeigniorageProceedsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3188,7 +3075,6 @@ func (m *QuerySeigniorageProceedsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryIndicatorsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3239,7 +3125,6 @@ func (m *QueryIndicatorsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryIndicatorsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3358,7 +3243,6 @@ func (m *QueryIndicatorsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3409,7 +3293,6 @@ func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3493,7 +3376,6 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryBurnTaxExemptionListRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3580,7 +3462,6 @@ func (m *QueryBurnTaxExemptionListRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func (m *QueryBurnTaxExemptionListResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3699,7 +3580,6 @@ func (m *QueryBurnTaxExemptionListResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-
 func skipQuery(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

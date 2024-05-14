@@ -1,7 +1,7 @@
 package wasmbinding_test
 
 import (
-	"github.com/classic-terra/core/v2/wasmbinding/bindings"
+	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,7 +11,7 @@ const (
 	TerraStargateQueryPath     = "../testdata/stargate_tester.wasm"
 )
 
-// go test -v -run ^TestWasmTestSuite/TestExecuteBindingsAll$ github.com/classic-terra/core/v2/wasmbinding/test
+// go test -v -run ^TestWasmTestSuite/TestExecuteBindingsAll$ github.com/classic-terra/core/v3/wasmbinding/test
 func (s *WasmTestSuite) TestExecuteBindingsAll() {
 	cases := []struct {
 		name        string
@@ -46,7 +46,7 @@ func (s *WasmTestSuite) TestExecuteBindingsAll() {
 	}
 }
 
-// go test -v -run ^TestWasmTestSuite/TestQueryBindingsAll$ github.com/classic-terra/core/v2/wasmbinding/test
+// go test -v -run ^TestWasmTestSuite/TestQueryBindingsAll$ github.com/classic-terra/core/v3/wasmbinding/test
 func (s *WasmTestSuite) TestQueryBindingsAll() {
 	cases := []struct {
 		name        string

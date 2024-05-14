@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strconv"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func UnmarshalValidators(config simappparams.EncodingConfig, data []byte) (stakingtypes.Validators, []cryptotypes.PubKey, error) {
+func UnmarshalValidators(config testutil.TestEncodingConfig, data []byte) (stakingtypes.Validators, []cryptotypes.PubKey, error) {
 	var validators stakingtypes.Validators
 	var pubKeys []cryptotypes.PubKey
 
@@ -42,6 +42,14 @@ func UnmarshalValidators(config simappparams.EncodingConfig, data []byte) (staki
 			return nil, nil, fmt.Errorf("invalid UnbondingHeight")
 		}
 		delete(validator, "unbonding_height")
+
+		unbondingOnHoldRefCount, ok := validator["unbonding_on_hold_ref_count"].(string)
+		if !ok {
+			return nil, nil, fmt.Errorf("invalid UnbondingOnHoldRefCount")
+		}
+		delete(validator, "unbonding_on_hold_ref_count")
+
+		delete(validator, "unbonding_ids")
 
 		concensusPubkey, ok := validator["consensus_pubkey"].(map[string]interface{})
 		if !ok {
@@ -79,6 +87,13 @@ func UnmarshalValidators(config simappparams.EncodingConfig, data []byte) (staki
 			return nil, nil, err
 		}
 		val.UnbondingHeight = unbondingHeightInt
+
+		// Convert UnbondingOnHoldRefCount to int64
+		unbondingOnHoldRefCountInt, err := strconv.ParseInt(unbondingOnHoldRefCount, 10, 64)
+		if err != nil {
+			return nil, nil, err
+		}
+		val.UnbondingOnHoldRefCount = unbondingOnHoldRefCountInt
 
 		// Convert consensus_pubkey to PubKey
 		concensusPubkeyBz, err := json.Marshal(concensusPubkey)

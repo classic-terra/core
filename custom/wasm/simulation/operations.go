@@ -32,6 +32,7 @@ const (
 // WasmKeeper is a subset of the wasm keeper used by simulations
 type WasmKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
+	GetAuthority() string
 	IterateCodeInfos(ctx sdk.Context, cb func(uint64, types.CodeInfo) bool)
 	IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.ContractInfo) bool)
 	QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte) ([]byte, error)
@@ -109,7 +110,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgStoreCode,
-			wasmsim.SimulateMsgStoreCode(ak, bk, wasmKeeper, wasmBz, 5_000_000),
+			wasmsim.SimulateMsgStoreCode(ak, bk, wasmKeeper, wasmBz),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgInstantiateContract,

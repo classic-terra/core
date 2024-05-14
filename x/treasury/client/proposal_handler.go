@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/classic-terra/core/v2/x/treasury/client/cli"
+	"github.com/classic-terra/core/v3/x/treasury/client/cli"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 

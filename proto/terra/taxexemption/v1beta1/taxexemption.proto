@@ -4,7 +4,7 @@ package terra.taxexemption.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
 
 message Zone {
     string name        = 1 [(gogoproto.moretags) = "yaml:\"name\""];

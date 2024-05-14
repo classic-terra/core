@@ -3,7 +3,7 @@ package terra.taxexemption.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
 
 // Msg defines the taxexemption Msg service.
 service Msg {

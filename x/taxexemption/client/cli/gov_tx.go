@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"

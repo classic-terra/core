@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"

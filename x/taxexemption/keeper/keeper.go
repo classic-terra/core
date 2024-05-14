@@ -13,7 +13,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 )
 
 // Keeper of the store

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 )
 
 type msgServer struct {

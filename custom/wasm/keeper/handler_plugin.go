@@ -5,7 +5,7 @@ import (
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	taxexemptionkeeper "github.com/classic-terra/core/v2/x/taxexemption/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

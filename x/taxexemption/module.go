@@ -6,9 +6,9 @@ import (
 	"math/rand"
 
 	"github.com/classic-terra/core/v2/x/market/simulation"
-	"github.com/classic-terra/core/v2/x/taxexemption/client/cli"
-	"github.com/classic-terra/core/v2/x/taxexemption/keeper"
-	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	"github.com/classic-terra/core/v3/x/taxexemption/client/cli"
+	"github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 

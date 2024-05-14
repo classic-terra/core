@@ -5,7 +5,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "terra/taxexemption/v1beta1/taxexemption.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/taxexemption/types";
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
 
 service Query {
     rpc Taxable(QueryTaxableRequest) returns (QueryTaxableResponse) {

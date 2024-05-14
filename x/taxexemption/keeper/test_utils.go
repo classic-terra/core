@@ -15,7 +15,7 @@ import (
 	core "github.com/classic-terra/core/v2/types"
 	"github.com/classic-terra/core/v2/x/market"
 	"github.com/classic-terra/core/v2/x/oracle"
-	"github.com/classic-terra/core/v2/x/taxexemption/types"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 

@@ -43,6 +43,14 @@ func UnmarshalValidators(config testutil.TestEncodingConfig, data []byte) (staki
 		}
 		delete(validator, "unbonding_height")
 
+		unbondingOnHoldRefCount, ok := validator["unbonding_on_hold_ref_count"].(string)
+		if !ok {
+			return nil, nil, fmt.Errorf("invalid UnbondingOnHoldRefCount")
+		}
+		delete(validator, "unbonding_on_hold_ref_count")
+
+		delete(validator, "unbonding_ids")
+
 		concensusPubkey, ok := validator["consensus_pubkey"].(map[string]interface{})
 		if !ok {
 			return nil, nil, fmt.Errorf("invalid consensus_pubkey")
@@ -79,6 +87,13 @@ func UnmarshalValidators(config testutil.TestEncodingConfig, data []byte) (staki
 			return nil, nil, err
 		}
 		val.UnbondingHeight = unbondingHeightInt
+
+		// Convert UnbondingOnHoldRefCount to int64
+		unbondingOnHoldRefCountInt, err := strconv.ParseInt(unbondingOnHoldRefCount, 10, 64)
+		if err != nil {
+			return nil, nil, err
+		}
+		val.UnbondingOnHoldRefCount = unbondingOnHoldRefCountInt
 
 		// Convert consensus_pubkey to PubKey
 		concensusPubkeyBz, err := json.Marshal(concensusPubkey)

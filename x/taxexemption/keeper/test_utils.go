@@ -7,35 +7,32 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/require"
 
-	customauth "github.com/classic-terra/core/v2/custom/auth"
-	custombank "github.com/classic-terra/core/v2/custom/bank"
-	customdistr "github.com/classic-terra/core/v2/custom/distribution"
-	customparams "github.com/classic-terra/core/v2/custom/params"
-	customstaking "github.com/classic-terra/core/v2/custom/staking"
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/market"
-	"github.com/classic-terra/core/v2/x/oracle"
+	simappparams "cosmossdk.io/simapp/params"
+	customauth "github.com/classic-terra/core/v3/custom/auth"
+	custombank "github.com/classic-terra/core/v3/custom/bank"
+	customdistr "github.com/classic-terra/core/v3/custom/distribution"
+	customparams "github.com/classic-terra/core/v3/custom/params"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/market"
+	"github.com/classic-terra/core/v3/x/oracle"
 	"github.com/classic-terra/core/v3/x/taxexemption/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 )
@@ -54,28 +51,15 @@ func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
-func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
-	amino := codec.NewLegacyAmino()
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	codec := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
-
-	std.RegisterInterfaces(interfaceRegistry)
-	std.RegisterLegacyAminoCodec(amino)
-
-	ModuleBasics.RegisterLegacyAminoCodec(amino)
-	ModuleBasics.RegisterInterfaces(interfaceRegistry)
-
-	return simparams.EncodingConfig{
-		InterfaceRegistry: interfaceRegistry,
-		Codec:             codec,
-		TxConfig:          txCfg,
-		Amino:             amino,
-	}
+func MakeEncodingConfig(_ *testing.T) simappparams.EncodingConfig {
+	encodingConfig := simappparams.MakeTestEncodingConfig()
+	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	return encodingConfig
 }
 
 var (
-	ValPubKeys = simapp.CreateTestPubKeys(5)
+	ValPubKeys = simtestutil.CreateTestPubKeys(5)
 
 	PubKeys = []crypto.PubKey{
 		secp256k1.GenPrivKey().PubKey(),
@@ -130,10 +114,10 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, aKeyParams, paramsKeeper.Subspace(authtypes.ModuleName),
+	accountKeeper := authkeeper.NewAccountKeeper(appCodec, aKeyParams,
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		sdk.GetConfig().GetBech32AccountAddrPrefix())
+		sdk.GetConfig().GetBech32AccountAddrPrefix(), string(authtypes.NewModuleAddress(govtypes.ModuleName)))
 
 	taxexemptionKeeper := NewKeeper(appCodec,
 		keyTaxExemption, paramsKeeper.Subspace(types.ModuleName),

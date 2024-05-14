@@ -69,7 +69,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, te taxexemptionkeeper.Keeper, tk Tr
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err == nil {
-				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, messages...)...)
+				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, te, tk, messages...)...)
 			}
 		}
 	}

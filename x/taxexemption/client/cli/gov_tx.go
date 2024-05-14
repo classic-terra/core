@@ -90,7 +90,7 @@ $ %s tx gov submit-proposal add-tax-exemption-zone zonexyz terra1dczz24r33fwlj0q
 
 			sdkMsg := []sdk.Msg{&msg}
 
-			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta), proposalTitle, proposalDescr)
 			if err != nil {
 				return err
 			}
@@ -163,7 +163,7 @@ $ %s tx gov submit-proposal remove-tax-exemption-zone zonexyz --title "remove ta
 
 			sdkMsg := []sdk.Msg{&msg}
 
-			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta), proposalTitle, proposalDescr)
 			if err != nil {
 				return err
 			}
@@ -250,7 +250,7 @@ $ %s tx gov submit-proposal modify-tax-exemption-zone zonexyz --exempt-outgoing 
 
 			sdkMsg := []sdk.Msg{&msg}
 
-			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta), proposalTitle, proposalDescr)
 			if err != nil {
 				return err
 			}
@@ -325,7 +325,7 @@ $ %s tx gov submit-proposal add-tax-exemption-address zonexyz terra1dczz24r33fwl
 
 			sdkMsg := []sdk.Msg{&msg}
 
-			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta), proposalTitle, proposalDescr)
 			if err != nil {
 				return err
 			}
@@ -396,7 +396,7 @@ $ %s tx gov submit-proposal remove-tax-exemption-address zonexyz terra1dczz24r33
 
 			sdkMsg := []sdk.Msg{&msg}
 
-			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta))
+			submitMsg, err := govv1.NewMsgSubmitProposal(sdkMsg, deposit, clientCtx.GetFromAddress().String(), string(jsonMeta), proposalTitle, proposalDescr)
 			if err != nil {
 				return err
 			}

@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -10,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/classic-terra/core/v3/x/taxexemption/types"
 )

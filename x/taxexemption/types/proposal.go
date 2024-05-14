@@ -18,15 +18,10 @@ const (
 
 func init() {
 	govv1beta1.RegisterProposalType(ProposalTypeAddTaxExemptionZone)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&AddTaxExemptionZoneProposal{}, "taxexemption/AddTaxExemptionZoneProposal", nil)
 	govv1beta1.RegisterProposalType(ProposalTypeRemoveTaxExemptionZone)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&RemoveTaxExemptionZoneProposal{}, "taxexemption/RemoveTaxExemptionZoneProposal", nil)
 	govv1beta1.RegisterProposalType(ProposalTypeModifyTaxExemptionZone)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&ModifyTaxExemptionZoneProposal{}, "taxexemption/ModifyTaxExemptionZoneProposal", nil)
 	govv1beta1.RegisterProposalType(ProposalTypeAddTaxExemptionAddress)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&AddTaxExemptionAddressProposal{}, "taxexemption/AddTaxExemptionAddressProposal", nil)
 	govv1beta1.RegisterProposalType(ProposalTypeRemoveTaxExemptionAddress)
-	govv1beta1.ModuleCdc.LegacyAmino.RegisterConcrete(&RemoveTaxExemptionAddressProposal{}, "taxexemption/RemoveTaxExemptionAddressProposal", nil)
 }
 
 var (

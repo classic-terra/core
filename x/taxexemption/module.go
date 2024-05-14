@@ -3,22 +3,21 @@ package taxexemption
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 
-	"github.com/classic-terra/core/v2/x/market/simulation"
+	"github.com/classic-terra/core/v3/x/market/simulation"
 	"github.com/classic-terra/core/v3/x/taxexemption/client/cli"
 	"github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	"github.com/classic-terra/core/v3/x/taxexemption/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -112,11 +111,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	return nil
 }
 
-// LegacyQuerierHandler returns the taxexemption module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewLegacyQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // QuerierRoute returns the taxexemption module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
@@ -131,11 +125,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
 
-// Route returns the message routing key for the taxexemption module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
 // GenerateGenesisState creates a randomized GenState of the taxexemption module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
@@ -144,12 +133,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // simulate governance proposals.
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{}
-}
-
-// RandomizedParams creates randomized taxexemption param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	// workaround to make the sim work with staking module
-	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for taxexemption module's types

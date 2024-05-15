@@ -30,7 +30,7 @@ fi
 ## check if $BUILDDIR/old/terrad exists
 if [ ! -f "$BUILDDIR/old/terrad" ]; then
     mkdir -p $BUILDDIR/old
-    cp ./contrib/updates/Dockerfile.old _build/core-${OLD_VERSION}/Dockerfile.old
+    cp ./contrib/updates/Dockerfile.old _build/core-${OLD_VERSION}
     docker build --platform linux/amd64 --no-cache --build-arg source=./_build/core-${OLD_VERSION:1}/ --tag classic-terra/terraclassic.terrad-binary.old -f Dockerfile.old .
     docker create --platform linux/amd64 --name old-temp classic-terra/terraclassic.terrad-binary.old:latest
     docker cp old-temp:/usr/local/bin/terrad $BUILDDIR/old/

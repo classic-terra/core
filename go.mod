@@ -225,7 +225,7 @@ replace (
 )
 
 replace (
-	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-terra1
+	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-terra.3
 	// use cometbft
 	github.com/cometbft/cometbft => github.com/classic-terra/cometbft v0.37.4-terra1
 	github.com/cometbft/cometbft-db => github.com/cometbft/cometbft-db v0.8.0

@@ -135,12 +135,15 @@ func (v MockValidator) TokensFromShares(sdk.Dec) sdk.Dec      { return sdk.ZeroD
 func (v MockValidator) TokensFromSharesTruncated(sdk.Dec) sdk.Dec {
 	return sdk.ZeroDec()
 }
+
 func (v MockValidator) TokensFromSharesRoundUp(sdk.Dec) sdk.Dec {
 	return sdk.ZeroDec()
 }
+
 func (v MockValidator) SharesFromTokens(_ sdkmath.Int) (sdk.Dec, error) {
 	return sdk.ZeroDec(), nil
 }
+
 func (v MockValidator) SharesFromTokensTruncated(_ sdkmath.Int) (sdk.Dec, error) {
 	return sdk.ZeroDec(), nil
 }

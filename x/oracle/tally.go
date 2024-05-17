@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/classic-terra/core/v3/x/oracle/keeper"
@@ -37,7 +38,7 @@ func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap ma
 }
 
 // ballot for the asset is passing the threshold amount of voting power
-func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes sdk.Int) (sdk.Int, bool) {
+func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes math.Int) (math.Int, bool) {
 	ballotPower := sdk.NewInt(ballot.Power())
 	return ballotPower, !ballotPower.IsZero() && ballotPower.GTE(thresholdVotes)
 }

@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -10,7 +11,7 @@ import (
 type TreasuryKeeper interface {
 	RecordEpochTaxProceeds(ctx sdk.Context, delta sdk.Coins)
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
-	GetTaxCap(ctx sdk.Context, denom string) (taxCap sdk.Int)
+	GetTaxCap(ctx sdk.Context, denom string) (taxCap math.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
 	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
 	HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool

@@ -29,7 +29,7 @@ const BurnModuleName = "burn"
 //
 // - 0x02: sdk.Dec
 //
-// - 0x03<denom_Bytes>: sdk.Int
+// - 0x03<denom_Bytes>: math.Int
 //
 // - 0x04: sdk.Coins
 //
@@ -39,7 +39,7 @@ const BurnModuleName = "burn"
 //
 // - 0x07<epoch_Bytes>: sdk.Dec
 //
-// - 0x08<epoch_Bytes>: sdk.Int
+// - 0x08<epoch_Bytes>: math.Int
 //
 // - 0x09: int64
 var (

@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/stretchr/testify/require"
 
@@ -125,7 +126,7 @@ func TestLoadIndicatorByEpoch(t *testing.T) {
 		input.TreasuryKeeper.SetSR(input.Ctx, int64(epoch), SR)
 	}
 
-	TSLArr := []sdk.Int{
+	TSLArr := []math.Int{
 		sdk.NewInt(1000000),
 		sdk.NewInt(2000000),
 		sdk.NewInt(3000000),

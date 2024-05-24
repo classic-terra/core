@@ -3,17 +3,18 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
@@ -118,21 +119,21 @@ func (k Keeper) GetRewardWeight(ctx sdk.Context) sdk.Dec {
 }
 
 // SetRewardWeight sets the reward weight
-func (k Keeper) SetRewardWeight(ctx sdk.Context, rewardWeight sdk.Dec) {
+func (k Keeper) SetRewardWeight(ctx sdk.Context, rewardWeight math.LegacyDec) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&sdk.DecProto{Dec: rewardWeight})
 	store.Set(types.RewardWeightKey, b)
 }
 
 // SetTaxCap sets the tax cap denominated in integer units of the reference {denom}
-func (k Keeper) SetTaxCap(ctx sdk.Context, denom string, cap sdk.Int) {
+func (k Keeper) SetTaxCap(ctx sdk.Context, denom string, cap math.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: cap})
 	store.Set(types.GetTaxCapKey(denom), bz)
 }
 
 // GetTaxCap gets the tax cap denominated in integer units of the reference {denom}
-func (k Keeper) GetTaxCap(ctx sdk.Context, denom string) sdk.Int {
+func (k Keeper) GetTaxCap(ctx sdk.Context, denom string) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTaxCapKey(denom))
 	if bz == nil {
@@ -146,7 +147,7 @@ func (k Keeper) GetTaxCap(ctx sdk.Context, denom string) sdk.Int {
 }
 
 // IterateTaxCap iterates all tax cap
-func (k Keeper) IterateTaxCap(ctx sdk.Context, handler func(denom string, taxCap sdk.Int) (stop bool)) {
+func (k Keeper) IterateTaxCap(ctx sdk.Context, handler func(denom string, taxCap math.Int) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.TaxCapKey)
 
@@ -234,7 +235,7 @@ func (k Keeper) GetEpochInitialIssuance(ctx sdk.Context) sdk.Coins {
 }
 
 // PeekEpochSeigniorage returns epoch seigniorage
-func (k Keeper) PeekEpochSeigniorage(ctx sdk.Context) sdk.Int {
+func (k Keeper) PeekEpochSeigniorage(ctx sdk.Context) math.Int {
 	epochIssuance := k.bankKeeper.GetSupply(ctx, core.MicroLunaDenom).Amount
 	preEpochIssuance := k.GetEpochInitialIssuance(ctx).AmountOf(core.MicroLunaDenom)
 	epochSeigniorage := preEpochIssuance.Sub(epochIssuance)
@@ -315,13 +316,13 @@ func (k Keeper) ClearSRs(ctx sdk.Context) {
 }
 
 // GetTSL returns the total staked luna for the epoch
-func (k Keeper) GetTSL(ctx sdk.Context, epoch int64) sdk.Int {
+func (k Keeper) GetTSL(ctx sdk.Context, epoch int64) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTSLKey(epoch))
 
 	ip := sdk.IntProto{}
 	if bz == nil {
-		ip.Int = sdk.ZeroInt()
+		ip.Int = math.ZeroInt()
 	} else {
 		k.cdc.MustUnmarshal(bz, &ip)
 	}
@@ -330,7 +331,7 @@ func (k Keeper) GetTSL(ctx sdk.Context, epoch int64) sdk.Int {
 }
 
 // SetTSL stores the total staked luna for the epoch
-func (k Keeper) SetTSL(ctx sdk.Context, epoch int64, tsl sdk.Int) {
+func (k Keeper) SetTSL(ctx sdk.Context, epoch int64, tsl math.Int) {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: tsl})

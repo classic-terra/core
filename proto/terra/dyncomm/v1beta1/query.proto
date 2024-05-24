@@ -1,11 +1,12 @@
 syntax = "proto3";
 package terra.dyncomm.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "terra/dyncomm/v1beta1/dyncomm.proto";
 
-option go_package = "github.com/classic-terra/core/v2/x/dyncomm/types";
+option go_package = "github.com/classic-terra/core/v3/x/dyncomm/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -14,7 +15,7 @@ service Query {
     option (google.api.http).get = "/terra/dyncomm/v1beta1/params";
   }
 
-  rpc Rate(QueryRateRequest) returns (QueryRateResponse){
+  rpc Rate(QueryRateRequest) returns (QueryRateResponse) {
     option (google.api.http).get = "/terra/dyncomm/v1beta1/rate/{validator_addr}";
   }
 }
@@ -31,11 +32,13 @@ message QueryParamsResponse {
 // QueryRateRequest is the request type for the Query/Rate RPC method.
 message QueryRateRequest {
   // validator_addr defines the validator address to query for.
-  string validator_addr = 1;
+  string validator_addr = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryRateResponse is the response type for the Query/Rate RPC method.
 message QueryRateResponse {
-  string rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
-  string target = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string rate = 1
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+  string target = 2
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
 }

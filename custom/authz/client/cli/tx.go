@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 
-	feeutils "github.com/classic-terra/core/v2/custom/auth/client/utils"
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -68,7 +68,10 @@ Example:
 			}
 
 			// Generate transaction factory for gas simulation
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
 			if err := msg.ValidateBasic(); err != nil {
 				return err

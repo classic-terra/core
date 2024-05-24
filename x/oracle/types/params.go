@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"

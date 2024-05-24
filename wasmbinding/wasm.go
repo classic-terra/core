@@ -1,15 +1,14 @@
 package wasmbinding
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
-	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
-	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
+	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
+	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
 
 func RegisterCustomPlugins(
@@ -30,7 +29,7 @@ func RegisterCustomPlugins(
 		CustomMessageDecorator(marketKeeper),
 	)
 
-	return []wasm.Option{
+	return []wasmkeeper.Option{
 		queryPluginOpt,
 		messengerDecoratorOpt,
 	}
@@ -41,7 +40,7 @@ func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter, codec codec.Co
 		Stargate: StargateQuerier(queryRouter, codec),
 	})
 
-	return []wasm.Option{
+	return []wasmkeeper.Option{
 		queryPluginOpt,
 	}
 }

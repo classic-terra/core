@@ -6,12 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
+	dbm "github.com/cometbft/cometbft-db"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -31,16 +33,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	tmcfg "github.com/tendermint/tendermint/config"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	terraapp "github.com/classic-terra/core/v2/app"
-	terralegacy "github.com/classic-terra/core/v2/app/legacy"
-	"github.com/classic-terra/core/v2/app/params"
-	authcustomcli "github.com/classic-terra/core/v2/custom/auth/client/cli"
-	core "github.com/classic-terra/core/v2/types"
+	terraapp "github.com/classic-terra/core/v3/app"
+	terralegacy "github.com/classic-terra/core/v3/app/legacy"
+	"github.com/classic-terra/core/v3/app/params"
+	authcustomcli "github.com/classic-terra/core/v3/custom/auth/client/cli"
+	core "github.com/classic-terra/core/v3/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
@@ -117,9 +121,11 @@ func initTendermintConfig() *tmcfg.Config {
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	a := appCreator{encodingConfig}
 
+	gentxModule := terraapp.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(terraapp.ModuleBasics, terraapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, terraapp.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, terraapp.DefaultNodeHome, gentxModule.GenTxValidator),
 		terralegacy.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(terraapp.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, terraapp.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(terraapp.ModuleBasics),
@@ -140,9 +146,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		txCommand(),
 		keys.Commands(terraapp.DefaultNodeHome),
 	)
-
-	// add rosetta commands
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -225,13 +228,26 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		panic(err)
 	}
 
-	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		genDocFile := filepath.Join(homeDir, "config", "genesis.json")
+		appGenesis, err := tmtypes.GenesisDocFromFile(genDocFile)
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
+
+	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
 	err = os.MkdirAll(snapshotDir, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
 
-	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
+	snapshotDB, err := dbm.NewDB("metadata", server.GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -246,15 +262,15 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	)
 
 	// TODO: We want to parse legacy wasm options from app.toml in [wasm] section here or not?
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 
 	return terraapp.NewTerraApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encodingConfig,
 		appOpts,
 		wasmOpts,
+		baseapp.SetChainID(chainID),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -273,9 +289,9 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 
 func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions,
+	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
@@ -283,14 +299,14 @@ func (a appCreator) appExport(
 
 	var terraApp *terraapp.TerraApp
 	if height != -1 {
-		terraApp = terraapp.NewTerraApp(logger, db, traceStore, false, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), a.encodingConfig, appOpts, wasmOpts)
+		terraApp = terraapp.NewTerraApp(logger, db, traceStore, false, map[int64]bool{}, homePath, a.encodingConfig, appOpts, wasmOpts)
 
 		if err := terraApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		terraApp = terraapp.NewTerraApp(logger, db, traceStore, true, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), a.encodingConfig, appOpts, wasmOpts)
+		terraApp = terraapp.NewTerraApp(logger, db, traceStore, true, map[int64]bool{}, homePath, a.encodingConfig, appOpts, wasmOpts)
 	}
 
-	return terraApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return terraApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }

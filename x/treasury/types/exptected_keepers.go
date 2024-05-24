@@ -1,11 +1,12 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // AccountKeeper expected account keeper
@@ -30,7 +31,7 @@ type MarketKeeper interface {
 
 // StakingKeeper expected keeper for staking module
 type StakingKeeper interface {
-	TotalBondedTokens(sdk.Context) sdk.Int // total bonded tokens within the validator set
+	TotalBondedTokens(sdk.Context) math.Int // total bonded tokens within the validator set
 }
 
 // DistributionKeeper expected keeper for distribution module

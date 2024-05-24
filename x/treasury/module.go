@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/classic-terra/core/v2/x/treasury/keeper"
-	"github.com/classic-terra/core/v2/x/treasury/simulation"
+	"github.com/classic-terra/core/v3/x/treasury/keeper"
+	"github.com/classic-terra/core/v3/x/treasury/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/classic-terra/core/v2/x/treasury/client/cli"
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/x/treasury/client/cli"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 var (
@@ -103,11 +103,6 @@ func (AppModule) Name() string { return types.ModuleName }
 // RegisterInvariants registers the treasury module invariants.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the treasury module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
-}
-
 // NewHandler returns an sdk.Handler for the treasury module.
 func (am AppModule) NewHandler() sdk.Handler {
 	return nil
@@ -115,11 +110,6 @@ func (am AppModule) NewHandler() sdk.Handler {
 
 // QuerierRoute returns the treasury module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the treasury module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewLegacyQuerier(am.keeper, legacyQuerierCdc)
-}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -183,7 +173,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
 	return simulation.ParamChanges(r)
 }
 

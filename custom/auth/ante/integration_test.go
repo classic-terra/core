@@ -13,12 +13,12 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	customante "github.com/classic-terra/core/v2/custom/auth/ante"
-	core "github.com/classic-terra/core/v2/types"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	customante "github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
-// go test -v -run ^TestAnteTestSuite/TestIntegrationTaxExemption$ github.com/classic-terra/core/v2/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestIntegrationTaxExemption$ github.com/classic-terra/core/v3/custom/auth/ante
 func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
@@ -123,6 +123,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
 		dk := s.app.DistrKeeper
+		wk := s.app.WasmKeeper
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000
@@ -138,6 +139,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 			customante.HandlerOptions{
 				AccountKeeper:      ak,
 				BankKeeper:         bk,
+				WasmKeeper:         &wk,
 				FeegrantKeeper:     s.app.FeeGrantKeeper,
 				OracleKeeper:       s.app.OracleKeeper,
 				TreasuryKeeper:     s.app.TreasuryKeeper,

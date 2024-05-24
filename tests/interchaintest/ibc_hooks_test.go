@@ -7,16 +7,16 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v2/test/interchaintest/helpers"
-	"github.com/strangelove-ventures/interchaintest/v6"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v6/testutil"
+	"github.com/classic-terra/core/v3/test/interchaintest/helpers"
+	"github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
 
 // TestIBCHooks ensures the ibc-hooks middleware from osmosis works.

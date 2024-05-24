@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	"github.com/strangelove-ventures/interchaintest/v6"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v6/testutil"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	"github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -111,11 +111,11 @@ func TestTerraGaiaIBCTranfer(t *testing.T) {
 
 	terraUserInitialBal, err := terra.GetBalance(ctx, terraUserAddr, terra.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount.String(), terraUserInitialBal.String())
+	require.Equal(t, genesisWalletBalance, terraUserInitialBal)
 
 	gaiaUserInitialBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount.String(), gaiaUserInitialBal.String())
+	require.Equal(t, genesisWalletBalance, gaiaUserInitialBal)
 
 	// Compose an IBC transfer and send from Terra Classic -> Gaia
 	transferAmount := math.NewInt(1000)

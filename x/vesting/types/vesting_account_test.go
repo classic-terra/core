@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
@@ -14,8 +14,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/vesting/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/vesting/types"
 )
 
 var (
@@ -78,7 +78,7 @@ func TestGetVestingCoinsLazyVestingAcc(t *testing.T) {
 
 	// require no coins vesting at the end of the vesting schedule
 	vestingCoins = lgva.GetVestingCoins(endTime)
-	require.Nil(t, vestingCoins)
+	require.Equal(t, vestingCoins, sdk.Coins{})
 
 	// require 50% of coins vesting
 	vestingCoins = lgva.GetVestingCoins(now.Add(12 * time.Hour))

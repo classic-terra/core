@@ -3,11 +3,12 @@ package treasury
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/treasury/keeper"
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/treasury/keeper"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // InitGenesis initializes default parameters
@@ -62,7 +63,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisSt
 	epochInitialIssuance := keeper.GetEpochInitialIssuance(ctx)
 
 	var taxCaps []types.TaxCap
-	keeper.IterateTaxCap(ctx, func(denom string, taxCap sdk.Int) bool {
+	keeper.IterateTaxCap(ctx, func(denom string, taxCap math.Int) bool {
 		taxCaps = append(taxCaps, types.TaxCap{
 			Denom:  denom,
 			TaxCap: taxCap,

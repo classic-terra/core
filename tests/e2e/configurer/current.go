@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/classic-terra/core/v2/tests/e2e/configurer/chain"
-	"github.com/classic-terra/core/v2/tests/e2e/containers"
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/configurer/chain"
+	"github.com/classic-terra/core/v3/tests/e2e/containers"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 )
 
 type CurrentBranchConfigurer struct {

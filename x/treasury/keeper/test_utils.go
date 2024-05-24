@@ -6,37 +6,38 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	customauth "github.com/classic-terra/core/v2/custom/auth"
-	custombank "github.com/classic-terra/core/v2/custom/bank"
-	customdistr "github.com/classic-terra/core/v2/custom/distribution"
-	customparams "github.com/classic-terra/core/v2/custom/params"
-	customstaking "github.com/classic-terra/core/v2/custom/staking"
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/market"
-	marketkeeper "github.com/classic-terra/core/v2/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v2/x/market/types"
-	"github.com/classic-terra/core/v2/x/oracle"
-	oraclekeeper "github.com/classic-terra/core/v2/x/oracle/keeper"
-	oracletypes "github.com/classic-terra/core/v2/x/oracle/types"
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	customauth "github.com/classic-terra/core/v3/custom/auth"
+	custombank "github.com/classic-terra/core/v3/custom/bank"
+	customdistr "github.com/classic-terra/core/v3/custom/distribution"
+	customparams "github.com/classic-terra/core/v3/custom/params"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/market"
+	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	"github.com/classic-terra/core/v3/x/oracle"
+	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	"cosmossdk.io/math"
+	simparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -48,6 +49,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -92,7 +94,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 }
 
 var (
-	ValPubKeys = simapp.CreateTestPubKeys(5)
+	ValPubKeys = simtestutil.CreateTestPubKeys(5)
 
 	PubKeys = []crypto.PubKey{
 		secp256k1.GenPrivKey().PubKey(),
@@ -123,7 +125,7 @@ type TestInput struct {
 	AccountKeeper  authkeeper.AccountKeeper
 	BankKeeper     bankkeeper.Keeper
 	DistrKeeper    distrkeeper.Keeper
-	StakingKeeper  stakingkeeper.Keeper
+	StakingKeeper  *stakingkeeper.Keeper
 	MarketKeeper   types.MarketKeeper
 	OracleKeeper   types.OracleKeeper
 }
@@ -186,8 +188,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix())
-	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(banktypes.ModuleName), blackListAddrs)
+	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)*10))))
 	bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
@@ -197,7 +199,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		keyStaking,
 		accountKeeper,
 		bankKeeper,
-		paramsKeeper.Subspace(stakingtypes.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	stakingParams := stakingtypes.DefaultParams()
@@ -205,16 +207,15 @@ func CreateTestInput(t *testing.T) TestInput {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec,
-		keyDistr, paramsKeeper.Subspace(distrtypes.ModuleName),
+		appCodec, keyDistr,
 		accountKeeper, bankKeeper, stakingKeeper,
-		authtypes.FeeCollectorName)
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	distrKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
 	distrParams := distrtypes.DefaultParams()
 	distrParams.CommunityTax = sdk.NewDecWithPrec(2, 2)
-	distrParams.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
-	distrParams.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
 	distrKeeper.SetParams(ctx, distrParams)
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks()))
 
@@ -260,11 +261,11 @@ func CreateTestInput(t *testing.T) TestInput {
 	wasmOpts := []wasmkeeper.Option{}
 	wasmKeeper := wasmkeeper.NewKeeper(
 		appCodec, keyWasm,
-		paramsKeeper.Subspace(wasmtypes.ModuleName),
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		distrKeeper,
+		distrkeeper.NewQuerier(distrKeeper),
+		nil,
 		nil,
 		nil,
 		scopedWasmKeeper,
@@ -274,6 +275,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		"",
 		wasmConfig,
 		supportedFeatures,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
 
@@ -322,7 +324,7 @@ func CreateTestInput(t *testing.T) TestInput {
 }
 
 // NewTestMsgCreateValidator test msg creator
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt math.Int) *stakingtypes.MsgCreateValidator {
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	msg, _ := stakingtypes.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin(core.MicroLunaDenom, amt),

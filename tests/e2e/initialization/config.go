@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -17,12 +18,11 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/classic-terra/core/v2/tests/e2e/util"
-	treasurytypes "github.com/classic-terra/core/v2/x/treasury/types"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -59,11 +59,11 @@ const (
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
 	WalletFeeBalance  = 100000000
-	// chainC
-	ChainCID      = "terra-test-c"
-	TerraBalanceC = 500000000000
-	StakeBalanceC = 440000000000
-	StakeAmountC  = 400000000000
+	// // chainC
+	// ChainCID      = "terra-test-c"
+	// TerraBalanceC = 500000000000
+	// StakeBalanceC = 440000000000
+	// StakeAmountC  = 400000000000
 )
 
 var (
@@ -74,13 +74,13 @@ var (
 
 	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
-	InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
-	LunaToken       = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
-	tenTerra        = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
+	// InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
+	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
+	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
-	OneMin  = time.Minute // nolint
-	TwoMin  = 2 * time.Minute // nolint
-	FiveMin = 5 * time.Minute // nolint
+	OneMin  = time.Minute              // nolint
+	TwoMin  = 2 * time.Minute          // nolint
+	FiveMin = 5 * time.Minute          // nolint
 	TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
 )
 
@@ -191,10 +191,10 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 			if err := addAccount(configDir, "", InitBalanceStrB, accAdd, forkHeight); err != nil {
 				return err
 			}
-		case ChainCID:
-			if err := addAccount(configDir, "", InitBalanceStrC, accAdd, forkHeight); err != nil {
-				return err
-			}
+			// case ChainCID:
+			// 	if err := addAccount(configDir, "", InitBalanceStrC, accAdd, forkHeight); err != nil {
+			// 		return err
+			// 	}
 		}
 	}
 
@@ -313,12 +313,13 @@ func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 }
 
 func updateGovGenesis(govGenState *govv1.GenesisState) {
-	govGenState.VotingParams.VotingPeriod = &OneMin
-	govGenState.TallyParams.Quorum = sdk.NewDecWithPrec(2, 1).String()
-	govGenState.DepositParams.MinDeposit = tenTerra
+	govGenState.Params.VotingPeriod = &OneMin
+	govGenState.Params.Quorum = sdk.NewDecWithPrec(2, 1).String()
+	govGenState.Params.MinDeposit = tenTerra
 }
 
 func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
+	genutilErr := "genutil genesis setup failed: "
 	return func(genUtilGenState *genutiltypes.GenesisState) {
 		// generate genesis txs
 		genTxs := make([]json.RawMessage, 0, len(c.nodes))
@@ -333,17 +334,17 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 			}
 			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genutilErr + err.Error())
 			}
 
 			signedTx, err := node.signMsg(createValmsg)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genutilErr + err.Error())
 			}
 
 			txRaw, err := util.Cdc.MarshalJSON(signedTx)
 			if err != nil {
-				panic("genutil genesis setup failed: " + err.Error())
+				panic(genutilErr + err.Error())
 			}
 			genTxs = append(genTxs, txRaw)
 		}

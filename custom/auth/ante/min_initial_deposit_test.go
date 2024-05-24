@@ -9,8 +9,8 @@ import (
 
 	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
 
 	// core "github.com/terra-money/core/types"
 	// treasury "github.com/terra-money/core/x/treasury/types"
@@ -31,12 +31,12 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
-	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
+	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	// set initial deposit ratio to 0.0
 	ratio := sdk.ZeroDec()
@@ -63,7 +63,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	suite.Require().NoError(err, "error: Proposal whithout initial deposit should have gone through")
 
 	// create v1 proposal
-	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata")
+	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata", "title", "summary")
 	feeAmountv1 := testdata.NewTestFeeAmount()
 	gasLimitv1 := testdata.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msgv1))
@@ -86,12 +86,12 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
-	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
+	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	// set initial deposit ratio to 0.2
 	ratio := sdk.NewDecWithPrec(2, 1)
@@ -120,7 +120,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	suite.Require().NoError(err, "error: Proposal with sufficient initial deposit should have gone through")
 
 	// create v1 proposal
-	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata")
+	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata", "title", "summary")
 	feeAmountv1 := testdata.NewTestFeeAmount()
 	gasLimitv1 := testdata.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msgv1))
@@ -143,12 +143,12 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govv1.DefaultDepositParams())
-	govparams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
 	)
-	suite.app.GovKeeper.SetDepositParams(suite.ctx, govparams)
+	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	// set initial deposit ratio to 0.2
 	ratio := sdk.NewDecWithPrec(2, 1)
@@ -177,7 +177,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	suite.Require().Error(err, "error: Proposal with insufficient initial deposit should have failed")
 
 	// create v1 proposal
-	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata")
+	msgv1, _ := govv1.NewMsgSubmitProposal([]sdk.Msg{}, depositCoins1, addr1.String(), "metadata", "title", "summary")
 	feeAmountv1 := testdata.NewTestFeeAmount()
 	gasLimitv1 := testdata.NewTestGasLimit()
 	suite.Require().NoError(suite.txBuilder.SetMsgs(msgv1))

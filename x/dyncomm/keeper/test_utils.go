@@ -10,26 +10,26 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	customauth "github.com/classic-terra/core/v2/custom/auth"
-	custombank "github.com/classic-terra/core/v2/custom/bank"
-	customdistr "github.com/classic-terra/core/v2/custom/distribution"
-	customparams "github.com/classic-terra/core/v2/custom/params"
-	customstaking "github.com/classic-terra/core/v2/custom/staking"
-	core "github.com/classic-terra/core/v2/types"
+	customauth "github.com/classic-terra/core/v3/custom/auth"
+	custombank "github.com/classic-terra/core/v3/custom/bank"
+	customdistr "github.com/classic-terra/core/v3/custom/distribution"
+	customparams "github.com/classic-terra/core/v3/custom/params"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
+	core "github.com/classic-terra/core/v3/types"
 
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	types "github.com/classic-terra/core/v2/x/dyncomm/types"
+	simparams "cosmossdk.io/simapp/params"
+	types "github.com/classic-terra/core/v3/x/dyncomm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	simparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -39,6 +39,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -85,7 +86,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 
 // Test Account
 var (
-	PubKeys = simapp.CreateTestPubKeys(32)
+	PubKeys = simtestutil.CreateTestPubKeys(32)
 
 	InitTokens    = sdk.TokensFromConsensusPower(10_000, sdk.DefaultPowerReduction)
 	InitCoins     = sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens))
@@ -115,7 +116,7 @@ type TestInput struct {
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
 	DistrKeeper   distrkeeper.Keeper
-	StakingKeeper stakingkeeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
 	DyncommKeeper Keeper
 }
 
@@ -145,8 +146,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	require.NoError(t, ms.LoadLatestVersion())
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, paramsKeeper.Subspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix())
-	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, paramsKeeper.Subspace(banktypes.ModuleName), blackListAddrs)
+	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, math.Int(math.LegacyNewDec(1_000_000_000_000))))
 	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
@@ -157,7 +158,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		keyStaking,
 		accountKeeper,
 		bankKeeper,
-		paramsKeeper.Subspace(stakingtypes.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	stakingParams := stakingtypes.DefaultParams()
@@ -165,10 +166,11 @@ func CreateTestInput(t *testing.T) TestInput {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec,
-		keyDistr, paramsKeeper.Subspace(distrtypes.ModuleName),
-		accountKeeper, bankKeeper, &stakingKeeper,
-		authtypes.FeeCollectorName)
+		appCodec, keyDistr,
+		accountKeeper, bankKeeper, stakingKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	distrKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
 	distrParams := distrtypes.DefaultParams()

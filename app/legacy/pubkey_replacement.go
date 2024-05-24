@@ -7,9 +7,9 @@ import (
 	"log"
 	"os"
 
+	cryptocodec "github.com/cometbft/cometbft/crypto/encoding"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/pkg/errors"
-	cryptocodec "github.com/tendermint/tendermint/crypto/encoding"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

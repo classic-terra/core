@@ -13,10 +13,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/classic-terra/core/v2/tests/e2e/configurer/chain"
-	"github.com/classic-terra/core/v2/tests/e2e/containers"
-	"github.com/classic-terra/core/v2/tests/e2e/initialization"
-	"github.com/classic-terra/core/v2/tests/e2e/util"
+	"github.com/classic-terra/core/v3/tests/e2e/configurer/chain"
+	"github.com/classic-terra/core/v3/tests/e2e/containers"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
 )
 
 // baseConfigurer is the base implementation for the
@@ -75,8 +75,8 @@ func (bc *baseConfigurer) RunIBC() error {
 	if err := bc.runIBCRelayer(bc.chainConfigs[0], bc.chainConfigs[1], containers.HermesContainerName1); err != nil {
 		return err
 	}
-	bc.t.Log("Run relayer 2 between chain b and chain c")
-	if err := bc.runIBCRelayer(bc.chainConfigs[1], bc.chainConfigs[2], containers.HermesContainerName2); err != nil {
+	bc.t.Log("Run relayer 2 between chain b and chain a")
+	if err := bc.runIBCRelayer(bc.chainConfigs[1], bc.chainConfigs[0], containers.HermesContainerName2); err != nil {
 		return err
 	}
 
@@ -172,15 +172,14 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	time.Sleep(10 * time.Second)
 
 	// create the client, connection and channel between the two Terra chains
-	return bc.connectIBCChains(chainConfigA, chainConfigB, hermesContainerName)
+	return bc.connectIBCChains(chainConfigA, chainConfigB)
 }
 
-func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config, hermesContainerName string) error {
+func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
-
 	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.ID, "--b-chain", chainB.ChainMeta.ID, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	bc.t.Log(cmd)
-	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, hermesContainerName, "SUCCESS")
+	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}

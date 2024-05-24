@@ -3,12 +3,12 @@ package forks
 import (
 	"fmt"
 
-	"github.com/classic-terra/core/v2/app/keepers"
-	core "github.com/classic-terra/core/v2/types"
+	"github.com/classic-terra/core/v3/app/keepers"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	ibcchanneltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibcchanneltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 )
 
 func runForkLogicSwapDisable(ctx sdk.Context, keppers *keepers.AppKeepers, _ *module.Manager) {

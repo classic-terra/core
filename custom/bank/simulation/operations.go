@@ -4,13 +4,14 @@ import (
 	"math/rand"
 	"strings"
 
+	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -30,13 +31,13 @@ func WeightedOperations(
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(*rand.Rand) {
-			weightMsgSend = simappparams.DefaultWeightMsgSend
+			weightMsgSend = banksim.DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(*rand.Rand) {
-			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
+			weightMsgMultiSend = banksim.DefaultWeightMsgMultiSend
 		},
 	)
 
@@ -113,12 +114,12 @@ func sendMsgSend(
 		}
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -144,7 +145,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// random number of inputs/outputs between [1, 3]
-		inputs := make([]types.Input, r.Intn(3)+1)
+		inputs := make([]types.Input, 1)
 		outputs := make([]types.Output, r.Intn(3)+1)
 
 		// collect signer privKeys
@@ -152,34 +153,23 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 
 		// use map to check if address already exists as input
 		usedAddrs := make(map[string]bool)
+		simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
-		var totalSentCoins sdk.Coins
-		for i := range inputs {
-			// generate random input fields, ignore to address
-			simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
-
-			// make sure account is fresh and not used in previous input
-			for usedAddrs[simAccount.Address.String()] {
-				simAccount, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
-			}
-
-			if skip {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
-			}
-
-			// set input address in used address map
-			usedAddrs[simAccount.Address.String()] = true
-
-			// set signer privkey
-			privs[i] = simAccount.PrivKey
-
-			// set next input and accumulate total sent coins
-			inputs[i] = types.NewInput(simAccount.Address, coins)
-			totalSentCoins = totalSentCoins.Add(coins...)
+		if skip {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
 		}
 
+		// set input address in used address map
+		usedAddrs[simAccount.Address.String()] = true
+
+		// set signer privkey
+		privs[0] = simAccount.PrivKey
+
+		// set next input and accumulate total sent coins
+		inputs[0] = types.NewInput(simAccount.Address, coins)
+
 		// Check send_enabled status of each sent coin denom
-		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
+		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}
 
@@ -189,12 +179,12 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
 			if o == len(outputs)-1 {
-				outCoins = totalSentCoins
+				outCoins = coins
 			} else {
 				// take random subset of remaining coins for output
 				// and update remaining coins
-				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
-				totalSentCoins = totalSentCoins.Sub(outCoins...)
+				outCoins = simtypes.RandSubsetCoins(r, coins)
+				coins = coins.Sub(outCoins...)
 			}
 
 			outputs[o] = types.NewOutput(outAddr.Address, outCoins)
@@ -273,12 +263,12 @@ func sendMsgMultiSend(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

@@ -3,13 +3,14 @@ package staking_test
 import (
 	"testing"
 
-	apptesting "github.com/classic-terra/core/v2/app/testing"
-	"github.com/classic-terra/core/v2/types"
-	simapp "github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/math"
+	apptesting "github.com/classic-terra/core/v3/app/testing"
+	"github.com/classic-terra/core/v3/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	teststaking "github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -22,7 +23,7 @@ func TestStakingTestSuite(t *testing.T) {
 	suite.Run(t, new(StakingTestSuite))
 }
 
-// go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v2/custom/staking
+// go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v3/custom/staking
 func (s *StakingTestSuite) TestValidatorVPLimit() {
 	s.KeeperTestHelper.Setup(s.T(), types.ColumbusChainID)
 
@@ -34,17 +35,17 @@ func (s *StakingTestSuite) TestValidatorVPLimit() {
 		err := s.App.BankKeeper.DelegateCoinsFromAccountToModule(s.Ctx, addrDels[i], stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewInt64Coin("uluna", 1000000)))
 		s.Require().NoError(err)
 	}
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
-	PKs := simapp.CreateTestPubKeys(num)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	PKs := simtestutil.CreateTestPubKeys(num)
 
-	var amts [9]sdk.Int
+	var amts [9]math.Int
 	for i := range amts {
 		amts[i] = sdk.NewInt(1000000)
 	}
 
 	var validators [9]stakingtypes.Validator
 	for i, amt := range amts {
-		validators[i] = teststaking.NewValidator(s.T(), valAddrs[i], PKs[i])
+		validators[i] = testutil.NewValidator(s.T(), valAddrs[i], PKs[i])
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
 	}
 

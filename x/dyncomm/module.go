@@ -6,20 +6,20 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/classic-terra/core/v2/x/dyncomm/client/cli"
-	"github.com/classic-terra/core/v2/x/dyncomm/keeper"
-	"github.com/classic-terra/core/v2/x/dyncomm/types"
-	"github.com/classic-terra/core/v2/x/market/simulation"
+	"github.com/classic-terra/core/v3/x/dyncomm/client/cli"
+	"github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	"github.com/classic-terra/core/v3/x/dyncomm/types"
+	"github.com/classic-terra/core/v3/x/market/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -114,11 +114,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	return nil
 }
 
-// LegacyQuerierHandler returns the dyncomm module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewLegacyQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // QuerierRoute returns the dyncomm module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
@@ -135,11 +130,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // NewHandler returns an sdk.Handler for the dyncomm module.
 func (am AppModule) NewHandler() sdk.Handler {
 	return nil
-}
-
-// Route returns the message routing key for the dyncomm module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
 }
 
 // GenerateGenesisState creates a randomized GenState of the dyncomm module.
@@ -166,9 +156,9 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized dyncomm param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	// workaround to make the sim work with staking module
-	return []simtypes.ParamChange{}
+	return []simtypes.LegacyParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for dyncomm module's types

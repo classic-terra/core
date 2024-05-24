@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/classic-terra/core/v2/types"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCalculateVotingPower(t *testing.T) {
 	input := CreateTestInput(t)
-	helper := teststaking.NewHelper(
+	helper := testutil.NewHelper(
 		t, input.Ctx, input.StakingKeeper,
 	)
 	helper.Denom = core.MicroLunaDenom
@@ -30,7 +30,7 @@ func TestCalculateVotingPower(t *testing.T) {
 
 func TestCalculateDynCommission(t *testing.T) {
 	input := CreateTestInput(t)
-	helper := teststaking.NewHelper(
+	helper := testutil.NewHelper(
 		t, input.Ctx, input.StakingKeeper,
 	)
 	helper.Denom = core.MicroLunaDenom

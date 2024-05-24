@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v2/custom/auth/ante"
-	treasurykeeper "github.com/classic-terra/core/v2/x/treasury/keeper"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -39,6 +39,7 @@ type SDKMessageHandler struct {
 
 func NewMessageHandler(
 	router MessageRouter,
+	ics4Wrapper wasmtypes.ICS4Wrapper,
 	channelKeeper wasmtypes.ChannelKeeper,
 	capabilityKeeper wasmtypes.CapabilityKeeper,
 	bankKeeper bankKeeper.Keeper,
@@ -54,7 +55,7 @@ func NewMessageHandler(
 	}
 	return wasmkeeper.NewMessageHandlerChain(
 		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
-		wasmkeeper.NewIBCRawPacketHandler(channelKeeper, capabilityKeeper),
+		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }

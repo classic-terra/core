@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,10 +19,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/classic-terra/core/v2/x/market/client/cli"
-	"github.com/classic-terra/core/v2/x/market/keeper"
-	"github.com/classic-terra/core/v2/x/market/simulation"
-	"github.com/classic-terra/core/v2/x/market/types"
+	"github.com/classic-terra/core/v3/x/market/client/cli"
+	"github.com/classic-terra/core/v3/x/market/keeper"
+	"github.com/classic-terra/core/v3/x/market/simulation"
+	"github.com/classic-terra/core/v3/x/market/types"
 )
 
 var (
@@ -117,18 +117,8 @@ func (AppModule) Name() string { return types.ModuleName }
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the market module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
 // QuerierRoute returns the market module's querier route name.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the market module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewLegacyQuerier(am.keeper, legacyQuerierCdc)
-}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -182,7 +172,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized market param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
 	return simulation.ParamChanges(r)
 }
 

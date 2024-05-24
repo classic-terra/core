@@ -4,14 +4,15 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	core "github.com/classic-terra/core/v2/types"
-	"github.com/classic-terra/core/v2/x/treasury/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 func TestRewardWeight(t *testing.T) {
@@ -53,7 +54,7 @@ func TestIterateTaxCap(t *testing.T) {
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroUSDDenom, usdCap)
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroKRWDenom, krwCap)
 
-	input.TreasuryKeeper.IterateTaxCap(input.Ctx, func(denom string, taxCap sdk.Int) bool {
+	input.TreasuryKeeper.IterateTaxCap(input.Ctx, func(denom string, taxCap math.Int) bool {
 		switch denom {
 		case core.MicroCNYDenom:
 			require.Equal(t, cnyCap, taxCap)

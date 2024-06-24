@@ -12,5 +12,5 @@ message Params {}
 // GenesisState defines the tax2gas module's genesis state.
 message GenesisState {
   // params is the container of tax2gas parameters.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }

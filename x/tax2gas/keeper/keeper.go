@@ -1,13 +1,12 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
 )
-
 
 type Keeper struct {
 	storeKey storetypes.StoreKey

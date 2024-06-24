@@ -7,12 +7,12 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/classic-terra/core/v3/x/tax2gas/types";
 
 service Msg {
-    rpc Test(MsgTest) returns (MsgTestResponse);
+  rpc Test(MsgTest) returns (MsgTestResponse);
 }
 
 // ===================== MsgTest
 message MsgTest {
-    string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
 }
 
 message MsgTestResponse {}

@@ -29,7 +29,6 @@ func GetQueryCmd() *cobra.Command {
 	return tax2gasQueryCmd
 }
 
-
 // GetCmdQueryParams implements a command to return the current parameters.
 func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{

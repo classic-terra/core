@@ -16,4 +16,6 @@ service Query {
 
 //=============================== Params
 message ParamsRequest {}
-message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
+message ParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

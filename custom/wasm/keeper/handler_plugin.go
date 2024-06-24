@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/custom/auth/ante"
+	"github.com/classic-terra/core/v3/x/tax2gas/ante"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"

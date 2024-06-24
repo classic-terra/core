@@ -11,6 +11,7 @@ import (
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
+	"github.com/classic-terra/core/v3/x/tax2gas/types"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
@@ -20,7 +21,7 @@ func isIBCDenom(denom string) bool {
 }
 
 // FilterMsgAndComputeTax computes the stability tax on messages.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
+func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
 	taxes := sdk.Coins{}
 
 	for _, msg := range msgs {
@@ -77,7 +78,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, msgs ...sdk.Msg)
 }
 
 // computes the stability tax according to tax-rate and tax-cap
-func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins) sdk.Coins {
+func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) sdk.Coins {
 	taxRate := tk.GetTaxRate(ctx)
 	if taxRate.Equal(sdk.ZeroDec()) {
 		return sdk.Coins{}

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
+	tax2gasante "github.com/classic-terra/core/v3/x/tax2gas/ante"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -52,7 +53,7 @@ func (ts txServer) ComputeTax(c context.Context, req *ComputeTaxRequest) (*Compu
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, msgs...)
+	taxAmount := tax2gasante.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, msgs...)
 	return &ComputeTaxResponse{
 		TaxAmount: taxAmount,
 	}, nil

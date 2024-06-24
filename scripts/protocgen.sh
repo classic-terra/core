@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -eux pipefail
+set -eo pipefail
 
 echo "Generating gogo proto code"
 cd proto

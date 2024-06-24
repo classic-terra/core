@@ -4,7 +4,6 @@ package terra.tax2gas.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "terra/tax2gas/v1beta1/genesis.proto";
-import "terra/tax2gas/v1beta1/tx.proto";
 
 option go_package = "github.com/classic-terra/core/v3/x/tax2gas/types";
 

@@ -22,6 +22,7 @@ var (
 	KeyWindowProbation         = []byte("WindowProbation")
 	KeyBurnTaxSplit            = []byte("BurnTaxSplit")
 	KeyMinInitialDepositRatio  = []byte("MinInitialDepositRatio")
+	KeyOracleSplit             = []byte("OracleSplit")
 )
 
 // Default parameter values
@@ -47,6 +48,7 @@ var (
 	DefaultRewardWeight            = sdk.NewDecWithPrec(5, 2)   // 5%
 	DefaultBurnTaxSplit            = sdk.NewDecWithPrec(1, 1)   // 10% goes to community pool, 90% burn
 	DefaultMinInitialDepositRatio  = sdk.ZeroDec()              // 0% min initial deposit
+	DefaultOracleSplit             = sdk.NewDecWithPrec(5, 1)   // 50% oracle, 50% community pool
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -63,6 +65,7 @@ func DefaultParams() Params {
 		WindowProbation:         DefaultWindowProbation,
 		BurnTaxSplit:            DefaultBurnTaxSplit,
 		MinInitialDepositRatio:  DefaultMinInitialDepositRatio,
+		OracleSplit:             DefaultOracleSplit,
 	}
 }
 
@@ -90,6 +93,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyWindowProbation, &p.WindowProbation, validateWindowProbation),
 		paramstypes.NewParamSetPair(KeyBurnTaxSplit, &p.BurnTaxSplit, validateBurnTaxSplit),
 		paramstypes.NewParamSetPair(KeyMinInitialDepositRatio, &p.MinInitialDepositRatio, validateMinInitialDepositRatio),
+		paramstypes.NewParamSetPair(KeyOracleSplit, &p.OracleSplit, validateOraceSplit),
 	}
 }
 
@@ -135,6 +139,14 @@ func (p Params) Validate() error {
 
 	if p.WindowLong <= p.WindowShort {
 		return fmt.Errorf("treasury parameter WindowLong must be bigger than WindowShort: (%d, %d)", p.WindowLong, p.WindowShort)
+	}
+
+	if p.OracleSplit.IsNegative() {
+		return fmt.Errorf("treasury parameter OracleSplit must be positive: %s", p.OracleSplit)
+	}
+
+	if p.OracleSplit.GT(sdk.OneDec()) {
+		return fmt.Errorf("treasury parameter OracleSplit must be less than or equal to 1.0: %s", p.OracleSplit)
 	}
 
 	return nil
@@ -264,6 +276,23 @@ func validateMinInitialDepositRatio(i interface{}) error {
 
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min initial deposit ratio must less than or equal 1.0: %s", v)
+	}
+
+	return nil
+}
+
+func validateOraceSplit(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid paramater type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("oracle split must be positive: %s", v)
+	}
+
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("oracle split must be less than or equal to 1.0: %s", v)
 	}
 
 	return nil

@@ -692,7 +692,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		// Set burn split rate to 50%
 		// oracle split to 0% (oracle split is covered in another test)
 		tk.SetBurnSplitRate(s.ctx, burnSplitRate)
-		tk.SetOracleSplit(s.ctx, oracleSplitRate)
+		tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 		fmt.Printf("CASE = %s \n", c.name)
 		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -767,7 +767,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 
 	// Set burn split tax
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
-	tk.SetOracleSplit(s.ctx, oracleSplitRate)
+	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

@@ -687,9 +687,12 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
 		burnSplitRate := sdk.NewDecWithPrec(5, 1)
+		oracleSplitRate := sdk.ZeroDec()
 
 		// Set burn split rate to 50%
+		// oracle split to 0% (oracle split is covered in another test)
 		tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+		tk.SetOracleSplit(s.ctx, oracleSplitRate)
 
 		fmt.Printf("CASE = %s \n", c.name)
 		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()

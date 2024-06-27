@@ -1,4 +1,5 @@
-package v81
+//nolint:revive
+package v8_1
 
 import (
 	"github.com/classic-terra/core/v3/app/keepers"

@@ -1,4 +1,4 @@
-package v8_1
+package v81
 
 import (
 	"github.com/classic-terra/core/v3/app/keepers"
@@ -17,7 +17,6 @@ func CreateV81UpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// set default oracle split
 		mm.Modules[treasurytypes.ModuleName].(*treasurykeeper.Keeper).SetOracleSplit(ctx, treasurytypes.DefaultOracleSplit)
 		return mm.RunMigrations(ctx, cfg, fromVM)

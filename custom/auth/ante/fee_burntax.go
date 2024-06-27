@@ -28,7 +28,6 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 	}
 
 	if oracleSplitRate.IsPositive() {
-
 		for _, distrCoin := range distributionDeltaCoins {
 			oracleCoinAmnt := oracleSplitRate.MulInt(distrCoin.Amount).RoundInt()
 			oracleSplitCoins = oracleSplitCoins.Add(sdk.NewCoin(distrCoin.Denom, oracleCoinAmnt))

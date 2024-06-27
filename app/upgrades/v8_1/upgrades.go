@@ -19,7 +19,7 @@ func CreateV81UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// set default oracle split
-		mm.Modules[treasurytypes.ModuleName].(*treasurykeeper.Keeper).SetOracleSplit(ctx, treasurytypes.DefaultOracleSplit)
+		mm.Modules[treasurytypes.ModuleName].(*treasurykeeper.Keeper).SetOracleSplitRate(ctx, treasurytypes.DefaultOracleSplit)
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

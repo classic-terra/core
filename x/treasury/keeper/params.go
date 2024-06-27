@@ -66,12 +66,12 @@ func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRati
 	k.paramSpace.Set(ctx, types.KeyMinInitialDepositRatio, minInitialDepositRatio)
 }
 
-func (k Keeper) GetOracleSplit(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetOracleSplitRate(ctx sdk.Context) (res sdk.Dec) {
 	k.paramSpace.Get(ctx, types.KeyOracleSplit, &res)
 	return
 }
 
-func (k Keeper) SetOracleSplit(ctx sdk.Context, oracleSplit sdk.Dec) {
+func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdk.Dec) {
 	k.paramSpace.Set(ctx, types.KeyOracleSplit, oracleSplit)
 }
 

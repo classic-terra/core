@@ -16,7 +16,7 @@ type TreasuryKeeper interface {
 	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
 	HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
 	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
-	GetOracleSplit(ctx sdk.Context) sdk.Dec
+	GetOracleSplitRate(ctx sdk.Context) sdk.Dec
 }
 
 // OracleKeeper for feeder validation

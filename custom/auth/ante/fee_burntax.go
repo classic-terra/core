@@ -13,7 +13,7 @@ import (
 // BurnTaxSplit splits
 func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
 	burnSplitRate := fd.treasuryKeeper.GetBurnSplitRate(ctx)
-	oracleSplitRate := fd.treasuryKeeper.GetOracleSplit(ctx)
+	oracleSplitRate := fd.treasuryKeeper.GetOracleSplitRate(ctx)
 	distributionDeltaCoins := sdk.NewCoins()
 	oracleSplitCoins := sdk.NewCoins()
 

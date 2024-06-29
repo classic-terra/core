@@ -45,7 +45,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from strin
 	n.LogActionF("successfully initialized")
 }
 
-func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee, from string) {
+func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee, gas, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
 	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
 	hex.Encode(encodedSalt, []byte(salt))
@@ -55,6 +55,9 @@ func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee
 	}
 	if fee != "" {
 		cmd = append(cmd, fmt.Sprintf("--fees=%s", fee))
+	}
+	if gas != "" {
+		cmd = append(cmd, fmt.Sprintf("--gas=%s", gas))
 	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)

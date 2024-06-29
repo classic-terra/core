@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, "salt",
 		transferCoin.String(),
-		fmt.Sprintf("%duluna", stabilityFee), "test")
+		fmt.Sprintf("%duluna", stabilityFee), "300000", "test")
 
 	contracts, err = node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)

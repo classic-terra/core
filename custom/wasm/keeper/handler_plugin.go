@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -210,7 +209,6 @@ func deductFromMsgs(ctx sdk.Context, tk types.TreasuryKeeper, taxes sdk.Coins, m
 		case *banktypes.MsgSend:
 			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
 				msg.Amount = msg.Amount.Sub(taxes...)
-				fmt.Println("msg.Amount bank send: ", msg.Amount)
 			}
 
 		case *banktypes.MsgMultiSend:
@@ -256,12 +254,10 @@ func deductFromMsgs(ctx sdk.Context, tk types.TreasuryKeeper, taxes sdk.Coins, m
 
 		case *wasmtypes.MsgExecuteContract:
 			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
-				fmt.Println("msg.Funds before: ", msg.Funds)
 				var neg bool
 				if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
 					return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
 				}
-				fmt.Println("msg.Funds after: ", msg.Funds)
 			}
 
 		case *authz.MsgExec:

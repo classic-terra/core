@@ -68,7 +68,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return ctx, err
 	}
 
-	if feeTx.GetGas() < taxGas {
+	if feeTx.GetGas()-gasConsumed < taxGas {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide enough gas to cover taxes")
 	}
 

@@ -46,10 +46,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 }
 
-func (k Keeper) GetBurnRate(ctx sdk.Context) sdk.Dec {
-	return k.GetParams(ctx).BurnRate
-}
-
 func (k Keeper) GetGasPrices(ctx sdk.Context) sdk.DecCoins {
 	return k.GetParams(ctx).GasPrices
 }

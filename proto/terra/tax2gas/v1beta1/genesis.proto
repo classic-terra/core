@@ -9,12 +9,7 @@ message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
-  string burn_rate = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  repeated cosmos.base.v1beta1.DecCoin gas_prices = 2 [
+  repeated cosmos.base.v1beta1.DecCoin gas_prices = 1 [
     (gogoproto.moretags)   = "yaml:\"gas_prices\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)   = false

@@ -46,7 +46,6 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	taxGas, ok := ctx.Value(types.TaxGas).(uint64)
 	if !ok {
-		// TODO
 		return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing tax gas")
 	}
 	// we consume the gas here as we need to calculate the tax for consumed gas
@@ -94,5 +93,5 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	return ctx, nil
+	return next(ctx, tx, simulate, success)
 }

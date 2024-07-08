@@ -1,7 +1,6 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -23,7 +22,6 @@ func NewParams() Params {
 // DefaultParams are the default tax2gas module parameters.
 func DefaultParams() Params {
 	return Params{
-		BurnRate: sdk.NewDecFromIntWithPrec(math.NewInt(1), 2),
 		GasPrices: sdk.NewDecCoins(
 			sdk.NewDecCoinFromDec("uluna", sdk.NewDecWithPrec(28325, 3)),
 			sdk.NewDecCoinFromDec("usdr", sdk.NewDecWithPrec(52469, 5)),

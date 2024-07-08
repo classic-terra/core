@@ -24,7 +24,9 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
@@ -36,7 +38,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the testmodule module.
+// ValidateGenesis performs genesis state validation for the tax2gas module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
@@ -61,7 +63,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaces registers interfaces and implementations of the testmodule module.
+// RegisterInterfaces registers interfaces and implementations of the tax2gas module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
@@ -73,35 +75,36 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// types.RegisterMsgServer(cfg.MsgServer(), testmodule.NewMsgServerImpl(&am.k))
+	// types.RegisterMsgServer(cfg.MsgServer(), tax2gas.NewMsgServerImpl(&am.k))
 	// queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: module.NewQuerier(am.k)})
+	querier := keeper.NewQuerier(am.k)
+	types.RegisterQueryServer(cfg.QueryServer(), querier)
 }
 
-func NewAppModule(testmoduleKeeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, tax2gasKeeper keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		k:              testmoduleKeeper,
+		AppModuleBasic: AppModuleBasic{cdc},
+		k:              tax2gasKeeper,
 	}
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
-// QuerierRoute returns the testmodule module's querier route name.
+// QuerierRoute returns the tax2gas module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// InitGenesis performs genesis initialization for the testmodule module.
+// InitGenesis performs genesis initialization for the tax2gas module.
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 
 	cdc.MustUnmarshalJSON(gs, &genesisState)
-
-	am.k.InitGenesis(ctx, &genesisState)
+	InitGenesis(ctx, am.k, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the testmodule.
+// ExportGenesis returns the exported genesis state as raw bytes for the tax2gas.
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.k.ExportGenesis(ctx)

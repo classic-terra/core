@@ -1,0 +1,20 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.staking.v1beta1.MsgUpdateParams",
+      "authority": "terra10d07y265gmmuvt4z0w9aw880jnsr700juxf95n",
+      "params": {
+        "unbonding_time": "1814400s",
+        "max_validators": "130",
+        "max_entries": 7,
+        "historical_entries": 10000,
+        "bond_denom": "uluna",
+        "min_commission_rate": "0.000000000000000000"
+      }
+    }
+  ],
+  "metadata": "AQ==",
+  "deposit": "100000000000uluna",
+  "title": "Change max vals prop",
+  "summary": "Change max vals prop"
+}

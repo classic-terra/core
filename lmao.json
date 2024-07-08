@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+      "authority": "terra10d07y265gmmuvt4z0w9aw880jnsr700juxf95n",
+      "content": {
+        "@type": "/cosmos.params.v1beta1.ParameterChangeProposal",
+        "title": "Increase Validator Active Set to 130",
+        "changes": [
+          {
+            "key": "MaxValidators",
+            "value": "130",
+            "subspace": "staking"
+          }
+        ],
+        "description": "This proposal raises the validator limit for Luna Classic from 100 to 130, welcoming back validators from Luna v2 after the TFL and SEC settlement. Expanding the validator set strengthens our network's decentralization and benefits the LUNC community."
+      }
+    }
+  ],
+  "metadata": "Payment for genuine labs. More detailed info here : https://hackmd.io/@O2c-4nD0Qz6e_DUjqIEGrw/rymdK8L9p",
+  "deposit": "100000000000uluna",
+  "title": "Genuine Labs's Community Spend Proposal",
+  "summary": "Genuine Labs's Community Spend Proposal"
+}

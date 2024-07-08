@@ -8,13 +8,13 @@ import "terra/tax2gas/v1beta1/genesis.proto";
 option go_package = "github.com/classic-terra/core/v3/x/tax2gas/types";
 
 service Query {
-  rpc Params(ParamsRequest) returns (ParamsResponse) {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/tax2gas/Params";
   }
 }
 
 //=============================== Params
-message ParamsRequest {}
-message ParamsResponse {
+message QueryParamsRequest {}
+message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }

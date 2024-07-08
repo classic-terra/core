@@ -1,7 +1,13 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/x/tax2gas/ante"
+	"fmt"
+	"regexp"
+	"strings"
+
+	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
+	"github.com/classic-terra/core/v3/x/tax2gas/types"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -11,7 +17,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -78,10 +86,13 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 
 	for _, sdkMsg := range sdkMsgs {
 		// Charge tax on result msg
-		taxes := ante.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
+		taxes := FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
 			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)
+			if err := deductFromMsgs(ctx, h.treasuryKeeper, taxes, sdkMsg); err != nil {
+				return nil, nil, err
+			}
 			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), contractAcc, taxes); err != nil {
 				return nil, nil, err
 			}
@@ -128,4 +139,189 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	// path should never be called, because all those Msgs should be
 	// registered within the `msgServiceRouter` already.
 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+}
+
+var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
+
+func isIBCDenom(denom string) bool {
+	return IBCRegexp.MatchString(strings.ToLower(denom))
+}
+
+// FilterMsgAndComputeTax computes the stability tax on messages.
+func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
+	taxes := sdk.Coins{}
+
+	for _, msg := range msgs {
+		switch msg := msg.(type) {
+		case *banktypes.MsgSend:
+			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
+				taxes = taxes.Add(computeTax(ctx, tk, msg.Amount)...)
+			}
+
+		case *banktypes.MsgMultiSend:
+			tainted := 0
+
+			for _, input := range msg.Inputs {
+				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
+					tainted++
+				}
+			}
+
+			for _, output := range msg.Outputs {
+				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
+					tainted++
+				}
+			}
+
+			if tainted != len(msg.Inputs)+len(msg.Outputs) {
+				for _, input := range msg.Inputs {
+					taxes = taxes.Add(computeTax(ctx, tk, input.Coins)...)
+				}
+			}
+
+		case *marketexported.MsgSwapSend:
+			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin))...)
+
+		case *wasmtypes.MsgInstantiateContract:
+			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
+
+		case *wasmtypes.MsgInstantiateContract2:
+			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
+
+		case *wasmtypes.MsgExecuteContract:
+			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
+				taxes = taxes.Add(computeTax(ctx, tk, msg.Funds)...)
+			}
+
+		case *authz.MsgExec:
+			messages, err := msg.GetMessages()
+			if err == nil {
+				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, messages...)...)
+			}
+		}
+	}
+
+	return taxes
+}
+
+func deductFromMsgs(ctx sdk.Context, tk types.TreasuryKeeper, taxes sdk.Coins, msgs ...sdk.Msg) (err error) {
+	for _, msg := range msgs {
+		switch msg := msg.(type) {
+		case *banktypes.MsgSend:
+			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
+				msg.Amount = msg.Amount.Sub(taxes...)
+				fmt.Println("msg.Amount bank send: ", msg.Amount)
+			}
+
+		case *banktypes.MsgMultiSend:
+			tainted := 0
+
+			for _, input := range msg.Inputs {
+				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
+					tainted++
+				}
+			}
+
+			for _, output := range msg.Outputs {
+				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
+					tainted++
+				}
+			}
+
+			if tainted != len(msg.Inputs)+len(msg.Outputs) {
+				for _, input := range msg.Inputs {
+					input.Coins = input.Coins.Sub(taxes...)
+				}
+			}
+
+		case *marketexported.MsgSwapSend:
+			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin))...)
+			if found, taxCoin := taxes.Find(msg.OfferCoin.Denom); found {
+				if msg.OfferCoin, err = msg.OfferCoin.SafeSub(taxCoin); err != nil {
+					return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
+				}
+			}
+
+		case *wasmtypes.MsgInstantiateContract:
+			var neg bool
+			if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
+			}
+
+		case *wasmtypes.MsgInstantiateContract2:
+			var neg bool
+			if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
+			}
+
+		case *wasmtypes.MsgExecuteContract:
+			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
+				fmt.Println("msg.Funds before: ", msg.Funds)
+				var neg bool
+				if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
+					return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
+				}
+				fmt.Println("msg.Funds after: ", msg.Funds)
+			}
+
+		case *authz.MsgExec:
+			messages, err := msg.GetMessages()
+			if err == nil {
+				deductFromMsgs(ctx, tk, taxes, messages...)
+			}
+		}
+	}
+
+	return nil
+}
+
+// computes the stability tax according to tax-rate and tax-cap
+func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) sdk.Coins {
+	taxRate := tk.GetTaxRate(ctx)
+	if taxRate.Equal(sdk.ZeroDec()) {
+		return sdk.Coins{}
+	}
+
+	taxes := sdk.Coins{}
+
+	for _, coin := range principal {
+		if coin.Denom == sdk.DefaultBondDenom {
+			continue
+		}
+
+		if isIBCDenom(coin.Denom) {
+			continue
+		}
+
+		taxDue := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
+
+		// If tax due is greater than the tax cap, cap!
+		taxCap := tk.GetTaxCap(ctx, coin.Denom)
+		if taxDue.GT(taxCap) {
+			taxDue = taxCap
+		}
+
+		if taxDue.Equal(sdk.ZeroInt()) {
+			continue
+		}
+
+		taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxDue))
+	}
+
+	return taxes
+}
+
+func isOracleTx(msgs []sdk.Msg) bool {
+	for _, msg := range msgs {
+		switch msg.(type) {
+		case *oracleexported.MsgAggregateExchangeRatePrevote:
+			continue
+		case *oracleexported.MsgAggregateExchangeRateVote:
+			continue
+		default:
+			return false
+		}
+	}
+
+	return true
 }

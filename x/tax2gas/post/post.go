@@ -52,7 +52,7 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
 
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	taxRequired, err := dd.tax2gasKeeper.ComputeTaxOnGasConsumed(ctx, tx, dd.treasuryKeeper, gasConsumed)
+	gasConsumedTax, err := dd.tax2gasKeeper.ComputeTaxOnGasConsumed(ctx, tx, dd.treasuryKeeper, gasConsumed)
 	if err != nil {
 		return ctx, err
 	}
@@ -62,14 +62,16 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	var requiredFees sdk.Coins
-	if taxRequired != nil && feeCoins != nil {
-		requiredFees = taxRequired.Sub(paidFeeCoins...)
+	if gasConsumedTax != nil && feeCoins != nil {
+		// Remove the paid fee coins in ante handler
+		requiredFees = gasConsumedTax.Sub(paidFeeCoins...)
 
 		// Check if fee coins contains at least one coin that can cover required fees
 		if !feeCoins.IsAnyGTE(requiredFees) {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q", feeCoins, requiredFees)
 		}
 
+		// Get fee denom identified in ante handler
 		feeDenom, ok := ctx.Value(types.FeeDenom).(string)
 		if !ok {
 			return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing fee denom")
@@ -78,11 +80,6 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		found, requiredFee := requiredFees.Find(feeDenom)
 		if !found {
 			return ctx, errorsmod.Wrapf(types.ErrCoinNotFound, "can'f find %s in %s", feeDenom, requiredFees)
-		}
-		remainingCoins := feeCoins.Sub(requiredFee)
-
-		if !remainingCoins.IsValid() {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid remaining coins amount: %s", remainingCoins)
 		}
 
 		feePayer := dd.accountKeeper.GetAccount(ctx, feeTx.FeePayer())

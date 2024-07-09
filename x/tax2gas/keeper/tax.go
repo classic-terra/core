@@ -121,7 +121,6 @@ func (k Keeper) ComputeTaxOnGasConsumed(ctx sdk.Context, tx sdk.Tx, tk TreasuryK
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	feeCoins := feeTx.GetFee()
 	isOracleTx := isOracleTx(feeTx.GetMsgs())
 	gasPrices := k.GetGasPrices(ctx)
 
@@ -133,11 +132,6 @@ func (k Keeper) ComputeTaxOnGasConsumed(ctx sdk.Context, tx sdk.Tx, tk TreasuryK
 		for i, gp := range gasPrices {
 			fee := gp.Amount.Mul(glDec)
 			gasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-		}
-
-		// Check required fees
-		if !feeCoins.IsAnyGTE(gasFees) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient gas fees; got: %q, required: %q ", feeCoins, gasFees)
 		}
 	}
 

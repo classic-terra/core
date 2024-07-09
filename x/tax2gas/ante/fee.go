@@ -55,7 +55,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	// Compute taxes based on consumed gas
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	taxRequired, err := fd.tax2gasKeeper.ComputeTaxOnGasConsumed(ctx, tx, fd.treasuryKeeper, gasConsumed)
+	gasConsumedTax, err := fd.tax2gasKeeper.ComputeTaxOnGasConsumed(ctx, tx, fd.treasuryKeeper, gasConsumed)
 	if err != nil {
 		return ctx, err
 	}
@@ -73,19 +73,20 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	if !simulate {
-		priority, err = fd.checkTxFee(ctx, tx, taxes)
+		// Fee has to at least be enough to cover taxes + gasConsumedTax
+		priority, err = fd.checkTxFee(ctx, tx, taxes.Add(gasConsumedTax...))
 		if err != nil {
 			return ctx, err
 		}
 	}
 
-	// Try to deduct the required tax from the consumed gas
-	feeDenom, err := fd.checkDeductFee(ctx, feeTx, taxRequired, simulate)
+	// Try to deduct the gasConsumed tax
+	feeDenom, err := fd.checkDeductFee(ctx, feeTx, gasConsumedTax, simulate)
 	if err != nil {
 		return ctx, err
 	}
 
-	newCtx := ctx.WithPriority(priority).WithValue(types.ConsumedGasFee, taxRequired).WithValue(types.TaxGas, taxGas)
+	newCtx := ctx.WithPriority(priority).WithValue(types.ConsumedGasFee, gasConsumedTax).WithValue(types.TaxGas, taxGas)
 	if feeDenom != "" {
 		newCtx = newCtx.WithValue(types.FeeDenom, feeDenom)
 	}

@@ -52,6 +52,9 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	)
 
 	msgs := feeTx.GetMsgs()
+	if isOracleTx(msgs) {
+		return next(ctx, tx, simulate)
+	}
 
 	// Compute taxes based on consumed gas
 	gasConsumed := ctx.GasMeter().GasConsumed()
@@ -72,9 +75,9 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide enough gas to cover taxes")
 	}
 
-	if !simulate {
+	if !simulate && !taxes.IsZero() {
 		// Fee has to at least be enough to cover taxes + gasConsumedTax
-		priority, err = fd.checkTxFee(ctx, tx, taxes.Add(gasConsumedTax...))
+		priority, err = fd.checkTxFee(ctx, tx, gasConsumedTax.Add(taxes...))
 		if err != nil {
 			return ctx, err
 		}
@@ -86,7 +89,13 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return ctx, err
 	}
 
-	newCtx := ctx.WithPriority(priority).WithValue(types.ConsumedGasFee, gasConsumedTax).WithValue(types.TaxGas, taxGas)
+	newCtx := ctx.WithPriority(priority).WithValue(types.TaxGas, taxGas)
+	if taxGas != 0 {
+		newCtx = newCtx.WithValue(types.TaxGas, taxGas)
+	}
+	if !gasConsumedTax.IsZero() {
+		newCtx = newCtx.WithValue(types.ConsumedGasFee, gasConsumedTax)
+	}
 	if feeDenom != "" {
 		newCtx = newCtx.WithValue(types.FeeDenom, feeDenom)
 	}

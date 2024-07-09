@@ -16,7 +16,5 @@ const (
 
 // Key defines the store key for tax2gas.
 var (
-	Key = []byte{0x01}
-
-	ParamsKey = []byte{0x30}
+	ParamsKey = []byte{0x1}
 )

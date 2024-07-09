@@ -41,12 +41,12 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	paidFees := ctx.Value(types.ConsumedGasFee)
 	paidFeeCoins, ok := paidFees.(sdk.Coins)
 	if !ok {
-		return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing coins")
+		paidFeeCoins = sdk.NewCoins()
 	}
 
 	taxGas, ok := ctx.Value(types.TaxGas).(uint64)
 	if !ok {
-		return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing tax gas")
+		taxGas = 0
 	}
 	// we consume the gas here as we need to calculate the tax for consumed gas
 	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")

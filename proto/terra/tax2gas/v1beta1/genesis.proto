@@ -3,20 +3,21 @@ package terra.tax2gas.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
 
+option go_package = "github.com/classic-terra/core/v3/x/tax2gas/types";
 
 message Params {
-  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
+  option (amino.name)                 = "terra/x/tax2gas/Params";
 
   repeated cosmos.base.v1beta1.DecCoin gas_prices = 1 [
     (gogoproto.moretags)   = "yaml:\"gas_prices\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty)   = true
   ];
 }
-
-option go_package = "github.com/classic-terra/core/v3/x/tax2gas/types";
 
 // GenesisState defines the tax2gas module's genesis state.
 message GenesisState {

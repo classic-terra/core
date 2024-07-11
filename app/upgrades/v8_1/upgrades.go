@@ -4,7 +4,6 @@ package v8_1
 import (
 	"github.com/classic-terra/core/v3/app/keepers"
 	"github.com/classic-terra/core/v3/app/upgrades"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -19,7 +18,7 @@ func CreateV81UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// set default oracle split
-		mm.Modules[treasurytypes.ModuleName].(*treasurykeeper.Keeper).SetOracleSplitRate(ctx, treasurytypes.DefaultOracleSplit)
+	        keepers.TreasuryKeeper.SetOracleSplitRate(ctx, treasurytypes.DefaultOracleSplit)
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

@@ -77,8 +77,7 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.k))
 	// queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: module.NewQuerier(am.k)})
-	querier := keeper.NewQuerier(am.k)
-	types.RegisterQueryServer(cfg.QueryServer(), querier)
+	types.RegisterQueryServer(cfg.QueryServer(), am.k)
 }
 
 func NewAppModule(cdc codec.Codec, tax2gasKeeper keeper.Keeper) AppModule {

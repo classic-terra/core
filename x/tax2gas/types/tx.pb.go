@@ -214,7 +214,6 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 }
 
 func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	fmt.Println("test here")
 	in := new(MsgUpdateParams)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -226,7 +225,6 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 		Server:     srv,
 		FullMethod: "/terra.tax2gas.v1beta1.Msg/UpdateParams",
 	}
-	fmt.Println("hix")
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
 	}

@@ -6,8 +6,11 @@ import (
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
 )
 
-// SetParams sets the gov module's parameters.
+// SetParams sets the tax2gas module's parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
@@ -18,7 +21,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	return nil
 }
 
-// GetParams gets the gov module's parameters.
+// GetParams gets the tax2gas module's parameters.
 func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	store := clientCtx.KVStore(k.storeKey)
 	bz := store.Get(types.ParamsKey)

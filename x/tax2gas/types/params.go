@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -52,6 +54,9 @@ func DefaultParams() Params {
 
 // Validate validates params.
 func (p Params) Validate() error {
+	if len(p.GasPrices) == 0 {
+		return fmt.Errorf("must provide at least 1 gas prices")
+	}
 	return nil
 }
 

@@ -282,7 +282,7 @@ func NewAppKeepers(
 	appKeepers.Tax2gasKeeper = tax2gasKeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[tax2gasTypes.StoreKey],
-		appKeepers.GetSubspace(tax2gasTypes.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// Create IBC Keeper
@@ -513,7 +513,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName).WithKeyTable(wasmtypes.ParamKeyTable())
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
-	paramsKeeper.Subspace(tax2gasTypes.ModuleName)
 
 	return paramsKeeper
 }

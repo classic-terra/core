@@ -2,34 +2,25 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
-	TypeMsgTest = "test"
+	TypeMsgUpdateParams = "update_params"
 )
 
-var _ sdk.Msg = &MsgTest{}
+var _ sdk.Msg = &MsgUpdateParams{}
 
-func (msg MsgTest) Route() string { return ModuleName }
-func (msg MsgTest) Type() string  { return TypeMsgTest }
-func (msg MsgTest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
-	}
-
-	return nil
+func (msg MsgUpdateParams) Route() string { return ModuleName }
+func (msg MsgUpdateParams) Type() string  { return TypeMsgUpdateParams }
+func (msg MsgUpdateParams) ValidateBasic() error {
+	return msg.Params.Validate()
 }
 
-func (msg MsgTest) GetSignBytes() []byte {
+func (msg MsgUpdateParams) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
-func (msg MsgTest) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }

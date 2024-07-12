@@ -32,8 +32,14 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 
 	if communityTax.IsPositive() {
 
+		// we need to apply a reduced community tax here as the community tax is applied again during distribution
+		// in the distribution module and we don't want to calculate the tax twice
+		// the reduction depends on the oracle split rate as well as on the community tax itself
+		// the formula can be applied even with a zero oracle split rate
+		applyCommunityTax := communityTax.Mul(communityTax.Add(oracleSplitRate).Sub(communityTax.Mul(oracleSplitRate)))
+
 		for _, distrCoin := range distributionDeltaCoins {
-			communityTaxAmount := communityTax.MulInt(distrCoin.Amount).RoundInt()
+			communityTaxAmount := applyCommunityTax.MulInt(distrCoin.Amount).RoundInt()
 			communityTaxCoins = communityTaxCoins.Add(sdk.NewCoin(distrCoin.Denom, communityTaxAmount))
 		}
 

@@ -35,6 +35,8 @@ type BankKeeper interface {
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	GetFeePool(ctx sdk.Context) distributiontypes.FeePool
+	GetCommunityTax(ctx sdk.Context) math.LegacyDec
+	SetFeePool(ctx sdk.Context, feePool distributiontypes.FeePool)
 }
 
 type GovKeeper interface {

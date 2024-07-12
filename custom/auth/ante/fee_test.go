@@ -830,7 +830,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	oracleAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(oracletypes.ModuleName))
 	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, msg)
 
-	//burnTax := sdk.NewDecCoinsFromCoins(taxes...)
+	// burnTax := sdk.NewDecCoinsFromCoins(taxes...)
 	// in the burn tax split function, coins and not deccoins are used, which leads to rounding differences
 	// when comparing to the test with very small numbers, accordingly all deccoin calculations are changed to coins
 	burnTax := taxes

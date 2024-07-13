@@ -845,7 +845,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 
 	if burnSplitRate.IsPositive() {
 		distributionDeltaCoins := burnSplitRate.MulInt(burnTax.AmountOf(core.MicroSDRDenom)).RoundInt()
-		applyCommunityTax := communityTax.Mul(communityTax.Add(oracleSplitRate).Sub(communityTax.Mul(oracleSplitRate)))
+		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Sub(communityTax).Add(sdk.OneDec())))
 
 		expectedCommunityCoins := applyCommunityTax.MulInt(distributionDeltaCoins).RoundInt()
 		distributionDeltaCoins = distributionDeltaCoins.Sub(expectedCommunityCoins)
@@ -854,7 +854,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 		expectedDistrCoins := distributionDeltaCoins.Sub(expectedOracleCoins)
 
 		// expected: community pool 50%
-		fmt.Printf("-- BurnTax %+v, BurnSplitRate %+v, OracleSplitRate %+v, CommunityTax %+v, CTaxApplied %+v, OracleCoins %+v, DistrCoins %+v\n", taxRate, burnSplitRate, oracleSplitRate, communityTax, applyCommunityTax, expectedOracleCoins, expectedDistrCoins)
+		fmt.Printf("-- sendCoins %+v, BurnTax %+v, BurnSplitRate %+v, OracleSplitRate %+v, CommunityTax %+v, CTaxApplied %+v, OracleCoins %+v, DistrCoins %+v\n", sendCoins.AmountOf(core.MicroSDRDenom), taxRate, burnSplitRate, oracleSplitRate, communityTax, applyCommunityTax, expectedOracleCoins, expectedDistrCoins)
 		require.Equal(feeCollectorAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedDistrCoins)))
 		require.Equal(oracleAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedOracleCoins)))
 		require.Equal(communityPoolAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedCommunityCoins)))

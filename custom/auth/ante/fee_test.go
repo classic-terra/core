@@ -861,6 +861,23 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 		burnTax = burnTax.Sub(sdk.NewCoin(core.MicroSDRDenom, distributionDeltaCoins)).Sub(sdk.NewCoin(core.MicroSDRDenom, expectedCommunityCoins))
 	}
 
+	// check tax proceeds
+	// as end blocker has not been run here, we need to calculate it from the fee collector
+	addTaxFromFees := feeCollectorAfter.AmountOf(core.MicroSDRDenom)
+	if communityTax.IsPositive() {
+		addTaxFromFees = communityTax.Mul(sdk.NewDecFromInt(addTaxFromFees)).RoundInt()
+	}
+	expectedTaxProceeds := communityPoolAfter.AmountOf(core.MicroSDRDenom).Add(addTaxFromFees)
+	originalDistribution := sdk.ZeroDec()
+	if burnSplitRate.IsPositive() {
+		originalDistribution = burnSplitRate.Mul(sdk.NewDecFromInt(taxes.AmountOf(core.MicroSDRDenom)))
+	}
+	originalTaxProceeds := sdk.ZeroInt()
+	if communityTax.IsPositive() {
+		originalTaxProceeds = communityTax.Mul(originalDistribution).RoundInt()
+	}
+	require.LessOrEqual(expectedTaxProceeds.Sub(originalTaxProceeds).Int64(), sdk.OneInt().Int64())
+
 	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(s.ctx, &query.PageRequest{})
 	require.NoError(err)
 	if !burnTax.Empty() {

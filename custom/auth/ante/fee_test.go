@@ -876,6 +876,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	if communityTax.IsPositive() {
 		originalTaxProceeds = communityTax.Mul(originalDistribution).RoundInt()
 	}
+	// due to precision (roundInt) this can deviate up to 1 from the expected value
 	require.LessOrEqual(expectedTaxProceeds.Sub(originalTaxProceeds).Int64(), sdk.OneInt().Int64())
 
 	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(s.ctx, &query.PageRequest{})

@@ -48,7 +48,7 @@ var (
 	DefaultRewardWeight            = sdk.NewDecWithPrec(5, 2)   // 5%
 	DefaultBurnTaxSplit            = sdk.NewDecWithPrec(1, 1)   // 10% goes to community pool, 90% burn
 	DefaultMinInitialDepositRatio  = sdk.ZeroDec()              // 0% min initial deposit
-	DefaultOracleSplit             = sdk.OneDec() // 100% oracle, community tax (CP) is deducted before oracle split
+	DefaultOracleSplit             = sdk.OneDec()               // 100% oracle, community tax (CP) is deducted before oracle split
 )
 
 var _ paramstypes.ParamSet = &Params{}

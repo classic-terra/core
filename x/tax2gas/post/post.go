@@ -9,6 +9,7 @@ import (
 
 	tax2gasKeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
+	tax2gasUtils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 )
 
 type Tax2gasPostDecorator struct {
@@ -50,9 +51,10 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	// we consume the gas here as we need to calculate the tax for consumed gas
 	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
-
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	gasConsumedTax, err := dd.tax2gasKeeper.ComputeTaxOnGasConsumed(ctx, tx, dd.treasuryKeeper, gasConsumed)
+
+	gasPrices := dd.tax2gasKeeper.GetGasPrices(ctx)
+	gasConsumedTax, err := tax2gasUtils.ComputeTaxOnGasConsumed(ctx, tx, gasPrices, gasConsumed)
 	if err != nil {
 		return ctx, err
 	}

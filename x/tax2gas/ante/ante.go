@@ -12,6 +12,7 @@ import (
 
 	tax2gasKeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
+	tax2gasUtils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 )
 
 // FeeDecorator deducts fees from the first signer of the tx
@@ -52,21 +53,22 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	)
 
 	msgs := feeTx.GetMsgs()
-	if isOracleTx(msgs) {
+	if tax2gasUtils.IsOracleTx(msgs) {
 		return next(ctx, tx, simulate)
 	}
 
 	// Compute taxes based on consumed gas
+	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	gasConsumedTax, err := fd.tax2gasKeeper.ComputeTaxOnGasConsumed(ctx, tx, fd.treasuryKeeper, gasConsumed)
+	gasConsumedTax, err := tax2gasUtils.ComputeTaxOnGasConsumed(ctx, tx, gasPrices, gasConsumed)
 	if err != nil {
 		return ctx, err
 	}
 
 	// Compute taxes based on sent amount
-	taxes := tax2gasKeeper.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	taxes := tax2gasUtils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
 	// Convert taxes to gas
-	taxGas, err := fd.tax2gasKeeper.ComputeGas(ctx, tx, taxes)
+	taxGas, err := tax2gasUtils.ComputeGas(ctx, tx, gasPrices, taxes)
 	if err != nil {
 		return ctx, err
 	}
@@ -207,7 +209,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
-	isOracleTx := isOracleTx(msgs)
+	isOracleTx := tax2gasUtils.IsOracleTx(msgs)
 	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
@@ -232,28 +234,8 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 	priority := int64(math.MaxInt64)
 
 	if !isOracleTx {
-		priority = getTxPriority(feeCoins, int64(gas))
+		priority = tax2gasUtils.GetTxPriority(feeCoins, int64(gas))
 	}
 
 	return priority, nil
-}
-
-// getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price
-// provided in a transaction.
-// NOTE: This implementation should be used with a great consideration as it opens potential attack vectors
-// where txs with multiple coins could not be prioritize as expected.
-func getTxPriority(fee sdk.Coins, gas int64) int64 {
-	var priority int64
-	for _, c := range fee {
-		p := int64(math.MaxInt64)
-		gasPrice := c.Amount.QuoRaw(gas)
-		if gasPrice.IsInt64() {
-			p = gasPrice.Int64()
-		}
-		if priority == 0 || p < priority {
-			priority = p
-		}
-	}
-
-	return priority
 }

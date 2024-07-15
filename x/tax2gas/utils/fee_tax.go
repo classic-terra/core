@@ -1,11 +1,14 @@
-package ante
+package utils
 
 import (
 	"regexp"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -111,6 +114,57 @@ func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) s
 	}
 
 	return taxes
+}
+
+func ComputeGas(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	isOracleTx := IsOracleTx(feeTx.GetMsgs())
+	taxes = taxes.Sort()
+
+	var tax2gas sdkmath.Int = sdkmath.ZeroInt()
+	if ctx.IsCheckTx() && !isOracleTx {
+		// Convert to gas
+		var i, j int = 0, 0
+		for i < len(gasPrices) && j < len(taxes) {
+			if gasPrices[i].Denom == taxes[j].Denom {
+				tax2gas = tax2gas.Add(sdkmath.Int(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt()))
+				i++
+				j++
+			} else if gasPrices[i].Denom < taxes[j].Denom {
+				i++
+			} else {
+				j++
+			}
+		}
+	}
+
+	return tax2gas.Uint64(), nil
+}
+
+func ComputeTaxOnGasConsumed(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sdk.Coins, error) {
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	isOracleTx := isOracleTx(feeTx.GetMsgs())
+
+	gasFees := make(sdk.Coins, len(gasPrices))
+	if !isOracleTx && len(gasPrices) != 0 {
+		// Determine the required fees by multiplying each required minimum gas
+		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+		glDec := sdk.NewDec(int64(gas))
+		for i, gp := range gasPrices {
+			fee := gp.Amount.Mul(glDec)
+			gasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+		}
+	}
+
+	return gasFees, nil
 }
 
 func isOracleTx(msgs []sdk.Msg) bool {

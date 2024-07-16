@@ -9,7 +9,7 @@ import (
 
 	tax2gasKeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
-	tax2gasUtils "github.com/classic-terra/core/v3/x/tax2gas/utils"
+	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 )
 
 type Tax2gasPostDecorator struct {
@@ -39,58 +39,77 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	feeCoins := feeTx.GetFee()
-	paidFees := ctx.Value(types.ConsumedGasFee)
-	paidFeeCoins, ok := paidFees.(sdk.Coins)
+	anteConsumedGas, ok := ctx.Value(types.AnteConsumedGas).(uint64)
 	if !ok {
-		paidFeeCoins = sdk.NewCoins()
+		return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing ante consumed gas")
 	}
 
-	taxGas, ok := ctx.Value(types.TaxGas).(uint64)
-	if !ok {
-		taxGas = 0
-	}
-	// we consume the gas here as we need to calculate the tax for consumed gas
-	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
-	gasConsumed := ctx.GasMeter().GasConsumed()
-
-	gasPrices := dd.tax2gasKeeper.GetGasPrices(ctx)
-	gasConsumedTax, err := tax2gasUtils.ComputeTaxOnGasConsumed(ctx, tx, gasPrices, gasConsumed)
-	if err != nil {
-		return ctx, err
-	}
-
-	if simulate {
-		return next(ctx, tx, simulate, success)
-	}
-
-	var requiredFees sdk.Coins
-	if gasConsumedTax != nil && feeCoins != nil {
-		// Remove the paid fee coins in ante handler
-		requiredFees = gasConsumedTax.Sub(paidFeeCoins...)
-
-		// Check if fee coins contains at least one coin that can cover required fees
-		if !feeCoins.IsAnyGTE(requiredFees) {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q", feeCoins, requiredFees)
-		}
-
-		// Get fee denom identified in ante handler
-		feeDenom, ok := ctx.Value(types.FeeDenom).(string)
+	if !feeCoins.IsZero() {
+		// Get paid denom identified in ante handler
+		paidDenom, ok := ctx.Value(types.PaidDenom).(string)
 		if !ok {
 			return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing fee denom")
 		}
 
-		found, requiredFee := requiredFees.Find(feeDenom)
+		gasPrices := dd.tax2gasKeeper.GetGasPrices(ctx)
+		paidDenomGasPrice, found := tax2gasutils.GetGasPriceByDenom(ctx, gasPrices, paidDenom)
 		if !found {
-			return ctx, errorsmod.Wrapf(types.ErrCoinNotFound, "can'f find %s in %s", feeDenom, requiredFees)
+			return ctx, types.ErrDenomNotFound
+		}
+		paidAmount := paidDenomGasPrice.Mul(sdk.NewDec(int64(anteConsumedGas)))
+		// Deduct feeCoins with paid amount
+		feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
+
+		taxGas, ok := ctx.Value(types.TaxGas).(uint64)
+		if !ok {
+			taxGas = 0
+		}
+		// we consume the gas here as we need to calculate the tax for consumed gas
+		ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
+		gasConsumed := ctx.GasMeter().GasConsumed()
+
+		// Deduct the gas consumed amount spent on ante handler
+		gasRemaining := gasConsumed - anteConsumedGas
+		gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(ctx, tx, gasPrices, gasRemaining)
+		if err != nil {
+			return ctx, err
 		}
 
-		feePayer := dd.accountKeeper.GetAccount(ctx, feeTx.FeePayer())
+		if simulate {
+			return next(ctx, tx, simulate, success)
+		}
 
-		err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(requiredFee))
-		if err != nil {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		for _, feeCoin := range feeCoins {
+			found, feeRequired := gasRemainingFees.Find(feeCoin.Denom)
+			if !found {
+				continue
+			}
+
+			feePayer := dd.accountKeeper.GetAccount(ctx, feeTx.FeePayer())
+			if feeCoin.IsGTE(feeRequired) {
+				err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
+				if err != nil {
+					return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				}
+				gasRemaining = 0
+				break
+			} else {
+				gasPrice, found := tax2gasutils.GetGasPriceByDenom(ctx, gasPrices, feeCoin.Denom)
+				if !found {
+					continue
+				}
+
+				err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
+				if err != nil {
+					return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+				}
+				feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
+				gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+			}
+		}
+		if gasRemaining > 0 {
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas")
 		}
 	}
-
 	return next(ctx, tx, simulate, success)
 }

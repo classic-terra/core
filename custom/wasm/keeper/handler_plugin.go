@@ -4,12 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	"github.com/classic-terra/core/v3/x/tax2gas/types"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
-
 	errorsmod "cosmossdk.io/errors"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,6 +17,11 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+
+	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	"github.com/classic-terra/core/v3/x/tax2gas/types"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
 
 // msgEncoder is an extension point to customize encodings
@@ -83,10 +83,10 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
-	tx_origin := ctx.Value(wasmtypes.TxOrigin)
-	feePayer, ok := tx_origin.(sdk.AccAddress)
+	txOrigin := ctx.Value(wasmtypes.TxOrigin)
+	feePayer, ok := txOrigin.(sdk.AccAddress)
 	if !ok {
-		return nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "tx_origin is not a valid")
+		return nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "tx_origin is not valid")
 	}
 	for _, sdkMsg := range sdkMsgs {
 		taxes := FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
@@ -124,7 +124,7 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
 		}
 	}
 
@@ -139,7 +139,7 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	// proto messages and has registered all `Msg services`, then this
 	// path should never be called, because all those Msgs should be
 	// registered within the `msgServiceRouter` already.
-	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 }
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")

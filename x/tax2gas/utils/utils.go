@@ -42,3 +42,12 @@ func IsOracleTx(msgs []sdk.Msg) bool {
 
 	return true
 }
+
+func GetGasPriceByDenom(ctx sdk.Context, gasPrices sdk.DecCoins, denom string) (sdk.Dec, bool) {
+	for _, price := range gasPrices {
+		if price.Denom == denom {
+			return price.Amount, true
+		}
+	}
+	return sdk.Dec{}, false
+}

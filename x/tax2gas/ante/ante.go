@@ -12,7 +12,7 @@ import (
 
 	tax2gasKeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
-	tax2gasUtils "github.com/classic-terra/core/v3/x/tax2gas/utils"
+	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 )
 
 // FeeDecorator deducts fees from the first signer of the tx
@@ -22,12 +22,12 @@ import (
 type FeeDecorator struct {
 	accountKeeper  ante.AccountKeeper
 	bankKeeper     types.BankKeeper
-	feegrantKeeper ante.FeegrantKeeper
+	feegrantKeeper types.FeegrantKeeper
 	treasuryKeeper types.TreasuryKeeper
 	tax2gasKeeper  tax2gasKeeper.Keeper
 }
 
-func NewFeeDecorator(ak ante.AccountKeeper, bk types.BankKeeper, fk ante.FeegrantKeeper, tk types.TreasuryKeeper, taxKeeper tax2gasKeeper.Keeper) FeeDecorator {
+func NewFeeDecorator(ak ante.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper, tk types.TreasuryKeeper, taxKeeper tax2gasKeeper.Keeper) FeeDecorator {
 	return FeeDecorator{
 		accountKeeper:  ak,
 		bankKeeper:     bk,
@@ -53,22 +53,22 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	)
 
 	msgs := feeTx.GetMsgs()
-	if tax2gasUtils.IsOracleTx(msgs) {
+	if tax2gasutils.IsOracleTx(msgs) {
 		return next(ctx, tx, simulate)
 	}
 
 	// Compute taxes based on consumed gas
 	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	gasConsumedTax, err := tax2gasUtils.ComputeTaxOnGasConsumed(ctx, tx, gasPrices, gasConsumed)
+	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(ctx, tx, gasPrices, gasConsumed)
 	if err != nil {
 		return ctx, err
 	}
 
 	// Compute taxes based on sent amount
-	taxes := tax2gasUtils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	taxes := tax2gasutils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
 	// Convert taxes to gas
-	taxGas, err := tax2gasUtils.ComputeGas(ctx, tx, gasPrices, taxes)
+	taxGas, err := tax2gasutils.ComputeGas(ctx, tx, gasPrices, taxes)
 	if err != nil {
 		return ctx, err
 	}
@@ -78,15 +78,15 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	if !simulate && !taxes.IsZero() {
-		// Fee has to at least be enough to cover taxes + gasConsumedTax
-		priority, err = fd.checkTxFee(ctx, tx, gasConsumedTax.Add(taxes...))
+		// Fee has to at least be enough to cover taxes + gasConsumedFees
+		priority, err = fd.checkTxFee(ctx, tx, gasConsumedFees.Add(taxes...))
 		if err != nil {
 			return ctx, err
 		}
 	}
 
-	// Try to deduct the gasConsumed tax
-	feeDenom, err := fd.checkDeductFee(ctx, feeTx, gasConsumedTax, simulate)
+	// Try to deduct the gasConsumed fees
+	paidDenom, err := fd.checkDeductFee(ctx, feeTx, gasConsumedFees, simulate)
 	if err != nil {
 		return ctx, err
 	}
@@ -95,12 +95,11 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	if taxGas != 0 {
 		newCtx = newCtx.WithValue(types.TaxGas, taxGas)
 	}
-	if !gasConsumedTax.IsZero() {
-		newCtx = newCtx.WithValue(types.ConsumedGasFee, gasConsumedTax)
+	newCtx = newCtx.WithValue(types.AnteConsumedGas, gasConsumed)
+	if paidDenom != "" {
+		newCtx = newCtx.WithValue(types.PaidDenom, paidDenom)
 	}
-	if feeDenom != "" {
-		newCtx = newCtx.WithValue(types.FeeDenom, feeDenom)
-	}
+
 	return next(newCtx, tx, simulate)
 }
 
@@ -114,8 +113,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	feeGranter := feeTx.FeeGranter()
 	deductFeesFrom := feePayer
 
-	var foundCoins sdk.Coins
-
+	foundCoins := sdk.Coins{}
 	if !taxes.IsZero() {
 		for _, coin := range feeCoins {
 			found, requiredFee := taxes.Find(coin.Denom)
@@ -123,7 +121,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 				continue
 			}
 			if coin.Amount.GT(requiredFee.Amount) {
-				foundCoins = sdk.NewCoins(requiredFee)
+				foundCoins = foundCoins.Add(requiredFee)
 			}
 		}
 	} else {
@@ -136,9 +134,27 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		if fd.feegrantKeeper == nil {
 			return "", sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			err := fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, foundCoins, feeTx.GetMsgs())
+			allowance, err := fd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
 			if err != nil {
-				return "", errorsmod.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
+				return "", errorsmod.Wrapf(err, "fee-grant not found with granter %s and grantee %s", feeGranter, feePayer)
+			}
+
+			granted := false
+			for _, foundCoin := range foundCoins {
+				_, err := allowance.Accept(ctx, sdk.NewCoins(foundCoin), feeTx.GetMsgs())
+				if err == nil {
+					foundCoins = sdk.NewCoins(foundCoin)
+					granted = true
+					err = fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, sdk.NewCoins(foundCoin), feeTx.GetMsgs())
+					if err != nil {
+						return "", errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
+					}
+					break
+				}
+			}
+
+			if !granted {
+				return "", errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 			}
 		}
 
@@ -152,11 +168,11 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 	// deduct the fees
 	if !foundCoins.IsZero() {
-		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, foundCoins)
+		foundCoins, err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, foundCoins)
 		if err != nil {
 			return "", err
 		}
-		if !foundCoins.IsZero() && !simulate {
+		if !simulate {
 			err := fd.BurnTaxSplit(ctx, foundCoins)
 			if err != nil {
 				return "", err
@@ -183,17 +199,23 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper authtypes.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
+func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) (sdk.Coins, error) {
 	if !fees.IsValid() {
-		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
-	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	for _, fee := range fees {
+		balance := bankKeeper.GetBalance(ctx, acc.GetAddress(), fee.Denom)
+		if balance.IsGTE(fee) {
+			err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(fee))
+			if err != nil {
+				return nil, errorsmod.Wrapf(err, "failed to send fee to fee collector: %s", fee)
+			}
+			return sdk.NewCoins(fee), nil
+		}
 	}
 
-	return nil
+	return nil, sdkerrors.ErrInsufficientFunds
 }
 
 // checkTxFee implements the default fee logic, where the minimum price per
@@ -209,7 +231,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
-	isOracleTx := tax2gasUtils.IsOracleTx(msgs)
+	isOracleTx := tax2gasutils.IsOracleTx(msgs)
 	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
@@ -234,7 +256,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 	priority := int64(math.MaxInt64)
 
 	if !isOracleTx {
-		priority = tax2gasUtils.GetTxPriority(feeCoins, int64(gas))
+		priority = tax2gasutils.GetTxPriority(feeCoins, int64(gas))
 	}
 
 	return priority, nil

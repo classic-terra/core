@@ -13,7 +13,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
 )
 
@@ -145,13 +144,13 @@ func ComputeGas(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, taxes sdk.Co
 	return tax2gas.Uint64(), nil
 }
 
-func ComputeTaxOnGasConsumed(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sdk.Coins, error) {
+func ComputeFeesOnGasConsumed(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sdk.Coins, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	isOracleTx := isOracleTx(feeTx.GetMsgs())
+	isOracleTx := IsOracleTx(feeTx.GetMsgs())
 
 	gasFees := make(sdk.Coins, len(gasPrices))
 	if !isOracleTx && len(gasPrices) != 0 {
@@ -165,19 +164,4 @@ func ComputeTaxOnGasConsumed(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins,
 	}
 
 	return gasFees, nil
-}
-
-func isOracleTx(msgs []sdk.Msg) bool {
-	for _, msg := range msgs {
-		switch msg.(type) {
-		case *oracleexported.MsgAggregateExchangeRatePrevote:
-			continue
-		case *oracleexported.MsgAggregateExchangeRateVote:
-			continue
-		default:
-			return false
-		}
-	}
-
-	return true
 }

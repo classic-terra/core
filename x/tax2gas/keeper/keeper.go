@@ -61,5 +61,5 @@ func (k Keeper) GetAuthority() string {
 }
 
 func (k Keeper) GetGasPrices(ctx sdk.Context) sdk.DecCoins {
-	return k.GetParams(ctx).GasPrices
+	return k.GetParams(ctx).GasPrices.Sort()
 }

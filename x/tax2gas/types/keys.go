@@ -7,11 +7,11 @@ const (
 
 	RouterKey = ModuleName
 
-	ConsumedGasFee = "consumedGasFee"
+	AnteConsumedGas = "anteConsumedGas"
 
 	TaxGas = "taxGas"
 
-	FeeDenom = "feeDenom"
+	PaidDenom = "paidDenom"
 )
 
 // Key defines the store key for tax2gas.

@@ -13,8 +13,8 @@ import (
 	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	tax2gasante "github.com/classic-terra/core/v3/x/tax2gas/ante"
-
-	tax2gasKeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
+	tax2gaskeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
@@ -29,7 +29,7 @@ type HandlerOptions struct {
 	AccountKeeper          ante.AccountKeeper
 	BankKeeper             BankKeeper
 	ExtensionOptionChecker ante.ExtensionOptionChecker
-	FeegrantKeeper         ante.FeegrantKeeper
+	FeegrantKeeper         tax2gastypes.FeegrantKeeper
 	OracleKeeper           OracleKeeper
 	TreasuryKeeper         TreasuryKeeper
 	SignModeHandler        signing.SignModeHandler
@@ -43,7 +43,7 @@ type HandlerOptions struct {
 	TXCounterStoreKey      storetypes.StoreKey
 	DyncommKeeper          dyncommkeeper.Keeper
 	StakingKeeper          *stakingkeeper.Keeper
-	Tax2Gaskeeper          tax2gasKeeper.Keeper
+	Tax2Gaskeeper          tax2gaskeeper.Keeper
 	Cdc                    codec.BinaryCodec
 }
 

@@ -4,18 +4,7 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
-
-// Parameter store keys.
-var (
-	KeyParamField = []byte("TODO: CHANGE ME")
-)
-
-// ParamTable for tax2gas module.
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
-}
 
 func NewParams() Params {
 	return Params{}
@@ -58,11 +47,4 @@ func (p Params) Validate() error {
 		return fmt.Errorf("must provide at least 1 gas prices")
 	}
 	return nil
-}
-
-// Implements params.ParamSet.
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		// paramtypes.NewParamSetPair(KeyParamField, &p.Field, validateFn),
-	}
 }

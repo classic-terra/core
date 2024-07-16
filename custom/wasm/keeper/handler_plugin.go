@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
+	errorsmod "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -83,16 +83,18 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
+	tx_origin := ctx.Value(wasmtypes.TxOrigin)
+	feePayer, ok := tx_origin.(sdk.AccAddress)
+	if !ok {
+		return nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "tx_origin is not a valid")
+	}
 	for _, sdkMsg := range sdkMsgs {
-		// Charge tax on result msg
 		taxes := FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
-			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)
-			if err := deductFromMsgs(ctx, h.treasuryKeeper, taxes, sdkMsg); err != nil {
-				return nil, nil, err
-			}
-			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), contractAcc, taxes); err != nil {
+			feePayer := h.accountKeeper.GetAccount(ctx, feePayer)
+			// Deduct from tx_origin
+			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), feePayer, taxes); err != nil {
 				return nil, nil, err
 			}
 
@@ -203,74 +205,6 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, msgs ...sd
 	return taxes
 }
 
-func deductFromMsgs(ctx sdk.Context, tk types.TreasuryKeeper, taxes sdk.Coins, msgs ...sdk.Msg) (err error) {
-	for _, msg := range msgs {
-		switch msg := msg.(type) {
-		case *banktypes.MsgSend:
-			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
-				msg.Amount = msg.Amount.Sub(taxes...)
-			}
-
-		case *banktypes.MsgMultiSend:
-			tainted := 0
-
-			for _, input := range msg.Inputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
-					tainted++
-				}
-			}
-
-			for _, output := range msg.Outputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
-					tainted++
-				}
-			}
-
-			if tainted != len(msg.Inputs)+len(msg.Outputs) {
-				for _, input := range msg.Inputs {
-					input.Coins = input.Coins.Sub(taxes...)
-				}
-			}
-
-		case *marketexported.MsgSwapSend:
-			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin))...)
-			if found, taxCoin := taxes.Find(msg.OfferCoin.Denom); found {
-				if msg.OfferCoin, err = msg.OfferCoin.SafeSub(taxCoin); err != nil {
-					return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
-				}
-			}
-
-		case *wasmtypes.MsgInstantiateContract:
-			var neg bool
-			if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
-			}
-
-		case *wasmtypes.MsgInstantiateContract2:
-			var neg bool
-			if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
-				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
-			}
-
-		case *wasmtypes.MsgExecuteContract:
-			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
-				var neg bool
-				if msg.Funds, neg = msg.Funds.SafeSub(taxes...); neg {
-					return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "insufficient funds to pay tax")
-				}
-			}
-
-		case *authz.MsgExec:
-			messages, err := msg.GetMessages()
-			if err == nil {
-				deductFromMsgs(ctx, tk, taxes, messages...)
-			}
-		}
-	}
-
-	return nil
-}
-
 // computes the stability tax according to tax-rate and tax-cap
 func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) sdk.Coins {
 	taxRate := tk.GetTaxRate(ctx)
@@ -305,19 +239,4 @@ func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) s
 	}
 
 	return taxes
-}
-
-func isOracleTx(msgs []sdk.Msg) bool {
-	for _, msg := range msgs {
-		switch msg.(type) {
-		case *oracleexported.MsgAggregateExchangeRatePrevote:
-			continue
-		case *oracleexported.MsgAggregateExchangeRateVote:
-			continue
-		default:
-			return false
-		}
-	}
-
-	return true
 }

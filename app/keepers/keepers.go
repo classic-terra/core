@@ -399,6 +399,7 @@ func NewAppKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
+		appKeepers.Tax2gasKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
 	)

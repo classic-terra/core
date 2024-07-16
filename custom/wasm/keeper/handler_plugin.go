@@ -9,7 +9,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -20,7 +19,9 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	tax2gaskeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
 	"github.com/classic-terra/core/v3/x/tax2gas/types"
+	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
 
@@ -42,6 +43,7 @@ type SDKMessageHandler struct {
 	treasuryKeeper treasurykeeper.Keeper
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankKeeper.Keeper
+	tax2gaskeeper  tax2gaskeeper.Keeper
 }
 
 func NewMessageHandler(
@@ -52,6 +54,7 @@ func NewMessageHandler(
 	bankKeeper bankKeeper.Keeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	accountKeeper authkeeper.AccountKeeper,
+	tax2gaskeeper tax2gaskeeper.Keeper,
 	unpacker codectypes.AnyUnpacker,
 	portSource wasmtypes.ICS20TransferPortSource,
 	customEncoders ...*wasmkeeper.MessageEncoders,
@@ -61,19 +64,20 @@ func NewMessageHandler(
 		encoders = encoders.Merge(e)
 	}
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
+		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper, tax2gaskeeper),
 		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
 
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
+func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper, tax2gaskeeper tax2gaskeeper.Keeper) SDKMessageHandler {
 	return SDKMessageHandler{
 		router:         router,
 		encoders:       encoders,
 		treasuryKeeper: treasuryKeeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		tax2gaskeeper:  tax2gaskeeper,
 	}
 }
 
@@ -83,20 +87,16 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
-	txOrigin := ctx.Value(wasmtypes.TxOrigin)
-	feePayer, ok := txOrigin.(sdk.AccAddress)
-	if !ok {
-		return nil, nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "tx_origin is not valid")
-	}
 	for _, sdkMsg := range sdkMsgs {
 		taxes := FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
-			feePayer := h.accountKeeper.GetAccount(ctx, feePayer)
-			// Deduct from tx_origin
-			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), feePayer, taxes); err != nil {
+
+			gas, err := tax2gasutils.ComputeGas(ctx, h.tax2gaskeeper.GetGasPrices(ctx), taxes)
+			if err != nil {
 				return nil, nil, err
 			}
+			ctx.GasMeter().ConsumeGas(gas, "tax gas")
 
 			events = eventManager.Events()
 		}

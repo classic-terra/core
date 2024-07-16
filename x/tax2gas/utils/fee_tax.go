@@ -115,29 +115,22 @@ func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) s
 	return taxes
 }
 
-func ComputeGas(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
-
-	isOracleTx := IsOracleTx(feeTx.GetMsgs())
+func ComputeGas(ctx sdk.Context, gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
 	taxes = taxes.Sort()
 
 	var tax2gas sdkmath.Int = sdkmath.ZeroInt()
-	if ctx.IsCheckTx() && !isOracleTx {
-		// Convert to gas
-		var i, j int = 0, 0
-		for i < len(gasPrices) && j < len(taxes) {
-			if gasPrices[i].Denom == taxes[j].Denom {
-				tax2gas = tax2gas.Add(sdkmath.Int(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt()))
-				i++
-				j++
-			} else if gasPrices[i].Denom < taxes[j].Denom {
-				i++
-			} else {
-				j++
-			}
+
+	// Convert to gas
+	var i, j int = 0, 0
+	for i < len(gasPrices) && j < len(taxes) {
+		if gasPrices[i].Denom == taxes[j].Denom {
+			tax2gas = tax2gas.Add(sdkmath.Int(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt()))
+			i++
+			j++
+		} else if gasPrices[i].Denom < taxes[j].Denom {
+			i++
+		} else {
+			j++
 		}
 	}
 

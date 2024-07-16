@@ -70,22 +70,19 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 		// Deduct the gas consumed amount spent on ante handler
 		gasRemaining := gasConsumed - anteConsumedGas
-		gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(ctx, tx, gasPrices, gasRemaining)
-		if err != nil {
-			return ctx, err
-		}
 
 		if simulate {
 			return next(ctx, tx, simulate, success)
 		}
 
 		for _, feeCoin := range feeCoins {
-			found, feeRequired := gasRemainingFees.Find(feeCoin.Denom)
+			feePayer := dd.accountKeeper.GetAccount(ctx, feeTx.FeePayer())
+			gasPrice, found := tax2gasutils.GetGasPriceByDenom(ctx, gasPrices, feeCoin.Denom)
 			if !found {
 				continue
 			}
-
-			feePayer := dd.accountKeeper.GetAccount(ctx, feeTx.FeePayer())
+			feeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(gasRemaining)).Ceil().RoundInt())
+			
 			if feeCoin.IsGTE(feeRequired) {
 				err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
 				if err != nil {
@@ -94,11 +91,6 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				gasRemaining = 0
 				break
 			} else {
-				gasPrice, found := tax2gasutils.GetGasPriceByDenom(ctx, gasPrices, feeCoin.Denom)
-				if !found {
-					continue
-				}
-
 				err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
 				if err != nil {
 					return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())

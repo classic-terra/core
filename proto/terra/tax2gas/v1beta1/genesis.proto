@@ -17,6 +17,8 @@ message Params {
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty)   = true
   ];
+
+  bool enabled = 2;
 }
 
 // GenesisState defines the tax2gas module's genesis state.

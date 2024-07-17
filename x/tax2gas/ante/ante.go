@@ -53,7 +53,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	)
 
 	msgs := feeTx.GetMsgs()
-	if tax2gasutils.IsOracleTx(msgs) || simulate {
+	if tax2gasutils.IsOracleTx(msgs) || simulate || !fd.tax2gasKeeper.IsEnabled(ctx) {
 		return next(ctx, tx, simulate)
 	}
 

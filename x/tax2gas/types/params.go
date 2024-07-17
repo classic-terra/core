@@ -38,13 +38,19 @@ func DefaultParams() Params {
 			sdk.NewDecCoinFromDec("umyr", sdk.NewDecWithPrec(3, 0)),
 			sdk.NewDecCoinFromDec("utwd", sdk.NewDecWithPrec(20, 0)),
 		),
+		Enabled: true,
 	}
 }
 
 // Validate validates params.
 func (p Params) Validate() error {
-	if len(p.GasPrices) == 0 {
-		return fmt.Errorf("must provide at least 1 gas prices")
+	if p.Enabled {
+		if len(p.GasPrices) == 0 {
+			return fmt.Errorf("must provide at least 1 gas prices")
+		}
+		if !p.GasPrices.IsAllPositive() {
+			return fmt.Errorf("gas prices must be positive")
+		}
 	}
 	return nil
 }

@@ -60,6 +60,10 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
+func (k Keeper) IsEnabled(ctx sdk.Context) bool {
+	return k.GetParams(ctx).Enabled
+}
+
 func (k Keeper) GetGasPrices(ctx sdk.Context) sdk.DecCoins {
 	return k.GetParams(ctx).GasPrices.Sort()
 }

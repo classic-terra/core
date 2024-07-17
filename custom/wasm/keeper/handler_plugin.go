@@ -88,17 +88,19 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 	}
 
 	for _, sdkMsg := range sdkMsgs {
-		taxes := FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
-		if !taxes.IsZero() {
-			eventManager := sdk.NewEventManager()
+		if h.tax2gaskeeper.IsEnabled(ctx) {
+			taxes := FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
+			if !taxes.IsZero() {
+				eventManager := sdk.NewEventManager()
 
-			gas, err := tax2gasutils.ComputeGas(ctx, h.tax2gaskeeper.GetGasPrices(ctx), taxes)
-			if err != nil {
-				return nil, nil, err
+				gas, err := tax2gasutils.ComputeGas(h.tax2gaskeeper.GetGasPrices(ctx), taxes)
+				if err != nil {
+					return nil, nil, err
+				}
+				ctx.GasMeter().ConsumeGas(gas, "tax gas")
+
+				events = eventManager.Events()
 			}
-			ctx.GasMeter().ConsumeGas(gas, "tax gas")
-
-			events = eventManager.Events()
 		}
 
 		res, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)

@@ -24,6 +24,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	terraapp "github.com/classic-terra/core/v3/app"
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
@@ -51,6 +52,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
+	app.Tax2gasKeeper.SetParams(ctx, tax2gastypes.DefaultParams())
 
 	return app, ctx
 }

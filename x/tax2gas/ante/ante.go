@@ -78,8 +78,8 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	if !simulate && !taxes.IsZero() {
-		// Fee has to at least be enough to cover taxes + gasConsumedFees
-		priority, err = fd.checkTxFee(ctx, tx, gasConsumedFees.Add(taxes...))
+		// Fee has to at least be enough to cover taxes
+		priority, err = fd.checkTxFee(ctx, tx, taxes)
 		if err != nil {
 			return ctx, err
 		}

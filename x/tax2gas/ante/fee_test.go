@@ -11,9 +11,7 @@ import (
 	"github.com/classic-terra/core/v3/x/tax2gas/ante"
 )
 
-var (
-	sendCoins = sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, int64(1000000)))
-)
+var sendCoins = sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, int64(1000000)))
 
 func (s *AnteTestSuite) TestDeductFeeDecorator() {
 	s.SetupTest(true) // setup

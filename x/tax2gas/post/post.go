@@ -93,7 +93,7 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				return ctx, errorsmod.Wrapf(err, "fee-grant not found with granter %s and grantee %s", feeGranter, feePayer)
 			}
 
-			gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(ctx, tx, gasPrices, gasRemaining)
+			gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasRemaining)
 			if err != nil {
 				return ctx, err
 			}
@@ -133,14 +133,14 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 			gasRemaining = 0
 			break
-		} else {
-			err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
-			if err != nil {
-				return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-			}
-			feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
-			gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
 		}
+
+		err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
+		if err != nil {
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+		feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
+		gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
 	}
 	if gasRemaining > 0 {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas")

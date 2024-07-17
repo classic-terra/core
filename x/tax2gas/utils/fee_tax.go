@@ -115,21 +115,20 @@ func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) s
 	return taxes
 }
 
-func ComputeGas(ctx sdk.Context, gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
+func ComputeGas(gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
 	taxes = taxes.Sort()
-
-	var tax2gas sdkmath.Int = sdkmath.ZeroInt()
-
+	tax2gas := sdkmath.ZeroInt()
 	// Convert to gas
-	var i, j int = 0, 0
+	i, j := 0, 0
 	for i < len(gasPrices) && j < len(taxes) {
-		if gasPrices[i].Denom == taxes[j].Denom {
-			tax2gas = tax2gas.Add(sdkmath.Int(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt()))
+		switch {
+		case gasPrices[i].Denom == taxes[j].Denom:
+			tax2gas = tax2gas.Add(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt())
 			i++
 			j++
-		} else if gasPrices[i].Denom < taxes[j].Denom {
+		case gasPrices[i].Denom < taxes[j].Denom:
 			i++
-		} else {
+		default:
 			j++
 		}
 	}
@@ -137,7 +136,7 @@ func ComputeGas(ctx sdk.Context, gasPrices sdk.DecCoins, taxes sdk.Coins) (uint6
 	return tax2gas.Uint64(), nil
 }
 
-func ComputeFeesOnGasConsumed(ctx sdk.Context, tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sdk.Coins, error) {
+func ComputeFeesOnGasConsumed(tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sdk.Coins, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")

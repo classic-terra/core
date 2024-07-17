@@ -60,7 +60,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	// Compute taxes based on consumed gas
 	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(ctx, tx, gasPrices, gasConsumed)
+	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasConsumed)
 	if err != nil {
 		return ctx, err
 	}
@@ -68,7 +68,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	// Compute taxes based on sent amount
 	taxes := tax2gasutils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
 	// Convert taxes to gas
-	taxGas, err := tax2gasutils.ComputeGas(ctx, gasPrices, taxes)
+	taxGas, err := tax2gasutils.ComputeGas(gasPrices, taxes)
 	if err != nil {
 		return ctx, err
 	}
@@ -193,9 +193,8 @@ func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.
 
 		// As there is only 1 element
 		return foundCoins.Denoms()[0], nil
-	} else {
-		return "", fmt.Errorf("can't find coin that matches. Expected %s, wanted %s", feeCoins, taxes)
 	}
+	return "", fmt.Errorf("can't find coin that matches. Expected %s, wanted %s", feeCoins, taxes)
 }
 
 // DeductFees deducts fees from the given account.

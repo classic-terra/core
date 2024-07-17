@@ -178,5 +178,4 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			}
 		})
 	}
-
 }

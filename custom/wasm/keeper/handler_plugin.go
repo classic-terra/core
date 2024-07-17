@@ -92,7 +92,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
 
-			gas, err := tax2gasutils.ComputeGas(ctx, h.tax2gaskeeper.GetGasPrices(ctx), taxes)
+			gas, err := tax2gasutils.ComputeGas(h.tax2gaskeeper.GetGasPrices(ctx), taxes)
 			if err != nil {
 				return nil, nil, err
 			}

@@ -5,14 +5,18 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	core "github.com/classic-terra/core/v3/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	"github.com/classic-terra/core/v3/x/tax2gas/ante"
 )
 
 var (
-	sendCoins = sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, int64(1000000)))
+	sendCoin  = sdk.NewInt64Coin(core.MicroLunaDenom, int64(1000000))
+	sendCoins = sdk.NewCoins(sendCoin)
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator() {
@@ -28,8 +32,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
 
 	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	s.Require().NoError(s.txBuilder.SetMsgs(msg))
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
@@ -58,9 +60,11 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			simulation: false,
 			checkTx:    true,
 			mallate: func() {
+				msg := testdata.NewTestMsg(addr1)
+				s.Require().NoError(s.txBuilder.SetMsgs(msg))
 				// GasConsumed : 147542*28,325 = 4179127
-				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(4438670))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 4438670))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(4179128))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 4179128))
 				gasLimit := uint64(15)
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(gasLimit)
@@ -102,10 +106,10 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 					Funds:  sendCoins,
 				}
 				// Consumed gas at the point of ante is: 305215
-				// 305215*28.325 (gas fee) + 1000 (tax) = 8646214
+				// 307419*28.325 (gas fee) + 1000 (tax) = 8707644
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
-				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(8646214))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 8646214))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(8707644))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 8707644))
 				gasLimit := uint64(15)
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(gasLimit)
@@ -124,8 +128,8 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 					Msg:    []byte{},
 					Funds:  sendCoins,
 				}
-				// Consumed gas at the point of ante is: 305215
-				// 305215*28.325 (gas fee) + 1000 (tax) = 8646214
+				// Consumed gas at the point of ante is: 341749
+				// 341749*28.325 (gas fee) + 1000 (tax) = 8646214
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
 				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(8646213))))
 				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 8646213))
@@ -148,10 +152,86 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 					Funds:    sendCoins,
 				}
 				// Consumed gas at the point of ante is: 406592
-				// 406592*28.325 (gas fee) + 1000 (tax) = 11517719
+				// 409898*28.325 (gas fee) + 1000 (tax) = 11517719
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
-				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(11517719))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 11517719))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(11610361))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 11610361))
+				gasLimit := uint64(15)
+				s.txBuilder.SetFeeAmount(feeAmount)
+				s.txBuilder.SetGasLimit(gasLimit)
+			},
+			expFail: false,
+		},
+		{
+			name:       "Success: Bank send",
+			simulation: false,
+			checkTx:    true,
+			mallate: func() {
+				msg := banktypes.NewMsgSend(addr1, addr1, sendCoins)
+				// Consumed gas at the point of ante is: 406592
+				// 445330*28.325 (gas fee) + 1000 (tax) = 11517719
+				s.Require().NoError(s.txBuilder.SetMsgs(msg))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(13573850))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 13573850))
+				gasLimit := uint64(15)
+				s.txBuilder.SetFeeAmount(feeAmount)
+				s.txBuilder.SetGasLimit(gasLimit)
+			},
+			expFail: false,
+		},
+		{
+			name:       "Success: Bank multisend",
+			simulation: false,
+			checkTx:    true,
+			mallate: func() {
+				msg := banktypes.NewMsgMultiSend(
+					[]banktypes.Input{
+						banktypes.NewInput(addr1, sendCoins),
+						banktypes.NewInput(addr1, sendCoins),
+					},
+					[]banktypes.Output{
+						banktypes.NewOutput(addr1, sendCoins),
+						banktypes.NewOutput(addr1, sendCoins),
+					})
+				// Consumed gas at the point of ante is: 406592
+				// 445330*28.325 (gas fee) + 1000 (tax) = 11517719
+				s.Require().NoError(s.txBuilder.SetMsgs(msg))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(15535470))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 15535470))
+				gasLimit := uint64(15)
+				s.txBuilder.SetFeeAmount(feeAmount)
+				s.txBuilder.SetGasLimit(gasLimit)
+			},
+			expFail: false,
+		},
+		{
+			name:       "Success: Market swapsend",
+			simulation: false,
+			checkTx:    true,
+			mallate: func() {
+				msg := markettypes.NewMsgSwapSend(addr1, addr1, sendCoin, core.MicroKRWDenom)
+				// Consumed gas at the point of ante is: 406592
+				// 624257*28.325 (gas fee) + 1000 (tax) = 17682080
+				s.Require().NoError(s.txBuilder.SetMsgs(msg))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(17682080))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 17682080))
+				gasLimit := uint64(15)
+				s.txBuilder.SetFeeAmount(feeAmount)
+				s.txBuilder.SetGasLimit(gasLimit)
+			},
+			expFail: false,
+		},
+		{
+			name:       "Success: Authz exec",
+			simulation: false,
+			checkTx:    true,
+			mallate: func() {
+				msg := authz.NewMsgExec(addr1, []sdk.Msg{banktypes.NewMsgSend(addr1, addr1, sendCoins)})
+				// Consumed gas at the point of ante is: 406592
+				// 692541*28.325 (gas fee) + 1000 (tax) = 19616224
+				s.Require().NoError(s.txBuilder.SetMsgs(&msg))
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(19616224))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 19616224))
 				gasLimit := uint64(15)
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(gasLimit)

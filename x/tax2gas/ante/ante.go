@@ -120,7 +120,7 @@ func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.
 			if !found {
 				continue
 			}
-			if coin.Amount.GT(requiredFee.Amount) {
+			if coin.Amount.GTE(requiredFee.Amount) {
 				foundCoins = foundCoins.Add(requiredFee)
 			}
 		}

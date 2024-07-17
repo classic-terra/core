@@ -43,11 +43,31 @@ func IsOracleTx(msgs []sdk.Msg) bool {
 	return true
 }
 
-func GetGasPriceByDenom(ctx sdk.Context, gasPrices sdk.DecCoins, denom string) (sdk.Dec, bool) {
-	for _, price := range gasPrices {
-		if price.Denom == denom {
-			return price.Amount, true
+// Find returns true and Dec amount if the denom exists in gasPrices. Otherwise it returns false
+// and a zero dec. Uses binary search.
+// CONTRACT: gasPrices must be valid (sorted).
+func GetGasPriceByDenom(gasPrices sdk.DecCoins, denom string) (bool, sdk.Dec) {
+	switch len(gasPrices) {
+	case 0:
+		return false, sdk.ZeroDec()
+
+	case 1:
+		gasPrice := gasPrices[0]
+		if gasPrice.Denom == denom {
+			return true, gasPrice.Amount
+		}
+		return false, sdk.ZeroDec()
+
+	default:
+		midIdx := len(gasPrices) / 2 // 2:1, 3:1, 4:2
+		gasPrice := gasPrices[midIdx]
+		switch {
+		case denom < gasPrice.Denom:
+			return GetGasPriceByDenom(gasPrices[:midIdx], denom)
+		case denom == gasPrice.Denom:
+			return true, gasPrice.Amount
+		default:
+			return GetGasPriceByDenom(gasPrices[midIdx+1:], denom)
 		}
 	}
-	return sdk.Dec{}, false
 }

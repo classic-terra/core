@@ -241,6 +241,7 @@ func NewTerraApp(
 		custompost.HandlerOptions{
 			AccountKeeper:  app.AccountKeeper,
 			BankKeeper:     app.BankKeeper,
+			FeegrantKeeper: app.FeeGrantKeeper,
 			DyncommKeeper:  app.DyncommKeeper,
 			TreasuryKeeper: app.TreasuryKeeper,
 			Tax2Gaskeeper:  app.Tax2gasKeeper,

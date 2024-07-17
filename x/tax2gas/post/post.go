@@ -15,19 +15,22 @@ import (
 type Tax2gasPostDecorator struct {
 	accountKeeper  ante.AccountKeeper
 	bankKeeper     types.BankKeeper
+	feegrantKeeper types.FeegrantKeeper
 	treasuryKeeper types.TreasuryKeeper
 	tax2gasKeeper  tax2gasKeeper.Keeper
 }
 
-func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.BankKeeper, treasuryKeeper types.TreasuryKeeper, tax2gasKeeper tax2gasKeeper.Keeper) Tax2gasPostDecorator {
+func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.BankKeeper, feegrantKeeper types.FeegrantKeeper, treasuryKeeper types.TreasuryKeeper, tax2gasKeeper tax2gasKeeper.Keeper) Tax2gasPostDecorator {
 	return Tax2gasPostDecorator{
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		feegrantKeeper: feegrantKeeper,
 		treasuryKeeper: treasuryKeeper,
 		tax2gasKeeper:  tax2gasKeeper,
 	}
 }
 
+// TODO: handle fail tx
 func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, success bool, next sdk.PostHandler) (sdk.Context, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -37,6 +40,10 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
+	msgs := feeTx.GetMsgs()
+	if tax2gasutils.IsOracleTx(msgs) || simulate {
+		return next(ctx, tx, simulate, success)
+	}
 
 	feeCoins := feeTx.GetFee()
 	anteConsumedGas, ok := ctx.Value(types.AnteConsumedGas).(uint64)
@@ -44,64 +51,100 @@ func (dd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing ante consumed gas")
 	}
 
-	if !feeCoins.IsZero() {
-		// Get paid denom identified in ante handler
-		paidDenom, ok := ctx.Value(types.PaidDenom).(string)
-		if !ok {
-			return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing fee denom")
-		}
+	// Get paid denom identified in ante handler
+	paidDenom, ok := ctx.Value(types.PaidDenom).(string)
+	if !ok {
+		// If cannot found the paidDenom, that's mean this is the init genesis tx
+		// Skip this tx as it's init genesis tx
+		return next(ctx, tx, simulate, success)
+	}
 
-		gasPrices := dd.tax2gasKeeper.GetGasPrices(ctx)
-		paidDenomGasPrice, found := tax2gasutils.GetGasPriceByDenom(ctx, gasPrices, paidDenom)
-		if !found {
-			return ctx, types.ErrDenomNotFound
-		}
-		paidAmount := paidDenomGasPrice.Mul(sdk.NewDec(int64(anteConsumedGas)))
-		// Deduct feeCoins with paid amount
-		feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
+	gasPrices := dd.tax2gasKeeper.GetGasPrices(ctx)
+	found, paidDenomGasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, paidDenom)
+	if !found {
+		return ctx, types.ErrDenomNotFound
+	}
+	paidAmount := paidDenomGasPrice.Mul(sdk.NewDec(int64(anteConsumedGas)))
+	// Deduct feeCoins with paid amount
+	feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
 
-		taxGas, ok := ctx.Value(types.TaxGas).(uint64)
-		if !ok {
-			taxGas = 0
-		}
-		// we consume the gas here as we need to calculate the tax for consumed gas
-		ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
-		gasConsumed := ctx.GasMeter().GasConsumed()
+	taxGas, ok := ctx.Value(types.TaxGas).(uint64)
+	if !ok {
+		taxGas = 0
+	}
+	// we consume the gas here as we need to calculate the tax for consumed gas
+	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
+	gasConsumed := ctx.GasMeter().GasConsumed()
 
-		// Deduct the gas consumed amount spent on ante handler
-		gasRemaining := gasConsumed - anteConsumedGas
+	// Deduct the gas consumed amount spent on ante handler
+	gasRemaining := gasConsumed - anteConsumedGas
 
-		if simulate {
-			return next(ctx, tx, simulate, success)
-		}
+	feePayer := feeTx.FeePayer()
+	feeGranter := feeTx.FeeGranter()
 
-		for _, feeCoin := range feeCoins {
-			feePayer := dd.accountKeeper.GetAccount(ctx, feeTx.FeePayer())
-			gasPrice, found := tax2gasutils.GetGasPriceByDenom(ctx, gasPrices, feeCoin.Denom)
-			if !found {
-				continue
+	// if feegranter set deduct fee from feegranter account.
+	// this works with only when feegrant enabled.
+	if feeGranter != nil {
+		if dd.feegrantKeeper == nil {
+			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			allowance, err := dd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
+			if err != nil {
+				return ctx, errorsmod.Wrapf(err, "fee-grant not found with granter %s and grantee %s", feeGranter, feePayer)
 			}
-			feeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(gasRemaining)).Ceil().RoundInt())
-			
-			if feeCoin.IsGTE(feeRequired) {
-				err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
-				if err != nil {
-					return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-				}
-				gasRemaining = 0
-				break
-			} else {
-				err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
-				if err != nil {
-					return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-				}
-				feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
-				gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+
+			gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(ctx, tx, gasPrices, gasRemaining)
+			if err != nil {
+				return ctx, err
 			}
-		}
-		if gasRemaining > 0 {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas")
+
+			// For this tx, we only accept to pay by one denom
+			for _, feeRequired := range gasRemainingFees {
+				_, err := allowance.Accept(ctx, sdk.NewCoins(feeRequired), feeTx.GetMsgs())
+				if err == nil {
+					err = dd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, sdk.NewCoins(feeRequired), feeTx.GetMsgs())
+					if err != nil {
+						return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
+					}
+					feeGranter := dd.accountKeeper.GetAccount(ctx, feeGranter)
+					err = dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feeGranter.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
+					if err != nil {
+						return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+					}
+					return next(ctx, tx, simulate, success)
+				}
+			}
+			return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 		}
 	}
+
+	for _, feeCoin := range feeCoins {
+		feePayer := dd.accountKeeper.GetAccount(ctx, feePayer)
+		found, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeCoin.Denom)
+		if !found {
+			continue
+		}
+		feeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(gasRemaining)).Ceil().RoundInt())
+
+		if feeCoin.IsGTE(feeRequired) {
+			err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
+			if err != nil {
+				return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+			gasRemaining = 0
+			break
+		} else {
+			err := dd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
+			if err != nil {
+				return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+			feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
+			gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+		}
+	}
+	if gasRemaining > 0 {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas")
+	}
+
 	return next(ctx, tx, simulate, success)
 }

@@ -15,6 +15,7 @@ import (
 type HandlerOptions struct {
 	AccountKeeper  ante.AccountKeeper
 	BankKeeper     types.BankKeeper
+	FeegrantKeeper types.FeegrantKeeper
 	DyncommKeeper  dyncommkeeper.Keeper
 	TreasuryKeeper tax2gasTypes.TreasuryKeeper
 	Tax2Gaskeeper  tax2gasKeeper.Keeper
@@ -25,6 +26,6 @@ type HandlerOptions struct {
 func NewPostHandler(options HandlerOptions) (sdk.PostHandler, error) {
 	return sdk.ChainPostDecorators(
 		dyncommpost.NewDyncommPostDecorator(options.DyncommKeeper),
-		tax2gasPost.NewTax2GasPostDecorator(options.AccountKeeper, options.BankKeeper, options.TreasuryKeeper, options.Tax2Gaskeeper),
+		tax2gasPost.NewTax2GasPostDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper, options.Tax2Gaskeeper),
 	), nil
 }

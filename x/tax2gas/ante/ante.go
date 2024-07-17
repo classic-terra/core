@@ -86,7 +86,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	// Try to deduct the gasConsumed fees
-	paidDenom, err := fd.checkDeductFee(ctx, feeTx, gasConsumedFees, simulate)
+	paidDenom, err := fd.tryDeductFee(ctx, feeTx, gasConsumedFees, simulate)
 	if err != nil {
 		return ctx, err
 	}
@@ -103,7 +103,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) (string, error) {
+func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) (string, error) {
 	if addr := fd.accountKeeper.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
 		return "", fmt.Errorf("fee collector module account (%s) has not been set", authtypes.FeeCollectorName)
 	}
@@ -145,7 +145,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 				if err == nil {
 					foundCoins = sdk.NewCoins(foundCoin)
 					granted = true
-					err = fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, sdk.NewCoins(foundCoin), feeTx.GetMsgs())
+					err = fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, foundCoins, feeTx.GetMsgs())
 					if err != nil {
 						return "", errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 					}

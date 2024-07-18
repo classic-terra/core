@@ -75,8 +75,6 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return ctx, err
 	}
 
-	// If the feeCoins pass the denoms check, check they are bypass-msg types.
-	//
 	// Bypass min fee requires:
 	// 	- the tx contains only message types that can bypass the minimum fee,
 	//	see BypassMinFeeMsgTypes;

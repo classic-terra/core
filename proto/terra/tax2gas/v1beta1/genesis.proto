@@ -19,6 +19,18 @@ message Params {
   ];
 
   bool enabled = 2;
+
+  // bypass_min_fee_msg_types defines a list of message type urls
+  // that are free of fee charge.
+  repeated string bypass_min_fee_msg_types = 3 [
+    (gogoproto.jsontag) = "bypass_min_fee_msg_types,omitempty",
+    (gogoproto.moretags) = "yaml:\"bypass_min_fee_msg_types\""
+  ];
+
+  // max_total_bypass_min_fee_msg_gas_usage defines the total maximum gas usage
+  // allowed for a transaction containing only messages of types in bypass_min_fee_msg_types
+  // to bypass fee charge.
+  uint64 max_total_bypass_min_fee_msg_gas_usage = 4;
 }
 
 // GenesisState defines the tax2gas module's genesis state.

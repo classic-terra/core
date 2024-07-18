@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 
+	tmstrings "github.com/cometbft/cometbft/libs/strings"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -71,6 +73,23 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	taxGas, err := tax2gasutils.ComputeGas(gasPrices, taxes)
 	if err != nil {
 		return ctx, err
+	}
+
+	// If the feeCoins pass the denoms check, check they are bypass-msg types.
+	//
+	// Bypass min fee requires:
+	// 	- the tx contains only message types that can bypass the minimum fee,
+	//	see BypassMinFeeMsgTypes;
+	//	- the total gas limit per message does not exceed MaxTotalBypassMinFeeMsgGasUsage,
+	//	i.e., totalGas <=  MaxTotalBypassMinFeeMsgGasUsage
+	// Otherwise, minimum fees and global fees are checked to prevent spam.
+	maxTotalBypassMinFeeMsgGasUsage := fd.tax2gasKeeper.GetMaxTotalBypassMinFeeMsgGasUsage(ctx)
+	doesNotExceedMaxGasUsage := feeTx.GetGas() <= maxTotalBypassMinFeeMsgGasUsage
+	allBypassMsgs := fd.ContainsOnlyBypassMinFeeMsgs(ctx, msgs)
+	allowedToBypassMinFee := allBypassMsgs && doesNotExceedMaxGasUsage
+
+	if allowedToBypassMinFee {
+		return next(ctx, tx, simulate)
 	}
 
 	if feeTx.GetGas()-gasConsumed < taxGas {
@@ -259,4 +278,17 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 	}
 
 	return priority, nil
+}
+
+func (fd FeeDecorator) ContainsOnlyBypassMinFeeMsgs(ctx sdk.Context, msgs []sdk.Msg) bool {
+	bypassMsgTypes := fd.tax2gasKeeper.GetBypassMinFeeMsgTypes(ctx)
+
+	for _, msg := range msgs {
+		if tmstrings.StringInSlice(sdk.MsgTypeURL(msg), bypassMsgTypes) {
+			continue
+		}
+		return false
+	}
+
+	return true
 }

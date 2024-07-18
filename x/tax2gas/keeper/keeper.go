@@ -67,3 +67,13 @@ func (k Keeper) IsEnabled(ctx sdk.Context) bool {
 func (k Keeper) GetGasPrices(ctx sdk.Context) sdk.DecCoins {
 	return k.GetParams(ctx).GasPrices.Sort()
 }
+
+// GetBypassMinFeeMsgTypes gets the tax2gas module's BypassMinFeeMsgTypes.
+func (k Keeper) GetBypassMinFeeMsgTypes(ctx sdk.Context) []string {
+	return k.GetParams(ctx).BypassMinFeeMsgTypes
+}
+
+// GetBypassMinFeeMsgTypes gets the tax2gas module's BypassMinFeeMsgTypes.
+func (k Keeper) GetMaxTotalBypassMinFeeMsgGasUsage(ctx sdk.Context) uint64 {
+	return k.GetParams(ctx).MaxTotalBypassMinFeeMsgGasUsage
+}

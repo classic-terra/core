@@ -1,4 +1,4 @@
-package ante
+package post
 
 import (
 	errorsmod "cosmossdk.io/errors"
@@ -10,8 +10,8 @@ import (
 )
 
 // BurnTaxSplit splits
-func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
-	burnSplitRate := fd.treasuryKeeper.GetBurnSplitRate(ctx)
+func (tdd Tax2gasPostDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
+	burnSplitRate := tdd.treasuryKeeper.GetBurnSplitRate(ctx)
 
 	if burnSplitRate.IsPositive() {
 		distributionDeltaCoins := sdk.NewCoins()
@@ -25,7 +25,7 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 	}
 
 	if !taxes.IsZero() {
-		if err = fd.bankKeeper.SendCoinsFromModuleToModule(
+		if err = tdd.bankKeeper.SendCoinsFromModuleToModule(
 			ctx,
 			types.FeeCollectorName,
 			treasury.BurnModuleName,
@@ -35,5 +35,7 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 		}
 	}
 
+	// Record tax proceeds
+	tdd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 	return nil
 }

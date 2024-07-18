@@ -86,7 +86,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	// Try to deduct the gasConsumed fees
-	paidDenom, err := fd.tryDeductFee(ctx, feeTx, gasConsumedFees, simulate)
+	paidDenom, err := fd.tryDeductFee(ctx, feeTx, gasConsumedFees)
 	if err != nil {
 		return ctx, err
 	}
@@ -103,7 +103,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) (string, error) {
+func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins) (string, error) {
 	if addr := fd.accountKeeper.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
 		return "", fmt.Errorf("fee collector module account (%s) has not been set", authtypes.FeeCollectorName)
 	}
@@ -171,15 +171,6 @@ func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.
 		foundCoins, err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, foundCoins)
 		if err != nil {
 			return "", err
-		}
-		if !simulate {
-			err := fd.BurnTaxSplit(ctx, foundCoins)
-			if err != nil {
-				return "", err
-			}
-
-			// Record tax proceeds
-			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, foundCoins)
 		}
 
 		events := sdk.Events{

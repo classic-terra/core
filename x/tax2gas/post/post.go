@@ -118,6 +118,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		}
 	}
 
+	taxes := sdk.NewCoins()
 	for _, feeCoin := range feeCoins {
 		feePayer := tgd.accountKeeper.GetAccount(ctx, feePayer)
 		found, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeCoin.Denom)
@@ -131,6 +132,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 			if err != nil {
 				return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 			}
+			taxes = taxes.Add(feeRequired)
 			gasRemaining = 0
 			break
 		}
@@ -139,9 +141,18 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		if err != nil {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
+		taxes = taxes.Add(feeCoin)
 		feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
 		gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
 	}
+
+	if !simulate {
+		err := tgd.BurnTaxSplit(ctx, taxes)
+		if err != nil {
+			return ctx, err
+		}
+	}
+
 	if gasRemaining > 0 {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas")
 	}

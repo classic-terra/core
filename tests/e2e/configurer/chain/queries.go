@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -97,7 +98,7 @@ func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (sdk.Coin, error) 
 	return sdk.Coin{}, nil
 }
 
-func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
+func (n *NodeConfig) QuerySupplyOf(denom string) (math.Int, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)

@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,7 +52,7 @@ func TestIterateTaxCap(t *testing.T) {
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroUSDDenom, usdCap)
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroKRWDenom, krwCap)
 
-	input.TreasuryKeeper.IterateTaxCap(input.Ctx, func(denom string, taxCap sdk.Int) bool {
+	input.TreasuryKeeper.IterateTaxCap(input.Ctx, func(denom string, taxCap math.Int) bool {
 		switch denom {
 		case core.MicroCNYDenom:
 			require.Equal(t, cnyCap, taxCap)

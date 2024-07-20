@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,8 +35,8 @@ func NewQueryTaxCapParams(denom string) QueryTaxCapParams {
 
 // TaxCapsResponseItem query response item of tax caps querier
 type TaxCapsResponseItem struct {
-	Denom  string  `json:"denom"`
-	TaxCap sdk.Int `json:"tax_cap"`
+	Denom  string   `json:"denom"`
+	TaxCap math.Int `json:"tax_cap"`
 }
 
 // TaxCapsQueryResponse query response body of tax caps querier

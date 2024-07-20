@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -59,7 +60,7 @@ func (q querier) TaxCaps(c context.Context, _ *types.QueryTaxCapsRequest) (*type
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var taxCaps []types.QueryTaxCapsResponseItem
-	q.IterateTaxCap(ctx, func(denom string, taxCap sdk.Int) bool {
+	q.IterateTaxCap(ctx, func(denom string, taxCap sdkmath.Int) bool {
 		taxCaps = append(taxCaps, types.QueryTaxCapsResponseItem{
 			Denom:  denom,
 			TaxCap: taxCap,

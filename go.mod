@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230602123434-616841b9704d
 	github.com/CosmWasm/wasmd v0.45.0
-	github.com/CosmWasm/wasmvm v1.5.0
+	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.10
@@ -225,11 +225,11 @@ replace (
 )
 
 replace (
-	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-terra1
+	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-terra.5
 	// use cometbft
 	github.com/cometbft/cometbft => github.com/classic-terra/cometbft v0.37.4-terra1
 	github.com/cometbft/cometbft-db => github.com/cometbft/cometbft-db v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.47.10-terra
+	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.47.10-terra.1
 	github.com/cosmos/ibc-go/v7 => github.com/classic-terra/ibc-go/v7 v7.4.0-terra
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	// replace goleveldb to optimized one

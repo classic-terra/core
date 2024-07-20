@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -13,7 +14,7 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	wasmexported "github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
 	treasuryexported "github.com/classic-terra/core/v3/x/treasury/exported"
 )
@@ -143,7 +144,7 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 
 			taxes = taxes.Add(tax...)
 
-		case *wasmexported.MsgInstantiateContract:
+		case *wasmtypes.MsgInstantiateContract:
 			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
 			if err != nil {
 				return nil, err
@@ -151,7 +152,7 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 
 			taxes = taxes.Add(tax...)
 
-		case *wasmexported.MsgInstantiateContract2:
+		case *wasmtypes.MsgInstantiateContract2:
 			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
 			if err != nil {
 				return nil, err
@@ -159,7 +160,7 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 
 			taxes = taxes.Add(tax...)
 
-		case *wasmexported.MsgExecuteContract:
+		case *wasmtypes.MsgExecuteContract:
 			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
 			if err != nil {
 				return nil, err
@@ -208,7 +209,7 @@ func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
 	return res.TaxRate, err
 }
 
-func queryTaxCap(clientCtx client.Context, denom string) (sdk.Int, error) {
+func queryTaxCap(clientCtx client.Context, denom string) (math.Int, error) {
 	queryClient := treasuryexported.NewQueryClient(clientCtx)
 
 	res, err := queryClient.TaxCap(context.Background(), &treasuryexported.QueryTaxCapRequest{Denom: denom})

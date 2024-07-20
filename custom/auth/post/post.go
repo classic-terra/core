@@ -11,9 +11,8 @@ type HandlerOptions struct {
 	DyncommKeeper dyncommkeeper.Keeper
 }
 
-// NewAnteHandler returns an AnteHandler that checks and increments sequence
-// numbers, checks signatures & account numbers, and deducts fees from the first
-// signer.
+// NewPostHandler returns an PostHandler that checks and set target
+// commission rate for msg create validator and msg edit validator
 func NewPostHandler(options HandlerOptions) (sdk.PostHandler, error) {
 	return sdk.ChainPostDecorators(
 		dyncommpost.NewDyncommPostDecorator(options.DyncommKeeper),

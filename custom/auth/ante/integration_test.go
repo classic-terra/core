@@ -131,10 +131,10 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
 		dk := s.app.DistrKeeper
+		wk := s.app.WasmKeeper
 
 		te.AddTaxExemptionZone(s.ctx, taxexemptiontypes.Zone{Name: "EntityA", Outgoing: false, Incoming: false, CrossZone: false})
 		te.AddTaxExemptionZone(s.ctx, taxexemptiontypes.Zone{Name: "EntityB", Outgoing: false, Incoming: false, CrossZone: false})
-		wk := s.app.WasmKeeper
 
 		// Set burn split rate to 50%
 		// fee amount should be 500, 50% of 10000

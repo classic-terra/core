@@ -46,7 +46,6 @@ func loadKeydataFromFile(clientCtx client.Context, replacementrJSON string, genD
 	var replacementKeys replacementConfigs
 
 	err = json.Unmarshal(jsonReplacementBlob, &replacementKeys)
-
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "Could not unmarshal replacement keys "))
 	}
@@ -112,7 +111,6 @@ func loadKeydataFromFile(clientCtx client.Context, replacementrJSON string, genD
 	state[slashing.ModuleName] = clientCtx.Codec.MustMarshalJSON(&slashingGenesis)
 
 	genDoc.AppState, err = json.Marshal(state)
-
 	if err != nil {
 		log.Fatal("Could not marshal App State")
 	}

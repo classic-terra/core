@@ -76,7 +76,18 @@ var (
 	DefaultNodeHome string
 
 	// Upgrades defines upgrades to be applied to the network
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v4.Upgrade, v5.Upgrade, v6.Upgrade, v6_1.Upgrade, v7.Upgrade, v7_1.Upgrade, v8.Upgrade, v8_1.Upgrade}
+	Upgrades = []upgrades.Upgrade{
+		v2.Upgrade,
+		v3.Upgrade,
+		v4.Upgrade,
+		v5.Upgrade,
+		v6.Upgrade,
+		v6_1.Upgrade,
+		v7.Upgrade,
+		v7_1.Upgrade,
+		v8.Upgrade,
+		v8_1.Upgrade,
+	}
 
 	// Forks defines forks to be applied to the network
 	Forks = []upgrades.Fork{}

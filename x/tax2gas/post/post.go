@@ -17,15 +17,17 @@ type Tax2gasPostDecorator struct {
 	bankKeeper     types.BankKeeper
 	feegrantKeeper types.FeegrantKeeper
 	treasuryKeeper types.TreasuryKeeper
+	distrKeeper    types.DistrKeeper
 	tax2gasKeeper  tax2gasKeeper.Keeper
 }
 
-func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.BankKeeper, feegrantKeeper types.FeegrantKeeper, treasuryKeeper types.TreasuryKeeper, tax2gasKeeper tax2gasKeeper.Keeper) Tax2gasPostDecorator {
+func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.BankKeeper, feegrantKeeper types.FeegrantKeeper, treasuryKeeper types.TreasuryKeeper, distrKeeper types.DistrKeeper, tax2gasKeeper tax2gasKeeper.Keeper) Tax2gasPostDecorator {
 	return Tax2gasPostDecorator{
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		feegrantKeeper: feegrantKeeper,
 		treasuryKeeper: treasuryKeeper,
+		distrKeeper:    distrKeeper,
 		tax2gasKeeper:  tax2gasKeeper,
 	}
 }

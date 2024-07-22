@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -15,6 +16,7 @@ type TreasuryKeeper interface {
 	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
 	HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
 	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
+	GetOracleSplitRate(ctx sdk.Context) sdk.Dec
 }
 
 // BankKeeper defines the contract needed for supply related APIs (noalias)
@@ -30,4 +32,11 @@ type BankKeeper interface {
 type FeegrantKeeper interface {
 	GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
 	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
+}
+
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	GetFeePool(ctx sdk.Context) distributiontypes.FeePool
+	GetCommunityTax(ctx sdk.Context) math.LegacyDec
+	SetFeePool(ctx sdk.Context, feePool distributiontypes.FeePool)
 }

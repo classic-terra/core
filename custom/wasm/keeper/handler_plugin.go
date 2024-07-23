@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -20,7 +21,7 @@ import (
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
 	tax2gaskeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
-	"github.com/classic-terra/core/v3/x/tax2gas/types"
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
@@ -93,11 +94,12 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 			if !taxes.IsZero() {
 				eventManager := sdk.NewEventManager()
 
-				gas, err := tax2gasutils.ComputeGas(h.tax2gaskeeper.GetGasPrices(ctx), taxes)
+				taxGas, err := tax2gasutils.ComputeGas(h.tax2gaskeeper.GetGasPrices(ctx), taxes)
 				if err != nil {
 					return nil, nil, err
 				}
-				ctx.GasMeter().ConsumeGas(gas, "tax gas")
+				fmt.Println("consumed gas: ", taxGas)
+				ctx.TaxGasMeter().ConsumeGas(taxGas, "tax gas")
 
 				events = eventManager.Events()
 			}
@@ -151,7 +153,7 @@ func isIBCDenom(denom string) bool {
 }
 
 // FilterMsgAndComputeTax computes the stability tax on messages.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
+func FilterMsgAndComputeTax(ctx sdk.Context, tk tax2gastypes.TreasuryKeeper, msgs ...sdk.Msg) sdk.Coins {
 	taxes := sdk.Coins{}
 
 	for _, msg := range msgs {
@@ -208,7 +210,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, msgs ...sd
 }
 
 // computes the stability tax according to tax-rate and tax-cap
-func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) sdk.Coins {
+func computeTax(ctx sdk.Context, tk tax2gastypes.TreasuryKeeper, principal sdk.Coins) sdk.Coins {
 	taxRate := tk.GetTaxRate(ctx)
 	if taxRate.Equal(sdk.ZeroDec()) {
 		return sdk.Coins{}

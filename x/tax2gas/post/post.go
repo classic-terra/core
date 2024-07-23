@@ -48,7 +48,9 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	feeCoins := feeTx.GetFee()
 	anteConsumedGas, ok := ctx.Value(types.AnteConsumedGas).(uint64)
 	if !ok {
-		return ctx, errorsmod.Wrap(types.ErrParsing, "Error parsing ante consumed gas")
+		// If cannot found the anteConsumedGas, that's mean the tx is bypass
+		// Skip this tx as it's bypass
+		return next(ctx, tx, simulate, success)
 	}
 
 	// Get paid denom identified in ante handler
@@ -68,16 +70,14 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	// Deduct feeCoins with paid amount
 	feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
 
-	taxGas, ok := ctx.Value(types.TaxGas).(uint64)
-	if !ok {
-		taxGas = 0
-	}
+	taxGas := ctx.TaxGasMeter().GasConsumed()
+
 	// we consume the gas here as we need to calculate the tax for consumed gas
 	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
-	gasConsumed := ctx.GasMeter().GasConsumed()
 
+	totalGasConsumed := ctx.GasMeter().GasConsumed()
 	// Deduct the gas consumed amount spent on ante handler
-	gasRemaining := gasConsumed - anteConsumedGas
+	totalGasRemaining := totalGasConsumed - anteConsumedGas
 
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
@@ -93,7 +93,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 				return ctx, errorsmod.Wrapf(err, "fee-grant not found with granter %s and grantee %s", feeGranter, feePayer)
 			}
 
-			gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasRemaining)
+			gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, totalGasRemaining)
 			if err != nil {
 				return ctx, err
 			}
@@ -111,6 +111,16 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					if err != nil {
 						return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 					}
+
+					// Calculate tax fee and BurnTaxSplit
+					_, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeRequired.Denom)
+					taxFee := gasPrice.MulInt64(int64(taxGas)).Ceil().RoundInt()
+					if !simulate {
+						err := tgd.BurnTaxSplit(ctx, sdk.NewCoins(sdk.NewCoin(feeRequired.Denom, taxFee)))
+						if err != nil {
+							return ctx, err
+						}
+					}
 					return next(ctx, tx, simulate, success)
 				}
 			}
@@ -118,32 +128,15 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		}
 	}
 
-	taxes := sdk.NewCoins()
-	for _, feeCoin := range feeCoins {
-		feePayer := tgd.accountKeeper.GetAccount(ctx, feePayer)
-		found, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeCoin.Denom)
-		if !found {
-			continue
-		}
-		feeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(gasRemaining)).Ceil().RoundInt())
-
-		if feeCoin.IsGTE(feeRequired) {
-			err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
-			if err != nil {
-				return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-			}
-			taxes = taxes.Add(feeRequired)
-			gasRemaining = 0
-			break
-		}
-
-		err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeCoin))
-		if err != nil {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-		}
-		taxes = taxes.Add(feeCoin)
-		feeRemaining := sdk.NewDecCoinFromCoin(feeRequired.Sub(feeCoin))
-		gasRemaining = uint64(feeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
+	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
+	if gasRemaining > 0 {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %d gas more", totalGasRemaining)
+	}
+	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)
+	err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayerAccount.GetAddress(), authtypes.FeeCollectorName, payableFees)
+	if err != nil {
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
 
 	if !simulate {
@@ -151,10 +144,6 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		if err != nil {
 			return ctx, err
 		}
-	}
-
-	if gasRemaining > 0 {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas")
 	}
 
 	return next(ctx, tx, simulate, success)

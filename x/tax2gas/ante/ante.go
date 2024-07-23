@@ -91,7 +91,11 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	if feeTx.GetGas()-gasConsumed < taxGas {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide enough gas to cover taxes")
+		return ctx, errorsmod.Wrap(
+			sdkerrors.ErrInvalidGasLimit,
+			fmt.Sprintf("must provide enough gas to cover taxes, gas limit(%d) - gas consumed(%d) < tax gas(%d)",
+				feeTx.GetGas(), gasConsumed, taxGas),
+		)
 	}
 
 	if !simulate && !taxes.IsZero() {
@@ -110,7 +114,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	newCtx := ctx.WithPriority(priority).WithValue(types.TaxGas, taxGas)
 	if taxGas != 0 {
-		newCtx = newCtx.WithValue(types.TaxGas, taxGas)
+		newCtx.TaxGasMeter().ConsumeGas(taxGas, "ante handler taxGas")
 	}
 	newCtx = newCtx.WithValue(types.AnteConsumedGas, gasConsumed)
 	if paidDenom != "" {

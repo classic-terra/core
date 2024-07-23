@@ -71,3 +71,55 @@ func GetGasPriceByDenom(gasPrices sdk.DecCoins, denom string) (bool, sdk.Dec) {
 		}
 	}
 }
+
+func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas uint64, totalGasRemaining uint64) (taxes sdk.Coins, payableFees sdk.Coins, gasRemaining uint64) {
+	taxGasRemaining := taxGas
+	taxes = sdk.NewCoins()
+	payableFees = sdk.NewCoins()
+	gasRemaining = totalGasRemaining
+	for _, feeCoin := range feeCoins {
+		found, gasPrice := GetGasPriceByDenom(gasPrices, feeCoin.Denom)
+		if !found {
+			continue
+		}
+		taxFeeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(taxGasRemaining)).Ceil().RoundInt())
+		totalFeeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(gasRemaining)).Ceil().RoundInt())
+
+		switch {
+		case taxGasRemaining > 0:
+			switch {
+			case feeCoin.IsGTE(totalFeeRequired):
+				taxes = taxes.Add(taxFeeRequired)
+				payableFees = payableFees.Add(totalFeeRequired)
+				taxGasRemaining = 0
+				gasRemaining = 0
+				return
+			case feeCoin.IsGTE(taxFeeRequired):
+				taxes = taxes.Add(taxFeeRequired)
+				taxGasRemaining = 0
+				payableFees = payableFees.Add(feeCoin)
+				totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
+				gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+			default:
+				taxes = taxes.Add(feeCoin)
+				payableFees = payableFees.Add(feeCoin)
+				taxFeeRemaining := sdk.NewDecCoinFromCoin(taxFeeRequired.Sub(feeCoin))
+				taxGasRemaining = uint64(taxFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+				gasRemaining = gasRemaining - (taxGas - taxGasRemaining)
+			}
+		case gasRemaining > 0:
+			if feeCoin.IsGTE(totalFeeRequired) {
+				payableFees = payableFees.Add(totalFeeRequired)
+				gasRemaining = 0
+				return
+			} else {
+				payableFees = payableFees.Add(feeCoin)
+                totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
+                gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+			}
+		default:
+			return
+		}
+	}
+	return
+}

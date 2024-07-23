@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -98,7 +97,6 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 				if err != nil {
 					return nil, nil, err
 				}
-				fmt.Println("consumed gas: ", taxGas)
 				ctx.TaxGasMeter().ConsumeGas(taxGas, "tax gas")
 
 				events = eventManager.Events()

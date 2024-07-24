@@ -493,8 +493,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			// 259073*28.325 = 7338243 - only gas fee
-			minFeeAmount: 7338243,
+			// 263025*28.325 = 7450184 - only gas fee
+			minFeeAmount: 7450184,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],
@@ -507,7 +507,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount: 7338243 + feeAmt,
+			minFeeAmount: 7450184 + feeAmt,
 		}, {
 			name:      "MsgExec(MsgSend(normal -> normal))",
 			msgSigner: privs[2],
@@ -520,7 +520,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount: 7338243 + feeAmt,
+			minFeeAmount: 7450184 + feeAmt,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
@@ -535,7 +535,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount: 7338243 + feeAmt,
+			minFeeAmount: 7450184 + feeAmt,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
 			msgSigner: privs[0],
@@ -570,7 +570,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			minFeeAmount: 7338243 + feeAmt*2,
+			minFeeAmount: 7450184 + feeAmt*2,
 		}, {
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
 			msgSigner: privs[3],
@@ -619,8 +619,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				msgs = append(msgs, msg2)
 				return msgs
 			},
-			// 1042701*28.325 = 29534506
-			minFeeAmount: 29534506 + feeAmt,
+			// 1046653*28.325 = 29646447
+			minFeeAmount: 29646447 + feeAmt,
 		},
 	}
 

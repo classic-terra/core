@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	nodeA.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeID),
 		`{"count": "0"}`, "",
-		initialization.ValidatorWalletName)
+		initialization.ValidatorWalletName, "200000", sdk.NewCoins(sdk.NewCoin(initialization.TerraDenom, sdk.NewInt(10))))
 
 	contracts, err := nodeA.QueryContractsFromID(chainA.LatestCodeID)
 	s.NoError(err)
@@ -104,6 +104,7 @@ func (s *IntegrationTestSuite) TestAddBurnTaxExemptionAddress() {
 	s.Require().Contains(whitelistedAddresses, whitelistAddr2)
 }
 
+// Each tx gas will cost 2 uluna (1 is for ante handler, 1 is for post handler)
 func (s *IntegrationTestSuite) TestFeeTax() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
@@ -119,14 +120,16 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().NoError(err)
 
 	test1Addr := node.CreateWallet("test1")
+	test2Addr := node.CreateWallet("test2")
 
 	// Test 1: banktypes.MsgSend
 	// burn tax with bank send
-	node.BankSend(transferCoin1.String(), validatorAddr, test1Addr)
-
 	subAmount := transferAmount1.Add(initialization.TaxRate.MulInt(transferAmount1).TruncateInt())
 
-	decremented := validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount))
+	gasLimit := transferCoin1.Amount.MulRaw(initialization.E10).String()
+	node.BankSend(transferCoin1.String(), validatorAddr, test1Addr, gasLimit, sdk.NewCoins(transferCoin1))
+
+	decremented := validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount.AddRaw(2)))
 	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
@@ -136,46 +139,22 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	s.Require().Equal(balanceTest1.Amount, transferAmount1)
 	s.Require().Equal(newValidatorBalance, decremented)
 
-	// Test 2: try bank send with grant
-	test2Addr := node.CreateWallet("test2")
-	transferAmount2 := sdkmath.NewInt(10000000)
-	transferCoin2 := sdk.NewCoin(initialization.TerraDenom, transferAmount2)
-
-	node.BankSend(transferCoin2.String(), validatorAddr, test2Addr)
-	node.GrantAddress(test2Addr, test1Addr, transferCoin2.String(), "test2")
-
+	// Test 2: banktypes.MsgMultiSend
 	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
-	s.Require().NoError(err)
-
-	node.BankSendFeeGrantWithWallet(transferCoin2.String(), test1Addr, validatorAddr, test2Addr, "test1")
-
-	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
-	s.Require().NoError(err)
-
-	balanceTest1, err = node.QuerySpecificBalance(test1Addr, initialization.TerraDenom)
-	s.Require().NoError(err)
-
-	balanceTest2, err := node.QuerySpecificBalance(test2Addr, initialization.TerraDenom)
-	s.Require().NoError(err)
-
-	s.Require().Equal(balanceTest1.Amount, transferAmount1.Sub(transferAmount2))
-	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2))
-	s.Require().Equal(balanceTest2.Amount, transferAmount2.Sub(initialization.TaxRate.MulInt(transferAmount2).TruncateInt()))
-
-	// Test 3: banktypes.MsgMultiSend
-	validatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
-	s.Require().NoError(err)
-
-	node.BankMultiSend(transferCoin1.String(), false, validatorAddr, test1Addr, test2Addr)
-
-	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 
 	totalTransferAmount := transferAmount1.Mul(sdk.NewInt(2))
+	gasLimit = transferCoin1.Amount.MulRaw(initialization.E10).String()
+	node.BankMultiSend(transferCoin1.String(), false, validatorAddr, gasLimit, sdk.NewCoins(transferCoin1), test1Addr, test2Addr)
+
+	newValidatorBalance, err = node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
+	s.Require().NoError(err)
+
 	subAmount = totalTransferAmount.Add(initialization.TaxRate.MulInt(totalTransferAmount).TruncateInt())
-	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount)))
+	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, subAmount.AddRaw(2))))
 }
 
+// Each tx gas will cost 2 uluna (1 is for ante handler, 1 is for post handler)
 func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
@@ -184,14 +163,16 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	testAddr := node.CreateWallet("test")
 	transferAmount := sdkmath.NewInt(100000000)
 	transferCoin := sdk.NewCoin(initialization.TerraDenom, transferAmount)
-	node.BankSend(fmt.Sprintf("%suluna", transferAmount.Mul(sdk.NewInt(4))), initialization.ValidatorWalletName, testAddr)
+
+	gasLimit := transferCoin.Amount.MulRaw(initialization.E10).String()
+	node.BankSend(fmt.Sprintf("%suluna", transferAmount.Mul(sdk.NewInt(4))), initialization.ValidatorWalletName, testAddr, gasLimit, sdk.NewCoins(transferCoin))
 	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
 	chain.LatestCodeID = int(node.QueryLatestWasmCodeID())
 	// instantiate contract and transfer 100000000uluna
 	node.InstantiateWasmContract(
 		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, transferCoin.String(),
-		"test")
+		"test", gasLimit, sdk.NewCoins(transferCoin))
 
 	contracts, err := node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)
@@ -199,17 +180,15 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 
 	balance1, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	// 400000000 - 100000000 - 100000000 * TaxRate = 300000000 - 10000000 * TaxRate
+	// 400000000 - 100000000 - 100000000 * TaxRate - 2 (gas) = 300000000 - 10000000 * TaxRate - 2 (gas)
 	taxAmount := initialization.TaxRate.MulInt(transferAmount).TruncateInt()
-	s.Require().Equal(balance1.Amount, transferAmount.Mul(sdk.NewInt(3)).Sub(taxAmount))
-
-	stabilityFee := sdk.NewDecWithPrec(2, 2).MulInt(transferAmount)
+	s.Require().Equal(balance1.Amount, transferAmount.Mul(sdk.NewInt(3)).Sub(taxAmount).SubRaw(2))
 
 	node.Instantiate2WasmContract(
 		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, "salt",
 		transferCoin.String(),
-		fmt.Sprintf("%duluna", stabilityFee), "300000", "test")
+		"test", gasLimit, sdk.NewCoins(transferCoin))
 
 	contracts, err = node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)
@@ -217,16 +196,59 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 
 	balance2, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	// balance1 - 100000000 - 100000000 * TaxRate
+	// balance1 - 100000000 - 100000000 * TaxRate - 2 (gas)
 	taxAmount = initialization.TaxRate.MulInt(transferAmount).TruncateInt()
-	s.Require().Equal(balance2.Amount, balance1.Amount.Sub(transferAmount).Sub(taxAmount))
+	s.Require().Equal(balance2.Amount, balance1.Amount.Sub(transferAmount).Sub(taxAmount).SubRaw(2))
 
 	contractAddr := contracts[0]
-	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), fmt.Sprintf("%duluna", stabilityFee), "test")
+	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), "test", gasLimit, sdk.NewCoins(transferCoin))
 
 	balance3, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	// balance2 - 100000000 - 100000000 * TaxRate
+	// balance2 - 100000000 - 100000000 * TaxRate - 2 (gas)
 	taxAmount = initialization.TaxRate.MulInt(transferAmount).TruncateInt()
-	s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount).Sub(taxAmount))
+	s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount).Sub(taxAmount).SubRaw(2))
+}
+
+func (s *IntegrationTestSuite) TestFeeTaxGrant() {
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	transferAmount := sdkmath.NewInt(100000000)
+	transferCoin := sdk.NewCoin(initialization.TerraDenom, transferAmount)
+
+	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
+	s.Require().NotEqual(validatorAddr, "")
+
+	test1Addr := node.CreateWallet("test1")
+	test2Addr := node.CreateWallet("test2")
+
+	// Test 1: try bank send with grant
+	gasLimit := transferCoin.Amount.MulRaw(initialization.E10).String()
+	node.BankSend(transferCoin.String(), validatorAddr, test1Addr, gasLimit, sdk.NewCoins(transferCoin))
+	node.BankSend(transferCoin.String(), validatorAddr, test1Addr, gasLimit, sdk.NewCoins(transferCoin))
+	node.BankSend(transferCoin.String(), validatorAddr, test2Addr, gasLimit, sdk.NewCoins(transferCoin))
+	node.GrantAddress(test2Addr, test1Addr, transferCoin.String(), "test2")
+
+	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
+	s.Require().NoError(err)
+
+	node.BankSendFeeGrantWithWallet(transferCoin.String(), test1Addr, validatorAddr, test2Addr, "test1", gasLimit, sdk.NewCoins(transferCoin))
+
+	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
+	s.Require().NoError(err)
+
+	balanceTest1, err := node.QuerySpecificBalance(test1Addr, initialization.TerraDenom)
+	s.Require().NoError(err)
+
+	balanceTest2, err := node.QuerySpecificBalance(test2Addr, initialization.TerraDenom)
+	s.Require().NoError(err)
+
+	s.Require().Equal(balanceTest1, transferCoin)
+	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin))
+	// addr2 lost 2uluna to pay for grant msg's gas,  100000000 * TaxRate + 2uluna to pay for bank send msg's tx fees,
+	s.Require().Equal(balanceTest2.Amount, transferAmount.Sub(initialization.TaxRate.MulInt(transferAmount).TruncateInt()).SubRaw(4))
+
+	// Test 2: try bank send with grant but pay by multiple fees denom
 }

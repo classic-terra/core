@@ -329,6 +329,7 @@ func updateDistrGenesis(distrGenState *distrtypes.GenesisState) {
 	distrGenState.Params.CommunityTax = sdk.NewDecWithPrec(2, 2)
 	distrGenState.Params.WithdrawAddrEnabled = true
 }
+
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 	treasuryGenState.TaxRate = TaxRate
 	treasuryGenState.Params.TaxPolicy = treasurytypes.PolicyConstraints{

@@ -272,8 +272,6 @@ func (s *IntegrationTestSuite) TestFeeTaxGrant() {
 	s.Require().NoError(err)
 	balanceTest2TerraBalance, err := node.QuerySpecificBalance(test2Addr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	balanceTest2UsdBalance, err := node.QuerySpecificBalance(test2Addr, initialization.UsdDenom)
-	s.Require().NoError(err)
 
 	node.BankSendFeeGrantWithWallet(transferTerraCoin2.String(), test1Addr, validatorAddr, test2Addr, "test1", gasLimit, sdk.NewCoins(transferUsdCoin2, feeCoinTerraDenom))
 
@@ -285,7 +283,7 @@ func (s *IntegrationTestSuite) TestFeeTaxGrant() {
 	s.Require().NoError(err)
 	newBalanceTest2TerraBalance, err := node.QuerySpecificBalance(test2Addr, initialization.TerraDenom)
 	s.Require().NoError(err)
-	balanceTest2UsdBalance, err = node.QuerySpecificBalance(test2Addr, initialization.UsdDenom)
+	balanceTest2UsdBalance, err := node.QuerySpecificBalance(test2Addr, initialization.UsdDenom)
 	s.Require().NoError(err)
 	// The fee grant msg only support to pay by one denom, so only uusd balance will change
 	s.Require().Equal(newValidatorTerraBalance, validatorTerraBalance.Add(transferTerraCoin2))

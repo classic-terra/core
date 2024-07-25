@@ -91,9 +91,8 @@ func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, tax
 			case feeCoin.IsGTE(totalFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
 				payableFees = payableFees.Add(totalFeeRequired)
-				taxGasRemaining = 0
 				gasRemaining = 0
-				return
+				return taxes, payableFees, gasRemaining
 			case feeCoin.IsGTE(taxFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
 				taxGasRemaining = 0
@@ -105,21 +104,21 @@ func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, tax
 				payableFees = payableFees.Add(feeCoin)
 				taxFeeRemaining := sdk.NewDecCoinFromCoin(taxFeeRequired.Sub(feeCoin))
 				taxGasRemaining = uint64(taxFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
-				gasRemaining = gasRemaining - (taxGas - taxGasRemaining)
+				gasRemaining -= taxGas - taxGasRemaining
 			}
 		case gasRemaining > 0:
 			if feeCoin.IsGTE(totalFeeRequired) {
 				payableFees = payableFees.Add(totalFeeRequired)
 				gasRemaining = 0
-				return
+				return taxes, payableFees, gasRemaining
 			} else {
 				payableFees = payableFees.Add(feeCoin)
-                totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
-                gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+				totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
+				gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
 			}
 		default:
-			return
+			return taxes, payableFees, gasRemaining
 		}
 	}
-	return
+	return taxes, payableFees, gasRemaining
 }

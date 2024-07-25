@@ -262,7 +262,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Fail: Authz exec",
 			simulation: false,
 			checkTx:    true,
@@ -279,7 +278,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Bypass: ibc MsgRecvPacket",
 			simulation: false,
 			checkTx:    true,
@@ -298,7 +296,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Not Bypass: ibc MsgRecvPacket",
 			simulation: false,
 			checkTx:    true,
@@ -318,7 +315,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expErrMsg: "can't find coin",
 		},
 		{
-
 			name:       "Bypass: ibc MsgAcknowledgement",
 			simulation: false,
 			checkTx:    true,
@@ -338,7 +334,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Bypass: ibc MsgUpdateClient",
 			simulation: false,
 			checkTx:    true,
@@ -358,7 +353,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Bypass: ibc MsgTimeout",
 			simulation: false,
 			checkTx:    true,
@@ -378,7 +372,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Bypass: ibc MsgTimeoutOnClose",
 			simulation: false,
 			checkTx:    true,
@@ -399,7 +392,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expFail: false,
 		},
 		{
-
 			name:       "Other msgs must pay gas fee",
 			simulation: false,
 			checkTx:    true,
@@ -418,7 +410,6 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			expErrMsg: "can't find coin",
 		},
 		{
-
 			name:       "Oracle zero fee",
 			simulation: false,
 			checkTx:    true,

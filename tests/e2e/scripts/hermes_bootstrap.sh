@@ -42,7 +42,7 @@ account_prefix = 'terra'
 key_name = 'val01-terra-a'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 28.325, denom = 'uluna' }
+gas_price = { price = 1, denom = 'uluna' }
 gas_multiplier = 3
 max_msg_num = 30
 max_tx_size = 2097152
@@ -69,7 +69,7 @@ account_prefix = 'terra'
 key_name = 'val01-terra-b'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 28.325, denom = 'uluna' }
+gas_price = { price = 1, denom = 'uluna' }
 gas_multiplier = 3
 max_msg_num = 30
 max_tx_size = 2097152

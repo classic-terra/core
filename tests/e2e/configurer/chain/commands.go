@@ -74,6 +74,19 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, amount, from string, gasLimi
 	n.LogActionF("successfully executed")
 }
 
+func (n *NodeConfig) WasmExecuteError(contract, execMsg, amount, from string, gasLimit string, fees sdk.Coins) {
+	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
+	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
+	if amount != "" {
+		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
+	}
+	cmd = append(cmd, "--gas", gasLimit, "--fees", fees.String())
+	n.LogActionF(strings.Join(cmd, " "))
+	_, _, err := n.containerManager.ExecTxCmdError(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully executed")
+}
+
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
 // specify the QueryParamResponse type (which may not exist for all params).
 func (n *NodeConfig) QueryParams(subspace, key string, result any) {
@@ -125,7 +138,6 @@ func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(addresses []string
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	fmt.Println("resp: ", resp.String())
 	proposalID, err := extractProposalIDFromResponse(resp.String())
 	require.NoError(n.t, err)
 
@@ -247,9 +259,17 @@ func (n *NodeConfig) BankMultiSend(amount string, split bool, sendAddress string
 	n.LogActionF("successfully multisent %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
 }
 
-func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, walletName string) {
+func (n *NodeConfig) GrantAddress(granter, gratee string, walletName string, feeDenom string, spendLimit ...string) {
 	n.LogActionF("granting for address %s", gratee)
-	cmd := []string{"terrad", "tx", "feegrant", "grant", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", spendLimit), "--fees=10uluna"}
+	cmd := []string{"terrad", "tx", "feegrant", "grant", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", strings.Join(spendLimit, ",")), fmt.Sprintf("--fees=10%s", feeDenom)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully granted for address %s", gratee)
+}
+
+func (n *NodeConfig) RevokeGrant(granter, gratee string, walletName string, feeDenom string) {
+	n.LogActionF("revoking grant for address %s", gratee)
+	cmd := []string{"terrad", "tx", "feegrant", "revoke", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--fees=10%s", feeDenom)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully granted for address %s", gratee)

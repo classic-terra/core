@@ -61,7 +61,7 @@ func NewParams() Params {
 func DefaultParams() Params {
 	return Params{
 		GasPrices:                       DefaultGasPrices,
-		Enabled:                         true,
+		Enabled:                         false,
 		BypassMinFeeMsgTypes:            DefaultBypassMinFeeMsgTypes,
 		MaxTotalBypassMinFeeMsgGasUsage: DefaultmaxTotalBypassMinFeeMsgGasUsage,
 	}

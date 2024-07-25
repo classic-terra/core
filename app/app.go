@@ -253,6 +253,7 @@ func NewTerraApp(
 			AccountKeeper:  app.AccountKeeper,
 			BankKeeper:     app.BankKeeper,
 			FeegrantKeeper: app.FeeGrantKeeper,
+			DistrKeeper:    app.DistrKeeper,
 			DyncommKeeper:  app.DyncommKeeper,
 			TreasuryKeeper: app.TreasuryKeeper,
 			Tax2Gaskeeper:  app.Tax2gasKeeper,

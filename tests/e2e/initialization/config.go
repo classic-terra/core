@@ -12,6 +12,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -43,7 +44,8 @@ type NodeConfig struct {
 const (
 	// common
 	TerraDenom          = "uluna"
-	AtomDenom           = "uatom"
+	UsdDenom            = "uusd"
+	EurDenom            = "ueur"
 	TerraIBCDenom       = "ibc/4627AD2524E3E0523047E35BB76CC90E37D9D57ACF14F0FCBCEB2480705F3CB8"
 	MinGasPrice         = "0.00000000001"
 	E10                 = 10000000000
@@ -52,11 +54,15 @@ const (
 	// chainA
 	ChainAID      = "terra-test-a"
 	TerraBalanceA = 20000000000000
+	UsdBalanceA   = 30000000000000
+	EurBalanceA   = 40000000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
 	// chainB
 	ChainBID          = "terra-test-b"
 	TerraBalanceB     = 500000000000
+	UsdBalanceB       = 60000000000000
+	EurBalanceB       = 40000000000000
 	StakeBalanceB     = 440000000000
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
@@ -74,11 +80,15 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceA, TerraDenom, UsdBalanceA, UsdDenom, EurBalanceA, EurDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceB, TerraDenom, UsdBalanceB, UsdDenom, EurBalanceB, EurDenom)
 	// InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
 	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
+
+	TerraGasPrice = sdk.NewDecWithPrec(5, 11) // 0.5 * 10^-10
+	UsdGasPrice   = sdk.NewDecWithPrec(1, 10) // 1   * 10^-10
+	EurGasPrice   = sdk.NewDecWithPrec(2, 10) // 2   * 10^-10
 
 	OneMin  = time.Minute              // nolint
 	TwoMin  = 2 * time.Minute          // nolint
@@ -243,6 +253,11 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, distrtypes.ModuleName, &distrtypes.GenesisState{}, updateDistrGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, treasurytypes.ModuleName, &treasurytypes.GenesisState{}, updateTreasuryGenesis)
 	if err != nil {
 		return err
@@ -289,7 +304,7 @@ func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	denomsToRegister := []string{TerraDenom, AtomDenom}
+	denomsToRegister := []string{TerraDenom, UsdDenom, EurDenom}
 	for _, denom := range denomsToRegister {
 		setDenomMetadata(bankGenState, denom)
 	}
@@ -310,6 +325,10 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = TerraDenom
 }
 
+func updateDistrGenesis(distrGenState *distrtypes.GenesisState) {
+	distrGenState.Params.CommunityTax = sdk.NewDecWithPrec(2, 2)
+	distrGenState.Params.WithdrawAddrEnabled = true
+}
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 	treasuryGenState.TaxRate = TaxRate
 	treasuryGenState.Params.TaxPolicy = treasurytypes.PolicyConstraints{
@@ -362,10 +381,11 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 func updateTax2GasGenesis(tax2gasGenState *tax2gastypes.GenesisState) {
 	tax2gasGenState.Params.GasPrices = sdk.NewDecCoins(
 		// Gas prices will be very small so that normal tx only care about taxes
-		sdk.NewDecCoinFromDec("uluna", sdk.NewDecWithPrec(5, 11)), // 0.5 * 10^-10
-		sdk.NewDecCoinFromDec("uusd", sdk.NewDecWithPrec(1, 10)),   // 1   * 10^-10
-		sdk.NewDecCoinFromDec("ueur", sdk.NewDecWithPrec(2, 10)),   // 2   * 10^-10
+		sdk.NewDecCoinFromDec("uluna", TerraGasPrice),
+		sdk.NewDecCoinFromDec("uusd", UsdGasPrice),
+		sdk.NewDecCoinFromDec("ueur", EurGasPrice),
 	)
+	tax2gasGenState.Params.Enabled = true
 }
 
 func setDenomMetadata(genState *banktypes.GenesisState, denom string) {

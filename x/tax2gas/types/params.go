@@ -61,7 +61,7 @@ func NewParams() Params {
 func DefaultParams() Params {
 	return Params{
 		GasPrices:                       DefaultGasPrices,
-		Enabled:                         false,
+		Enabled:                         true,
 		BypassMinFeeMsgTypes:            DefaultBypassMinFeeMsgTypes,
 		MaxTotalBypassMinFeeMsgGasUsage: DefaultmaxTotalBypassMinFeeMsgGasUsage,
 	}
@@ -72,9 +72,6 @@ func (p Params) Validate() error {
 	if p.Enabled {
 		if len(p.GasPrices) == 0 {
 			return fmt.Errorf("must provide at least 1 gas prices")
-		}
-		if !p.GasPrices.IsAllPositive() {
-			return fmt.Errorf("gas prices must be positive")
 		}
 	}
 	return nil

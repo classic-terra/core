@@ -95,8 +95,10 @@ func (suite *KeeperTestSuite) TestSetParams() {
 		expFail bool
 	}{
 		{
-			name:    "empty params",
-			params:  types.Params{},
+			name: "empty gas prices",
+			params: types.Params{
+				Enabled: true,
+			},
 			expFail: true,
 		},
 		{

@@ -111,11 +111,10 @@ func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, tax
 				payableFees = payableFees.Add(totalFeeRequired)
 				gasRemaining = 0
 				return taxes, payableFees, gasRemaining
-			} else {
-				payableFees = payableFees.Add(feeCoin)
-				totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
-				gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
 			}
+			payableFees = payableFees.Add(feeCoin)
+			totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
+			gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
 		default:
 			return taxes, payableFees, gasRemaining
 		}

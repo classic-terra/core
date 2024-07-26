@@ -52,7 +52,9 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
-	app.Tax2gasKeeper.SetParams(ctx, tax2gastypes.DefaultParams())
+	tax2gasParams := tax2gastypes.DefaultParams()
+	tax2gasParams.Enabled = true
+	app.Tax2gasKeeper.SetParams(ctx, tax2gasParams)
 
 	return app, ctx
 }

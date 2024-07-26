@@ -24,10 +24,12 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "empty params",
+			name: "empty gas prices",
 			input: &types.MsgUpdateParams{
 				Authority: suite.keeper.GetAuthority(),
-				Params:    types.Params{},
+				Params: types.Params{
+					Enabled: true,
+				},
 			},
 			expErr:    true,
 			expErrMsg: "must provide at least 1 gas prices",

@@ -152,7 +152,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			tax2gasGenState.Params = tax2gastypes.Params{
 				Enabled: true,
-				GasPrices: sdk.DecCoins{  
+				GasPrices: sdk.DecCoins{
 					sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(0, 3)),
 				},
 			}
@@ -160,7 +160,6 @@ func TestAppStateDeterminism(t *testing.T) {
 			bz, err := app.AppCodec().MarshalJSON(&newGenState)
 			require.NoError(t, err)
 
-			fmt.Println("bz :", string(bz))
 			appGenState[tax2gastypes.ModuleName] = bz
 
 			fmt.Printf(

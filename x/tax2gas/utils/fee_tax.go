@@ -115,7 +115,7 @@ func computeTax(ctx sdk.Context, tk types.TreasuryKeeper, principal sdk.Coins) s
 	return taxes
 }
 
-func ComputeGas(gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
+func ComputeGas(gasPrices sdk.DecCoins, taxes sdk.Coins) (sdkmath.Int, error) {
 	taxes = taxes.Sort()
 	tax2gas := sdkmath.ZeroInt()
 	// Convert to gas
@@ -133,10 +133,10 @@ func ComputeGas(gasPrices sdk.DecCoins, taxes sdk.Coins) (uint64, error) {
 		}
 	}
 
-	return tax2gas.Uint64(), nil
+	return tax2gas, nil
 }
 
-func ComputeFeesOnGasConsumed(tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sdk.Coins, error) {
+func ComputeFeesOnGasConsumed(tx sdk.Tx, gasPrices sdk.DecCoins, gas sdkmath.Int) (sdk.Coins, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -148,7 +148,7 @@ func ComputeFeesOnGasConsumed(tx sdk.Tx, gasPrices sdk.DecCoins, gas uint64) (sd
 	if !isOracleTx && len(gasPrices) != 0 {
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		glDec := sdk.NewDec(int64(gas))
+		glDec := sdk.NewDecFromInt(gas)
 		for i, gp := range gasPrices {
 			fee := gp.Amount.Mul(glDec)
 			gasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())

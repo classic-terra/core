@@ -62,7 +62,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	// Compute taxes based on consumed gas
 	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 	gasConsumed := ctx.GasMeter().GasConsumed()
-	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasConsumed)
+	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, sdk.NewInt(int64(gasConsumed)))
 	if err != nil {
 		return ctx, err
 	}
@@ -90,7 +90,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return next(ctx, tx, simulate)
 	}
 
-	if feeTx.GetGas()-gasConsumed < taxGas {
+	if sdk.NewInt(int64(feeTx.GetGas() - gasConsumed)).LTE(taxGas) {
 		return ctx, errorsmod.Wrap(
 			sdkerrors.ErrInvalidGasLimit,
 			fmt.Sprintf("must provide enough gas to cover taxes, gas limit(%d) - gas consumed(%d) < tax gas(%d)",
@@ -113,7 +113,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	}
 
 	newCtx := ctx.WithPriority(priority).WithValue(types.TaxGas, taxGas)
-	if taxGas != 0 {
+	if !taxGas.IsZero() {
 		newCtx.TaxGasMeter().ConsumeGas(taxGas, "ante handler taxGas")
 	}
 	newCtx = newCtx.WithValue(types.AnteConsumedGas, gasConsumed)

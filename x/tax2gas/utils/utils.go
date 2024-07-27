@@ -3,6 +3,7 @@ package utils
 import (
 	"math"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
@@ -72,7 +73,7 @@ func GetGasPriceByDenom(gasPrices sdk.DecCoins, denom string) (bool, sdk.Dec) {
 	}
 }
 
-func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas uint64, totalGasRemaining uint64) (taxes sdk.Coins, payableFees sdk.Coins, gasRemaining uint64) {
+func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas sdkmath.Int, totalGasRemaining sdkmath.Int) (taxes sdk.Coins, payableFees sdk.Coins, gasRemaining sdkmath.Int) {
 	taxGasRemaining := taxGas
 	taxes = sdk.NewCoins()
 	payableFees = sdk.NewCoins()
@@ -82,39 +83,39 @@ func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, tax
 		if !found {
 			continue
 		}
-		taxFeeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(taxGasRemaining)).Ceil().RoundInt())
-		totalFeeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt64(int64(gasRemaining)).Ceil().RoundInt())
+		taxFeeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt(taxGasRemaining).Ceil().RoundInt())
+		totalFeeRequired := sdk.NewCoin(feeCoin.Denom, gasPrice.MulInt(gasRemaining).Ceil().RoundInt())
 
 		switch {
-		case taxGasRemaining > 0:
+		case taxGasRemaining.IsPositive():
 			switch {
 			case feeCoin.IsGTE(totalFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
 				payableFees = payableFees.Add(totalFeeRequired)
-				gasRemaining = 0
+				gasRemaining = sdkmath.ZeroInt()
 				return taxes, payableFees, gasRemaining
 			case feeCoin.IsGTE(taxFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
-				taxGasRemaining = 0
+				taxGasRemaining = sdkmath.ZeroInt()
 				payableFees = payableFees.Add(feeCoin)
 				totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
-				gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+				gasRemaining = totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 			default:
 				taxes = taxes.Add(feeCoin)
 				payableFees = payableFees.Add(feeCoin)
 				taxFeeRemaining := sdk.NewDecCoinFromCoin(taxFeeRequired.Sub(feeCoin))
-				taxGasRemaining = uint64(taxFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
-				gasRemaining -= taxGas - taxGasRemaining
+				taxGasRemaining = taxFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
+				gasRemaining = gasRemaining.Sub(taxGas.Sub(taxGasRemaining))
 			}
-		case gasRemaining > 0:
+		case gasRemaining.IsPositive():
 			if feeCoin.IsGTE(totalFeeRequired) {
 				payableFees = payableFees.Add(totalFeeRequired)
-				gasRemaining = 0
+				gasRemaining = sdkmath.ZeroInt()
 				return taxes, payableFees, gasRemaining
 			}
 			payableFees = payableFees.Add(feeCoin)
 			totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
-			gasRemaining = uint64(totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt64())
+			gasRemaining = totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 		default:
 			return taxes, payableFees, gasRemaining
 		}

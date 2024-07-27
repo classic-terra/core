@@ -1,6 +1,8 @@
 package post
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -75,11 +77,10 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	taxGas := ctx.TaxGasMeter().GasConsumed()
 
 	// we consume the gas here as we need to calculate the tax for consumed gas
-	ctx.GasMeter().ConsumeGas(taxGas, "tax gas")
 
 	totalGasConsumed := ctx.GasMeter().GasConsumed()
 	// Deduct the gas consumed amount spent on ante handler
-	totalGasRemaining := totalGasConsumed - anteConsumedGas
+	totalGasRemaining := sdkmath.NewInt(int64(totalGasConsumed - anteConsumedGas)).Add(taxGas)
 
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
@@ -116,7 +117,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 					// Calculate tax fee and BurnTaxSplit
 					_, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeRequired.Denom)
-					taxFee := gasPrice.MulInt64(int64(taxGas)).Ceil().RoundInt()
+					taxFee := gasPrice.MulInt(taxGas).Ceil().RoundInt()
 					if !simulate {
 						err := tgd.BurnTaxSplit(ctx, sdk.NewCoins(sdk.NewCoin(feeRequired.Denom, taxFee)))
 						if err != nil {
@@ -132,7 +133,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
 	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
-	if gasRemaining > 0 {
+	if gasRemaining.IsPositive() {
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %d gas more", totalGasRemaining)
 	}
 	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)

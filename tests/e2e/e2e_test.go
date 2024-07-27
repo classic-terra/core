@@ -578,5 +578,4 @@ func (s *IntegrationTestSuite) TestFeeTaxNotAcceptDenom() {
 	fee := initialization.TaxRate.MulInt(transferAmount2).TruncateInt().AddRaw(2)
 	s.Require().Equal(balanceTest1Terra.Amount, transferAmount1.Sub(transferAmount2).Sub(fee))
 	s.Require().Equal(balanceTest1NonValueDenom, transferCoin1NonValueDenom)
-
 }

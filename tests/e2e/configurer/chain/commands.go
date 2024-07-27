@@ -231,6 +231,7 @@ func (n *NodeConfig) BankSendError(amount string, sendAddress string, receiveAdd
 	require.NoError(n.t, err)
 	n.LogActionF("failed sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
+
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string, gasLimit string, fees sdk.Coins) {
 	n.BankSendWithWallet(amount, sendAddress, receiveAddress, "val", gasLimit, fees)
 }

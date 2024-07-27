@@ -84,7 +84,7 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, 
 }
 
 // ExecTxCmdError Runs ExecCmd
-func (m *Manager) ExecTxCmdError(t *testing.T, chainID string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecTxCmdError(t *testing.T, chainID string, containerName string, command []string, failStr string, checkTxHash bool) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainID), "--yes", "--keyring-backend=test", "--log_format=json"}
 	// parse to see if command has gas flags. If not, add default gas flags.
 	addGasFlags := true
@@ -97,7 +97,7 @@ func (m *Manager) ExecTxCmdError(t *testing.T, chainID string, containerName str
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
 	txCommand := append(command, allTxArgs...) //nolint
-	return m.ExecCmd(t, containerName, txCommand, "", true)
+	return m.ExecCmd(t, containerName, txCommand, failStr, checkTxHash)
 }
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.

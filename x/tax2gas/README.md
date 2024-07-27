@@ -11,6 +11,7 @@
 - Out of gas should return the tax and not consumed gas
 - Grant msg should work
 - Allow pay with multiple fees should work
+- Try to pay with non value token denom should fail
 
 | No | Name | Scenario | Expect Result | Covered by |
 |----|----------|-------------------|---------------|------------|
@@ -23,3 +24,4 @@
 | 7 | Out of gas should return the tax and not consumed gas | User make some transactions with limited gas amount that will lead to cause `out of gas` error | Tax and not consumed gas should be revert to user | 🛑 Not figure out the way to make `out of gas` error occur, should be test in testnet  |
 | 8 | Grant msg should work | User grant multiple type of permissions to different transactions | Grant permission msg will only can deduct one denom in ante handler and one denom in post hanlder | [TestFeeTaxGrant](../../tests/e2e/e2e_test.go#L214) |
 | 9 | Allow pay with multiple fees should work | User make transaction with multiple coins as fee | Fee can be paid by multiple denom, if one denom is not enough, then it will deduct other denom |  [TestFeeTaxMultipleDenoms](../../tests/e2e/e2e_test.go#L380) |
+| 10 | Try to pay with non value token denom should fail | User make transaction that use a different denom as fee | That denom should be reject and the tx should only accept denom listed in params | [TestFeeTaxNotAcceptDenom](../../tests/e2e/e2e_test.go#L531) |

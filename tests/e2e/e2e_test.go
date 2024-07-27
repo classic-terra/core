@@ -527,3 +527,56 @@ func (s *IntegrationTestSuite) TestFeeTaxForwardWasm() {
 	// Transfer amount will we return
 	s.Require().Equal(newTest1AddrBalance.Amount, test1AddrBalance.Amount)
 }
+
+func (s *IntegrationTestSuite) TestFeeTaxNotAcceptDenom() {
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	transferAmount1 := sdkmath.NewInt(500000000)
+	transferCoin1TerraDenom := sdk.NewCoin(initialization.TerraDenom, transferAmount1)
+	transferCoin1NonValueDenom := sdk.NewCoin(initialization.NonValueDenom, transferAmount1)
+
+	test1Addr := node.CreateWallet("test1-not-accept-denom")
+	test2Addr := node.CreateWallet("test2-not-accept-denom")
+
+	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
+
+	gasLimit := transferAmount1.MulRaw(initialization.E10).String()
+	node.BankSend(transferCoin1TerraDenom.String(), validatorAddr, test1Addr, gasLimit, sdk.NewCoins(transferCoin1TerraDenom))
+
+	gasLimit = "200000"
+	fees := sdk.NewCoins(sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(10)))
+	node.BankSend(transferCoin1NonValueDenom.String(), validatorAddr, test1Addr, gasLimit, fees)
+
+	// Test 1: Try to pay tx fee with non-value denom
+	transferAmount2 := sdkmath.NewInt(100000000)
+	transferCoin2 := sdk.NewCoin(initialization.TerraDenom, transferAmount2)
+
+	gasLimit = transferAmount2.MulRaw(initialization.E10).String()
+	fees = sdk.NewCoins(sdk.NewCoin(initialization.NonValueDenom, transferAmount2))
+	err = fmt.Errorf("insufficient fees")
+	// Tx will cause error cause it doesn't have the correct fees to pay for tx
+	node.BankSendError(transferCoin2.String(), test1Addr, test2Addr, "test1-not-accept-denom", gasLimit, fees, err.Error())
+
+	// Test 2: Try to trick the chain by paying with both uluna and non-value denom
+
+	// Use the uluna amount that is smaller than the tax
+	feeAmount := transferAmount2
+	feeTerraCoin := sdk.NewCoin(initialization.TerraDenom, feeAmount)
+	gasLimit = transferAmount2.MulRaw(initialization.E10).String()
+	fees = sdk.NewCoins(sdk.NewCoin(initialization.NonValueDenom, transferAmount2), feeTerraCoin)
+
+	// At this time, the tx will ignore non-value denom and only deduct the uluna
+	node.BankSendWithWallet(transferCoin2.String(), test1Addr, test2Addr, "test1-not-accept-denom", gasLimit, fees)
+
+	balanceTest1Terra, err := node.QuerySpecificBalance(test1Addr, initialization.TerraDenom)
+	s.Require().NoError(err)
+	balanceTest1NonValueDenom, err := node.QuerySpecificBalance(test1Addr, initialization.NonValueDenom)
+	s.Require().NoError(err)
+
+	fee := initialization.TaxRate.MulInt(transferAmount2).TruncateInt().AddRaw(2)
+	s.Require().Equal(balanceTest1Terra.Amount, transferAmount1.Sub(transferAmount2).Sub(fee))
+	s.Require().Equal(balanceTest1NonValueDenom, transferCoin1NonValueDenom)
+
+}

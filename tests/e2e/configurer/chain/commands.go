@@ -82,9 +82,9 @@ func (n *NodeConfig) WasmExecuteError(contract, execMsg, amount, from string, ga
 	}
 	cmd = append(cmd, "--gas", gasLimit, "--fees", fees.String())
 	n.LogActionF(strings.Join(cmd, " "))
-	_, _, err := n.containerManager.ExecTxCmdError(n.t, n.chainID, n.Name, cmd)
+	_, _, err := n.containerManager.ExecTxCmdError(n.t, n.chainID, n.Name, cmd, "", true)
 	require.NoError(n.t, err)
-	n.LogActionF("successfully executed")
+	n.LogActionF("executed failed")
 }
 
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
@@ -223,6 +223,14 @@ func extractProposalIDFromResponse(response string) (int, error) {
 	return proposalID, nil
 }
 
+func (n *NodeConfig) BankSendError(amount string, sendAddress string, receiveAddress string, walletName string, gasLimit string, fees sdk.Coins, failError string) {
+	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
+	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
+	cmd = append(cmd, "--fees", fees.String(), "--gas", gasLimit)
+	_, _, err := n.containerManager.ExecTxCmdError(n.t, n.chainID, n.Name, cmd, failError, false)
+	require.NoError(n.t, err)
+	n.LogActionF("failed sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
+}
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string, gasLimit string, fees sdk.Coins) {
 	n.BankSendWithWallet(amount, sendAddress, receiveAddress, "val", gasLimit, fees)
 }

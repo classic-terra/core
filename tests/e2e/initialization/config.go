@@ -46,18 +46,20 @@ const (
 	TerraDenom          = "uluna"
 	UsdDenom            = "uusd"
 	EurDenom            = "ueur"
+	NonValueDenom       = "nonvalue"
 	TerraIBCDenom       = "ibc/4627AD2524E3E0523047E35BB76CC90E37D9D57ACF14F0FCBCEB2480705F3CB8"
 	MinGasPrice         = "0.00000000001"
 	E10                 = 10000000000
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
 	// chainA
-	ChainAID      = "terra-test-a"
-	TerraBalanceA = 20000000000000
-	UsdBalanceA   = 30000000000000
-	EurBalanceA   = 40000000000000
-	StakeBalanceA = 110000000000
-	StakeAmountA  = 100000000000
+	ChainAID         = "terra-test-a"
+	TerraBalanceA    = 200000000000000
+	UsdBalanceA      = 300000000000000
+	EurBalanceA      = 400000000000000
+	NonValueBalanceA = 10000000000000
+	StakeBalanceA    = 110000000000
+	StakeAmountA     = 100000000000
 	// chainB
 	ChainBID          = "terra-test-b"
 	TerraBalanceB     = 500000000000
@@ -80,7 +82,7 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceA, TerraDenom, UsdBalanceA, UsdDenom, EurBalanceA, EurDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s", TerraBalanceA, TerraDenom, UsdBalanceA, UsdDenom, EurBalanceA, EurDenom, NonValueBalanceA, NonValueDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", TerraBalanceB, TerraDenom, UsdBalanceB, UsdDenom, EurBalanceB, EurDenom)
 	// InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
 	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna

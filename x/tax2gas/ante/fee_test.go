@@ -472,6 +472,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		msgSigner    cryptotypes.PrivKey
 		msgCreator   func() []sdk.Msg
 		minFeeAmount int64
+		gasLimit     uint64
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
@@ -484,8 +485,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			// 263025*28.325 = 7450184 - only gas fee
-			minFeeAmount: 7450184,
+			// 262593*28.325 = 7437947 - only gas fee
+			minFeeAmount: 7437947,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],
@@ -498,7 +499,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount: 7450184 + feeAmt,
+			// gasLimit * 28.325 = 8497500
+			minFeeAmount: 8497500 + feeAmt,
 		}, {
 			name:      "MsgExec(MsgSend(normal -> normal))",
 			msgSigner: privs[2],
@@ -511,7 +513,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount: 7450184 + feeAmt,
+			// gasLimit * 28.325 = 8497500
+			minFeeAmount: 8497500 + feeAmt,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
@@ -526,7 +529,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount: 7450184 + feeAmt,
+			// gasLimit * 28.325 = 8497500
+			minFeeAmount: 8497500 + feeAmt,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
 			msgSigner: privs[0],
@@ -561,7 +565,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			minFeeAmount: 7450184 + feeAmt*2,
+			// gasLimit * 28.325 = 8497500
+			minFeeAmount: 8497500 + feeAmt*2,
 		}, {
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
 			msgSigner: privs[3],
@@ -610,8 +615,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				msgs = append(msgs, msg2)
 				return msgs
 			},
-			// 1046653*28.325 = 29646447
-			minFeeAmount: 29646447 + feeAmt,
+			// gasLimit*28.325 = 33990000
+			minFeeAmount: 33990000 + feeAmt,
+			gasLimit:     1200000,
 		},
 	}
 
@@ -641,7 +647,10 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 		// msg and signatures
 		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, c.minFeeAmount))
-		gasLimit := testdata.NewTestGasLimit()
+		gasLimit := uint64(300000)
+		if c.gasLimit != 0 {
+			gasLimit = c.gasLimit
+		}
 		require.NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
 		s.txBuilder.SetFeeAmount(feeAmount)
 		s.txBuilder.SetGasLimit(gasLimit)

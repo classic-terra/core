@@ -45,7 +45,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
 	}
 	msgs := feeTx.GetMsgs()
-	if tax2gasutils.IsOracleTx(msgs) || simulate || !tgd.tax2gasKeeper.IsEnabled(ctx) {
+	if tax2gasutils.IsOracleTx(msgs) || !tgd.tax2gasKeeper.IsEnabled(ctx) {
 		return next(ctx, tx, simulate, success)
 	}
 
@@ -142,11 +142,9 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}
 
-	if !simulate {
-		err := tgd.BurnTaxSplit(ctx, taxes)
-		if err != nil {
-			return ctx, err
-		}
+	err = tgd.BurnTaxSplit(ctx, taxes)
+	if err != nil {
+		return ctx, err
 	}
 
 	return next(ctx, tx, simulate, success)

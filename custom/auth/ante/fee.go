@@ -99,7 +99,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
-	var feesOrTax sdk.Coins = fee
+	var feesOrTax = fee
 
 	// deduct the fees
 	if fee.IsZero() && simulate {

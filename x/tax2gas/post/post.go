@@ -34,7 +34,6 @@ func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.
 	}
 }
 
-// TODO: handle fail tx
 func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, success bool, next sdk.PostHandler) (sdk.Context, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -51,7 +50,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	feeCoins := feeTx.GetFee()
 	anteConsumedGas, ok := ctx.Value(types.AnteConsumedGas).(uint64)
-	if !ok {
+	if !simulate && !ok {
 		// If cannot found the anteConsumedGas, that's mean the tx is bypass
 		// Skip this tx as it's bypass
 		return next(ctx, tx, simulate, success)
@@ -59,7 +58,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	// Get paid denom identified in ante handler
 	paidDenom, ok := ctx.Value(types.PaidDenom).(string)
-	if !ok {
+	if !simulate && !ok {
 		// If cannot found the paidDenom, that's mean this is the init genesis tx
 		// Skip this tx as it's init genesis tx
 		return next(ctx, tx, simulate, success)
@@ -67,18 +66,33 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	gasPrices := tgd.tax2gasKeeper.GetGasPrices(ctx)
 	found, paidDenomGasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, paidDenom)
-	if !found {
+	if !simulate && !found {
 		return ctx, types.ErrDenomNotFound
 	}
 	paidAmount := paidDenomGasPrice.Mul(sdk.NewDec(int64(anteConsumedGas)))
-	// Deduct feeCoins with paid amount
-	feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
+
+	if !simulate {
+		// Deduct feeCoins with paid amount
+		feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
+	}
 
 	taxGas := ctx.TaxGasMeter().GasConsumed()
 
 	// we consume the gas here as we need to calculate the tax for consumed gas
-
+	// if the gas overflow, then that means the tx can't be estimates as normal way
+	// we need to add the --fee flag manually
 	totalGasConsumed := ctx.GasMeter().GasConsumed()
+
+	if taxGas.IsUint64() {
+		taxGasUint64 := taxGas.Uint64()
+		// Check if gas not overflow
+		if totalGasConsumed+taxGasUint64 >= totalGasConsumed && totalGasConsumed+taxGasUint64 >= taxGasUint64 {
+			if simulate {
+				ctx.GasMeter().ConsumeGas(taxGasUint64, "consume tax gas")
+			}
+		}
+	}
+
 	// Deduct the gas consumed amount spent on ante handler
 	totalGasRemaining := sdkmath.NewInt(int64(totalGasConsumed - anteConsumedGas)).Add(taxGas)
 
@@ -118,11 +132,10 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 					// Calculate tax fee and BurnTaxSplit
 					_, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeRequired.Denom)
 					taxFee := gasPrice.MulInt(taxGas).Ceil().RoundInt()
-					if !simulate {
-						err := tgd.BurnTaxSplit(ctx, sdk.NewCoins(sdk.NewCoin(feeRequired.Denom, taxFee)))
-						if err != nil {
-							return ctx, err
-						}
+
+					err := tgd.BurnTaxSplit(ctx, sdk.NewCoins(sdk.NewCoin(feeRequired.Denom, taxFee)))
+					if err != nil {
+						return ctx, err
 					}
 					return next(ctx, tx, simulate, success)
 				}
@@ -133,8 +146,13 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
 	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
-	if gasRemaining.IsPositive() {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %d gas more", totalGasRemaining)
+	if !simulate && !ctx.IsCheckTx() && gasRemaining.IsPositive() {
+		gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasRemaining)
+		if err != nil {
+			return ctx, err
+		}
+
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %s gas more, which equal to %q ", gasRemaining.String(), gasRemainingFees)
 	}
 	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)
 	err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayerAccount.GetAddress(), authtypes.FeeCollectorName, payableFees)

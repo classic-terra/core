@@ -93,14 +93,14 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	if !simulate && !taxes.IsZero() {
 		// Fee has to at least be enough to cover taxes
-		priority, err = fd.checkTxFee(ctx, tx, taxes)
+		priority, err = fd.checkTxFee(ctx, tx)
 		if err != nil {
 			return ctx, err
 		}
 	}
 
 	// Try to deduct the gasConsumed fees
-	paidDenom, err := fd.tryDeductFee(ctx, feeTx, gasConsumedFees)
+	paidDenom, err := fd.tryDeductFee(ctx, feeTx, gasConsumedFees, simulate)
 	if err != nil {
 		return ctx, err
 	}
@@ -117,7 +117,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins) (string, error) {
+func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) (string, error) {
 	if addr := fd.accountKeeper.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
 		return "", fmt.Errorf("fee collector module account (%s) has not been set", authtypes.FeeCollectorName)
 	}
@@ -199,6 +199,9 @@ func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.
 		// As there is only 1 element
 		return foundCoins.Denoms()[0], nil
 	}
+	if simulate {
+		return "", nil
+	}
 	return "", fmt.Errorf("can't find coin that matches. Expected %s, wanted %s", feeCoins, taxes)
 }
 
@@ -226,7 +229,7 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.Acco
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 // Transaction with only oracle messages will skip gas fee check and will have the most priority.
 // It also checks enough fee for treasury tax
-func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (int64, error) {
+func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx) (int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -249,11 +252,9 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 			requiredGasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
 
-		requiredFees := requiredGasFees.Add(taxes...)
-
 		// Check required fees
-		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-			return 0, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
+		if !requiredGasFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
+			return 0, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q", feeCoins, requiredGasFees)
 		}
 	}
 

@@ -44,3 +44,7 @@ type DistrKeeper interface {
 type GovKeeper interface {
 	GetDepositParams(ctx sdk.Context) govv1.DepositParams
 }
+
+type Tax2GasKeeper interface {
+	GetBurnTaxRate(ctx sdk.Context) (burnTaxRate sdk.Dec)
+}

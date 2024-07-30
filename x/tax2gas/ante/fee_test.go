@@ -75,9 +75,9 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			mallate: func() {
 				msg := testdata.NewTestMsg(addr1)
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
-				// GasConsumed : 7220*28.325 = 204507
-				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(204507))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 204507))
+				// GasConsumed : 7328*28.325 = 207566
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(207566))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207566))
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(100000)
 			},
@@ -90,9 +90,9 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 			mallate: func() {
 				msg := testdata.NewTestMsg(addr1)
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
-				// GasConsumed : 7220*28,325 = 204507
-				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(204506))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 204506))
+				// GasConsumed : 7328*28,325 = 207566
+				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(207565))))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207565))
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(100000)
 			},

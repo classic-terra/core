@@ -61,6 +61,7 @@ func NewParams() Params {
 func DefaultParams() Params {
 	return Params{
 		GasPrices:                       DefaultGasPrices,
+		BurnTaxRate:                     sdk.NewDecWithPrec(1, 3),
 		Enabled:                         true,
 		BypassMinFeeMsgTypes:            DefaultBypassMinFeeMsgTypes,
 		MaxTotalBypassMinFeeMsgGasUsage: DefaultmaxTotalBypassMinFeeMsgGasUsage,

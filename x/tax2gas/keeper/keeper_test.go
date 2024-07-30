@@ -48,6 +48,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		key,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	suite.keeper.SetParams(suite.ctx, types.DefaultParams())
 
 	types.RegisterInterfaces(encCfg.InterfaceRegistry)
 

@@ -388,6 +388,7 @@ func updateTax2GasGenesis(tax2gasGenState *tax2gastypes.GenesisState) {
 		sdk.NewDecCoinFromDec("uusd", UsdGasPrice),
 		sdk.NewDecCoinFromDec("ueur", EurGasPrice),
 	)
+	tax2gasGenState.Params.BurnTaxRate = TaxRate
 	tax2gasGenState.Params.Enabled = true
 }
 

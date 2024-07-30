@@ -62,13 +62,15 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	// Compute taxes based on consumed gas
 	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 	gasConsumed := ctx.GasMeter().GasConsumed()
+	fmt.Println("gasConsumed: ", gasConsumed)
 	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, sdk.NewInt(int64(gasConsumed)))
 	if err != nil {
 		return ctx, err
 	}
 
 	// Compute taxes based on sent amount
-	taxes := tax2gasutils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	burnTaxRate := fd.tax2gasKeeper.GetBurnTaxRate(ctx)
+	taxes := tax2gasutils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, burnTaxRate, msgs...)
 	// Convert taxes to gas
 	taxGas, err := tax2gasutils.ComputeGas(gasPrices, taxes)
 	if err != nil {

@@ -1,5 +1,5 @@
 //nolint:revive
-package v8_2
+package v9
 
 import (
 	"github.com/classic-terra/core/v3/app/keepers"
@@ -10,7 +10,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func CreateV82UpgradeHandler(
+func CreateV9UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
 	_ upgrades.BaseAppParamManager,

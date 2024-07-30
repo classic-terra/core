@@ -1,5 +1,5 @@
 //nolint:revive
-package v8_2
+package v9
 
 import (
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -8,11 +8,11 @@ import (
 	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 )
 
-const UpgradeName = "v8_2"
+const UpgradeName = "v9"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
-	CreateUpgradeHandler: CreateV82UpgradeHandler,
+	CreateUpgradeHandler: CreateV9UpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			tax2gastypes.ModuleName,

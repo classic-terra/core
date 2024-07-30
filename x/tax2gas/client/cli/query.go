@@ -24,6 +24,7 @@ func GetQueryCmd() *cobra.Command {
 
 	tax2gasQueryCmd.AddCommand(
 		GetCmdQueryParams(),
+		GetCmdBurnTaxRate(),
 	)
 
 	return tax2gasQueryCmd
@@ -50,6 +51,35 @@ func GetCmdQueryParams() *cobra.Command {
 			}
 
 			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdBurnTaxRate implements a command to return the current burn tax rate.
+func GetCmdBurnTaxRate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "burn-tax-rate",
+		Short: "Query the current burn tax rate",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			burnTaxRate := &types.QueryBurnTaxRateRequest{}
+
+			res, err := queryClient.BurnTaxRate(context.Background(), burnTaxRate)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 

@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 
-	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,7 +15,8 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	treasuryexported "github.com/classic-terra/core/v3/x/treasury/exported"
+	tax2gasexported "github.com/classic-terra/core/v3/x/tax2gas/exported"
+	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 )
 
 type (
@@ -98,7 +98,7 @@ func ComputeFeesWithCmd(
 
 // FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
 func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sdk.Coins, err error) {
-	taxRate, err := queryTaxRate(clientCtx)
+	burnTaxRate, err := queryTaxRate(clientCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,20 +106,12 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			tax, err := computeTax(clientCtx, taxRate, msg.Amount)
-			if err != nil {
-				return nil, err
-			}
-
+			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Amount)
 			taxes = taxes.Add(tax...)
 
 		case *banktypes.MsgMultiSend:
 			for _, input := range msg.Inputs {
-				tax, err := computeTax(clientCtx, taxRate, input.Coins)
-				if err != nil {
-					return nil, err
-				}
-
+				tax := tax2gasutils.ComputeTax(burnTaxRate, input.Coins)
 				taxes = taxes.Add(tax...)
 			}
 
@@ -137,35 +129,19 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 			taxes = taxes.Add(tax...)
 
 		case *marketexported.MsgSwapSend:
-			tax, err := computeTax(clientCtx, taxRate, sdk.NewCoins(msg.OfferCoin))
-			if err != nil {
-				return nil, err
-			}
-
+			tax := tax2gasutils.ComputeTax(burnTaxRate, sdk.NewCoins(msg.OfferCoin))
 			taxes = taxes.Add(tax...)
 
 		case *wasmtypes.MsgInstantiateContract:
-			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-			if err != nil {
-				return nil, err
-			}
-
+			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)
 			taxes = taxes.Add(tax...)
 
 		case *wasmtypes.MsgInstantiateContract2:
-			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-			if err != nil {
-				return nil, err
-			}
-
+			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)
 			taxes = taxes.Add(tax...)
 
 		case *wasmtypes.MsgExecuteContract:
-			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-			if err != nil {
-				return nil, err
-			}
-
+			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)
 			taxes = taxes.Add(tax...)
 		}
 	}
@@ -173,50 +149,14 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 	return taxes, nil
 }
 
-// computes the stability tax according to tax-rate and tax-cap
-func computeTax(clientCtx client.Context, taxRate sdk.Dec, principal sdk.Coins) (taxes sdk.Coins, err error) {
-	for _, coin := range principal {
-
-		taxCap, err := queryTaxCap(clientCtx, coin.Denom)
-		if err != nil {
-			return nil, err
-		}
-
-		taxDue := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
-
-		// If tax due is greater than the tax cap, cap!
-		if taxDue.GT(taxCap) {
-			taxDue = taxCap
-		}
-
-		if taxDue.Equal(sdk.ZeroInt()) {
-			continue
-		}
-
-		taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxDue))
-	}
-
-	return
-}
-
 func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
-	queryClient := treasuryexported.NewQueryClient(clientCtx)
+	queryClient := tax2gasexported.NewQueryClient(clientCtx)
 
-	res, err := queryClient.TaxRate(context.Background(), &treasuryexported.QueryTaxRateRequest{})
+	res, err := queryClient.BurnTaxRate(context.Background(), &tax2gasexported.QueryBurnTaxRateRequest{})
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
-	return res.TaxRate, err
-}
-
-func queryTaxCap(clientCtx client.Context, denom string) (math.Int, error) {
-	queryClient := treasuryexported.NewQueryClient(clientCtx)
-
-	res, err := queryClient.TaxCap(context.Background(), &treasuryexported.QueryTaxCapRequest{Denom: denom})
-	if err != nil {
-		return sdk.NewInt(0), err
-	}
-	return res.TaxCap, err
+	return res.BurnTaxRate, err
 }
 
 // prepareFactory ensures the account defined by ctx.GetFromAddress() exists and

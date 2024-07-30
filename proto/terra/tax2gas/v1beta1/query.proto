@@ -11,10 +11,21 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/tax2gas/Params";
   }
+  rpc BurnTaxRate(QueryBurnTaxRateRequest) returns (QueryBurnTaxRateResponse) {
+    option (google.api.http).get = "/terra/tax2gas/BurnTaxRate";
+  }
 }
 
 //=============================== Params
 message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryBurnTaxRateRequest {}
+message QueryBurnTaxRateResponse {
+  string burn_tax_rate = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

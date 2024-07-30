@@ -1,9 +1,6 @@
 package keeper
 
 import (
-	"regexp"
-	"strings"
-
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -145,12 +142,6 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 }
 
-var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
-
-func isIBCDenom(denom string) bool {
-	return IBCRegexp.MatchString(strings.ToLower(denom))
-}
-
 // FilterMsgAndComputeTax computes the stability tax on messages.
 func FilterMsgAndComputeTax(ctx sdk.Context, tk tax2gastypes.TreasuryKeeper, burnTaxRate sdk.Dec, msgs ...sdk.Msg) sdk.Coins {
 	taxes := sdk.Coins{}
@@ -159,7 +150,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk tax2gastypes.TreasuryKeeper, bur
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
 			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
-				taxes = taxes.Add(computeTax(burnTaxRate, msg.Amount)...)
+				taxes = taxes.Add(tax2gasutils.ComputeTax(burnTaxRate, msg.Amount)...)
 			}
 
 		case *banktypes.MsgMultiSend:
@@ -179,22 +170,22 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk tax2gastypes.TreasuryKeeper, bur
 
 			if tainted != len(msg.Inputs)+len(msg.Outputs) {
 				for _, input := range msg.Inputs {
-					taxes = taxes.Add(computeTax(burnTaxRate, input.Coins)...)
+					taxes = taxes.Add(tax2gasutils.ComputeTax(burnTaxRate, input.Coins)...)
 				}
 			}
 
 		case *marketexported.MsgSwapSend:
-			taxes = taxes.Add(computeTax(burnTaxRate, sdk.NewCoins(msg.OfferCoin))...)
+			taxes = taxes.Add(tax2gasutils.ComputeTax(burnTaxRate, sdk.NewCoins(msg.OfferCoin))...)
 
 		case *wasmtypes.MsgInstantiateContract:
-			taxes = taxes.Add(computeTax(burnTaxRate, msg.Funds)...)
+			taxes = taxes.Add(tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)...)
 
 		case *wasmtypes.MsgInstantiateContract2:
-			taxes = taxes.Add(computeTax(burnTaxRate, msg.Funds)...)
+			taxes = taxes.Add(tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)...)
 
 		case *wasmtypes.MsgExecuteContract:
 			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
-				taxes = taxes.Add(computeTax(burnTaxRate, msg.Funds)...)
+				taxes = taxes.Add(tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)...)
 			}
 
 		case *authz.MsgExec:
@@ -203,34 +194,6 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk tax2gastypes.TreasuryKeeper, bur
 				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, burnTaxRate, messages...)...)
 			}
 		}
-	}
-
-	return taxes
-}
-
-// computes the stability tax according to tax-rate and tax-cap
-func computeTax(burnTaxRate sdk.Dec, principal sdk.Coins) sdk.Coins {
-	if burnTaxRate.Equal(sdk.ZeroDec()) {
-		return sdk.Coins{}
-	}
-
-	taxes := sdk.Coins{}
-
-	for _, coin := range principal {
-		if coin.Denom == sdk.DefaultBondDenom {
-			continue
-		}
-
-		if isIBCDenom(coin.Denom) {
-			continue
-		}
-
-		tax := sdk.NewDecFromInt(coin.Amount).Mul(burnTaxRate).TruncateInt()
-		if tax.Equal(sdk.ZeroInt()) {
-			continue
-		}
-
-		taxes = taxes.Add(sdk.NewCoin(coin.Denom, tax))
 	}
 
 	return taxes

@@ -30,7 +30,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, burnTaxRat
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
 			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
-				taxes = taxes.Add(computeTax(burnTaxRate, msg.Amount)...)
+				taxes = taxes.Add(ComputeTax(burnTaxRate, msg.Amount)...)
 			}
 
 		case *banktypes.MsgMultiSend:
@@ -50,22 +50,22 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, burnTaxRat
 
 			if tainted != len(msg.Inputs)+len(msg.Outputs) {
 				for _, input := range msg.Inputs {
-					taxes = taxes.Add(computeTax(burnTaxRate, input.Coins)...)
+					taxes = taxes.Add(ComputeTax(burnTaxRate, input.Coins)...)
 				}
 			}
 
 		case *marketexported.MsgSwapSend:
-			taxes = taxes.Add(computeTax(burnTaxRate, sdk.NewCoins(msg.OfferCoin))...)
+			taxes = taxes.Add(ComputeTax(burnTaxRate, sdk.NewCoins(msg.OfferCoin))...)
 
 		case *wasmtypes.MsgInstantiateContract:
-			taxes = taxes.Add(computeTax(burnTaxRate, msg.Funds)...)
+			taxes = taxes.Add(ComputeTax(burnTaxRate, msg.Funds)...)
 
 		case *wasmtypes.MsgInstantiateContract2:
-			taxes = taxes.Add(computeTax(burnTaxRate, msg.Funds)...)
+			taxes = taxes.Add(ComputeTax(burnTaxRate, msg.Funds)...)
 
 		case *wasmtypes.MsgExecuteContract:
 			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
-				taxes = taxes.Add(computeTax(burnTaxRate, msg.Funds)...)
+				taxes = taxes.Add(ComputeTax(burnTaxRate, msg.Funds)...)
 			}
 
 		case *authz.MsgExec:
@@ -80,7 +80,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk types.TreasuryKeeper, burnTaxRat
 }
 
 // computes the stability tax according to tax-rate and tax-cap
-func computeTax(burnTaxRate sdk.Dec, principal sdk.Coins) sdk.Coins {
+func ComputeTax(burnTaxRate sdk.Dec, principal sdk.Coins) sdk.Coins {
 	taxes := sdk.Coins{}
 
 	for _, coin := range principal {

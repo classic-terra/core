@@ -485,8 +485,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			// 262593*28.325 = 7437947 - only gas fee
-			minFeeAmount: 7437947,
+			// 263241*28.325 = 7456302 - only gas fee
+			minFeeAmount: 7456302,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],

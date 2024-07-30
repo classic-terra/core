@@ -111,7 +111,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	}
 
 	if !feesOrTax.IsZero() {
-		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, fee)
+		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, feesOrTax)
 		if err != nil {
 			return err
 		}

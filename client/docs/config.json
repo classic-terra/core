@@ -138,6 +138,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/terra/taxexemption/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "TaxExemptionParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/terra/dyncomm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

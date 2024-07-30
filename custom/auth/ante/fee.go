@@ -106,12 +106,30 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 			return err
 		}
 
-		if !taxes.IsZero() && !simulate {
+		if !taxes.IsZero() {
 			err := fd.BurnTaxSplit(ctx, taxes)
 			if err != nil {
 				return err
 			}
+			// Record tax proceeds
+			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
+		}
+	}
 
+	if fee.IsZero() && simulate {
+		// as in simulate there normally is no fees sent, only put the tax to the fee collector to allow burn tax split simulation
+		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, taxes)
+		if err != nil {
+			return err
+		}
+
+		// we duplicate this part here to make the update non-state-breaking.
+		// TODO: consolidate in a state-breaking update
+		if !taxes.IsZero() {
+			err := fd.BurnTaxSplit(ctx, taxes)
+			if err != nil {
+				return err
+			}
 			// Record tax proceeds
 			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 		}

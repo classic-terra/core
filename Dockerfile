@@ -1,16 +1,16 @@
 # syntax=docker/dockerfile:1
 
 ARG source=./
-ARG GO_VERSION="1.20"
+ARG GO_VERSION="1.21"
 ARG BUILDPLATFORM=linux/amd64
 ARG BASE_IMAGE="golang:${GO_VERSION}-alpine3.18"
-FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} as base
+FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} AS  base
 
 ###############################################################################
 # Builder
 ###############################################################################
 
-FROM base as builder-stage-1
+FROM base AS builder-stage-1
 
 ARG source
 ARG GIT_COMMIT
@@ -70,7 +70,7 @@ RUN set -eux &&\
 
 ###############################################################################
 
-FROM builder-stage-1 as builder-stage-2
+FROM builder-stage-1 AS builder-stage-2
 
 ARG source
 ARG GOOS=linux \
@@ -102,7 +102,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 ################################################################################
 
-FROM alpine as terra-core
+FROM alpine AS terra-core
 
 RUN apk update && apk add wget lz4 aria2 curl jq gawk coreutils "zlib>1.2.12-r2" libssl3
 

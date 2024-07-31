@@ -1,4 +1,4 @@
-go 1.20
+go 1.22
 
 module github.com/classic-terra/core/v3
 
@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.10
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99
-	github.com/cosmos/ibc-go/v7 v7.4.0
+	github.com/cosmos/ibc-go/v7 v7.4.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
 	github.com/google/gofuzz v1.2.0

@@ -30,3 +30,11 @@ pull_request_rules:
       backport:
         branches:
           - release/v3.0.x
+  - name: Backport patches to release/v3.1.x branch
+    conditions:
+      - base=main
+      - label=backport/v3.1.x
+    actions:
+      backport:
+        branches:
+          - release/v3.1.x

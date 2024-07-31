@@ -1,4 +1,5 @@
-FROM golang:1.20 AS go-builder
+ARG GO_VERSION="1.22"
+FROM golang:${GO_VERSION} AS go-builder
 
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apt update

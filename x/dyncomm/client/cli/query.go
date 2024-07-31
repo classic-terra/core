@@ -70,7 +70,7 @@ func GetCmdQueryParams() *cobra.Command {
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query the current dyncomm params",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

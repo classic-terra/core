@@ -172,7 +172,7 @@ func SimulateMsgExecuteContract(
 		app *baseapp.BaseApp,
 		ctx sdk.Context,
 		accs []simtypes.Account,
-		chainID string,
+		_ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		contractAddr := contractSelector(ctx, wasmKeeper)
 		if contractAddr == nil {

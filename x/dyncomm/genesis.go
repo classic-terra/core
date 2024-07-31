@@ -14,7 +14,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 	keeper.SetParams(ctx, data.Params)
 
 	// iterate validators and set target rates
-	keeper.StakingKeeper.IterateValidators(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+	keeper.StakingKeeper.IterateValidators(ctx, func(_ int64, validator stakingtypes.ValidatorI) bool {
 		val := validator.(stakingtypes.Validator)
 		keeper.SetTargetCommissionRate(ctx, val.OperatorAddress, val.Commission.Rate)
 		return false

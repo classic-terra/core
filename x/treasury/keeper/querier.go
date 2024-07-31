@@ -133,7 +133,7 @@ func (q querier) BurnTaxExemptionList(c context.Context, req *types.QueryBurnTax
 	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.BurnTaxExemptionListPrefix)
 	var addresses []string
 
-	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(sub, req.Pagination, func(key []byte, _ []byte, _ bool) (bool, error) {
 		address := string(key)
 		addresses = append(addresses, address)
 

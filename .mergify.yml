@@ -1,26 +1,40 @@
+defaults:
+  actions:
+    backport:
+      assignees:
+        - "{{ author }}"
+
 queue_rules:
   - name: default
     conditions:
-      - "#approved-reviews-by>2"
+      - "#approved-reviews-by>1"
+    commit_message_template: |
+      {{ title }} (#{{ number }})
+      {{ body }}
 
 pull_request_rules:
-  - name: automerge to main with label automerge and branch protection passing
+  - name: Automatic merge on approval to the main branch
     conditions:
-      - "#approved-reviews-by>2"
+      - "#approved-reviews-by>=1"
       - base=main
       - label=A:automerge
     actions:
       queue:
         name: default
         method: squash
-        commit_message_template: |
-          {{ title }} (#{{ number }})
-          {{ body }}
-  - name: backport patches to v2.1.x branch
+  - name: Backport patches to release/v3.0.x branch
     conditions:
       - base=main
-      - label=backport/v2.1.x
+      - label=backport/v3.0.x
     actions:
       backport:
         branches:
-          - release/v2.1.x
+          - release/v3.0.x
+  - name: Backport patches to release/v3.1.x branch
+    conditions:
+      - base=main
+      - label=backport/v3.1.x
+    actions:
+      backport:
+        branches:
+          - release/v3.1.x

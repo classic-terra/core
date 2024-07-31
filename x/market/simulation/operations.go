@@ -68,7 +68,7 @@ func SimulateMsgSwap(
 		}
 
 		var whitelist []string
-		ok.IterateLunaExchangeRates(ctx, func(denom string, ex sdk.Dec) bool {
+		ok.IterateLunaExchangeRates(ctx, func(denom string, _ sdk.Dec) bool {
 			whitelist = append(whitelist, denom)
 			return false
 		})
@@ -141,7 +141,7 @@ func SimulateMsgSwapSend(
 		}
 
 		var whitelist []string
-		ok.IterateLunaExchangeRates(ctx, func(denom string, ex sdk.Dec) bool {
+		ok.IterateLunaExchangeRates(ctx, func(denom string, _ sdk.Dec) bool {
 			whitelist = append(whitelist, denom)
 			return false
 		})

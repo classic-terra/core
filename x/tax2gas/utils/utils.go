@@ -1,33 +1,11 @@
 package utils
 
 import (
-	"math"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 )
-
-// GetTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price
-// provided in a transaction.
-// NOTE: This implementation should be used with a great consideration as it opens potential attack vectors
-// where txs with multiple coins could not be prioritize as expected.
-func GetTxPriority(fee sdk.Coins, gas int64) int64 {
-	var priority int64
-	for _, c := range fee {
-		p := int64(math.MaxInt64)
-		gasPrice := c.Amount.QuoRaw(gas)
-		if gasPrice.IsInt64() {
-			p = gasPrice.Int64()
-		}
-		if priority == 0 || p < priority {
-			priority = p
-		}
-	}
-
-	return priority
-}
 
 func IsOracleTx(msgs []sdk.Msg) bool {
 	for _, msg := range msgs {
@@ -73,9 +51,10 @@ func GetGasPriceByDenom(gasPrices sdk.DecCoins, denom string) (bool, sdk.Dec) {
 	}
 }
 
-func CalculateTaxesAndGasRemaining(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas sdkmath.Int, totalGasRemaining sdkmath.Int) (taxes sdk.Coins, gasRemaining sdkmath.Int) {
+func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas sdkmath.Int, totalGasRemaining sdkmath.Int) (taxes, payableFees sdk.Coins, gasRemaining sdkmath.Int) {
 	taxGasRemaining := taxGas
 	taxes = sdk.NewCoins()
+	payableFees = sdk.NewCoins()
 	gasRemaining = totalGasRemaining
 	for _, feeCoin := range feeCoins {
 		found, gasPrice := GetGasPriceByDenom(gasPrices, feeCoin.Denom)
@@ -90,29 +69,34 @@ func CalculateTaxesAndGasRemaining(gasPrices sdk.DecCoins, feeCoins sdk.Coins, t
 			switch {
 			case feeCoin.IsGTE(totalFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
+				payableFees = payableFees.Add(totalFeeRequired)
 				gasRemaining = sdkmath.ZeroInt()
-				return taxes, gasRemaining
+				return taxes, payableFees, gasRemaining
 			case feeCoin.IsGTE(taxFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
 				taxGasRemaining = sdkmath.ZeroInt()
+				payableFees = payableFees.Add(feeCoin)
 				totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
 				gasRemaining = totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 			default:
 				taxes = taxes.Add(feeCoin)
+				payableFees = payableFees.Add(feeCoin)
 				taxFeeRemaining := sdk.NewDecCoinFromCoin(taxFeeRequired.Sub(feeCoin))
 				taxGasRemaining = taxFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 				gasRemaining = gasRemaining.Sub(taxGas.Sub(taxGasRemaining))
 			}
 		case gasRemaining.IsPositive():
 			if feeCoin.IsGTE(totalFeeRequired) {
+				payableFees = payableFees.Add(totalFeeRequired)
 				gasRemaining = sdkmath.ZeroInt()
-				return taxes, gasRemaining
+				return taxes, payableFees, gasRemaining
 			}
+			payableFees = payableFees.Add(feeCoin)
 			totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
 			gasRemaining = totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 		default:
-			return taxes, gasRemaining
+			return taxes, payableFees, gasRemaining
 		}
 	}
-	return taxes, gasRemaining
+	return taxes, payableFees, gasRemaining
 }

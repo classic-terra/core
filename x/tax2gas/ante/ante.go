@@ -95,12 +95,13 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	if !simulate {
 		isOracleTx := tax2gasutils.IsOracleTx(msgs)
-		feeCoins := feeTx.GetFee()
-		gas := feeTx.GetGas()
-
+		// the priority to be added in mempool is based on
+		// the tax gas that user need to pay 
 		priority = int64(math.MaxInt64)
 		if !isOracleTx {
-			priority = tax2gasutils.GetTxPriority(feeCoins, int64(gas))
+			if taxGas.IsInt64() {
+				priority = taxGas.Int64()
+			}
 		}
 	}
 

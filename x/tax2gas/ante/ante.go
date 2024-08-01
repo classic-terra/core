@@ -209,7 +209,7 @@ func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.
 	if simulate {
 		return "", nil
 	}
-	return "", fmt.Errorf("can't find coin that matches. Expected %s, wanted %s", feeCoins, taxes)
+	return "", fmt.Errorf("can't find coin that matches. Expected %q, wanted %q", feeCoins, taxes)
 }
 
 // DeductFees deducts fees from the given account.

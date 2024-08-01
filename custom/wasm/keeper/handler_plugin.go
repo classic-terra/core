@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -85,7 +83,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 
 	gasPrices, ok := ctx.Value(tax2gastypes.FinalGasPrices).(sdk.DecCoins)
 	if !ok {
-		return nil, nil, fmt.Errorf("unable to get gas prices from context")
+		gasPrices = h.tax2gaskeeper.GetGasPrices(ctx)
 	}
 	for _, sdkMsg := range sdkMsgs {
 		if h.tax2gaskeeper.IsEnabled(ctx) {

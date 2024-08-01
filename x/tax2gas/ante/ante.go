@@ -59,7 +59,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return next(ctx, tx, simulate)
 	}
 
-	// Check if the gas price user set is larger than the current gas price
+	// Check if the gas price node set is larger than the current gas price
 	// it will be the new gas price
 	gasPrices := fd.GetFinalGasPrices(ctx)
 	// Compute taxes based on consumed gas

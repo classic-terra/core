@@ -52,7 +52,7 @@ func ComputeFeesWithCmd(
 		gas = adj
 	}
 
-	// As the tax is already converted to gas when simulating, 
+	// As the tax is already converted to gas when simulating,
 	// we don't need to calculate tax anymore
 	fees := txf.Fees()
 	gasPrices := txf.GasPrices()

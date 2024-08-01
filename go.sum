@@ -356,8 +356,8 @@ github.com/classic-terra/cosmos-sdk v0.47.10-terra.1 h1:ek0vQ435fpeP3xGhszDO2yMI
 github.com/classic-terra/cosmos-sdk v0.47.10-terra.1/go.mod h1:4mBvTB8zevoeTuQufWwTcNnthGG2afXO+9D42BKzlRo=
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121 h1:fjpWDB0hm225wYg9vunyDyTH8ftd5xEUgINJKidj+Tw=
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
-github.com/classic-terra/ibc-go/v7 v7.4.0-terra h1:hawaq62XKlxyc8xLyIcc6IujDDEbqDBU+2U15SF+hj8=
-github.com/classic-terra/ibc-go/v7 v7.4.0-terra/go.mod h1:s0lxNkjVIqsb8AVltL0qhzxeLgOKvWZrknPuvgjlEQ8=
+github.com/classic-terra/ibc-go/v7 v7.4.1-terra h1:p9S2uAxRnI+EfX4knxC+EzD847IL6V5HsQrmikhqeow=
+github.com/classic-terra/ibc-go/v7 v7.4.1-terra/go.mod h1:s0lxNkjVIqsb8AVltL0qhzxeLgOKvWZrknPuvgjlEQ8=
 github.com/classic-terra/wasmd v0.45.0-terra.5 h1:0fuc4lS1Z0Egci6hwK4DZqOwF2l9fGsZuPTZ1akObFY=
 github.com/classic-terra/wasmd v0.45.0-terra.5/go.mod h1:r/AxjzSLyrQbrANEsV/d+qf/vmCDFiAoVwWenGs23ZY=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=

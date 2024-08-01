@@ -11,6 +11,8 @@ const (
 
 	TaxGas = "taxGas"
 
+	FinalGasPrices = "finalGasPrices"
+
 	PaidDenom = "paidDenom"
 )
 

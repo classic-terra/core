@@ -92,10 +92,11 @@ var (
 	UsdGasPrice   = sdk.NewDecWithPrec(1, 10) // 1   * 10^-10
 	EurGasPrice   = sdk.NewDecWithPrec(2, 10) // 2   * 10^-10
 
-	OneMin  = time.Minute              // nolint
-	TwoMin  = 2 * time.Minute          // nolint
-	FiveMin = 5 * time.Minute          // nolint
-	TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
+	OneMin        = time.Minute              // nolint
+	TwoMin        = 2 * time.Minute          // nolint
+	FiveMin       = 5 * time.Minute          // nolint
+	TaxRate       = sdk.NewDecWithPrec(2, 2) // 0.02
+	GasAdjustment = sdk.NewDecWithPrec(12, 1)
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {

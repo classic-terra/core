@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,6 +16,7 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
 	tax2gaskeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
@@ -80,6 +83,10 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
+	gasPrices, ok := ctx.Value(tax2gastypes.FinalGasPrices).(sdk.DecCoins)
+	if !ok {
+		return nil, nil, fmt.Errorf("unable to get gas prices from context")
+	}
 	for _, sdkMsg := range sdkMsgs {
 		if h.tax2gaskeeper.IsEnabled(ctx) {
 			burnTaxRate := h.tax2gaskeeper.GetBurnTaxRate(ctx)
@@ -87,7 +94,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 			if !taxes.IsZero() {
 				eventManager := sdk.NewEventManager()
 
-				taxGas, err := tax2gasutils.ComputeGas(h.tax2gaskeeper.GetGasPrices(ctx), taxes)
+				taxGas, err := tax2gasutils.ComputeGas(gasPrices, taxes)
 				if err != nil {
 					return nil, nil, err
 				}

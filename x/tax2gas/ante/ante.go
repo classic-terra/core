@@ -59,8 +59,10 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return next(ctx, tx, simulate)
 	}
 
+	// Check if the gas price user set is larger than the current gas price
+	// it will be the new gas price
+	gasPrices := fd.GetFinalGasPrices(ctx)
 	// Compute taxes based on consumed gas
-	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
 	gasConsumed := ctx.GasMeter().GasConsumed()
 	gasConsumedFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, sdk.NewInt(int64(gasConsumed)))
 	if err != nil {
@@ -91,11 +93,14 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return next(ctx, tx, simulate)
 	}
 
-	if !simulate && !taxes.IsZero() {
-		// Fee has to at least be enough to cover taxes
-		priority, err = fd.checkTxFee(ctx, tx)
-		if err != nil {
-			return ctx, err
+	if !simulate {
+		isOracleTx := tax2gasutils.IsOracleTx(msgs)
+		feeCoins := feeTx.GetFee()
+		gas := feeTx.GetGas()
+
+		priority = int64(math.MaxInt64)
+		if !isOracleTx {
+			priority = tax2gasutils.GetTxPriority(feeCoins, int64(gas))
 		}
 	}
 
@@ -105,7 +110,9 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		return ctx, err
 	}
 
-	newCtx := ctx.WithPriority(priority).WithValue(types.TaxGas, taxGas)
+	newCtx := ctx.WithPriority(priority).
+		WithValue(types.TaxGas, taxGas).
+		WithValue(types.FinalGasPrices, gasPrices)
 	if !taxGas.IsZero() {
 		newCtx.TaxGasMeter().ConsumeGas(taxGas, "ante handler taxGas")
 	}
@@ -225,48 +232,6 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc authtypes.Acco
 	return nil, sdkerrors.ErrInsufficientFunds
 }
 
-// checkTxFee implements the default fee logic, where the minimum price per
-// unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
-// Transaction with only oracle messages will skip gas fee check and will have the most priority.
-// It also checks enough fee for treasury tax
-func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx) (int64, error) {
-	feeTx, ok := tx.(sdk.FeeTx)
-	if !ok {
-		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
-	}
-
-	feeCoins := feeTx.GetFee()
-	gas := feeTx.GetGas()
-	msgs := feeTx.GetMsgs()
-	isOracleTx := tax2gasutils.IsOracleTx(msgs)
-	gasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
-
-	// Ensure that the provided fees meet a minimum threshold for the validator,
-	// if this is a CheckTx. This is only for local mempool purposes, and thus
-	// is only ran on check tx.
-	requiredGasFees := make(sdk.Coins, len(gasPrices))
-	if ctx.IsCheckTx() && !isOracleTx {
-		glDec := sdk.NewDec(int64(gas))
-		for i, gp := range gasPrices {
-			fee := gp.Amount.Mul(glDec)
-			requiredGasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
-		}
-
-		// Check required fees
-		if !requiredGasFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
-			return 0, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q", feeCoins, requiredGasFees)
-		}
-	}
-
-	priority := int64(math.MaxInt64)
-
-	if !isOracleTx {
-		priority = tax2gasutils.GetTxPriority(feeCoins, int64(gas))
-	}
-
-	return priority, nil
-}
-
 func (fd FeeDecorator) ContainsOnlyBypassMinFeeMsgs(ctx sdk.Context, msgs []sdk.Msg) bool {
 	bypassMsgTypes := fd.tax2gasKeeper.GetBypassMinFeeMsgTypes(ctx)
 
@@ -278,4 +243,24 @@ func (fd FeeDecorator) ContainsOnlyBypassMinFeeMsgs(ctx sdk.Context, msgs []sdk.
 	}
 
 	return true
+}
+
+func (fd FeeDecorator) GetFinalGasPrices(ctx sdk.Context) sdk.DecCoins {
+	tax2gasGasPrices := fd.tax2gasKeeper.GetGasPrices(ctx)
+	minGasPrices := ctx.MinGasPrices()
+	gasPrices := make(sdk.DecCoins, len(tax2gasGasPrices))
+
+	for i, gasPrice := range tax2gasGasPrices {
+		maxGasPrice := sdk.DecCoin{
+			Denom: gasPrice.Denom,
+			Amount: sdk.MaxDec(
+				minGasPrices.AmountOf(gasPrice.Denom),
+				gasPrice.Amount,
+			),
+		}
+
+		gasPrices[i] = maxGasPrice
+	}
+
+	return gasPrices
 }

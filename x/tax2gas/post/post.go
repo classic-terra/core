@@ -64,7 +64,11 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return next(ctx, tx, simulate, success)
 	}
 
-	gasPrices := tgd.tax2gasKeeper.GetGasPrices(ctx)
+	gasPrices, ok := ctx.Value(types.FinalGasPrices).(sdk.DecCoins)
+	if !ok {
+		gasPrices = tgd.tax2gasKeeper.GetGasPrices(ctx)
+	}
+
 	found, paidDenomGasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, paidDenom)
 	if !simulate && !found {
 		return ctx, types.ErrDenomNotFound
@@ -87,9 +91,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		taxGasUint64 := taxGas.Uint64()
 		// Check if gas not overflow
 		if totalGasConsumed+taxGasUint64 >= totalGasConsumed && totalGasConsumed+taxGasUint64 >= taxGasUint64 {
-			if simulate {
-				ctx.GasMeter().ConsumeGas(taxGasUint64, "consume tax gas")
-			}
+			ctx.GasMeter().ConsumeGas(taxGasUint64, "consume tax gas")
 		}
 	}
 
@@ -98,6 +100,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
+	deductFeesFrom := feePayer
 
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
@@ -105,47 +108,17 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		if tgd.feegrantKeeper == nil {
 			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
-			allowance, err := tgd.feegrantKeeper.GetAllowance(ctx, feeGranter, feePayer)
+
+			err := tgd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, feeCoins, feeTx.GetMsgs())
 			if err != nil {
-				return ctx, errorsmod.Wrapf(err, "fee-grant not found with granter %s and grantee %s", feeGranter, feePayer)
+				return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 			}
-
-			gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, totalGasRemaining)
-			if err != nil {
-				return ctx, err
-			}
-
-			// For this tx, we only accept to pay by one denom
-			for _, feeRequired := range gasRemainingFees {
-				_, err := allowance.Accept(ctx, sdk.NewCoins(feeRequired), feeTx.GetMsgs())
-				if err == nil {
-					err = tgd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, sdk.NewCoins(feeRequired), feeTx.GetMsgs())
-					if err != nil {
-						return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
-					}
-					feeGranter := tgd.accountKeeper.GetAccount(ctx, feeGranter)
-					err = tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feeGranter.GetAddress(), authtypes.FeeCollectorName, sdk.NewCoins(feeRequired))
-					if err != nil {
-						return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
-					}
-
-					// Calculate tax fee and BurnTaxSplit
-					_, gasPrice := tax2gasutils.GetGasPriceByDenom(gasPrices, feeRequired.Denom)
-					taxFee := gasPrice.MulInt(taxGas).Ceil().RoundInt()
-
-					err := tgd.BurnTaxSplit(ctx, sdk.NewCoins(sdk.NewCoin(feeRequired.Denom, taxFee)))
-					if err != nil {
-						return ctx, err
-					}
-					return next(ctx, tx, simulate, success)
-				}
-			}
-			return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 		}
+		deductFeesFrom = feeGranter
 	}
 
 	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
-	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
+	taxes, gasRemaining := tax2gasutils.CalculateTaxesAndGasRemaining(gasPrices, feeCoins, taxGas, totalGasRemaining)
 	if !simulate && !ctx.IsCheckTx() && gasRemaining.IsPositive() {
 		gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasRemaining)
 		if err != nil {
@@ -154,13 +127,15 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %s gas more, which equal to %q ", gasRemaining.String(), gasRemainingFees)
 	}
-	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)
-	err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayerAccount.GetAddress(), authtypes.FeeCollectorName, payableFees)
-	if err != nil {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	deductFeesFromAcc := tgd.accountKeeper.GetAccount(ctx, deductFeesFrom)
+	if !feeCoins.IsZero() {
+		err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, deductFeesFromAcc.GetAddress(), authtypes.FeeCollectorName, feeCoins)
+		if err != nil {
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
 	}
 
-	err = tgd.BurnTaxSplit(ctx, taxes)
+	err := tgd.BurnTaxSplit(ctx, taxes)
 	if err != nil {
 		return ctx, err
 	}

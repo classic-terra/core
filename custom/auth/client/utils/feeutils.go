@@ -1,22 +1,12 @@
 package utils
 
 import (
-	"context"
-
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	tax2gasexported "github.com/classic-terra/core/v3/x/tax2gas/exported"
-	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 )
 
 type (
@@ -62,13 +52,9 @@ func ComputeFeesWithCmd(
 		gas = adj
 	}
 
-	// Computes taxes of the msgs
-	taxes, err := FilterMsgAndComputeTax(clientCtx, msgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	fees := txf.Fees().Add(taxes...)
+	// As the tax is already converted to gas when simulating, 
+	// we don't need to calculate tax anymore
+	fees := txf.Fees()
 	gasPrices := txf.GasPrices()
 
 	if !gasPrices.IsZero() {
@@ -94,69 +80,6 @@ func ComputeFeesWithCmd(
 		Amount: fees,
 		Gas:    gas,
 	}, nil
-}
-
-// FilterMsgAndComputeTax computes the stability tax on MsgSend and MsgMultiSend.
-func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sdk.Coins, err error) {
-	burnTaxRate, err := queryTaxRate(clientCtx)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, msg := range msgs {
-		switch msg := msg.(type) {
-		case *banktypes.MsgSend:
-			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Amount)
-			taxes = taxes.Add(tax...)
-
-		case *banktypes.MsgMultiSend:
-			for _, input := range msg.Inputs {
-				tax := tax2gasutils.ComputeTax(burnTaxRate, input.Coins)
-				taxes = taxes.Add(tax...)
-			}
-
-		case *authz.MsgExec:
-			messages, err := msg.GetMessages()
-			if err != nil {
-				panic(err)
-			}
-
-			tax, err := FilterMsgAndComputeTax(clientCtx, messages...)
-			if err != nil {
-				return nil, err
-			}
-
-			taxes = taxes.Add(tax...)
-
-		case *marketexported.MsgSwapSend:
-			tax := tax2gasutils.ComputeTax(burnTaxRate, sdk.NewCoins(msg.OfferCoin))
-			taxes = taxes.Add(tax...)
-
-		case *wasmtypes.MsgInstantiateContract:
-			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)
-			taxes = taxes.Add(tax...)
-
-		case *wasmtypes.MsgInstantiateContract2:
-			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)
-			taxes = taxes.Add(tax...)
-
-		case *wasmtypes.MsgExecuteContract:
-			tax := tax2gasutils.ComputeTax(burnTaxRate, msg.Funds)
-			taxes = taxes.Add(tax...)
-		}
-	}
-
-	return taxes, nil
-}
-
-func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
-	queryClient := tax2gasexported.NewQueryClient(clientCtx)
-
-	res, err := queryClient.BurnTaxRate(context.Background(), &tax2gasexported.QueryBurnTaxRateRequest{})
-	if err != nil {
-		return sdk.ZeroDec(), err
-	}
-	return res.BurnTaxRate, err
 }
 
 // prepareFactory ensures the account defined by ctx.GetFromAddress() exists and

@@ -73,10 +73,9 @@ func GetGasPriceByDenom(gasPrices sdk.DecCoins, denom string) (bool, sdk.Dec) {
 	}
 }
 
-func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas sdkmath.Int, totalGasRemaining sdkmath.Int) (taxes sdk.Coins, payableFees sdk.Coins, gasRemaining sdkmath.Int) {
+func CalculateTaxesAndGasRemaining(gasPrices sdk.DecCoins, feeCoins sdk.Coins, taxGas sdkmath.Int, totalGasRemaining sdkmath.Int) (taxes sdk.Coins, gasRemaining sdkmath.Int) {
 	taxGasRemaining := taxGas
 	taxes = sdk.NewCoins()
-	payableFees = sdk.NewCoins()
 	gasRemaining = totalGasRemaining
 	for _, feeCoin := range feeCoins {
 		found, gasPrice := GetGasPriceByDenom(gasPrices, feeCoin.Denom)
@@ -91,34 +90,29 @@ func CalculateTaxesAndPayableFee(gasPrices sdk.DecCoins, feeCoins sdk.Coins, tax
 			switch {
 			case feeCoin.IsGTE(totalFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
-				payableFees = payableFees.Add(totalFeeRequired)
 				gasRemaining = sdkmath.ZeroInt()
-				return taxes, payableFees, gasRemaining
+				return taxes, gasRemaining
 			case feeCoin.IsGTE(taxFeeRequired):
 				taxes = taxes.Add(taxFeeRequired)
 				taxGasRemaining = sdkmath.ZeroInt()
-				payableFees = payableFees.Add(feeCoin)
 				totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
 				gasRemaining = totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 			default:
 				taxes = taxes.Add(feeCoin)
-				payableFees = payableFees.Add(feeCoin)
 				taxFeeRemaining := sdk.NewDecCoinFromCoin(taxFeeRequired.Sub(feeCoin))
 				taxGasRemaining = taxFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 				gasRemaining = gasRemaining.Sub(taxGas.Sub(taxGasRemaining))
 			}
 		case gasRemaining.IsPositive():
 			if feeCoin.IsGTE(totalFeeRequired) {
-				payableFees = payableFees.Add(totalFeeRequired)
 				gasRemaining = sdkmath.ZeroInt()
-				return taxes, payableFees, gasRemaining
+				return taxes, gasRemaining
 			}
-			payableFees = payableFees.Add(feeCoin)
 			totalFeeRemaining := sdk.NewDecCoinFromCoin(totalFeeRequired.Sub(feeCoin))
 			gasRemaining = totalFeeRemaining.Amount.Quo(gasPrice).Ceil().RoundInt()
 		default:
-			return taxes, payableFees, gasRemaining
+			return taxes, gasRemaining
 		}
 	}
-	return taxes, payableFees, gasRemaining
+	return taxes, gasRemaining
 }

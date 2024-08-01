@@ -263,10 +263,16 @@ func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, recei
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
-func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress string, receiveAddress string, feeGranter string, walletName string, gasLimit string, fees sdk.Coins) {
+func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress string, receiveAddress string, feeGranter string, walletName string, feeDenoms []string, fees ...sdk.Coin) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--fee-granter=%s", feeGranter), fmt.Sprintf("--from=%s", walletName)}
-	cmd = append(cmd, "--fees", fees.String(), "--gas", gasLimit)
+	gasPrices := feeDenomsToGasPrices(feeDenoms)
+	if len(fees) == 0 {
+		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
+	} else {
+		feeCoins := sdk.NewCoins(fees...)
+		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.2")
+	}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 

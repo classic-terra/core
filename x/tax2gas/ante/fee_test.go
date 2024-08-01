@@ -79,7 +79,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(207566))))
 				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207566))
 				s.txBuilder.SetFeeAmount(feeAmount)
-				s.txBuilder.SetGasLimit(100000)
+				s.txBuilder.SetGasLimit(7328)
 			},
 			expFail: false,
 		},
@@ -94,10 +94,10 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(207565))))
 				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207565))
 				s.txBuilder.SetFeeAmount(feeAmount)
-				s.txBuilder.SetGasLimit(100000)
+				s.txBuilder.SetGasLimit(7328)
 			},
 			expFail:   true,
-			expErrMsg: "can't find coin",
+			expErrMsg: "can't find coin that matches",
 		},
 		{
 			name:       "Success: Instantiate contract",
@@ -155,16 +155,16 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 					Msg:    []byte{},
 					Funds:  sendCoins,
 				}
-				// Consumed gas at the point of ante is: 7220 but the gas limit is 100000
-				// 100000*28.325 (gas fee) + 1000 (tax) = 2833500
+				// Consumed gas at the point of ante is: 7220
+				// 7220*28.325 (gas fee) = 207566
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
 				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2833499))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 2833499))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207565))
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(100000)
 			},
 			expFail:   true,
-			expErrMsg: "insufficient fees",
+			expErrMsg: "can't find coin that matches",
 		},
 		{
 			name:       "Success: Execute contract",
@@ -312,7 +312,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 				s.txBuilder.SetGasLimit(1_000_001)
 			},
 			expFail:   true,
-			expErrMsg: "can't find coin",
+			expErrMsg: "can't find coin that matches",
 		},
 		{
 			name:       "Bypass: ibc MsgAcknowledgement",
@@ -407,7 +407,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 				s.txBuilder.SetGasLimit(1_000_000)
 			},
 			expFail:   true,
-			expErrMsg: "can't find coin",
+			expErrMsg: "can't find coin that matches",
 		},
 		{
 			name:       "Oracle zero fee",
@@ -487,6 +487,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			},
 			// 263241*28.325 = 7456302 - only gas fee
 			minFeeAmount: 7456302,
+			gasLimit:     263241,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],

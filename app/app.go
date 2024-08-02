@@ -56,6 +56,7 @@ import (
 	v7_1 "github.com/classic-terra/core/v3/app/upgrades/v7_1"
 	v8 "github.com/classic-terra/core/v3/app/upgrades/v8"
 	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
+	v9 "github.com/classic-terra/core/v3/app/upgrades/v9"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"
@@ -87,6 +88,7 @@ var (
 		v7_1.Upgrade,
 		v8.Upgrade,
 		v8_1.Upgrade,
+		v9.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -240,6 +242,7 @@ func NewTerraApp(
 			TXCounterStoreKey:  app.GetKey(wasmtypes.StoreKey),
 			DyncommKeeper:      app.DyncommKeeper,
 			StakingKeeper:      app.StakingKeeper,
+			Tax2Gaskeeper:      app.Tax2gasKeeper,
 			Cdc:                app.appCodec,
 		},
 	)
@@ -249,7 +252,13 @@ func NewTerraApp(
 
 	postHandler, err := custompost.NewPostHandler(
 		custompost.HandlerOptions{
-			DyncommKeeper: app.DyncommKeeper,
+			AccountKeeper:  app.AccountKeeper,
+			BankKeeper:     app.BankKeeper,
+			FeegrantKeeper: app.FeeGrantKeeper,
+			DistrKeeper:    app.DistrKeeper,
+			DyncommKeeper:  app.DyncommKeeper,
+			TreasuryKeeper: app.TreasuryKeeper,
+			Tax2Gaskeeper:  app.Tax2gasKeeper,
 		},
 	)
 	if err != nil {
@@ -398,7 +407,7 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *TerraApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
-	customauthtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.TreasuryKeeper)
+	customauthtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.TreasuryKeeper, app.Tax2gasKeeper)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.

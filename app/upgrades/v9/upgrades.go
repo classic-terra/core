@@ -18,7 +18,14 @@ func CreateV9UpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// set default oracle split
 		keepers.TreasuryKeeper.SetTaxRate(ctx, sdk.ZeroDec())
-		keepers.Tax2gasKeeper.SetParams(ctx, tax2gastypes.DefaultParams())
+
+		tax2gasParams := tax2gastypes.DefaultParams()
+		tax2gasParams.GasPrices = sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec("uluna", sdk.NewDecWithPrec(28325, 3)),
+			sdk.NewDecCoinFromDec("uusd", sdk.NewDecWithPrec(75, 2)),
+		)
+		tax2gasParams.MaxTotalBypassMinFeeMsgGasUsage = 200000
+		keepers.Tax2gasKeeper.SetParams(ctx, tax2gasParams)
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

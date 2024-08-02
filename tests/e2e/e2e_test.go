@@ -245,8 +245,8 @@ func (s *IntegrationTestSuite) TestFeeTaxGrant() {
 
 	s.Require().Equal(balanceTest1, transferCoin1)
 	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin1))
-	// addr2 lost 10uluna to pay for grant msg's gas,  100000000 * TaxRate + 1uluna to pay for bank send msg's tx fees,
-	s.Require().Equal(balanceTest2.Amount, transferAmount1.Sub(initialization.TaxRate.MulInt(transferAmount1).TruncateInt()).SubRaw(4))
+	// addr2 lost 2uluna to pay for grant msg's gas,  100000000 * TaxRate + 2uluna to pay for bank send msg's tx fees,
+	s.Require().Equal(balanceTest2.Amount, transferAmount1.Sub(initialization.TaxRate.MulInt(transferAmount1).TruncateInt()).SubRaw(12))
 
 	// Test 3: try bank send with no grant
 	transferAmount2 := sdkmath.NewInt(200000000)
@@ -292,7 +292,7 @@ func (s *IntegrationTestSuite) TestFeeTaxGrant() {
 			initialization.TaxRate.MulInt(transferAmount2). // tax amount in the form of terra denom
 									Mul(initialization.UsdGasPrice.Quo(initialization.TerraGasPrice)). // convert terra denom to usd denom base on gas price
 									TruncateInt(),
-		).SubRaw(5), // addr2 lost 2uusd to pay for revoke msg's gas, 2uusd to pay for grant msg's gas, 1uusd to pay for band send msg's gas
+		).SubRaw(21), // addr2 lost 10uusd to pay for revoke msg's gas, 10uusd to pay for grant msg's gas, 1uusd to pay for band send msg's gas
 	)
 }
 
@@ -352,7 +352,7 @@ func (s *IntegrationTestSuite) TestFeeTaxNotSupport() {
 	transferAmount3 := sdkmath.NewInt(10000000)
 	transferCoin3 := sdk.NewCoin(initialization.TerraIBCDenom, transferAmount3)
 
-	nodeB.BankSend(transferCoin3.String(), test1AddrChainB, test2AddrChainB, []string{}, sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(10)))
+	nodeB.BankSend(transferCoin3.String(), test1AddrChainB, test2AddrChainB, []string{}, sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(2)))
 
 	newTerraIBCBalance, err := nodeB.QuerySpecificBalance(test1AddrChainB, initialization.TerraIBCDenom)
 	s.Require().NoError(err)

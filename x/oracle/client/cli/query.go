@@ -45,10 +45,10 @@ func GetCmdQueryExchangeRates() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1),
 		Short: "Query the current Luna exchange rate w.r.t an asset",
 		Long: strings.TrimSpace(`
-Query the current exchange rate of Luna with an asset. 
+Query the current exchange rate of Luna with an asset.
 You can find the current list of active denoms by running
 
-$ terrad query oracle exchange-rates 
+$ terrad query oracle exchange-rates
 
 Or, can filter with denom
 
@@ -98,7 +98,7 @@ Query the active list of Terra assets recognized by the types.
 
 $ terrad query oracle actives
 `),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -124,7 +124,7 @@ func GetCmdQueryParams() *cobra.Command {
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query the current Oracle params",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -289,7 +289,7 @@ func GetCmdQueryAggregateVote() *cobra.Command {
 		Long: strings.TrimSpace(`
 Query outstanding oracle aggregate vote.
 
-$ terrad query oracle aggregate-votes 
+$ terrad query oracle aggregate-votes
 
 Or, can filter with voter address
 
@@ -342,7 +342,7 @@ func GetCmdQueryVoteTargets() *cobra.Command {
 		Use:   "vote-targets",
 		Args:  cobra.NoArgs,
 		Short: "Query the current Oracle vote targets",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -380,7 +380,7 @@ Or, can filter with denom
 
 $ terrad query oracle tobin-taxes ukrw
 
-Or, can 
+Or, can
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

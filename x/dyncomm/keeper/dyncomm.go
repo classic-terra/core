@@ -159,7 +159,7 @@ func (k Keeper) UpdateValidatorMinRates(ctx sdk.Context, validator stakingtypes.
 }
 
 func (k Keeper) UpdateAllBondedValidatorRates(ctx sdk.Context) (err error) {
-	k.StakingKeeper.IterateValidators(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+	k.StakingKeeper.IterateValidators(ctx, func(_ int64, validator stakingtypes.ValidatorI) (stop bool) {
 		val := validator.(stakingtypes.Validator)
 
 		if !val.IsBonded() {

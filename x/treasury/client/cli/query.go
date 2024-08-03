@@ -47,7 +47,7 @@ Query the stability tax rate of the current epoch.
 
 $ terrad query treasury tax-rate
 `),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -74,8 +74,8 @@ func GetCmdQueryTaxCap() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the current stability tax cap of a denom asset",
 		Long: strings.TrimSpace(`
-Query the current stability tax cap of the denom asset. 
-The stability tax levied on a tx is at most tax cap, regardless of the size of the transaction. 
+Query the current stability tax cap of the denom asset.
+The stability tax levied on a tx is at most tax cap, regardless of the size of the transaction.
 
 $ terrad query treasury tax-cap ukrw
 `),
@@ -109,12 +109,12 @@ func GetCmdQueryTaxCaps() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query the current stability tax caps for all denom assets",
 		Long: strings.TrimSpace(`
-Query the current stability tax caps of the all denom assets. 
-The stability tax levied on a tx is at most tax cap, regardless of the size of the transaction. 
+Query the current stability tax caps of the all denom assets.
+The stability tax levied on a tx is at most tax cap, regardless of the size of the transaction.
 
 $ terrad query treasury tax-caps
 `),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -145,7 +145,7 @@ Query the reward rate of the current epoch.
 
 $ terrad query treasury reward-weight
 `),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -172,11 +172,11 @@ func GetCmdQueryTaxProceeds() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query the tax proceeds for the current epoch",
 		Long: strings.TrimSpace(`
-Query the tax proceeds corresponding to the current epoch. The return value will be sdk.Coins{} of all the taxes collected. 
+Query the tax proceeds corresponding to the current epoch. The return value will be sdk.Coins{} of all the taxes collected.
 
 $ terrad query treasury tax-proceeds
 `),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -203,11 +203,11 @@ func GetCmdQuerySeigniorageProceeds() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query the seigniorage proceeds for the current epoch",
 		Long: strings.TrimSpace(`
-Query the seigniorage proceeds corresponding to the current epoch. The return value will be in units of 'uluna' coins. 
+Query the seigniorage proceeds corresponding to the current epoch. The return value will be in units of 'uluna' coins.
 
 $ terrad query treasury seigniorage-proceeds
 `),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -233,7 +233,7 @@ func GetCmdQueryIndicators() *cobra.Command {
 		Use:   "indicators",
 		Args:  cobra.NoArgs,
 		Short: "Query the current Treasury indicators",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -258,7 +258,7 @@ func GetCmdQueryParams() *cobra.Command {
 		Use:   "params",
 		Args:  cobra.NoArgs,
 		Short: "Query the current Treasury parameters",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -282,7 +282,7 @@ func GetCmdQueryExemptlist() *cobra.Command {
 		Use:   "burn-tax-exemption-list",
 		Args:  cobra.NoArgs,
 		Short: "Query all burn tax exemption addresses",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

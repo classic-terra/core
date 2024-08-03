@@ -102,7 +102,7 @@ func (q querier) Actives(c context.Context, _ *types.QueryActivesRequest) (*type
 	ctx := sdk.UnwrapSDKContext(c)
 
 	denoms := []string{}
-	q.IterateLunaExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateLunaExchangeRates(ctx, func(denom string, _ sdk.Dec) bool {
 		denoms = append(denoms, denom)
 		return false
 	})

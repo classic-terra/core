@@ -49,7 +49,7 @@ func TestExchangeRate(t *testing.T) {
 	require.Error(t, err)
 
 	numExchangeRates := 0
-	handler := func(denom string, exchangeRate sdk.Dec) (stop bool) {
+	handler := func(_ string, _ sdk.Dec) bool {
 		numExchangeRates++
 		return false
 	}

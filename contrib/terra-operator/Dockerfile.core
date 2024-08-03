@@ -1,6 +1,7 @@
 # docker build . -t cosmwasm/wasmd:latest
 # docker run --rm -it cosmwasm/wasmd:latest /bin/sh
-FROM golang:1.20-alpine3.18 AS go-builder
+ARG GO_VERSION="1.22"
+FROM golang:${GO_VERSION}-alpine3.18 AS go-builder
 ARG source=.
 
 # this comes from standard alpine nightly file

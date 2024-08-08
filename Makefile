@@ -336,21 +336,21 @@ localnet-start: localnet-stop build-linux
 		-v /etc/shadow:/etc/shadow:ro \
 		classic-terra/terrad-env testnet --chain-id ${TESTNET_CHAINID} --v ${TESTNET_NVAL} -o . --starting-ip-address 192.168.10.2 --keyring-backend=test; \
 	fi
-	docker-compose up -d
+	docker compose up -d
 
 localnet-start-upgrade: localnet-upgrade-stop build-linux
 	$(MAKE) -C contrib/updates build-cosmovisor-linux BUILDDIR=$(BUILDDIR)
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' classic-terra/terrad-upgrade-env 2>/dev/null),$(info found image classic-terra/terrad-upgrade-env),$(MAKE) -C contrib/localnet terrad-upgrade-env)
 	bash contrib/updates/prepare_cosmovisor.sh $(BUILDDIR) ${TESTNET_NVAL} ${TESTNET_CHAINID}
-	docker-compose -f ./contrib/updates/docker-compose.yml up -d
+	docker compose -f ./contrib/updates/docker-compose.yml up -d
 
 localnet-upgrade-stop:
-	docker-compose -f ./contrib/updates/docker-compose.yml down
+	docker compose -f ./contrib/updates/docker-compose.yml down
 	rm -rf build/node*
 	rm -rf build/gentxs
 
 localnet-stop:
-	docker-compose down
+	docker compose down
 	rm -rf build/node*
 	rm -rf build/gentxs
 

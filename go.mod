@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.10
-	github.com/cosmos/gogoproto v1.4.10
+	github.com/cosmos/gogoproto v1.6.0
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/gogo/protobuf v1.3.3
@@ -193,7 +193,7 @@ require (
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect

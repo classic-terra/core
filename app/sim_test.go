@@ -21,10 +21,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 )
 
 // SimAppChainID hardcoded chainID for simulation
@@ -142,16 +145,33 @@ func TestAppStateDeterminism(t *testing.T) {
 				simtestutil.EmptyAppOptions{}, emptyWasmOpts, interBlockCacheOpt(), fauxMerkleModeOpt(),
 			)
 
+			appGenState := app.DefaultGenesis()
+			tax2gasGenState := tax2gastypes.GenesisState{}
+			err := app.AppCodec().UnmarshalJSON(appGenState[tax2gastypes.ModuleName], &tax2gasGenState)
+			require.NoError(t, err)
+
+			tax2gasGenState.Params = tax2gastypes.Params{
+				Enabled: true,
+				GasPrices: sdk.DecCoins{
+					sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(0, 3)),
+				},
+			}
+			newGenState := tax2gasGenState
+			bz, err := app.AppCodec().MarshalJSON(&newGenState)
+			require.NoError(t, err)
+
+			appGenState[tax2gastypes.ModuleName] = bz
+
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
+			_, _, err = simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				app.BaseApp,
-				AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				AppStateFn(app.AppCodec(), app.SimulationManager(), appGenState),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				simtestutil.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),

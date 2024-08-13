@@ -1,4 +1,4 @@
-package ante
+package post
 
 import (
 	errorsmod "cosmossdk.io/errors"
@@ -12,7 +12,7 @@ import (
 )
 
 // BurnTaxSplit splits
-func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
+func (fd Tax2gasPostDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error) {
 	burnSplitRate := fd.treasuryKeeper.GetBurnSplitRate(ctx)
 	oracleSplitRate := fd.treasuryKeeper.GetOracleSplitRate(ctx)
 	communityTax := fd.distrKeeper.GetCommunityTax(ctx)
@@ -90,5 +90,7 @@ func (fd FeeDecorator) BurnTaxSplit(ctx sdk.Context, taxes sdk.Coins) (err error
 		}
 	}
 
+	// Record tax proceeds
+	fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 	return nil
 }

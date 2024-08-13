@@ -1,10 +1,10 @@
-package ante
+package types
 
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // TreasuryKeeper for tax charging & recording
@@ -19,11 +19,6 @@ type TreasuryKeeper interface {
 	GetOracleSplitRate(ctx sdk.Context) sdk.Dec
 }
 
-// OracleKeeper for feeder validation
-type OracleKeeper interface {
-	ValidateFeeder(ctx sdk.Context, feederAddr sdk.AccAddress, validatorAddr sdk.ValAddress) error
-}
-
 // BankKeeper defines the contract needed for supply related APIs (noalias)
 type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
@@ -34,17 +29,14 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
+type FeegrantKeeper interface {
+	GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
+	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
+}
+
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 	GetFeePool(ctx sdk.Context) distributiontypes.FeePool
 	GetCommunityTax(ctx sdk.Context) math.LegacyDec
 	SetFeePool(ctx sdk.Context, feePool distributiontypes.FeePool)
-}
-
-type GovKeeper interface {
-	GetDepositParams(ctx sdk.Context) govv1.DepositParams
-}
-
-type Tax2GasKeeper interface {
-	GetBurnTaxRate(ctx sdk.Context) (burnTaxRate sdk.Dec)
 }

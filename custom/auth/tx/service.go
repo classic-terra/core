@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
-	tax2gasUtils "github.com/classic-terra/core/v3/x/tax2gas/utils"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,15 +21,13 @@ var _ ServiceServer = txServer{}
 type txServer struct {
 	clientCtx      client.Context
 	treasuryKeeper customante.TreasuryKeeper
-	tax2gasKeeper  customante.Tax2GasKeeper
 }
 
 // NewTxServer creates a new Tx service server.
-func NewTxServer(clientCtx client.Context, treasuryKeeper customante.TreasuryKeeper, tax2gasKeeper customante.Tax2GasKeeper) ServiceServer {
+func NewTxServer(clientCtx client.Context, treasuryKeeper customante.TreasuryKeeper) ServiceServer {
 	return txServer{
 		clientCtx:      clientCtx,
 		treasuryKeeper: treasuryKeeper,
-		tax2gasKeeper:  tax2gasKeeper,
 	}
 }
 
@@ -55,8 +52,7 @@ func (ts txServer) ComputeTax(c context.Context, req *ComputeTaxRequest) (*Compu
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	burnTaxRate := ts.tax2gasKeeper.GetBurnTaxRate(ctx)
-	taxAmount := tax2gasUtils.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, burnTaxRate, msgs...)
+	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, msgs...)
 	return &ComputeTaxResponse{
 		TaxAmount: taxAmount,
 	}, nil
@@ -67,11 +63,10 @@ func RegisterTxService(
 	qrt gogogrpc.Server,
 	clientCtx client.Context,
 	treasuryKeeper customante.TreasuryKeeper,
-	tax2gasKeeper customante.Tax2GasKeeper,
 ) {
 	RegisterServiceServer(
 		qrt,
-		NewTxServer(clientCtx, treasuryKeeper, tax2gasKeeper),
+		NewTxServer(clientCtx, treasuryKeeper),
 	)
 }
 

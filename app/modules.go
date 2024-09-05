@@ -25,8 +25,6 @@ import (
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	"github.com/classic-terra/core/v3/x/oracle"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	tax2gas "github.com/classic-terra/core/v3/x/tax2gas"
-	tax2gasTypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	"github.com/classic-terra/core/v3/x/treasury"
 	treasuryclient "github.com/classic-terra/core/v3/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
@@ -125,7 +123,6 @@ var (
 		customwasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
-		tax2gas.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 	)
@@ -187,7 +184,6 @@ func appModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
-		tax2gas.NewAppModule(appCodec, app.Tax2gasKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
@@ -254,7 +250,6 @@ func orderBeginBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
-		tax2gasTypes.ModuleName,
 		// consensus module
 		consensusparamtypes.ModuleName,
 	}
@@ -289,7 +284,6 @@ func orderEndBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
-		tax2gasTypes.ModuleName,
 		// consensus module
 		consensusparamtypes.ModuleName,
 	}
@@ -324,7 +318,6 @@ func orderInitGenesis() []string {
 		treasurytypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
-		tax2gasTypes.ModuleName,
 		// consensus module
 		consensusparamtypes.ModuleName,
 	}

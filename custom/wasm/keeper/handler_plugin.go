@@ -1,22 +1,20 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-
-	tax2gaskeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
-	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
-	tax2gasutils "github.com/classic-terra/core/v3/x/tax2gas/utils"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 )
 
 // msgEncoder is an extension point to customize encodings
@@ -37,7 +35,6 @@ type SDKMessageHandler struct {
 	treasuryKeeper treasurykeeper.Keeper
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankKeeper.Keeper
-	tax2gaskeeper  tax2gaskeeper.Keeper
 }
 
 func NewMessageHandler(
@@ -48,7 +45,6 @@ func NewMessageHandler(
 	bankKeeper bankKeeper.Keeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	accountKeeper authkeeper.AccountKeeper,
-	tax2gaskeeper tax2gaskeeper.Keeper,
 	unpacker codectypes.AnyUnpacker,
 	portSource wasmtypes.ICS20TransferPortSource,
 	customEncoders ...*wasmkeeper.MessageEncoders,
@@ -58,20 +54,19 @@ func NewMessageHandler(
 		encoders = encoders.Merge(e)
 	}
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper, tax2gaskeeper),
+		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
 		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
 
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper, tax2gaskeeper tax2gaskeeper.Keeper) SDKMessageHandler {
+func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
 	return SDKMessageHandler{
 		router:         router,
 		encoders:       encoders,
 		treasuryKeeper: treasuryKeeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		tax2gaskeeper:  tax2gaskeeper,
 	}
 }
 
@@ -81,25 +76,17 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
-	gasPrices, ok := ctx.Value(tax2gastypes.FinalGasPrices).(sdk.DecCoins)
-	if !ok {
-		gasPrices = h.tax2gaskeeper.GetGasPrices(ctx)
-	}
 	for _, sdkMsg := range sdkMsgs {
-		if h.tax2gaskeeper.IsEnabled(ctx) {
-			burnTaxRate := h.tax2gaskeeper.GetBurnTaxRate(ctx)
-			taxes := tax2gasutils.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, burnTaxRate, sdkMsg)
-			if !taxes.IsZero() {
-				eventManager := sdk.NewEventManager()
-
-				taxGas, err := tax2gasutils.ComputeGas(gasPrices, taxes)
-				if err != nil {
-					return nil, nil, err
-				}
-				ctx.TaxGasMeter().ConsumeGas(taxGas, "tax gas")
-
-				events = eventManager.Events()
+		// Charge tax on result msg
+		taxes := ante.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, sdkMsg)
+		if !taxes.IsZero() {
+			eventManager := sdk.NewEventManager()
+			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)
+			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), contractAcc, taxes); err != nil {
+				return nil, nil, err
 			}
+
+			events = eventManager.Events()
 		}
 
 		res, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)
@@ -125,7 +112,7 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {
-			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
 		}
 	}
 
@@ -140,5 +127,5 @@ func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Ad
 	// proto messages and has registered all `Msg services`, then this
 	// path should never be called, because all those Msgs should be
 	// registered within the `msgServiceRouter` already.
-	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 }

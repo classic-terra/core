@@ -81,10 +81,6 @@ func ModifyGenesis() func(ibc.ChainConfig, []byte) ([]byte, error) {
 		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "params", "min_deposit", 0, "denom"); err != nil {
 			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
 		}
-		// Disable tax2gas params to disable
-		if err := dyno.Set(g, false, "app_state", "tax2gas", "params", "enabled"); err != nil {
-			return nil, fmt.Errorf("failed to set tax2gas params in genesis json: %w", err)
-		}
 		// Modify signed blocks window
 		if err := dyno.Set(g, signedBlocksWindow, "app_state", "slashing", "params", "signed_blocks_window"); err != nil {
 			return nil, fmt.Errorf("failed to set signed blocks window in genesis json: %w", err)

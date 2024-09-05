@@ -83,23 +83,6 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, 
 	return m.ExecTxCmdWithSuccessString(t, chainID, containerName, command, "\"code\":0")
 }
 
-// ExecTxCmdError Runs ExecCmd
-func (m *Manager) ExecTxCmdError(t *testing.T, chainID string, containerName string, command []string, failStr string, checkTxHash bool) (bytes.Buffer, bytes.Buffer, error) {
-	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainID), "--yes", "--keyring-backend=test", "--log_format=json"}
-	// parse to see if command has gas flags. If not, add default gas flags.
-	addGasFlags := true
-	for _, cmd := range command {
-		if strings.HasPrefix(cmd, "--gas") || strings.HasPrefix(cmd, "--fees") {
-			addGasFlags = false
-		}
-	}
-	if addGasFlags {
-		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
-	}
-	txCommand := append(command, allTxArgs...) //nolint
-	return m.ExecCmd(t, containerName, txCommand, failStr, checkTxHash)
-}
-
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json"`,
 // and searching for `successStr`
@@ -121,7 +104,6 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, conta
 
 // ExecHermesCmd executes command on the hermes relayer 1 container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
-	time.Sleep(time.Second * 30)
 	return m.ExecCmd(t, hermesContainerName, command, success, false)
 }
 

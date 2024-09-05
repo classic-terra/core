@@ -1,6 +1,7 @@
 package v8
 
 import (
+	wasmmigration "github.com/CosmWasm/wasmd/x/wasm/migrations/v2"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v3/app/keepers"
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -49,7 +50,7 @@ func CreateV8UpgradeHandler(
 			case govtypes.ModuleName:
 				keyTable = govv1.ParamKeyTable()
 			case wasmtypes.ModuleName:
-				keyTable = wasmtypes.ParamKeyTable()
+				keyTable = wasmmigration.ParamKeyTable()
 			case crisistypes.ModuleName:
 				keyTable = crisistypes.ParamKeyTable()
 			}

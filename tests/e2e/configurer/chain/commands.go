@@ -25,24 +25,17 @@ import (
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
-	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--fees=10uluna", "--gas=2000000"}
+	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from string, feeDenoms []string, fees ...sdk.Coin) {
+func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
 	cmd := []string{"terrad", "tx", "wasm", "instantiate", codeID, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
-	}
-	if len(fees) == 0 {
-		gasPrices := feeDenomsToGasPrices(feeDenoms)
-		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
-	} else {
-		feeCoins := sdk.NewCoins(fees...)
-		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.2")
 	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
@@ -52,7 +45,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from strin
 	n.LogActionF("successfully initialized")
 }
 
-func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, from string, feeDenoms []string) {
+func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee, gas, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeID, initMsg)
 	encodedSalt := make([]byte, hex.EncodedLen(len([]byte(salt))))
 	hex.Encode(encodedSalt, []byte(salt))
@@ -60,43 +53,31 @@ func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fro
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
-	gasPrices := feeDenomsToGasPrices(feeDenoms)
-	cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
-
+	if fee != "" {
+		cmd = append(cmd, fmt.Sprintf("--fees=%s", fee))
+	}
+	if gas != "" {
+		cmd = append(cmd, fmt.Sprintf("--gas=%s", gas))
+	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully initialized")
 }
 
-func (n *NodeConfig) WasmExecute(contract, execMsg, amount, from string, feeDenoms []string) {
+func (n *NodeConfig) WasmExecute(contract, execMsg, amount, fee, from string) {
 	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
 	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
-	gasPrices := feeDenomsToGasPrices(feeDenoms)
-	cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
-
+	if fee != "" {
+		cmd = append(cmd, fmt.Sprintf("--fees=%s", fee))
+	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully executed")
-}
-
-func (n *NodeConfig) WasmExecuteError(contract, execMsg, amount, from string, feeDenoms []string) {
-	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
-	cmd := []string{"terrad", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
-	if amount != "" {
-		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
-	}
-	gasPrices := feeDenomsToGasPrices(feeDenoms)
-	cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
-
-	n.LogActionF(strings.Join(cmd, " "))
-	_, _, err := n.containerManager.ExecTxCmdError(n.t, n.chainID, n.Name, cmd, "", true)
-	require.NoError(n.t, err)
-	n.LogActionF("executed failed")
 }
 
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
@@ -143,13 +124,13 @@ func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(addresses []string
 		"add-burn-tax-exemption-address", strings.Join(addresses, ","),
 		"--title=\"burn tax exemption address\"",
 		"--description=\"\"burn tax exemption address",
-		"--gas", "300000", "--gas-prices", "1uluna",
 		fmt.Sprintf("--from=%s", walletName),
 	}
 
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 
+	fmt.Println("resp: ", resp.String())
 	proposalID, err := extractProposalIDFromResponse(resp.String())
 	require.NoError(n.t, err)
 
@@ -171,7 +152,7 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", amount, from, recipient, memo)
 
-	cmd := []string{"terrad", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo, "--fees=10uluna"}
+	cmd := []string{"terrad", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
 
 	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainID, n.Name, cmd, "\"code\":0")
 	require.NoError(n.t, err)
@@ -190,7 +171,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin) {
 func (n *NodeConfig) DepositProposal(proposalNumber int) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
 	deposit := sdk.NewCoin(initialization.TerraDenom, sdk.NewInt(20*assets.MicroUnit)).String()
-	cmd := []string{"terrad", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val", "--gas", "300000", "--fees", "10000000uluna"}
+	cmd := []string{"terrad", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully deposited on proposal %d", proposalNumber)
@@ -198,7 +179,7 @@ func (n *NodeConfig) DepositProposal(proposalNumber int) {
 
 func (n *NodeConfig) VoteYesProposal(from string, proposalNumber int) {
 	n.LogActionF("voting yes on proposal: %d", proposalNumber)
-	cmd := []string{"terrad", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "yes", fmt.Sprintf("--from=%s", from), "--gas", "300000", "--fees", "10000000uluna"}
+	cmd := []string{"terrad", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "yes", fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully voted yes on proposal %d", proposalNumber)
@@ -235,77 +216,44 @@ func extractProposalIDFromResponse(response string) (int, error) {
 	return proposalID, nil
 }
 
-func (n *NodeConfig) BankSendError(amount string, sendAddress string, receiveAddress string, walletName string, gasLimit string, fees sdk.Coins, failError string) {
-	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
-	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
-	cmd = append(cmd, "--fees", fees.String(), "--gas", gasLimit)
-	_, _, err := n.containerManager.ExecTxCmdError(n.t, n.chainID, n.Name, cmd, failError, false)
-	require.NoError(n.t, err)
-	n.LogActionF("failed sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
+func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
+	n.BankSendWithWallet(amount, sendAddress, receiveAddress, "val")
 }
 
-func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string, feeDenoms []string, fees ...sdk.Coin) {
-	n.BankSendWithWallet(amount, sendAddress, receiveAddress, "val", feeDenoms, fees...)
-}
-
-func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, receiveAddress string, walletName string, feeDenoms []string, fees ...sdk.Coin) {
+func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, receiveAddress string, walletName string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
-	gasPrices := feeDenomsToGasPrices(feeDenoms)
-	if len(fees) == 0 {
-		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
-	} else {
-		feeCoins := sdk.NewCoins(fees...)
-		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.2")
-	}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
-func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress string, receiveAddress string, feeGranter string, walletName string, feeDenoms []string, fees ...sdk.Coin) {
+func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress string, receiveAddress string, feeGranter string, walletName string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--fee-granter=%s", feeGranter), fmt.Sprintf("--from=%s", walletName)}
-	gasPrices := feeDenomsToGasPrices(feeDenoms)
-	if len(fees) == 0 {
-		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
-	} else {
-		feeCoins := sdk.NewCoins(fees...)
-		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.2")
-	}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
-func (n *NodeConfig) BankMultiSend(amount string, split bool, sendAddress string, feeDenoms []string, receiveAddresses []string) {
+func (n *NodeConfig) BankMultiSend(amount string, split bool, sendAddress string, receiveAddresses ...string) {
 	n.LogActionF("bank multisending from %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
 	cmd := []string{"terrad", "tx", "bank", "multi-send", sendAddress}
 	cmd = append(cmd, receiveAddresses...)
 	cmd = append(cmd, amount, "--from=val")
-
-	gasPrices := feeDenomsToGasPrices(feeDenoms)
-	cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
 	if split {
 		cmd = append(cmd, "--split")
 	}
+
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully multisent %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
 }
 
-func (n *NodeConfig) GrantAddress(granter, gratee string, walletName string, feeDenom string, spendLimit ...string) {
+func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, walletName string) {
 	n.LogActionF("granting for address %s", gratee)
-	cmd := []string{"terrad", "tx", "feegrant", "grant", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", strings.Join(spendLimit, ",")), fmt.Sprintf("--fees=10%s", feeDenom)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully granted for address %s", gratee)
-}
-
-func (n *NodeConfig) RevokeGrant(granter, gratee string, walletName string, feeDenom string) {
-	n.LogActionF("revoking grant for address %s", gratee)
-	cmd := []string{"terrad", "tx", "feegrant", "revoke", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--fees=10%s", feeDenom)}
+	cmd := []string{"terrad", "tx", "feegrant", "grant", granter, gratee, fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", spendLimit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully granted for address %s", gratee)
@@ -366,23 +314,4 @@ func (n *NodeConfig) Status() (resultStatus, error) { //nolint
 		return resultStatus{}, err
 	}
 	return result, nil
-}
-
-func feeDenomsToGasPrices(feeDenoms []string) string {
-	gasPrices := ""
-	for i, feeDenom := range feeDenoms {
-		switch feeDenom {
-		case initialization.TerraDenom:
-			gasPrices += fmt.Sprintf("%s%s", initialization.TerraGasPrice, initialization.TerraDenom)
-		case initialization.UsdDenom:
-			gasPrices += fmt.Sprintf("%s%s", initialization.UsdGasPrice, initialization.UsdDenom)
-		case initialization.EurDenom:
-			gasPrices += fmt.Sprintf("%s%s", initialization.EurGasPrice, initialization.EurDenom)
-		default:
-		}
-		if i != len(feeDenoms)-1 {
-			gasPrices += ","
-		}
-	}
-	return gasPrices
 }

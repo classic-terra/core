@@ -66,8 +66,6 @@ import (
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	tax2gasKeeper "github.com/classic-terra/core/v3/x/tax2gas/keeper"
-	tax2gasTypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
@@ -105,10 +103,10 @@ type AppKeepers struct {
 	DyncommKeeper         dyncommkeeper.Keeper
 	IBCHooksKeeper        *ibchookskeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-	Tax2gasKeeper         tax2gasKeeper.Keeper
-	Ics20WasmHooks        *ibchooks.WasmHooks
-	IBCHooksWrapper       *ibchooks.ICS4Middleware
-	TransferStack         ibctransfer.IBCModule
+
+	Ics20WasmHooks  *ibchooks.WasmHooks
+	IBCHooksWrapper *ibchooks.ICS4Middleware
+	TransferStack   ibctransfer.IBCModule
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -158,7 +156,6 @@ func NewAppKeepers(
 		treasurytypes.StoreKey,
 		wasmtypes.StoreKey,
 		dyncommtypes.StoreKey,
-		tax2gasTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -279,12 +276,6 @@ func NewAppKeepers(
 		stakingtypes.NewMultiStakingHooks(appKeepers.DistrKeeper.Hooks(), appKeepers.SlashingKeeper.Hooks()),
 	)
 
-	appKeepers.Tax2gasKeeper = tax2gasKeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[tax2gasTypes.StoreKey],
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
 	// Create IBC Keeper
 	appKeepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
@@ -399,7 +390,6 @@ func NewAppKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
-		appKeepers.Tax2gasKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
 	)

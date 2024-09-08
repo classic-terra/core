@@ -515,7 +515,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
-	paramsKeeper.Subspace(wasmtypes.ModuleName).WithKeyTable(wasmtypes.ParamKeyTable())
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
 
 	return paramsKeeper

@@ -56,6 +56,7 @@ import (
 	v7_1 "github.com/classic-terra/core/v3/app/upgrades/v7_1"
 	v8 "github.com/classic-terra/core/v3/app/upgrades/v8"
 	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
+	v8_2 "github.com/classic-terra/core/v3/app/upgrades/v8_2"
 	v9 "github.com/classic-terra/core/v3/app/upgrades/v9"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
@@ -88,6 +89,7 @@ var (
 		v7_1.Upgrade,
 		v8.Upgrade,
 		v8_1.Upgrade,
+		v8_2.Upgrade,
 		v9.Upgrade,
 	}
 

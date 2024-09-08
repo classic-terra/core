@@ -101,19 +101,24 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
+	feesOrTax := fee
+
 	// deduct the fees
-	if !fee.IsZero() {
-		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, fee)
+	if fee.IsZero() && simulate {
+		feesOrTax = taxes
+	}
+
+	if !feesOrTax.IsZero() {
+		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, feesOrTax)
 		if err != nil {
 			return err
 		}
 
-		if !taxes.IsZero() && !simulate {
+		if !taxes.IsZero() {
 			err := fd.BurnTaxSplit(ctx, taxes)
 			if err != nil {
 				return err
 			}
-
 			// Record tax proceeds
 			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 		}

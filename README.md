@@ -272,12 +272,12 @@ journalctl -t terrad -r
 journalctl -t terrad -f
 ```
 
-## Using `docker-compose`
+## Using `docker compose`
 
 1. Install Docker
 
 	- [Docker Install documentation](https://docs.docker.com/install/)
-	- [Docker-Compose Install documentation](https://docs.docker.com/compose/install/)
+	- [Docker Compose Install documentation](https://docs.docker.com/compose/install/)
 
 2. Create a new folder on your local machine and copy docker-compose\docker-compose.yml
 
@@ -286,19 +286,19 @@ journalctl -t terrad -f
 4. Bring up your stack by running
 
 	```bash
-	docker-compose up -d
+	docker compose up -d
 	```
 
 5. Add your wallet
     ```bash
-	docker-compose exec node sh /keys-add.sh
+	docker compose exec node sh /keys-add.sh
 	```
 
 6. Copy your terra wallet address and go to the terra faucet here -> http://45.79.139.229:3000/ Put your address in and give yourself luna coins.
 
 7. Start the validator
 	```bash
-	docker-compose exec node sh /create-validator.sh
+	docker compose exec node sh /create-validator.sh
 	```
 
 ### Cheat Sheet:
@@ -306,33 +306,33 @@ journalctl -t terrad -f
 #### Start
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 #### Stop
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 #### View Logs
 
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 #### Run Terrad Commands Example
 
 ```bash
-docker-compose exec node terrad status
+docker compose exec node terrad status
 ```
 
 #### Upgrade
 
 ```bash
-docker-compose down
-docker-compose pull
-docker-compose up -d
+docker compose down
+docker compose pull
+docker compose up -d
 ```
 
 #### Build from source

@@ -73,7 +73,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	burnTaxRate := fd.tax2gasKeeper.GetBurnTaxRate(ctx)
 	taxes := tax2gasutils.FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, burnTaxRate, msgs...)
 	// Convert taxes to gas
-	taxGas, err := tax2gasutils.ComputeGas(gasPrices, taxes)
+	taxGas, err := tax2gasutils.ComputeGas(ctx, gasPrices, taxes)
 	if err != nil {
 		return ctx, err
 	}

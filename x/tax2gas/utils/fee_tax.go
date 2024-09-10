@@ -103,7 +103,7 @@ func ComputeTax(burnTaxRate sdk.Dec, principal sdk.Coins) sdk.Coins {
 	return taxes
 }
 
-func ComputeGas(gasPrices sdk.DecCoins, taxes sdk.Coins) (sdkmath.Int, error) {
+func ComputeGas(ctx sdk.Context, gasPrices sdk.DecCoins, taxes sdk.Coins) (sdkmath.Int, error) {
 	taxes = taxes.Sort()
 	tax2gas := sdkmath.ZeroInt()
 	// Convert to gas
@@ -111,9 +111,17 @@ func ComputeGas(gasPrices sdk.DecCoins, taxes sdk.Coins) (sdkmath.Int, error) {
 	for i < len(gasPrices) && j < len(taxes) {
 		switch {
 		case gasPrices[i].Denom == taxes[j].Denom:
-			tax2gas = tax2gas.Add(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt())
-			i++
-			j++
+			maxGas := ctx.ConsensusParams().Block.MaxGas
+			if taxes[j].Amount.GT(sdk.NewInt(maxGas)) {
+				tax2gas = tax2gas.Add(sdk.NewDec(maxGas).Quo((gasPrices[i].Amount)).Ceil().RoundInt())
+				// tax2gas = tax2gas.Add(sdk.NewDec(math.MaxInt64)).Quo((gasPrices[i].Amount)).Ceil().RoundInt()
+				i++
+				j++
+			} else {
+				tax2gas = tax2gas.Add(sdk.NewDec(taxes[j].Amount.Int64()).Quo((gasPrices[i].Amount)).Ceil().RoundInt())
+				i++
+				j++
+			}
 		case gasPrices[i].Denom < taxes[j].Denom:
 			i++
 		default:

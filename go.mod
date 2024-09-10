@@ -1,7 +1,5 @@
 go 1.21
 
-toolchain go1.22.1
-
 module github.com/classic-terra/core/v3
 
 require (

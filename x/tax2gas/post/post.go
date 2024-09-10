@@ -87,11 +87,14 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	// we need to add the --fee flag manually
 	totalGasConsumed := ctx.GasMeter().GasConsumed()
 
-	if taxGas.IsUint64() {
+	if taxGas.IsUint64() && !taxGas.IsZero() {
 		taxGasUint64 := taxGas.Uint64()
 		// Check if gas not overflow
 		if totalGasConsumed+taxGasUint64 >= totalGasConsumed && totalGasConsumed+taxGasUint64 >= taxGasUint64 {
-			if simulate {
+			if ctx.IsSpecialSimulate() {
+				if taxGasUint64+totalGasConsumed > ctx.GasMeter().Limit() {
+					ctx.GasMeter().ExtendGasLimit()
+				}
 				ctx.GasMeter().ConsumeGas(taxGasUint64, "consume tax gas")
 			}
 		}

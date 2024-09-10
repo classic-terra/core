@@ -97,6 +97,9 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 					return nil, nil, err
 				}
 				ctx.TaxGasMeter().ConsumeGas(taxGas, "tax gas")
+				if ctx.IsSpecialSimulate() {
+					ctx.CacheTaxGasMeter().ConsumeGas(taxGas, "tax gas")
+				}
 
 				events = eventManager.Events()
 			}

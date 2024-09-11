@@ -101,9 +101,28 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 	feesOrTax := fee
 
-	// deduct the fees
-	if fee.IsZero() && simulate {
-		feesOrTax = taxes
+	if simulate {
+		// we need to check all taxes if they are GTE 10 because otherwise we will not be able to
+		// simulate the split processes (i.e. BurnTaxSplit and OracleSplit)
+		// if they are less than 10, we will set them to 10
+		for i := range taxes {
+			if taxes[i].Amount.LT(sdk.NewInt(10)) {
+				taxes[i].Amount = sdk.NewInt(10)
+			}
+		}
+
+		if fee.IsZero() {
+			feesOrTax = taxes
+		}
+
+		// even if fee is not zero it might be it is lower than the increased tax
+		// so we need to check if the tax is higher than the fee to not run into deduction errors
+		for i := range feesOrTax {
+			feeDenom := feesOrTax[i].Denom
+			if feesOrTax[i].Amount.LT(taxes.AmountOf(feeDenom)) {
+				feesOrTax[i].Amount = taxes.AmountOf(feeDenom)
+			}
+		}
 	}
 
 	if !feesOrTax.IsZero() {

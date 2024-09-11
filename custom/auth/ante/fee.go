@@ -115,7 +115,8 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 				feesOrTax = feesOrTax.Add(tax)
 			} else if feeAmount.LT(tax.Amount) {
 				// Update feesOrTax if the tax amount is higher
-				feesOrTax = feesOrTax.Add(tax.Sub(sdk.NewCoin(tax.Denom, feeAmount)))
+				missingAmount := tax.Amount.Sub(feeAmount)
+				feesOrTax = feesOrTax.Add(sdk.NewCoin(tax.Denom, missingAmount))
 			}
 		}
 	}

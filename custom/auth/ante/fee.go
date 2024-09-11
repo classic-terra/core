@@ -108,10 +108,14 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 		// even if fee is not zero it might be it is lower than the increased tax from computeTax
 		// so we need to check if the tax is higher than the fee to not run into deduction errors
-		for i := range feesOrTax {
-			feeDenom := feesOrTax[i].Denom
-			if feesOrTax[i].Amount.LT(taxes.AmountOf(feeDenom)) {
-				feesOrTax[i].Amount = taxes.AmountOf(feeDenom)
+		for _, tax := range taxes {
+			feeAmount := feesOrTax.AmountOf(tax.Denom)
+			// if the fee amount is zero, add the tax amount to feesOrTax
+			if feeAmount.IsZero() {
+				feesOrTax = feesOrTax.Add(tax)
+			} else if feeAmount.LT(tax.Amount) {
+				// Update feesOrTax if the tax amount is higher
+				feesOrTax = feesOrTax.Add(tax.Sub(sdk.NewCoin(tax.Denom, feeAmount)))
 			}
 		}
 	}

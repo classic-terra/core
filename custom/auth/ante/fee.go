@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/classic-terra/core/v3/types/assets"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -109,6 +110,16 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 			if taxes[i].Amount.LT(sdk.NewInt(10)) {
 				taxes[i].Amount = sdk.NewInt(10)
 			}
+		}
+
+		// it might also be that there is no taxes at all, then we need to add one
+		if len(taxes) == 0 {
+			denom := assets.MicroLunaDenom
+			if !fee.IsZero() {
+				denom = fee[0].Denom
+			}
+
+			taxes = sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10)))
 		}
 
 		if fee.IsZero() {

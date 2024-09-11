@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/classic-terra/core/v3/types/assets"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -52,7 +51,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, simulate, msgs...)
 
 	if !simulate {
 		priority, err = fd.checkTxFee(ctx, tx, taxes)
@@ -103,30 +102,11 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	feesOrTax := fee
 
 	if simulate {
-		// we need to check all taxes if they are GTE 10 because otherwise we will not be able to
-		// simulate the split processes (i.e. BurnTaxSplit and OracleSplit)
-		// if they are less than 10, we will set them to 10
-		for i := range taxes {
-			if taxes[i].Amount.LT(sdk.NewInt(10)) {
-				taxes[i].Amount = sdk.NewInt(10)
-			}
-		}
-
-		// it might also be that there is no taxes at all, then we need to add one
-		if len(taxes) == 0 {
-			denom := assets.MicroLunaDenom
-			if !fee.IsZero() {
-				denom = fee[0].Denom
-			}
-
-			taxes = sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10)))
-		}
-
 		if fee.IsZero() {
 			feesOrTax = taxes
 		}
 
-		// even if fee is not zero it might be it is lower than the increased tax
+		// even if fee is not zero it might be it is lower than the increased tax from computeTax
 		// so we need to check if the tax is higher than the fee to not run into deduction errors
 		for i := range feesOrTax {
 			feeDenom := feesOrTax[i].Denom

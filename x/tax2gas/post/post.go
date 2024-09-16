@@ -147,6 +147,15 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 	}
 
+	// Try to simulate using paid denom
+	if feeCoins.IsZero() && simulate {
+		fees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, sdk.DecCoins{sdk.NewDecCoinFromDec(paidDenom, paidDenomGasPrice)}, totalGasRemaining)
+		if err != nil {
+			return ctx, err
+		}
+		feeCoins = fees
+	}
+
 	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
 	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
 	if !simulate && !ctx.IsCheckTx() && gasRemaining.IsPositive() {
@@ -159,7 +168,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	}
 	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)
 
-	if !simulate && taxes.IsZero() {
+	if taxes.IsZero() && !simulate {
 		payableFees = feeCoins
 	}
 	err := tgd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayerAccount.GetAddress(), authtypes.FeeCollectorName, payableFees)

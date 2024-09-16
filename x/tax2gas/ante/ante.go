@@ -153,6 +153,11 @@ func (fd FeeDecorator) tryDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.
 		return "", nil
 	}
 
+	// Try to simulate using taxes
+	if foundCoins.IsZero() && simulate {
+		foundCoins = taxes
+	}
+
 	// if feegranter set deduct fee from feegranter account.
 	// this works with only when feegrant enabled.
 	if feeGranter != nil {

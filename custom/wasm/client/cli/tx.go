@@ -42,7 +42,7 @@ func GetTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		cli.StoreCodeCmd(),
 		InstantiateContractCmd(),
-		cli.InstantiateContract2Cmd(),
+		InstantiateContract2Cmd(),
 		ExecuteContractCmd(),
 		cli.MigrateContractCmd(),
 		cli.UpdateContractAdminCmd(),

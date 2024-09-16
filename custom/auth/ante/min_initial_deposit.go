@@ -65,10 +65,6 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkee
 
 // AnteHandle handles checking MsgSubmitProposal
 func (midd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	if simulate {
-		return next(ctx, tx, simulate)
-	}
-
 	msgs := tx.GetMsgs()
 	for _, msg := range msgs {
 		if !IsMsgSubmitProposal(msg) {

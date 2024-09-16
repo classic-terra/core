@@ -39,10 +39,10 @@ func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from strin
 	}
 	if len(fees) == 0 {
 		gasPrices := feeDenomsToGasPrices(feeDenoms)
-		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
+		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.5", fmt.Sprintf("--gas-prices=%s", gasPrices))
 	} else {
 		feeCoins := sdk.NewCoins(fees...)
-		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.2")
+		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.5")
 	}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
@@ -253,10 +253,10 @@ func (n *NodeConfig) BankSendWithWallet(amount string, sendAddress string, recei
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--from=%s", walletName)}
 	gasPrices := feeDenomsToGasPrices(feeDenoms)
 	if len(fees) == 0 {
-		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.2", fmt.Sprintf("--gas-prices=%s", gasPrices))
+		cmd = append(cmd, "--gas", "auto", "--gas-adjustment=1.5", fmt.Sprintf("--gas-prices=%s", gasPrices))
 	} else {
 		feeCoins := sdk.NewCoins(fees...)
-		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.2")
+		cmd = append(cmd, "--fees", feeCoins.String(), "--gas", "auto", "--gas-adjustment=1.5")
 	}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)

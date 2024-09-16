@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG source=./
-ARG GO_VERSION="1.20"
+ARG GO_VERSION="1.21"
 ARG BUILDPLATFORM=linux/amd64
 ARG BASE_IMAGE="golang:${GO_VERSION}-alpine3.18"
 FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} as base

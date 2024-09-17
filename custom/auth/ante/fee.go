@@ -51,7 +51,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, msgs...)
+	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, simulate, msgs...)
 
 	if !simulate {
 		priority, err = fd.checkTxFee(ctx, tx, taxes)
@@ -101,9 +101,24 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 	feesOrTax := fee
 
-	// deduct the fees
-	if fee.IsZero() && simulate {
-		feesOrTax = taxes
+	if simulate {
+		if fee.IsZero() {
+			feesOrTax = taxes
+		}
+
+		// even if fee is not zero it might be it is lower than the increased tax from computeTax
+		// so we need to check if the tax is higher than the fee to not run into deduction errors
+		for _, tax := range taxes {
+			feeAmount := feesOrTax.AmountOf(tax.Denom)
+			// if the fee amount is zero, add the tax amount to feesOrTax
+			if feeAmount.IsZero() {
+				feesOrTax = feesOrTax.Add(tax)
+			} else if feeAmount.LT(tax.Amount) {
+				// Update feesOrTax if the tax amount is higher
+				missingAmount := tax.Amount.Sub(feeAmount)
+				feesOrTax = feesOrTax.Add(sdk.NewCoin(tax.Denom, missingAmount))
+			}
+		}
 	}
 
 	if !feesOrTax.IsZero() {

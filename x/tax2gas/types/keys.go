@@ -1,7 +1,7 @@
 package types
 
 const (
-	ModuleName = "tax2gas"
+	ModuleName = "tax2gas_testnet"
 
 	StoreKey = ModuleName
 

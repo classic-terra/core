@@ -116,7 +116,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		WithValue(types.FinalGasPrices, gasPrices)
 	if !taxGas.IsZero() {
 		newCtx.TaxGasMeter().ConsumeGas(taxGas, "ante handler taxGas")
-		if ctx.IsSpecialSimulate() {
+		if ctx.IsSimulate() {
 			ctx.CacheTaxGasMeter().ConsumeGas(taxGas, "tax gas")
 		}
 	}

@@ -91,7 +91,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		taxGasUint64 := taxGas.Uint64()
 		// Check if gas not overflow
 		if totalGasConsumed+taxGasUint64 >= totalGasConsumed && totalGasConsumed+taxGasUint64 >= taxGasUint64 {
-			if ctx.IsSpecialSimulate() {
+			if ctx.IsSimulate() {
 				if taxGasUint64+totalGasConsumed > ctx.GasMeter().Limit() {
 					ctx.GasMeter().ExtendGasLimit()
 				}

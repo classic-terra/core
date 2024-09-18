@@ -46,7 +46,8 @@ func ComputeFeesWithCmd(
 	gasStr, _ := flagSet.GetString(flags.FlagGas)
 	switch gasStr {
 	case flags.GasFlagAuto:
-		// skip
+		txf = txf.WithGas(0)
+		txf = txf.WithSimulateAndExecute(true)
 	case "":
 		txf = txf.WithGas(0)
 		txf = txf.WithSimulateAndExecute(true)
@@ -123,8 +124,9 @@ func CalculateGas(
 		return nil, 0, err
 	}
 
-	taxGas := simSpecialRes.GasInfo.GasUsed - simRes.GasInfo.GasUsed
-	actualGas := uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed))
+	taxGas := simRes.GasInfo.GasUsed - simSpecialRes.GasInfo.GasUsed
+	actualGas := uint64(txf.GasAdjustment() * float64(simSpecialRes.GasInfo.GasUsed))
+	simRes.GasInfo = simSpecialRes.GasInfo
 	return simRes, actualGas + taxGas, nil
 }
 

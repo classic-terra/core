@@ -50,7 +50,8 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 	if maxGas := ctx.ConsensusParams().GetBlock().MaxGas; maxGas > 0 {
 		return next(ctx.WithGasMeter(types.NewTax2GasMeter(sdk.Gas(maxGas), false)), tx, simulate)
 	}
-	return next(ctx, tx, simulate)
+
+	return next(ctx.WithGasMeter(types.NewTax2GasMeter(ctx.GasMeter().Limit(), false)), tx, simulate)
 }
 
 // GasRegisterDecorator ante decorator to store gas register in the context

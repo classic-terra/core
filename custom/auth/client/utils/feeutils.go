@@ -126,7 +126,6 @@ func CalculateGas(
 
 	taxGas := simRes.GasInfo.GasUsed - simSpecialRes.GasInfo.GasUsed
 	actualGas := uint64(txf.GasAdjustment() * float64(simSpecialRes.GasInfo.GasUsed))
-	simRes.GasInfo = simSpecialRes.GasInfo
 	return simRes, actualGas + taxGas, nil
 }
 

@@ -1,6 +1,8 @@
 package post
 
 import (
+	"fmt"
+
 	sdkmath "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
@@ -35,6 +37,11 @@ func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.
 }
 
 func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, success bool, next sdk.PostHandler) (sdk.Context, error) {
+	gasMeter, ok := ctx.GasMeter().(*types.Tax2GasMeter)
+	if !ok {
+		return ctx, fmt.Errorf("expected Tax2GasMeter, got %T", ctx.GasMeter())
+	}
+
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -80,7 +87,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
 	}
 
-	taxGas := ctx.TaxGasMeter().GasConsumed()
+	taxGas := gasMeter.TaxConsumed()
 
 	// we consume the gas here as we need to calculate the tax for consumed gas
 	// if the gas overflow, then that means the tx can't be estimates as normal way
@@ -92,7 +99,9 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// Check if gas not overflow
 		if totalGasConsumed+taxGasUint64 >= totalGasConsumed && totalGasConsumed+taxGasUint64 >= taxGasUint64 {
 			if simulate {
-				ctx.GasMeter().ConsumeGas(taxGasUint64, "consume tax gas")
+				gasMeter.DisableGasLimitEnforcement()
+				defer gasMeter.EnableGasLimitEnforcement()
+				gasMeter.ConsumeGas(taxGasUint64, "consume tax gas")
 			}
 		}
 	}

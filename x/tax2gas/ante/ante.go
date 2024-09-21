@@ -115,7 +115,11 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		WithValue(types.TaxGas, taxGas).
 		WithValue(types.FinalGasPrices, gasPrices)
 	if !taxGas.IsZero() {
-		newCtx.TaxGasMeter().ConsumeGas(taxGas, "ante handler taxGas")
+		gasMeter, ok := ctx.GasMeter().(*types.Tax2GasMeter)
+		if !ok {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidType, "invalid gas meter")
+		}
+		gasMeter.ConsumeTax(taxGas, "ante handler taxGas")
 	}
 	newCtx = newCtx.WithValue(types.AnteConsumedGas, gasConsumed)
 	if paidDenom != "" {

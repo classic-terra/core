@@ -81,6 +81,11 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
+	gasMeter, ok := ctx.GasMeter().(*tax2gastypes.Tax2GasMeter)
+	if !ok {
+		return nil, nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "invalid gas meter")
+	}
+
 	gasPrices, ok := ctx.Value(tax2gastypes.FinalGasPrices).(sdk.DecCoins)
 	if !ok {
 		gasPrices = h.tax2gaskeeper.GetGasPrices(ctx)
@@ -96,7 +101,9 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 				if err != nil {
 					return nil, nil, err
 				}
-				ctx.TaxGasMeter().ConsumeGas(taxGas, "tax gas")
+
+				// Consume tax gas
+				gasMeter.ConsumeTax(taxGas.Uint64(), "tax gas")
 
 				events = eventManager.Events()
 			}

@@ -103,7 +103,7 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 				}
 
 				// Consume tax gas
-				gasMeter.ConsumeTax(taxGas.Uint64(), "tax gas")
+				gasMeter.ConsumeTax(taxGas, "tax gas")
 
 				events = eventManager.Events()
 			}

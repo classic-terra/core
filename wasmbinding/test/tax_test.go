@@ -6,12 +6,14 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	core "github.com/classic-terra/core/v3/types"
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v3/wasmbinding/test
 func (s *WasmTestSuite) TestTax() {
 	s.SetupTest()
+	s.Ctx = s.Ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(s.Ctx.GasMeter().Limit()))
 	taxRate := sdk.NewDecWithPrec(11, 2)            // 11%
 	s.App.TreasuryKeeper.SetTaxRate(s.Ctx, taxRate) // 11%
 

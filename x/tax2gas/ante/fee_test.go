@@ -27,6 +27,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	tax2gastypes "github.com/classic-terra/core/v3/x/tax2gas/types"
 )
 
 var (
@@ -436,6 +437,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 		s.Run(tc.name, func() {
 			tc.mallate()
 			s.ctx = s.app.BaseApp.NewContext(tc.checkTx, tmproto.Header{})
+			s.ctx = s.ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(s.ctx.GasMeter().Limit()))
 
 			_, err = antehandler(s.ctx, tx, tc.simulation)
 

@@ -64,6 +64,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	tempDir := suite.T().TempDir()
 	suite.app, suite.ctx = createTestApp(isCheckTx, tempDir)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
+	suite.ctx = suite.ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(suite.ctx.GasMeter().Limit()))
 
 	// Set up TxConfig.
 	encodingConfig := suite.SetupEncoding()

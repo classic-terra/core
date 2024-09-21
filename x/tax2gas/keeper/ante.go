@@ -8,17 +8,17 @@ import (
 
 // this keeper has been taken from the wasmd package
 
-// LimitSimulationGasDecorator ante decorator to limit gas in simulation calls
-type LimitSimulationGasDecorator struct {
+// Tax2GasDecorator ante decorator to limit gas in simulation calls
+type Tax2GasDecorator struct {
 	gasLimit *sdk.Gas
 }
 
-// NewLimitSimulationGasDecorator constructor accepts nil value to fallback to block gas limit.
-func NewLimitSimulationGasDecorator(gasLimit *sdk.Gas) *LimitSimulationGasDecorator {
+// NewTax2GasDecorator constructor accepts nil value to fallback to block gas limit.
+func NewTax2GasDecorator(gasLimit *sdk.Gas) *Tax2GasDecorator {
 	if gasLimit != nil && *gasLimit == 0 {
 		panic("gas limit must not be zero")
 	}
-	return &LimitSimulationGasDecorator{gasLimit: gasLimit}
+	return &Tax2GasDecorator{gasLimit: gasLimit}
 }
 
 // AnteHandle that limits the maximum gas available in simulations only.
@@ -28,13 +28,17 @@ func NewLimitSimulationGasDecorator(gasLimit *sdk.Gas) *LimitSimulationGasDecora
 // simulations but may have effect on client user experience.
 //
 // When no custom value is set then the max block gas is used as default limit.
-func (d LimitSimulationGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	if !simulate {
 		// Wasm code is not executed in checkTX so that we don't need to limit it further.
 		// Tendermint rejects the TX afterwards when the tx.gas > max block gas.
 		// On deliverTX we rely on the tendermint/sdk mechanics that ensure
 		// tx has gas set and gas < max block gas
-		return next(ctx, tx, simulate)
+		if ctx.BlockHeight() == 0 {
+			return next(ctx, tx, simulate)
+		}
+
+		return next(ctx.WithGasMeter(types.NewTax2GasMeter(ctx.GasMeter().Limit())), tx, simulate)
 	}
 
 	// apply custom node gas limit

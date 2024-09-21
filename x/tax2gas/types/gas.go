@@ -17,15 +17,17 @@ type Tax2GasMeter struct {
 	consumed      sdk.Gas
 	taxConsumed   sdkmath.Int
 	limitEnforced bool
+	infinite      bool
 }
 
 // NewGasMeter returns a reference to a new Tax2GasMeter.
-func NewTax2GasMeter(limit sdk.Gas) sdk.GasMeter {
+func NewTax2GasMeter(limit sdk.Gas, infinite bool) sdk.GasMeter {
 	return &Tax2GasMeter{
 		limit:         limit,
 		consumed:      0,
 		taxConsumed:   sdkmath.ZeroInt(),
 		limitEnforced: true,
+		infinite:      infinite,
 	}
 }
 
@@ -41,6 +43,10 @@ func (g *Tax2GasMeter) TaxConsumed() sdkmath.Int {
 
 // GasRemaining returns the gas left in the GasMeter.
 func (g *Tax2GasMeter) GasRemaining() sdk.Gas {
+	if g.infinite {
+		return math.MaxUint64
+	}
+
 	if g.IsPastLimit() {
 		return 0
 	}
@@ -49,6 +55,10 @@ func (g *Tax2GasMeter) GasRemaining() sdk.Gas {
 
 // Limit returns the gas limit of the GasMeter.
 func (g *Tax2GasMeter) Limit() sdk.Gas {
+	if g.infinite {
+		return math.MaxUint64
+	}
+
 	return g.limit
 }
 
@@ -58,6 +68,10 @@ func (g *Tax2GasMeter) Limit() sdk.Gas {
 // NOTE: This behavior is only called when recovering from panic when
 // BlockGasMeter consumes gas past the limit.
 func (g *Tax2GasMeter) GasConsumedToLimit() sdk.Gas {
+	if g.infinite {
+		return g.consumed
+	}
+
 	if g.limitEnforced {
 		if g.IsPastLimit() {
 			return g.limit
@@ -88,7 +102,7 @@ func (g *Tax2GasMeter) ConsumeGas(amount sdk.Gas, descriptor string) {
 		panic(sdk.ErrorGasOverflow{Descriptor: descriptor})
 	}
 
-	if g.consumed > g.limit {
+	if !g.infinite && g.consumed > g.limit {
 		panic(sdk.ErrorOutOfGas{Descriptor: descriptor})
 	}
 }
@@ -117,12 +131,12 @@ func (g *Tax2GasMeter) RefundGas(amount sdk.Gas, descriptor string) {
 
 // IsPastLimit returns true if gas consumed is past limit, otherwise it returns false.
 func (g *Tax2GasMeter) IsPastLimit() bool {
-	return g.consumed > g.limit
+	return !g.infinite && g.consumed > g.limit
 }
 
 // IsOutOfGas returns true if gas consumed is greater than or equal to gas limit, otherwise it returns false.
 func (g *Tax2GasMeter) IsOutOfGas() bool {
-	return g.consumed >= g.limit
+	return !g.infinite && g.consumed >= g.limit
 }
 
 // String returns the Tax2GasMeter's gas limit and gas consumed.

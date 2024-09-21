@@ -13,7 +13,7 @@ import (
 // go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v3/wasmbinding/test
 func (s *WasmTestSuite) TestTax() {
 	s.SetupTest()
-	s.Ctx = s.Ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(s.Ctx.GasMeter().Limit()))
+	s.Ctx = s.Ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(s.Ctx.GasMeter().Limit(), false))
 	taxRate := sdk.NewDecWithPrec(11, 2)            // 11%
 	s.App.TreasuryKeeper.SetTaxRate(s.Ctx, taxRate) // 11%
 

@@ -35,10 +35,10 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 		// On deliverTX we rely on the tendermint/sdk mechanics that ensure
 		// tx has gas set and gas < max block gas
 		if ctx.BlockHeight() == 0 {
-			return next(ctx, tx, simulate)
+			return next(ctx.WithGasMeter(types.NewTax2GasMeter(0, true)), tx, simulate)
 		}
 
-		return next(ctx.WithGasMeter(types.NewTax2GasMeter(ctx.GasMeter().Limit())), tx, simulate)
+		return next(ctx.WithGasMeter(types.NewTax2GasMeter(ctx.GasMeter().Limit(), false)), tx, simulate)
 	}
 
 	// apply custom node gas limit
@@ -48,7 +48,7 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 
 	// default to max block gas when set, to be on the safe side
 	if maxGas := ctx.ConsensusParams().GetBlock().MaxGas; maxGas > 0 {
-		return next(ctx.WithGasMeter(types.NewTax2GasMeter(sdk.Gas(maxGas))), tx, simulate)
+		return next(ctx.WithGasMeter(types.NewTax2GasMeter(sdk.Gas(maxGas), false)), tx, simulate)
 	}
 	return next(ctx, tx, simulate)
 }

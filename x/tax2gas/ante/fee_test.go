@@ -437,7 +437,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 		s.Run(tc.name, func() {
 			tc.mallate()
 			s.ctx = s.app.BaseApp.NewContext(tc.checkTx, tmproto.Header{})
-			s.ctx = s.ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(s.ctx.GasMeter().Limit()))
+			s.ctx = s.ctx.WithGasMeter(tax2gastypes.NewTax2GasMeter(s.ctx.GasMeter().Limit(), false))
 
 			_, err = antehandler(s.ctx, tx, tc.simulation)
 

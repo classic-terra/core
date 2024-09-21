@@ -41,3 +41,4 @@ e2e-check-image-sha:
 
 e2e-remove-resources:
 	tests/e2e/scripts/run/remove_stale_resources.sh
+	sudo systemctl restart docker

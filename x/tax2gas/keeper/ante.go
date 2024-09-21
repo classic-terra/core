@@ -43,7 +43,7 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 
 	// apply custom node gas limit
 	if d.gasLimit != nil {
-		return next(ctx.WithGasMeter(sdk.NewGasMeter(*d.gasLimit)), tx, simulate)
+		return next(ctx.WithGasMeter(types.NewTax2GasMeter(*d.gasLimit, false)), tx, simulate)
 	}
 
 	// default to max block gas when set, to be on the safe side

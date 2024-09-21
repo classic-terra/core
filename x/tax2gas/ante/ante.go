@@ -99,9 +99,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		// the tax gas that user need to pay
 		priority = int64(math.MaxInt64)
 		if !isOracleTx {
-			if taxGas.IsInt64() {
-				priority = taxGas.Int64()
-			}
+			priority = int64(1)
 		}
 	}
 

@@ -32,8 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	//"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -125,6 +123,22 @@ type TerraApp struct {
 
 	// the configurator
 	configurator module.Configurator
+}
+
+func (app *TerraApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	res := app.BaseApp.CheckTx(req)
+
+	ctx := app.NewContext(true, tmproto.Header{})
+
+	maxGas := app.BaseApp.GetConsensusParams(ctx).Block.MaxGas
+
+	// Adjust GasWanted if necessary
+	if uint64(res.GasWanted) > uint64(maxGas) {
+		// Set GasWanted to maxGasWanted to satisfy the mempool's check
+		res.GasWanted = maxGas
+	}
+
+	return res
 }
 
 func init() {
@@ -219,7 +233,6 @@ func NewTerraApp(
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
-	//app.SetMempool(mempool.DefaultPriorityMempool())
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 

@@ -80,8 +80,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	return sdk.ChainAnteDecorators(
-		//ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		//wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
+		// ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		// wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		tax2gaskeeper.NewTax2GasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),

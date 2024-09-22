@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	types "github.com/classic-terra/core/v3/x/tax2gas/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,6 +22,7 @@ func NewTax2GasDecorator(gasLimit *sdk.Gas) *Tax2GasDecorator {
 	if gasLimit != nil && *gasLimit == 0 {
 		panic("gas limit must not be zero")
 	}
+
 	return &Tax2GasDecorator{gasLimit: gasLimit}
 }
 
@@ -31,7 +34,7 @@ func NewTax2GasDecorator(gasLimit *sdk.Gas) *Tax2GasDecorator {
 //
 // When no custom value is set then the max block gas is used as default limit.
 func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	_, ok := tx.(ante.GasTx)
+	gasTx, ok := tx.(ante.GasTx)
 	if !ok {
 		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 		// during runTx.
@@ -39,8 +42,30 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 		return newCtx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}
 
+	ctx.Logger().Debug("Tax2GasDecorator.AnteHandle", "simulate", simulate, "gaswanted", gasTx.GetGas())
+
 	//gas := gasTx.GetGas()
 	//newCtx = SetGasMeter(simulate, ctx, gas)
+
+	// Decorator will catch an OutOfGasPanic caused in the next antehandler
+	// AnteHandlers must have their own defer/recover in order for the BaseApp
+	// to know how much gas was used! This is because the GasMeter is created in
+	// the AnteHandler, but if it panics the context won't be set properly in
+	// runTx's recover call.
+	defer func() {
+		if r := recover(); r != nil {
+			switch rType := r.(type) {
+			case sdk.ErrorOutOfGas:
+				log := fmt.Sprintf(
+					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
+
+				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+			default:
+				panic(r)
+			}
+		}
+	}()
 
 	if !simulate {
 		// Wasm code is not executed in checkTX so that we don't need to limit it further.
@@ -51,7 +76,7 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 			return next(ctx.WithGasMeter(types.NewTax2GasMeter(0, true)), tx, simulate)
 		}
 
-		return next(ctx.WithGasMeter(types.NewTax2GasMeter(ctx.GasMeter().Limit(), false)), tx, simulate)
+		return next(ctx.WithGasMeter(types.NewTax2GasMeter(gasTx.GetGas(), false)), tx, simulate)
 	}
 
 	// apply custom node gas limit
@@ -64,7 +89,7 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 		return next(ctx.WithGasMeter(types.NewTax2GasMeter(sdk.Gas(maxGas), false)), tx, simulate)
 	}
 
-	return next(ctx.WithGasMeter(types.NewTax2GasMeter(ctx.GasMeter().Limit(), false)), tx, simulate)
+	return next(ctx.WithGasMeter(types.NewTax2GasMeter(gasTx.GetGas(), false)), tx, simulate)
 }
 
 // GasRegisterDecorator ante decorator to store gas register in the context

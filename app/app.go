@@ -32,7 +32,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
+
+	//"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -218,7 +219,7 @@ func NewTerraApp(
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
-	app.SetMempool(mempool.DefaultPriorityMempool())
+	//app.SetMempool(mempool.DefaultPriorityMempool())
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 

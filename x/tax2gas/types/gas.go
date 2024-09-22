@@ -102,7 +102,7 @@ func (g *Tax2GasMeter) ConsumeGas(amount sdk.Gas, descriptor string) {
 		panic(sdk.ErrorGasOverflow{Descriptor: descriptor})
 	}
 
-	if !g.infinite && g.consumed > g.limit {
+	if !g.infinite && g.limitEnforced && g.consumed > g.limit {
 		panic(sdk.ErrorOutOfGas{Descriptor: descriptor})
 	}
 }
@@ -131,12 +131,12 @@ func (g *Tax2GasMeter) RefundGas(amount sdk.Gas, descriptor string) {
 
 // IsPastLimit returns true if gas consumed is past limit, otherwise it returns false.
 func (g *Tax2GasMeter) IsPastLimit() bool {
-	return !g.infinite && g.consumed > g.limit
+	return !g.infinite && g.limitEnforced && g.consumed > g.limit
 }
 
 // IsOutOfGas returns true if gas consumed is greater than or equal to gas limit, otherwise it returns false.
 func (g *Tax2GasMeter) IsOutOfGas() bool {
-	return !g.infinite && g.consumed >= g.limit
+	return !g.infinite && g.limitEnforced && g.consumed >= g.limit
 }
 
 // String returns the Tax2GasMeter's gas limit and gas consumed.

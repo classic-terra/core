@@ -4,6 +4,8 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	types "github.com/classic-terra/core/v3/x/tax2gas/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // this keeper has been taken from the wasmd package
@@ -28,7 +30,18 @@ func NewTax2GasDecorator(gasLimit *sdk.Gas) *Tax2GasDecorator {
 // simulations but may have effect on client user experience.
 //
 // When no custom value is set then the max block gas is used as default limit.
-func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	_, ok := tx.(ante.GasTx)
+	if !ok {
+		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
+		// during runTx.
+		newCtx = SetGasMeter(simulate, ctx, 0)
+		return newCtx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
+	}
+
+	//gas := gasTx.GetGas()
+	//newCtx = SetGasMeter(simulate, ctx, gas)
+
 	if !simulate {
 		// Wasm code is not executed in checkTX so that we don't need to limit it further.
 		// Tendermint rejects the TX afterwards when the tx.gas > max block gas.
@@ -67,4 +80,15 @@ func NewGasRegisterDecorator(gr wasmtypes.GasRegister) *GasRegisterDecorator {
 // AnteHandle adds the gas register to the context.
 func (g GasRegisterDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	return next(wasmtypes.WithGasRegister(ctx, g.gasRegister), tx, simulate)
+}
+
+// SetGasMeter returns a new context with a gas meter set from a given context.
+func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
+	// In various cases such as simulation and during the genesis block, we do not
+	// meter any gas utilization.
+	if simulate || ctx.BlockHeight() == 0 {
+		return ctx.WithGasMeter(types.NewTax2GasMeter(0, true))
+	}
+
+	return ctx.WithGasMeter(types.NewTax2GasMeter(gasLimit, false))
 }

@@ -44,8 +44,10 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 
 	ctx.Logger().Debug("Tax2GasDecorator.AnteHandle", "simulate", simulate, "gaswanted", gasTx.GetGas())
 
-	//gas := gasTx.GetGas()
-	//newCtx = SetGasMeter(simulate, ctx, gas)
+	newCtx = ctx // default to old context for defer handling
+
+	// gas := gasTx.GetGas()
+	// newCtx = SetGasMeter(simulate, ctx, gas)
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
 	// AnteHandlers must have their own defer/recover in order for the BaseApp

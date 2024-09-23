@@ -44,6 +44,8 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 
 	ctx.Logger().Debug("Tax2GasDecorator.AnteHandle", "simulate", simulate, "gaswanted", gasTx.GetGas())
 
+	newCtx = ctx // default to old context for defer handling
+
 	//gas := gasTx.GetGas()
 	//newCtx = SetGasMeter(simulate, ctx, gas)
 

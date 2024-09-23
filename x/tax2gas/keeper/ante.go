@@ -91,7 +91,8 @@ func (d Tax2GasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 		return next(ctx.WithGasMeter(types.NewTax2GasMeter(sdk.Gas(maxGas), false)), tx, simulate)
 	}
 
-	return next(ctx.WithGasMeter(types.NewTax2GasMeter(gasTx.GetGas(), false)), tx, simulate)
+	// if no limit is set anywhere, we make it an infinite gas meter, like in the upstream modules
+	return next(ctx.WithGasMeter(types.NewTax2GasMeter(0, true)), tx, simulate)
 }
 
 // GasRegisterDecorator ante decorator to store gas register in the context

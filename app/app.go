@@ -138,10 +138,10 @@ func (app *TerraApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	for _, event := range res.Events {
 		if event.Type == "tax2gas" {
 			for _, attr := range event.Attributes {
-				if string(attr.Key) == "tax_gas" {
-					value, ok := sdkmath.NewIntFromString(string(attr.Value))
+				if attr.Key == "tax_gas" {
+					value, ok := sdkmath.NewIntFromString(attr.Value)
 					if !ok {
-						ctx.Logger().Error("failed to parse tax gas from events", "value", string(attr.Value))
+						ctx.Logger().Error("failed to parse tax gas from events", "value", attr.Value)
 						continue
 					}
 
@@ -170,8 +170,8 @@ func (app *TerraApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		gasWanted -= subTaxGas
 	}
 
-	//maxGas := app.BaseApp.GetConsensusParams(ctx).Block.MaxGas
-	//fmt.Println("GasWanted", res.GasWanted, "GasUsed", res.GasUsed, "TaxGas", taxGas, "MaxGas", maxGas, "Multiple", multiple, "GasWantedAdjusted", gasWanted)
+	// maxGas := app.BaseApp.GetConsensusParams(ctx).Block.MaxGas
+	// fmt.Println("GasWanted", res.GasWanted, "GasUsed", res.GasUsed, "TaxGas", taxGas, "MaxGas", maxGas, "Multiple", multiple, "GasWantedAdjusted", gasWanted)
 
 	// if the gas wanted is still higher than the gas used, we can adjust the gas wanted
 	if gasWanted >= gasUsed {

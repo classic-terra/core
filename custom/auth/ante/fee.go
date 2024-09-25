@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // FeeDecorator deducts fees from the first signer of the tx
@@ -117,6 +118,28 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 				// Update feesOrTax if the tax amount is higher
 				missingAmount := tax.Amount.Sub(feeAmount)
 				feesOrTax = feesOrTax.Add(sdk.NewCoin(tax.Denom, missingAmount))
+			}
+		}
+
+		// a further issue arises from the fact that simulations are sometimes run with
+		// the full bank balance of the account, which can lead to a situation where
+		// the fees are deducted from the account during simulation and so the account
+		// balance is not enough to complete the simulation.
+		// So ONLY during simulation, we MINT the fees to the account to avoid this issue.
+		// We only mint the fees we are adding on top of the original fee (sent by user).
+		if !feesOrTax.IsZero() {
+			needMint := feesOrTax.Sort().Sub(fee.Sort()...)
+			if !needMint.IsZero() {
+				err := fd.bankKeeper.MintCoins(ctx, minttypes.ModuleName, needMint)
+				if err != nil {
+					return err
+				}
+
+				// we need to add the fees to the account balance to avoid deduction errors
+				err = fd.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, deductFeesFromAcc.GetAddress(), needMint)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

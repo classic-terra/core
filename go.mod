@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.10
-	github.com/cosmos/gogoproto v1.4.10
+	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99
 	github.com/cosmos/ibc-go/v7 v7.4.0
 	github.com/gogo/protobuf v1.3.3

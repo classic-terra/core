@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,8 +20,9 @@ var _ ServiceServer = txServer{}
 
 // txServer is the server for the protobuf Tx service.
 type txServer struct {
-	clientCtx      client.Context
-	treasuryKeeper customante.TreasuryKeeper
+	clientCtx          client.Context
+	treasuryKeeper     customante.TreasuryKeeper
+	taxexemptionKeeper taxexemptionkeeper.Keeper
 }
 
 // NewTxServer creates a new Tx service server.
@@ -52,7 +54,7 @@ func (ts txServer) ComputeTax(c context.Context, req *ComputeTaxRequest) (*Compu
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, false, msgs...)
+	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.taxexemptionKeeper, ts.treasuryKeeper, false, msgs...)
 	return &ComputeTaxResponse{
 		TaxAmount: taxAmount,
 	}, nil

@@ -12,6 +12,7 @@ import (
 
 	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
@@ -29,6 +30,7 @@ type HandlerOptions struct {
 	FeegrantKeeper         ante.FeegrantKeeper
 	OracleKeeper           OracleKeeper
 	TreasuryKeeper         TreasuryKeeper
+	TaxExemptionKeeper     taxexemptionkeeper.Keeper
 	SignModeHandler        signing.SignModeHandler
 	SigGasConsumer         ante.SignatureVerificationGasConsumer
 	TxFeeChecker           ante.TxFeeChecker
@@ -79,6 +81,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
+		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
@@ -88,7 +91,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// MinInitialDepositDecorator prevents submitting governance proposal low initial deposit
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TreasuryKeeper, options.DistributionKeeper),
+		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TaxExemptionKeeper, options.TreasuryKeeper, options.DistributionKeeper),
 		dyncommante.NewDyncommDecorator(options.Cdc, options.DyncommKeeper, options.StakingKeeper),
 
 		// Do not add any other decorators below this point unless explicitly explain.

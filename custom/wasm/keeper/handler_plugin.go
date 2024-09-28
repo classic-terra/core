@@ -82,7 +82,9 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 
 	for _, sdkMsg := range sdkMsgs {
 		// Charge tax on result msg
-		taxes := ante.FilterMsgAndComputeTax(ctx, h.taxexemptionKeeper, h.treasuryKeeper, sdkMsg)
+		// we set simulate to false here as it is not available and we don't need to
+		// increase the tax amount for simulation inside of wasm
+		taxes := ante.FilterMsgAndComputeTax(ctx, h.taxexemptionKeeper, h.treasuryKeeper, false, sdkMsg)
 		if !taxes.IsZero() {
 			eventManager := sdk.NewEventManager()
 			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)

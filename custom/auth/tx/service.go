@@ -54,7 +54,7 @@ func (ts txServer) ComputeTax(c context.Context, req *ComputeTaxRequest) (*Compu
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.taxexemptionKeeper, ts.treasuryKeeper, msgs...)
+	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.taxexemptionKeeper, ts.treasuryKeeper, false, msgs...)
 	return &ComputeTaxResponse{
 		TaxAmount: taxAmount,
 	}, nil

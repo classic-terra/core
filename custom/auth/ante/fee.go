@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 // FeeDecorator deducts fees from the first signer of the tx
@@ -53,7 +54,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.taxexemptionKeeper, fd.treasuryKeeper, msgs...)
+	taxes := FilterMsgAndComputeTax(ctx, fd.taxexemptionKeeper, fd.treasuryKeeper, simulate, msgs...)
 
 	if !simulate {
 		priority, err = fd.checkTxFee(ctx, tx, taxes)
@@ -103,9 +104,46 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 	feesOrTax := fee
 
-	// deduct the fees
-	if fee.IsZero() && simulate {
-		feesOrTax = taxes
+	if simulate {
+		if fee.IsZero() {
+			feesOrTax = taxes
+		}
+
+		// even if fee is not zero it might be it is lower than the increased tax from computeTax
+		// so we need to check if the tax is higher than the fee to not run into deduction errors
+		for _, tax := range taxes {
+			feeAmount := feesOrTax.AmountOf(tax.Denom)
+			// if the fee amount is zero, add the tax amount to feesOrTax
+			if feeAmount.IsZero() {
+				feesOrTax = feesOrTax.Add(tax)
+			} else if feeAmount.LT(tax.Amount) {
+				// Update feesOrTax if the tax amount is higher
+				missingAmount := tax.Amount.Sub(feeAmount)
+				feesOrTax = feesOrTax.Add(sdk.NewCoin(tax.Denom, missingAmount))
+			}
+		}
+
+		// a further issue arises from the fact that simulations are sometimes run with
+		// the full bank balance of the account, which can lead to a situation where
+		// the fees are deducted from the account during simulation and so the account
+		// balance is not enough to complete the simulation.
+		// So ONLY during simulation, we MINT the fees to the account to avoid this issue.
+		// We only mint the fees we are adding on top of the original fee (sent by user).
+		if !feesOrTax.IsZero() {
+			needMint := feesOrTax.Sort().Sub(fee.Sort()...)
+			if !needMint.IsZero() {
+				err := fd.bankKeeper.MintCoins(ctx, minttypes.ModuleName, needMint)
+				if err != nil {
+					return err
+				}
+
+				// we need to add the fees to the account balance to avoid deduction errors
+				err = fd.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, deductFeesFromAcc.GetAddress(), needMint)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	if !feesOrTax.IsZero() {

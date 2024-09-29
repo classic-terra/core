@@ -1,0 +1,55 @@
+syntax = "proto3";
+package terra.gov.v3;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/gov/types";
+
+// Params defines the parameters for the x/gov module.
+//
+// Since: cosmos-sdk 0.47
+message Params {
+
+  // Deprecated: min_deposit is deprecated and replaced by the min_uusd_deposit
+  // Minimum deposit for a proposal to enter voting period.
+  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // Maximum period for Atom holders to deposit on a proposal. Initial value: 2
+  // months.
+  google.protobuf.Duration max_deposit_period = 2 [(gogoproto.stdduration) = true];
+
+  // Duration of the voting period.
+  google.protobuf.Duration voting_period = 3 [(gogoproto.stdduration) = true];
+
+  //  Minimum percentage of total stake needed to vote for a result to be
+  //  considered valid.
+  string quorum = 4 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
+  string threshold = 5 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  Minimum value of Veto votes to Total votes ratio for proposal to be
+  //  vetoed. Default value: 1/3.
+  string veto_threshold = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
+  string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // burn deposits if a proposal does not meet quorum
+  bool burn_vote_quorum = 13;
+
+  // burn deposits if the proposal does not enter voting period
+  bool burn_proposal_deposit_prevote = 14;
+  
+  // burn deposits if quorum with vote type no_veto is met
+  bool burn_vote_veto = 15;
+
+  // Minimal uusd deposit for a proposal to enter voting period
+  cosmos.base.v1beta1.Coin min_uusd_deposit = 16 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

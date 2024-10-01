@@ -4,6 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/math"
+	v2luncv1types "github.com/classic-terra/core/v3/custom/gov/types"
+	core "github.com/classic-terra/core/v3/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -12,19 +16,20 @@ import (
 
 // SubmitProposal creates a new proposal given an array of messages
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress) (v1.Proposal, error) {
-	err := keeper.baseKeeper.assertMetadataLength(metadata)
+	err := keeper.assertMetadataLength(metadata)
+
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
 	// assert summary is no longer than predefined max length of metadata
-	err = keeper.baseKeeper.assertMetadataLength(summary)
+	err = keeper.assertMetadataLength(summary)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
 	// assert title is no longer than predefined max length of metadata
-	err = keeper.baseKeeper.assertMetadataLength(title)
+	err = keeper.assertMetadataLength(title)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -92,6 +97,22 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	keeper.baseKeeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
 	keeper.baseKeeper.SetProposalID(ctx, proposalID+1)
 
+	// Get exchange rate betweent Lunc/uusd from oracle
+	// save it to store
+	amt := sdk.NewInt(10)
+	offerCoin := sdk.NewCoin(core.MicroUSDDenom, amt)
+	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
+	if err != nil {
+		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
+	}
+
+	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
+	totalLuncDeposit, err := minUusdDeposit.Amount.SafeQuo(price.RoundInt())
+	if err != nil {
+		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
+	}
+	keeper.SetPriceLuncBaseUusd(ctx, proposalID, math.LegacyDec(totalLuncDeposit))
+
 	// called right after a proposal is submitted
 	keeper.baseKeeper.Hooks().AfterProposalSubmission(ctx, proposalID)
 
@@ -104,4 +125,11 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	)
 
 	return proposal, nil
+}
+
+// SetPriceLuncBaseUusd sets a price Lunc base on Uusd to store.
+func (keeper Keeper) SetPriceLuncBaseUusd(ctx sdk.Context, proposalID uint64, amount sdk.Dec) {
+	store := ctx.KVStore(keeper.storeKey)
+	key := v2luncv1types.TotalDepositKey(proposalID)
+	store.Set(key, []byte(amount.String()))
 }

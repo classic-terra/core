@@ -85,3 +85,12 @@ func NewKeeper(
 		authority:    authority,
 	}
 }
+
+// assertMetadataLength returns an error if given metadata length
+// is greater than a pre-defined MaxMetadataLen.
+func (keeper Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
+		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
+	}
+	return nil
+}

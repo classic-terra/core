@@ -105,9 +105,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	if err != nil {
 		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
-
 	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
-	totalLuncDeposit, err := minUusdDeposit.Amount.SafeQuo(price.RoundInt())
+	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
+
 	if err != nil {
 		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}

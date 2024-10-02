@@ -99,7 +99,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 	// Get exchange rate betweent Lunc/uusd from oracle
 	// save it to store
-	amt := sdk.NewInt(10)
+	amt := sdk.NewInt(1000000)
 	offerCoin := sdk.NewCoin(core.MicroUSDDenom, amt)
 	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
 	if err != nil {
@@ -131,5 +131,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 func (keeper Keeper) SetPriceLuncBaseUusd(ctx sdk.Context, proposalID uint64, amount sdk.Dec) {
 	store := ctx.KVStore(keeper.storeKey)
 	key := v2luncv1types.TotalDepositKey(proposalID)
-	store.Set(key, []byte(amount.String()))
+
+	bz, err := amount.Marshal()
+	if err == nil {
+		store.Set(key, bz)
+	}
 }

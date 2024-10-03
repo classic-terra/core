@@ -84,7 +84,7 @@ func setupGovKeeper(t *testing.T) (
 
 	// Gov keeper initializations
 	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
-	govKeeper.baseKeeper.SetProposalID(ctx, 1)
+	govKeeper.SetProposalID(ctx, 1)
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)

@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	core "github.com/classic-terra/core/v3/types"
+	v2luncv1types "github.com/classic-terra/core/v3/custom/gov/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -14,7 +14,7 @@ import (
 // Activates voting period when appropriate and returns true in that case, else returns false.
 func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
 	// Checks to see if proposal exists
-	proposal, ok := keeper.baseKeeper.GetProposal(ctx, proposalID)
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		return false, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
@@ -32,24 +32,27 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Update proposal
 	proposal.TotalDeposit = sdk.NewCoins(proposal.TotalDeposit...).Add(depositAmount...)
-	keeper.baseKeeper.SetProposal(ctx, proposal)
+	keeper.SetProposal(ctx, proposal)
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
 
-	minLUNCBaseUusd, err := keeper.GetDepositLimitBaseUusd(ctx, proposalID)
-	if err != nil {
-		return false, err
-	}
-	minDeposit := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, minLUNCBaseUusd.TruncateInt()))
-	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDeposit) {
-		keeper.baseKeeper.ActivateVotingPeriod(ctx, proposal)
+	// HandleCheckLimitlDeposit
+	minDeposit := keeper.GetParams(ctx).MinDeposit
+	requiredAmount := keeper.GetDepositLimitBaseUusd(ctx, proposalID).TruncateInt()
+
+	requiredDepositCoins := sdk.NewCoins(
+		sdk.NewCoin(minDeposit[0].Denom, requiredAmount),
+	)
+
+	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(requiredDepositCoins) && requiredAmount.GT(sdk.ZeroInt()) {
+		keeper.ActivateVotingPeriod(ctx, proposal)
 
 		activatedVotingPeriod = true
 	}
 
 	// Add or update deposit object
-	deposit, found := keeper.baseKeeper.GetDeposit(ctx, proposalID, depositorAddr)
+	deposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
 
 	if found {
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
@@ -58,7 +61,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// called when deposit has been added to a proposal, however the proposal may not be active
-	keeper.baseKeeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -68,29 +71,23 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		),
 	)
 
-	keeper.baseKeeper.SetDeposit(ctx, deposit)
+	keeper.SetDeposit(ctx, deposit)
 
 	return activatedVotingPeriod, nil
 }
 
-// validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
-// required at the time of proposal submission. This threshold amount is determined by
-// the deposit parameters. Returns nil on success, error otherwise.
-func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins) error {
-	params := keeper.baseKeeper.GetParams(ctx)
-	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
-	if err != nil {
-		return err
+// GetDepositLimitBaseUUSD gets the deposit limit (Lunc) for a specific proposal
+func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64) (depositLimit sdk.Dec) {
+	store := ctx.KVStore(keeper.storeKey)
+	key := v2luncv1types.TotalDepositKey(proposalID)
+	bz := store.Get(key)
+	if bz == nil {
+		return sdk.ZeroDec()
 	}
-	if minInitialDepositRatio.IsZero() {
-		return nil
+	err := depositLimit.Unmarshal(bz)
+	if err == nil {
+		return sdk.ZeroDec()
 	}
-	minDepositCoins := params.MinDeposit
-	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
-	}
-	if !initialDeposit.IsAllGTE(minDepositCoins) {
-		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
-	}
-	return nil
+
+	return depositLimit
 }

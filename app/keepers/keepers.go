@@ -60,6 +60,8 @@ import (
 	customwasmkeeper "github.com/classic-terra/core/v3/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v3/wasmbinding"
 
+	customgovkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
+
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
@@ -439,12 +441,13 @@ func NewAppKeepers(
 	// register the proposal types
 	govRouter := appKeepers.newGovRouter()
 	govConfig := govtypes.DefaultConfig()
-	govKeeper := govkeeper.NewKeeper(
+	govKeeper := customgovkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[govtypes.StoreKey],
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
+		appKeepers.OracleKeeper,
 		bApp.MsgServiceRouter(),
 		govConfig,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

@@ -53,7 +53,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		}
 
 		// assert that the governance module account is the only signer of the messages
-		if !signers[0].Equals(keeper.baseKeeper.GetGovernanceAccount(ctx).GetAddress()) {
+		if !signers[0].Equals(keeper.GetGovernanceAccount(ctx).GetAddress()) {
 			return v1.Proposal{}, sdkerrors.Wrapf(types.ErrInvalidSigner, signers[0].String())
 		}
 
@@ -80,22 +80,22 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 	}
 
-	proposalID, err := keeper.baseKeeper.GetProposalID(ctx)
+	proposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := keeper.baseKeeper.GetParams(ctx).MaxDepositPeriod
+	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
 	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
 
-	keeper.baseKeeper.SetProposal(ctx, proposal)
-	keeper.baseKeeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
-	keeper.baseKeeper.SetProposalID(ctx, proposalID+1)
+	keeper.SetProposal(ctx, proposal)
+	keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
+	keeper.SetProposalID(ctx, proposalID+1)
 
 	err, totalLuncDeposit := keeper.GetMinimumDepositBaseUusd(ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	}
 
 	// called right after a proposal is submitted
-	keeper.baseKeeper.Hooks().AfterProposalSubmission(ctx, proposalID)
+	keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -137,9 +137,7 @@ func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64,
 func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (error, math.Int) {
 	// Get exchange rate betweent Lunc/uusd from oracle
 	// save it to store
-	amt := sdk.NewInt(1000000)
-	offerCoin := sdk.NewCoin(core.MicroUSDDenom, amt)
-	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
+	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
 	if err != nil && price.LTE(sdk.ZeroDec()) {
 		return err, sdk.ZeroInt()
 	}

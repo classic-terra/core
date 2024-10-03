@@ -15,7 +15,7 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
-	baseKeeper   keeper.Keeper
+	*keeper.Keeper
 	authKeeper   types.AccountKeeper
 	bankKeeper   types.BankKeeper
 	oracleKeeper markettypes.OracleKeeper
@@ -73,8 +73,8 @@ func NewKeeper(
 	}
 
 	return &Keeper{
+		Keeper:       keeper.NewKeeper(cdc, key, authKeeper, bankKeeper, sk, router, config, authority),
 		storeKey:     key,
-		baseKeeper:   *keeper.NewKeeper(cdc, key, authKeeper, bankKeeper, sk, router, config, authority),
 		authKeeper:   authKeeper,
 		bankKeeper:   bankKeeper,
 		oracleKeeper: oracleKeeper,

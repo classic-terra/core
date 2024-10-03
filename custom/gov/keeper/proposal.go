@@ -97,17 +97,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	keeper.baseKeeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
 	keeper.baseKeeper.SetProposalID(ctx, proposalID+1)
 
-	// Get exchange rate betweent Lunc/uusd from oracle
-	// save it to store
-	amt := sdk.NewInt(1000000)
-	offerCoin := sdk.NewCoin(core.MicroUSDDenom, amt)
-	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
-	if err != nil && price.LTE(sdk.ZeroDec()) {
-		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
-	}
-	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
-	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
-
+	err, totalLuncDeposit := keeper.GetMinimumDepositBaseUusd(ctx)
 	if err != nil {
 		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
@@ -141,4 +131,23 @@ func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64,
 		store.Set(key, bz)
 	}
 	return err
+}
+
+// GetDepositLimitBaseUusd: calculate the minimum LUNC amount to deposit base on Uusd for the proposal
+func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (error, math.Int) {
+	// Get exchange rate betweent Lunc/uusd from oracle
+	// save it to store
+	amt := sdk.NewInt(1000000)
+	offerCoin := sdk.NewCoin(core.MicroUSDDenom, amt)
+	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
+	if err != nil && price.LTE(sdk.ZeroDec()) {
+		return err, sdk.ZeroInt()
+	}
+	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
+	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
+
+	if err != nil {
+		return err, sdk.ZeroInt()
+	}
+	return nil, totalLuncDeposit
 }

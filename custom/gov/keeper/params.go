@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
-	v2luncv1types "github.com/classic-terra/core/v3/custom/gov/types/v2luncv1"
+	v2luncv1types "github.com/classic-terra/core/v3/custom/gov/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

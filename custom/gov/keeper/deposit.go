@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -36,7 +37,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
 
-	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(keeper.baseKeeper.GetParams(ctx).MinDeposit) {
+	minLUNCBaseUusd, err := keeper.GetDepositLimitBaseUusd(ctx, proposalID)
+	if err != nil {
+		return false, err
+	}
+	minDeposit := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, minLUNCBaseUusd.TruncateInt()))
+	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDeposit) {
 		keeper.baseKeeper.ActivateVotingPeriod(ctx, proposal)
 
 		activatedVotingPeriod = true

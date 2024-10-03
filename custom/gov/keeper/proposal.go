@@ -99,9 +99,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 	// Get exchange rate betweent Lunc/uusd from oracle
 	// save it to store
-	amt := sdk.NewInt(10)
-	offerCoin := sdk.NewCoin(core.MicroUSDDenom, amt)
-	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, offerCoin.Denom)
+	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
 	if err != nil {
 		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
@@ -131,5 +129,25 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 func (keeper Keeper) SetPriceLuncBaseUusd(ctx sdk.Context, proposalID uint64, amount sdk.Dec) {
 	store := ctx.KVStore(keeper.storeKey)
 	key := v2luncv1types.TotalDepositKey(proposalID)
-	store.Set(key, []byte(amount.String()))
+
+	bz, err := amount.Marshal()
+	if err == nil {
+		store.Set(key, bz)
+	}
+}
+
+// GetDepositLimitBaseUUSD gets the deposit limit (Lunc) for a specific proposal
+func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64) (depositLimit sdk.Dec, err error) {
+	store := ctx.KVStore(keeper.storeKey)
+	key := v2luncv1types.TotalDepositKey(proposalID)
+	bz := store.Get(key)
+	if bz == nil {
+		return sdk.ZeroDec(), err
+	}
+	err = depositLimit.Unmarshal(bz)
+	if err == nil {
+		return sdk.ZeroDec(), err
+	}
+
+	return depositLimit, nil
 }

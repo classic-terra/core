@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type msgServer struct {
@@ -15,23 +16,23 @@ type msgServer struct {
 
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper *Keeper) v1.MsgServer {
+func NewMsgServerImpl(keeper *Keeper) v2lunc1types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-var _ v1.MsgServer = msgServer{}
+var _ v2lunc1types.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
-func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
+func (k msgServer) SubmitProposal(goCtx context.Context, msg *v2lunc1types.MsgSubmitProposal) (*v2lunc1types.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	initialDeposit := msg.GetInitialDeposit()
 
-	if err := k.baseKeeper.validateInitialDeposit(ctx, initialDeposit); err != nil {
+	if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
 		return nil, err
 	}
 
-	proposalMsgs, err := msg.GetMsgs()
+	proposalMsgs, err := sdktx.GetMsgs(msg.Messages, "sdk.MsgProposal")
 	if err != nil {
 		return nil, err
 	}
@@ -70,13 +71,13 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		)
 	}
 
-	return &v1.MsgSubmitProposalResponse{
+	return &v2lunc1types.MsgSubmitProposalResponse{
 		ProposalId: proposal.Id,
 	}, nil
 }
 
 // Deposit implements the MsgServer.Deposit method.
-func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepositResponse, error) {
+func (k msgServer) Deposit(goCtx context.Context, msg *v2lunc1types.MsgDeposit) (*v2lunc1types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	accAddr, err := sdk.AccAddressFromBech32(msg.Depositor)
 	if err != nil {
@@ -96,5 +97,5 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 		)
 	}
 
-	return &v1.MsgDepositResponse{}, nil
+	return &v2lunc1types.MsgDepositResponse{}, nil
 }

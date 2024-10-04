@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	govv2luncv1 "github.com/classic-terra/core/v3/custom/gov/keeper"
+	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -15,12 +15,12 @@ import (
 
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
 type MinInitialDepositDecorator struct {
-	govKeeper      govv2luncv1.Keeper
+	govKeeper      govv2lunc1.Keeper
 	treasuryKeeper TreasuryKeeper
 }
 
 // NewMinInitialDeposit returns new min initial deposit decorator instance
-func NewMinInitialDepositDecorator(govKeeper govv2luncv1.Keeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
+func NewMinInitialDepositDecorator(govKeeper govv2lunc1.Keeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
 	return MinInitialDepositDecorator{
 		govKeeper:      govKeeper,
 		treasuryKeeper: treasuryKeeper,
@@ -38,7 +38,7 @@ func IsMsgSubmitProposal(msg sdk.Msg) bool {
 }
 
 // HandleCheckMinInitialDeposit
-func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govv2luncv1.Keeper, treasuryKeeper TreasuryKeeper) (err error) {
+func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govv2lunc1.Keeper, treasuryKeeper TreasuryKeeper) (err error) {
 	var initialDepositCoins sdk.Coins
 
 	switch submitPropMsg := msg.(type) {

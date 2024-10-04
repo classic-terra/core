@@ -10,12 +10,12 @@ import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/classic-terra/core/v3/x/gov/types";
+option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1";
 
 // Query defines the gRPC querier service for gov module
 service Query {
   // Proposal queries proposal details based on ProposalID.
-  rpc Proposal(QueryProposalRequest) returns (QueryMinimalDepositProposalResponse) {
+  rpc ProposalMinimalLUNCByUusd(QueryProposalRequest) returns (QueryMinimalDepositProposalResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/minimal-deposits/{proposal_id}";
   }
 }

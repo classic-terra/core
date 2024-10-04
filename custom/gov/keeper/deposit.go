@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	v2luncv1types "github.com/classic-terra/core/v3/custom/gov/types"
+	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -76,10 +76,32 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
+// validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
+// required at the time of proposal submission. This threshold amount is determined by
+// the deposit parameters. Returns nil on success, error otherwise.
+func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins) error {
+	params := keeper.GetParams(ctx)
+	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+	if err != nil {
+		return err
+	}
+	if minInitialDepositRatio.IsZero() {
+		return nil
+	}
+	minDepositCoins := params.MinDeposit
+	for i := range minDepositCoins {
+		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
+	}
+	if !initialDeposit.IsAllGTE(minDepositCoins) {
+		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
+	}
+	return nil
+}
+
 // GetDepositLimitBaseUUSD gets the deposit limit (Lunc) for a specific proposal
 func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64) (depositLimit sdk.Dec) {
 	store := ctx.KVStore(keeper.storeKey)
-	key := v2luncv1types.TotalDepositKey(proposalID)
+	key := v2lunc1types.TotalDepositKey(proposalID)
 	bz := store.Get(key)
 	if bz == nil {
 		return sdk.ZeroDec()

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	v2luncv1types "github.com/classic-terra/core/v3/custom/gov/types"
+	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
 	core "github.com/classic-terra/core/v3/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,12 +99,12 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 
 	err, totalLuncDeposit := keeper.GetMinimumDepositBaseUusd(ctx)
 	if err != nil {
-		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, err.Error())
+		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
 
 	er := keeper.SetDepositLimitBaseUusd(ctx, proposalID, math.LegacyDec(totalLuncDeposit))
 	if er != nil {
-		return v1.Proposal{}, sdkerrors.Wrap(v2luncv1types.ErrQueryExchangeRateUusdFail, er.Error())
+		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, er.Error())
 	}
 
 	// called right after a proposal is submitted
@@ -124,7 +124,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 // SetDepositLimitBaseUusd sets a limit deposit(Lunc) base on Uusd to store.
 func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount sdk.Dec) error {
 	store := ctx.KVStore(keeper.storeKey)
-	key := v2luncv1types.TotalDepositKey(proposalID)
+	key := v2lunc1types.TotalDepositKey(proposalID)
 
 	bz, err := amount.Marshal()
 	if err == nil {

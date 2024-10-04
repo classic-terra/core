@@ -59,6 +59,11 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return customcli.GetTxCmd()
 }
 
+// GetQueryCmd returns no root query command for the oracle module.
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return customcli.GetQueryCmd()
+}
+
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)

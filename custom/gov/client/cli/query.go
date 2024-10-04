@@ -70,7 +70,7 @@ $ %s query gov proposal 1
 				return err
 			}
 
-			return clientCtx.PrintProto(&res.MinimalDeposits)
+			return clientCtx.PrintProto(&res.MinimalDeposit)
 		},
 	}
 

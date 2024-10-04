@@ -29,5 +29,5 @@ message QueryProposalRequest {
 // QueryVoteRequest is the request type for the Query/Vote RPC method.
 message QueryMinimalDepositProposalResponse {
   // proposal_id defines the unique id of the proposal.
-    repeated cosmos.base.v1beta1.Coin minimal_deposits = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.v1beta1.Coin minimal_deposit = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

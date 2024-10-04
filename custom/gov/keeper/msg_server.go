@@ -26,11 +26,11 @@ var _ v2lunc1types.MsgServer = msgServer{}
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *v2lunc1types.MsgSubmitProposal) (*v2lunc1types.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	initialDeposit := msg.GetInitialDeposit()
+	// initialDeposit := msg.GetInitialDeposit()
 
-	if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
-		return nil, err
-	}
+	// if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
+	// 	return nil, err
+	// }
 
 	proposalMsgs, err := sdktx.GetMsgs(msg.Messages, "sdk.MsgProposal")
 	if err != nil {

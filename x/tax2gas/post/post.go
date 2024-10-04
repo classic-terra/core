@@ -160,7 +160,6 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		if err != nil {
 			return ctx, err
 		}
-
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %s gas more, which equal to %q ", gasRemaining.String(), gasRemainingFees)
 	}
 	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)

@@ -10,7 +10,7 @@ import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/classic-terra/core/v3/custom/gov/types";
+option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1";
 
 // Query defines the gRPC querier service for gov module
 service Query {
@@ -29,5 +29,5 @@ message QueryProposalRequest {
 // QueryVoteRequest is the request type for the Query/Vote RPC method.
 message QueryMinimalDepositProposalResponse {
   // proposal_id defines the unique id of the proposal.
-    repeated cosmos.base.v1beta1.Coin minimal_deposits = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.v1beta1.Coin minimal_deposit = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

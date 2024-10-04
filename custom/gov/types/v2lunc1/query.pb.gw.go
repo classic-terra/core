@@ -2,11 +2,11 @@
 // source: terra/gov/v2lunc1/query.proto
 
 /*
-Package types is a reverse proxy.
+Package v2lunc1 is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package types
+package v2lunc1
 
 import (
 	"context"

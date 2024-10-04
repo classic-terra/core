@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
+	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -70,7 +70,7 @@ $ %s query gov proposal 1
 				return err
 			}
 
-			return clientCtx.PrintProto(&res.MinimalDeposits)
+			return clientCtx.PrintProto(&res.MinimalDeposit)
 		},
 	}
 

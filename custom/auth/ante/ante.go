@@ -2,13 +2,13 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	govkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"

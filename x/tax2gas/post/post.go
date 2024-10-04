@@ -84,6 +84,9 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	if !simulate {
 		// Deduct feeCoins with paid amount
+		if paidAmount.Ceil().RoundInt().Int64() > feeCoins.AmountOf(paidDenom).Int64() {
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fee: %s", feeCoins)
+		}
 		feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
 	}
 
@@ -155,7 +158,7 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
 	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
-	if !simulate && !ctx.IsCheckTx() && gasRemaining.IsPositive() {
+	if !simulate && gasRemaining.IsPositive() {
 		gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasRemaining)
 		if err != nil {
 			return ctx, err

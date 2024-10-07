@@ -7,11 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/spf13/cobra"
 
+	v2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	customcli "github.com/classic-terra/core/v3/custom/gov/client/cli"
 	customtypes "github.com/classic-terra/core/v3/custom/gov/types"
@@ -75,7 +76,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // module.
 func (am AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	// customize to set default genesis state deposit denom to uluna
-	defaultGenesisState := v1.DefaultGenesisState()
+	defaultGenesisState := v2lunc1.DefaultGenesisState()
 	defaultGenesisState.Params.MinDeposit[0].Denom = core.MicroLunaDenom
 
 	return cdc.MustMarshalJSON(defaultGenesisState)

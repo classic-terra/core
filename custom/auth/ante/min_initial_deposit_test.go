@@ -19,6 +19,7 @@ import (
 	// cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	// "github.com/cosmos/cosmos-sdk/x/auth/types"
 	// minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -31,7 +32,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	antehandler := sdk.ChainAnteDecorators(midd)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetParams(suite.ctx, govv1.DefaultParams())
+	suite.app.GovKeeper.SetParams(suite.ctx, govv2lunc1.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinDeposit = sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),

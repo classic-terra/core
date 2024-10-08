@@ -17,19 +17,6 @@ import (
 )
 
 func (s *PostTestSuite) TestDeductFeeDecorator() {
-	s.SetupTest(true)
-	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
-
-	mfd := post.NewTax2GasPostDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.Tax2gasKeeper)
-	posthandler := sdk.ChainPostDecorators(mfd)
-
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin("uluna", sdk.NewInt(10000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-	s.Require().NoError(err)
 
 	anteConsumedFee := int64(207566)
 	postConsumedFee := int64(1368041)
@@ -38,7 +25,7 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 		name           string
 		simulation     bool
 		checkTx        bool
-		setupFunc      func()
+		setupFunc      func(addr sdk.AccAddress, tx signing.Tx)
 		expectedOracle sdk.Coins
 		expectedCp     sdk.Coins
 		expectedBurn   sdk.Coins
@@ -47,8 +34,8 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 	}{
 		{
 			name: "happy case",
-			setupFunc: func() {
-				s.setupTestCase(addr1, 100000000, 100000, anteConsumedFee+500022)
+			setupFunc: func(addr sdk.AccAddress, tx signing.Tx) {
+				s.setupTestCase(addr, 100000000, 100000, anteConsumedFee+500022)
 			},
 			// amount: 100000000
 			// tax(0.5%): 500022
@@ -63,22 +50,22 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 		},
 		{
 			name: "not enough fee",
-			setupFunc: func() {
-				s.setupTestCase(addr1, 100000000, 100000, 600000)
+			setupFunc: func(addr sdk.AccAddress, tx signing.Tx) {
+				s.setupTestCase(addr, 100000000, 100000, 600000)
 			},
 			expFail: true,
 		},
 		{
 			name: "combine ante + post, not enough fee",
-			setupFunc: func() {
-				s.setupCombineAnteAndPost(addr1, tx, 100000, 7328, 707559)
+			setupFunc: func(addr sdk.AccAddress, tx signing.Tx) {
+				s.setupCombineAnteAndPost(addr, tx, 100000, 7328, 707559)
 			},
 			expFail: true,
 		},
 		{
 			name: "combine ante + post, enough fee",
-			setupFunc: func() {
-				s.setupCombineAnteAndPost(addr1, tx, 100000000, 100000, anteConsumedFee+postConsumedFee+500022)
+			setupFunc: func(addr sdk.AccAddress, tx signing.Tx) {
+				s.setupCombineAnteAndPost(addr, tx, 100000000, 100000, anteConsumedFee+postConsumedFee+500022)
 			},
 			expFail:        false,
 			expectedOracle: sdk.NewCoins(sdk.NewInt64Coin("uluna", 49002)),
@@ -89,10 +76,29 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			tc.setupFunc()
+			// Reset the entire app and context for each test case
+			s.SetupTest(true)
+			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+			deco := post.NewTax2GasPostDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.Tax2gasKeeper)
+			posthandler := sdk.ChainPostDecorators(deco)
+
+			// Generate a new address for each test case
+			priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+			// Fund the account
+			coins := sdk.NewCoins(sdk.NewCoin("uluna", sdk.NewInt(10000000)))
+			testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+
+			// Create a new test transaction
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+			s.Require().NoError(err)
+
+			tc.setupFunc(addr1, tx)
 
 			_, err = posthandler(s.ctx, tx, tc.simulation, true)
 			s.assertTestCase(tc, err)
+
 		})
 	}
 }
@@ -141,7 +147,7 @@ func (s *PostTestSuite) assertTestCase(tc struct {
 	name           string
 	simulation     bool
 	checkTx        bool
-	setupFunc      func()
+	setupFunc      func(addr sdk.AccAddress, tx signing.Tx)
 	expectedOracle sdk.Coins
 	expectedCp     sdk.Coins
 	expectedBurn   sdk.Coins

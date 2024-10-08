@@ -48,7 +48,7 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 		{
 			name: "happy case",
 			setupFunc: func() {
-				s.setupTestCase(addr1, tx, 100000000, 100000, anteConsumedFee+500022)
+				s.setupTestCase(addr1, 100000000, 100000, anteConsumedFee+500022)
 			},
 			// amount: 100000000
 			// tax(0.5%): 500022
@@ -64,7 +64,7 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 		{
 			name: "not enough fee",
 			setupFunc: func() {
-				s.setupTestCase(addr1, tx, 100000000, 100000, 600000)
+				s.setupTestCase(addr1, 100000000, 100000, 600000)
 			},
 			expFail: true,
 		},
@@ -97,7 +97,7 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 	}
 }
 
-func (s *PostTestSuite) setupTestCase(addr sdk.AccAddress, tx signing.Tx, sendAmount, gasLimit, feeAmount int64) {
+func (s *PostTestSuite) setupTestCase(addr sdk.AccAddress, sendAmount, gasLimit, feeAmount int64) {
 	msg := banktypes.NewMsgSend(addr, addr, sdk.NewCoins(sdk.NewCoin("uluna", sdk.NewInt(sendAmount))))
 	gm := tax2gastypes.NewTax2GasMeter(s.ctx.GasMeter().Limit(), false)
 	s.setupTax2GasMeter(gm, msg)
@@ -112,7 +112,7 @@ func (s *PostTestSuite) setupTestCase(addr sdk.AccAddress, tx signing.Tx, sendAm
 func (s *PostTestSuite) setupCombineAnteAndPost(addr sdk.AccAddress, tx signing.Tx, sendAmount, gasLimit, feeAmount int64) {
 	msg := banktypes.NewMsgSend(addr, addr, sdk.NewCoins(sdk.NewCoin("uluna", sdk.NewInt(sendAmount))))
 	gm := tax2gastypes.NewTax2GasMeter(s.ctx.GasMeter().Limit(), false)
-	//s.setupTax2GasMeter(gm, msg)
+	// s.setupTax2GasMeter(gm, msg)
 	mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.Tax2gasKeeper)
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("uluna", feeAmount)))
 	s.txBuilder.SetGasLimit(uint64(gasLimit))
@@ -147,7 +147,8 @@ func (s *PostTestSuite) assertTestCase(tc struct {
 	expectedBurn   sdk.Coins
 	expFail        bool
 	expErrMsg      string
-}, err error) {
+}, err error,
+) {
 	currentOracle := s.app.BankKeeper.GetBalance(s.ctx, s.app.AccountKeeper.GetModuleAddress(oracle.ModuleName), "uluna")
 	currentCp := s.app.DistrKeeper.GetFeePoolCommunityCoins(s.ctx).AmountOf("uluna")
 	currentBurn := s.app.BankKeeper.GetBalance(s.ctx, s.app.AccountKeeper.GetModuleAddress(types.BurnModuleName), "uluna")

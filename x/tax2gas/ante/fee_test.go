@@ -78,7 +78,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 				s.Require().NoError(s.txBuilder.SetMsgs(msg))
 				// GasConsumed : 7328*28.325 = 207566
 				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(207566))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 2833500))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207566))
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(7328)
 			},
@@ -116,7 +116,7 @@ func (s *AnteTestSuite) TestDeductFeeDecorator() {
 				// Consumed gas at the point of ante is: 7220 but the gas limit is 100000
 				// 100000*28.325 (gas fee) + 1000 (tax) = 2833500
 				err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2833500))))
-				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 207566))
+				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 2833500))
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(100000)
 			},

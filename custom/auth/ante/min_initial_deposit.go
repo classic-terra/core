@@ -61,7 +61,8 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govv2l
 			return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)
 		}
 	}
-	return nil
+
+	return fmt.Errorf("could not get minimum deposit base uusd")
 }
 
 // AnteHandle handles checking MsgSubmitProposal

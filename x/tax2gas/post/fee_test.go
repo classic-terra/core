@@ -17,7 +17,6 @@ import (
 )
 
 func (s *PostTestSuite) TestDeductFeeDecorator() {
-
 	anteConsumedFee := int64(207566)
 	postConsumedFee := int64(1368041)
 
@@ -98,7 +97,6 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 
 			_, err = posthandler(s.ctx, tx, tc.simulation, true)
 			s.assertTestCase(tc, err)
-
 		})
 	}
 }

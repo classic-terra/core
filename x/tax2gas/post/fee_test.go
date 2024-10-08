@@ -69,7 +69,7 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 			expFail: true,
 		},
 		{
-			name: "combine ante + post",
+			name: "combine ante + post, not enough fee",
 			setupFunc: func() {
 				s.setupCombineAnteAndPost(addr1, tx, 100000, 7328, 707559)
 			},
@@ -80,24 +80,16 @@ func (s *PostTestSuite) TestDeductFeeDecorator() {
 			setupFunc: func() {
 				s.setupCombineAnteAndPost(addr1, tx, 100000000, 100000, anteConsumedFee+postConsumedFee+500022)
 			},
-			expFail: false,
-			// amount: 100000000
-			// tax(0.5%): 500022
-			// use default value
-			// burn: tax*0.9 = 500022 * 0.9 = 455020
-			// distributtion: tax - burn = 50002
-			// cp: 2% of distribution: 50002 * 0.02 ~ 1000
-			// oracle: distribution - oracle = 49002
+			expFail:        false,
 			expectedOracle: sdk.NewCoins(sdk.NewInt64Coin("uluna", 49002)),
 			expectedCp:     sdk.NewCoins(sdk.NewInt64Coin("uluna", 1000)),
-			expectedBurn:   sdk.NewCoins(sdk.NewInt64Coin("uluna", 455020)),
+			expectedBurn:   sdk.NewCoins(sdk.NewInt64Coin("uluna", 450020)),
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			tc.setupFunc()
-			s.ctx = s.ctx.WithIsCheckTx(true)
 
 			_, err = posthandler(s.ctx, tx, tc.simulation, true)
 			s.assertTestCase(tc, err)

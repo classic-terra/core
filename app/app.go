@@ -20,6 +20,7 @@ import (
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -128,14 +129,57 @@ type TerraApp struct {
 func (app *TerraApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	res := app.BaseApp.CheckTx(req)
 
+	// the ctx here is just for the logger, so it might be okay to remove it
+	// and the logging in the event parsing
 	ctx := app.NewContext(true, tmproto.Header{})
 
-	maxGas := app.BaseApp.GetConsensusParams(ctx).Block.MaxGas
+	// fetch consumed tax gas from events
+	taxGas := sdkmath.ZeroInt()
+	for _, event := range res.Events {
+		if event.Type == "tax2gas" {
+			for _, attr := range event.Attributes {
+				if attr.Key == "tax_gas" {
+					value, ok := sdkmath.NewIntFromString(attr.Value)
+					if !ok {
+						ctx.Logger().Error("failed to parse tax gas from events", "value", attr.Value)
+						continue
+					}
 
-	// Adjust GasWanted if necessary
-	if uint64(res.GasWanted) > uint64(maxGas) {
-		// Set GasWanted to maxGasWanted to satisfy the mempool's check
-		res.GasWanted = maxGas
+					taxGas = taxGas.Add(value)
+				}
+			}
+		}
+	}
+
+	if taxGas.IsZero() {
+		return res
+	}
+
+	gasWanted := uint64(res.GasWanted)
+	gasUsed := uint64(res.GasUsed)
+	subTaxGas := taxGas.Uint64()
+
+	// check how many times the gas used fits into the gas wanted
+	// if it doesn't fit, we need to adjust the gas wanted
+	multiple := sdkmath.LegacyNewDec(res.GasWanted).Quo(sdkmath.LegacyNewDec(res.GasUsed).Add(taxGas.ToLegacyDec()))
+
+	// we have a multiplier, so we know approximately how often tax gas can be subtracted
+	// we should assume everything >= 0.9 should be subtracted. Using >= 1 would have issues with approximations
+	if multiple.GTE(sdkmath.LegacyNewDecWithPrec(9, 1)) {
+		// adjust gas wanted by the tax gas
+		subTaxGas = taxGas.ToLegacyDec().Mul(multiple).TruncateInt().Uint64()
+	}
+
+	if gasWanted > subTaxGas {
+		gasWanted -= subTaxGas
+	}
+
+	// maxGas := app.BaseApp.GetConsensusParams(ctx).Block.MaxGas
+	ctx.Logger().Info("CheckTx", "GasWanted", res.GasWanted, "GasUsed", res.GasUsed, "TaxGas", taxGas, "GasWantedAdjusted", gasWanted, "Multiple", multiple)
+
+	// if the gas wanted is still higher than the gas used, we can adjust the gas wanted
+	if gasWanted >= gasUsed {
+		res.GasWanted = int64(gasWanted)
 	}
 
 	return res

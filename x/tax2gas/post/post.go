@@ -109,6 +109,9 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		}
 	}
 
+	// add the consumed tax gas to the transaction logs
+	ctx.EventManager().EmitEvent(sdk.NewEvent("tax2gas", sdk.NewAttribute("tax_gas", taxGas.String())))
+
 	// Deduct the gas consumed amount spent on ante handler
 	totalGasRemaining := sdkmath.NewInt(int64(totalGasConsumed - anteConsumedGas)).Add(taxGas)
 

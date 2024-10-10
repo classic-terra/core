@@ -175,7 +175,7 @@ func (app *TerraApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	}
 
 	// maxGas := app.BaseApp.GetConsensusParams(ctx).Block.MaxGas
-	// fmt.Println("GasWanted", res.GasWanted, "GasUsed", res.GasUsed, "TaxGas", taxGas, "MaxGas", maxGas, "Multiple", multiple, "GasWantedAdjusted", gasWanted)
+	ctx.Logger().Info("CheckTx", "GasWanted", res.GasWanted, "GasUsed", res.GasUsed, "TaxGas", taxGas, "GasWantedAdjusted", gasWanted, "Multiple", multiple)
 
 	// if the gas wanted is still higher than the gas used, we can adjust the gas wanted
 	if gasWanted >= gasUsed {

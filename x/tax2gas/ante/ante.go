@@ -99,9 +99,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		// the tax gas that user need to pay
 		priority = int64(math.MaxInt64)
 		if !isOracleTx {
-			if taxGas.IsInt64() {
-				priority = taxGas.Int64()
-			}
+			priority = int64(1)
 		}
 	}
 
@@ -115,7 +113,11 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		WithValue(types.TaxGas, taxGas).
 		WithValue(types.FinalGasPrices, gasPrices)
 	if !taxGas.IsZero() {
-		newCtx.TaxGasMeter().ConsumeGas(taxGas, "ante handler taxGas")
+		gasMeter, ok := ctx.GasMeter().(*types.Tax2GasMeter)
+		if !ok {
+			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidType, "invalid gas meter")
+		}
+		gasMeter.ConsumeTax(taxGas, "ante handler taxGas")
 	}
 	newCtx = newCtx.WithValue(types.AnteConsumedGas, gasConsumed)
 	if paidDenom != "" {

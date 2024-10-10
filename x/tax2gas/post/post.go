@@ -1,6 +1,8 @@
 package post
 
 import (
+	"fmt"
+
 	sdkmath "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
@@ -35,6 +37,11 @@ func NewTax2GasPostDecorator(accountKeeper ante.AccountKeeper, bankKeeper types.
 }
 
 func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, success bool, next sdk.PostHandler) (sdk.Context, error) {
+	gasMeter, ok := ctx.GasMeter().(*types.Tax2GasMeter)
+	if !ok {
+		return ctx, fmt.Errorf("expected Tax2GasMeter, got %T", ctx.GasMeter())
+	}
+
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -77,10 +84,13 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	if !simulate {
 		// Deduct feeCoins with paid amount
+		if paidAmount.Ceil().RoundInt().Int64() > feeCoins.AmountOf(paidDenom).Int64() {
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fee: %s", feeCoins)
+		}
 		feeCoins = feeCoins.Sub(sdk.NewCoin(paidDenom, paidAmount.Ceil().RoundInt()))
 	}
 
-	taxGas := ctx.TaxGasMeter().GasConsumed()
+	taxGas := gasMeter.TaxConsumed()
 
 	// we consume the gas here as we need to calculate the tax for consumed gas
 	// if the gas overflow, then that means the tx can't be estimates as normal way
@@ -92,10 +102,15 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		// Check if gas not overflow
 		if totalGasConsumed+taxGasUint64 >= totalGasConsumed && totalGasConsumed+taxGasUint64 >= taxGasUint64 {
 			if simulate {
-				ctx.GasMeter().ConsumeGas(taxGasUint64, "consume tax gas")
+				gasMeter.DisableGasLimitEnforcement()
+				defer gasMeter.EnableGasLimitEnforcement()
+				gasMeter.ConsumeGas(taxGasUint64, "consume tax gas")
 			}
 		}
 	}
+
+	// add the consumed tax gas to the transaction logs
+	ctx.EventManager().EmitEvent(sdk.NewEvent("tax2gas", sdk.NewAttribute("tax_gas", taxGas.String())))
 
 	// Deduct the gas consumed amount spent on ante handler
 	totalGasRemaining := sdkmath.NewInt(int64(totalGasConsumed - anteConsumedGas)).Add(taxGas)
@@ -146,12 +161,11 @@ func (tgd Tax2gasPostDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	// First, we will deduct the fees covered taxGas and handle BurnTaxSplit
 	taxes, payableFees, gasRemaining := tax2gasutils.CalculateTaxesAndPayableFee(gasPrices, feeCoins, taxGas, totalGasRemaining)
-	if !simulate && !ctx.IsCheckTx() && gasRemaining.IsPositive() {
+	if !simulate && gasRemaining.IsPositive() {
 		gasRemainingFees, err := tax2gasutils.ComputeFeesOnGasConsumed(tx, gasPrices, gasRemaining)
 		if err != nil {
 			return ctx, err
 		}
-
 		return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "fees are not enough to pay for gas, need to cover %s gas more, which equal to %q ", gasRemaining.String(), gasRemainingFees)
 	}
 	feePayerAccount := tgd.accountKeeper.GetAccount(ctx, feePayer)

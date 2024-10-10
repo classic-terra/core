@@ -1,4 +1,4 @@
-package ante_test
+package post_test
 
 import (
 	"testing"
@@ -28,7 +28,7 @@ import (
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
-type AnteTestSuite struct {
+type PostTestSuite struct {
 	suite.Suite
 
 	app *terraapp.TerraApp
@@ -60,7 +60,7 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
+func (suite *PostTestSuite) SetupTest(isCheckTx bool) {
 	tempDir := suite.T().TempDir()
 	suite.app, suite.ctx = createTestApp(isCheckTx, tempDir)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
@@ -73,7 +73,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 		WithTxConfig(encodingConfig.TxConfig)
 }
 
-func (suite *AnteTestSuite) SetupEncoding() testutil.TestEncodingConfig {
+func (suite *PostTestSuite) SetupEncoding() testutil.TestEncodingConfig {
 	encodingConfig := testutil.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
@@ -83,7 +83,7 @@ func (suite *AnteTestSuite) SetupEncoding() testutil.TestEncodingConfig {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+func (suite *PostTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -129,6 +129,6 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 	return suite.txBuilder.GetTx(), nil
 }
 
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
+func TestPostTestSuite(t *testing.T) {
+	suite.Run(t, new(PostTestSuite))
 }

@@ -151,6 +151,10 @@ func (app *TerraApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		}
 	}
 
+	if taxGas.IsZero() {
+		return res
+	}
+
 	gasWanted := uint64(res.GasWanted)
 	gasUsed := uint64(res.GasUsed)
 	subTaxGas := taxGas.Uint64()

@@ -80,7 +80,6 @@ import (
 
 	taxbank "github.com/classic-terra/core/v3/x/tax/modules/bank"
 	taxmarket "github.com/classic-terra/core/v3/x/tax/modules/market"
-	taxwasm "github.com/classic-terra/core/v3/x/tax/modules/wasm"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 
 	// unnamed import of statik for swagger UI support
@@ -188,7 +187,7 @@ func appModules(
 		taxmarket.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.TreasuryKeeper, app.BankKeeper, app.OracleKeeper, app.TaxKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
-		taxwasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.AccountKeeper, app.TreasuryKeeper, app.TaxKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),

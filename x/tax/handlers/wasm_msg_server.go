@@ -13,6 +13,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// THIS FILE IS NOT USED CURRENTLY IN THE TAX MODULE
+// this is due to the fact that it would cause issues with contracts
+// the handling is done in the wasm module / the message handlers a contract executes
+
 type WasmMsgServer struct {
 	wasmtypes.UnimplementedMsgServer
 	taxKeeper      taxkeeper.Keeper

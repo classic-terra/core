@@ -100,7 +100,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	taxGenesis := types.DefaultGenesis()
 	params := types.DefaultParams()
 	params.BurnTaxRate = sdk.NewDecWithPrec(1, 2)
-	params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec("uluna", sdk.NewDecWithPrec(28325, 4)))
+	params.GasPrices = sdk.NewDecCoins() // no gas prices because tests always rely on 0 min gas price
 	taxGenesis.Params = params
 	bz, err := json.MarshalIndent(&taxGenesis, "", " ")
 	if err != nil {

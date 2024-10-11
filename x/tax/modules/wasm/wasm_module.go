@@ -46,7 +46,6 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper *keeper.Keeper,
 	validatorSetSource keeper.ValidatorSetSource,
-	ak types.AccountKeeper,
 	accountKeeper types.AccountKeeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	taxKeeper taxkeeper.Keeper,
@@ -54,11 +53,11 @@ func NewAppModule(
 	router *baseapp.MsgServiceRouter,
 	ss exported.Subspace,
 ) AppModule {
-	bm := wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bankKeeper, router, ss)
+	bm := wasm.NewAppModule(cdc, keeper, validatorSetSource, accountKeeper, bankKeeper, router, ss)
 	return AppModule{
 		AppModule:      &bm,
 		keeper:         keeper,
-		accountKeeper:  ak,
+		accountKeeper:  accountKeeper,
 		treasuryKeeper: treasuryKeeper,
 		taxKeeper:      taxKeeper,
 		bankKeeper:     bankKeeper,

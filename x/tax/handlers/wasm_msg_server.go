@@ -40,11 +40,13 @@ func (s *WasmMsgServer) WithContractValue(ctx sdk.Context, address sdk.AccAddres
 func (s *WasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
 	// This logic might lead to issues if the contract checks the received balance against the expected balance
 	// We SKIP this logic for now and handle it in the wasm module
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	newCtx := sdkCtx.WithValue(taxtypes.ContextKeyWasmFunds, msg.Funds)
-	newCtx = s.WithContractValue(newCtx, sdk.MustAccAddressFromBech32(msg.Contract))
+	/*
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		newCtx := sdkCtx.WithValue(taxtypes.ContextKeyWasmFunds, msg.Funds)
+		newCtx = s.WithContractValue(newCtx, sdk.MustAccAddressFromBech32(msg.Contract))
+	*/
 
-	return s.messageServer.ExecuteContract(newCtx, msg)
+	return s.messageServer.ExecuteContract(ctx, msg)
 
 	/*
 	   sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -71,10 +73,12 @@ func (s *WasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.MsgE
 func (s *WasmMsgServer) InstantiateContract(ctx context.Context, msg *wasmtypes.MsgInstantiateContract) (*wasmtypes.MsgInstantiateContractResponse, error) {
 	// This logic might lead to issues if the contract checks the received balance against the expected balance
 	// We SKIP this logic for now and handle it in the wasm module
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	newCtx := sdkCtx.WithValue(taxtypes.ContextKeyWasmFunds, msg.Funds).WithValue(taxtypes.ContextKeyWasmFunds, sdk.Coins{})
+	/*
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		newCtx := sdkCtx.WithValue(taxtypes.ContextKeyWasmFunds, msg.Funds).WithValue(taxtypes.ContextKeyWasmFunds, sdk.Coins{})
+	*/
 
-	return s.messageServer.InstantiateContract(newCtx, msg)
+	return s.messageServer.InstantiateContract(ctx, msg)
 
 	/*
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -97,12 +101,13 @@ func (s *WasmMsgServer) InstantiateContract(ctx context.Context, msg *wasmtypes.
 func (s *WasmMsgServer) InstantiateContract2(ctx context.Context, msg *wasmtypes.MsgInstantiateContract2) (*wasmtypes.MsgInstantiateContract2Response, error) {
 	// This logic might lead to issues if the contract checks the received balance against the expected balance
 	// We SKIP this logic for now and handle it in the wasm module
-	// we need to keep track of sent funds though!
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	newCtx := sdkCtx.WithValue(taxtypes.ContextKeyWasmFunds, msg.Funds).WithValue(taxtypes.ContextKeyWasmFunds, sdk.Coins{})
+	/*
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		newCtx := sdkCtx.WithValue(taxtypes.ContextKeyWasmFunds, msg.Funds).WithValue(taxtypes.ContextKeyWasmFunds, sdk.Coins{})
+	*/
 
-	return s.messageServer.InstantiateContract2(newCtx, msg)
+	return s.messageServer.InstantiateContract2(ctx, msg)
 
 	/*
 		if !s.taxKeeper.IsReverseCharge(sdkCtx, true) {

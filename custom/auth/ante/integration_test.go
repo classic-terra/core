@@ -149,6 +149,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				DistributionKeeper: dk,
 				WasmConfig:         &wasmConfig,
 				TXCounterStoreKey:  s.app.GetKey(wasmtypes.StoreKey),
+				TaxKeeper:          &s.app.TaxKeeper,
 			},
 		)
 		s.Require().NoError(err)

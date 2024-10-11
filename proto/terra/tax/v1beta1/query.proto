@@ -1,0 +1,31 @@
+syntax = "proto3";
+package terra.tax.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "terra/tax/v1beta1/genesis.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/tax/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/terra/tax/Params";
+  }
+  rpc BurnTaxRate(QueryBurnTaxRateRequest) returns (QueryBurnTaxRateResponse) {
+    option (google.api.http).get = "/terra/tax/BurnTaxRate";
+  }
+}
+
+//=============================== Params
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryBurnTaxRateRequest {}
+message QueryBurnTaxRateResponse {
+  string burn_tax_rate = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}

@@ -6,6 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -23,15 +25,17 @@ type FeeDecorator struct {
 	feegrantKeeper ante.FeegrantKeeper
 	treasuryKeeper TreasuryKeeper
 	distrKeeper    DistrKeeper
+	taxKeeper      taxkeeper.Keeper
 }
 
-func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper, dk DistrKeeper) FeeDecorator {
+func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper, dk DistrKeeper, th taxkeeper.Keeper) FeeDecorator {
 	return FeeDecorator{
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
 		treasuryKeeper: tk,
 		distrKeeper:    dk,
+		taxKeeper:      th,
 	}
 }
 
@@ -54,18 +58,28 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	// Compute taxes
 	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, simulate, msgs...)
 
+	// check if the tx has paid fees for both(!) fee and tax
+	// if not, then set the tax to zero at this point as it then is handled in the message route
+	reverseCharge := false
+
 	if !simulate {
-		priority, err = fd.checkTxFee(ctx, tx, taxes)
+		priority, reverseCharge, err = fd.checkTxFee(ctx, tx, taxes)
 		if err != nil {
 			return ctx, err
 		}
+	}
+
+	if reverseCharge {
+		// we don't have enough fees to pay for the gas and taxes
+		// we set taxes to zero as they are handled in the message route
+		taxes = sdk.Coins{}
 	}
 
 	if err := fd.checkDeductFee(ctx, feeTx, taxes, simulate); err != nil {
 		return ctx, err
 	}
 
-	newCtx := ctx.WithPriority(priority)
+	newCtx := ctx.WithPriority(priority).WithValue(taxtypes.ContextKeyTaxReverseCharge, reverseCharge)
 
 	return next(newCtx, tx, simulate)
 }
@@ -151,7 +165,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		}
 
 		if !taxes.IsZero() {
-			err := fd.BurnTaxSplit(ctx, taxes)
+			err := fd.taxKeeper.ProcessTaxSplits(ctx, taxes)
 			if err != nil {
 				return err
 			}
@@ -190,23 +204,24 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 // Transaction with only oracle messages will skip gas fee check and will have the most priority.
 // It also checks enough fee for treasury tax
-func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (int64, error) {
+func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (int64, bool, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return 0, false, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
 	isOracleTx := isOracleTx(msgs)
+	minGasPrices := fd.taxKeeper.GetEffectiveGasPrices(ctx)
+	reverseCharge := false
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
-	if ctx.IsCheckTx() && !isOracleTx {
+	if !isOracleTx {
 		requiredGasFees := sdk.Coins{}
-		minGasPrices := ctx.MinGasPrices()
 		if !minGasPrices.IsZero() {
 			requiredGasFees = make(sdk.Coins, len(minGasPrices))
 
@@ -221,9 +236,20 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 
 		requiredFees := requiredGasFees.Add(taxes...)
 
+		fmt.Println("requiredFees", requiredFees, "feeCoins", feeCoins, "requiredGasFees", requiredGasFees, "taxes", taxes, "minGasPrices", minGasPrices)
+
 		// Check required fees
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-			return 0, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
+			// we don't have enough for tax and gas fees. But do we have enough for gas alone?
+			if !feeCoins.IsAnyGTE(requiredGasFees) {
+				return 0, false, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
+			}
+
+			// we have enough for gas fees but not for tax fees
+			reverseCharge = true
+			ctx.Logger().Info("Insufficient fees to pay for gas and taxes (doing reverse charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees, "minGasPrices", minGasPrices)
+		} else {
+			ctx.Logger().Info("Sufficient fees to pay for gas and taxes (doing normal tax charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees, "minGasPrices", minGasPrices)
 		}
 	}
 
@@ -233,7 +259,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 		priority = getTxPriority(feeCoins, int64(gas))
 	}
 
-	return priority, nil
+	return priority, reverseCharge, nil
 }
 
 // getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price

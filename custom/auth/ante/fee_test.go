@@ -330,7 +330,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	newCtx, err := antehandler(s.ctx, tx, false)
 	s.Require().NoError(err, "Decorator should not have errored on missing tax (reverse charge)")
 	s.Require().Equal(true, newCtx.Value(taxtypes.ContextKeyTaxReverseCharge).(bool))
-	//s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
+	// s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	// must pass with tax
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedTax))))
@@ -802,7 +802,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	// Set burn split tax
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
-	//taxRate := tk.GetTaxRate(s.ctx)
+	// taxRate := tk.GetTaxRate(s.ctx)
 
 	// Set community tax
 	dkParams := dk.GetParams(s.ctx)
@@ -842,7 +842,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 
 	// feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 
-	//amountFeeBefore := bk.GetAllBalances(s.ctx, feeCollector.GetAddress())
+	// amountFeeBefore := bk.GetAllBalances(s.ctx, feeCollector.GetAddress())
 
 	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(s.ctx, &query.PageRequest{})
 	require.NoError(err)

@@ -22,6 +22,7 @@ import (
 	core "github.com/classic-terra/core/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -326,8 +327,10 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax)))
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)
-	_, err = antehandler(s.ctx, tx, false)
-	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
+	newCtx, err := antehandler(s.ctx, tx, false)
+	s.Require().NoError(err, "Decorator should not have errored on missing tax (reverse charge)")
+	s.Require().Equal(true, newCtx.Value(taxtypes.ContextKeyTaxReverseCharge).(bool))
+	//s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	// must pass with tax
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedTax.Add(expectedTax))))
@@ -527,11 +530,12 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	feeAmt := int64(1000)
 
 	cases := []struct {
-		name           string
-		msgSigner      cryptotypes.PrivKey
-		msgCreator     func() []sdk.Msg
-		minFeeAmount   int64
-		expectProceeds int64
+		name                string
+		msgSigner           cryptotypes.PrivKey
+		msgCreator          func() []sdk.Msg
+		minFeeAmount        int64
+		expectProceeds      int64
+		expectReverseCharge bool
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
@@ -544,8 +548,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			minFeeAmount:   0,
-			expectProceeds: 0,
+			minFeeAmount:        0,
+			expectProceeds:      0,
+			expectReverseCharge: false,
 		}, {
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],
@@ -558,8 +563,24 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			minFeeAmount:        feeAmt,
+			expectProceeds:      feeAmt,
+			expectReverseCharge: false,
+		}, {
+			name:      "MsgSend(normal -> normal, reverse charge)",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			minFeeAmount:        0,
+			expectProceeds:      0,
+			expectReverseCharge: true,
 		}, {
 			name:      "MsgExec(MsgSend(normal -> normal))",
 			msgSigner: privs[2],
@@ -572,8 +593,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			minFeeAmount:        feeAmt,
+			expectProceeds:      feeAmt,
+			expectReverseCharge: false,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
@@ -588,8 +610,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			minFeeAmount:        feeAmt,
+			expectProceeds:      feeAmt,
+			expectReverseCharge: false,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
 			msgSigner: privs[0],
@@ -624,8 +647,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 				return msgs
 			},
-			minFeeAmount:   feeAmt * 2,
-			expectProceeds: feeAmt * 2,
+			minFeeAmount:        feeAmt * 2,
+			expectProceeds:      feeAmt * 2,
+			expectReverseCharge: false,
 		}, {
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
 			msgSigner: privs[3],
@@ -674,12 +698,14 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				msgs = append(msgs, msg2)
 				return msgs
 			},
-			minFeeAmount:   feeAmt,
-			expectProceeds: feeAmt,
+			minFeeAmount:        0, // sending to contract is not taxed
+			expectProceeds:      0,
+			expectReverseCharge: false,
 		},
 	}
 
 	// there should be no coin in burn module
+	// run once with reverse charge and once without
 	for _, c := range cases {
 		s.SetupTest(true) // setup
 		require := s.Require()
@@ -719,7 +745,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 		require.NoError(err)
 
-		_, err = antehandler(s.ctx, tx, false)
+		newCtx, err := antehandler(s.ctx, tx, false)
 		require.NoError(err)
 
 		// check fee collector
@@ -730,6 +756,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		// check tax proceeds
 		taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
 		require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))))
+
+		require.Equal(newCtx.Value(taxtypes.ContextKeyTaxReverseCharge), c.expectReverseCharge)
 	}
 }
 
@@ -774,7 +802,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	// Set burn split tax
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
-	taxRate := tk.GetTaxRate(s.ctx)
+	//taxRate := tk.GetTaxRate(s.ctx)
 
 	// Set community tax
 	dkParams := dk.GetParams(s.ctx)
@@ -812,17 +840,17 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
+	// feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 
-	amountFeeBefore := bk.GetAllBalances(s.ctx, feeCollector.GetAddress())
+	//amountFeeBefore := bk.GetAllBalances(s.ctx, feeCollector.GetAddress())
 
 	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(s.ctx, &query.PageRequest{})
 	require.NoError(err)
-	fmt.Printf(
+	/*fmt.Printf(
 		"Before: TotalSupply %v, FeeCollector %v\n",
 		totalSupplyBefore,
 		amountFeeBefore,
-	)
+	)*/
 
 	// send tx to BurnTaxFeeDecorator antehandler
 	_, err = antehandler(s.ctx, tx, false)
@@ -855,7 +883,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 		expectedDistrCoins := distributionDeltaCoins.Sub(expectedOracleCoins)
 
 		// expected: community pool 50%
-		fmt.Printf("-- sendCoins %+v, BurnTax %+v, BurnSplitRate %+v, OracleSplitRate %+v, CommunityTax %+v, CTaxApplied %+v, OracleCoins %+v, DistrCoins %+v\n", sendCoins.AmountOf(core.MicroSDRDenom), taxRate, burnSplitRate, oracleSplitRate, communityTax, applyCommunityTax, expectedOracleCoins, expectedDistrCoins)
+		// fmt.Printf("-- sendCoins %+v, BurnTax %+v, BurnSplitRate %+v, OracleSplitRate %+v, CommunityTax %+v, CTaxApplied %+v, OracleCoins %+v, DistrCoins %+v\n", sendCoins.AmountOf(core.MicroSDRDenom), taxRate, burnSplitRate, oracleSplitRate, communityTax, applyCommunityTax, expectedOracleCoins, expectedDistrCoins)
 		require.Equal(feeCollectorAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedDistrCoins)))
 		require.Equal(oracleAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedOracleCoins)))
 		require.Equal(communityPoolAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedCommunityCoins)))
@@ -890,11 +918,11 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 		)
 	}
 
-	fmt.Printf(
+	/*fmt.Printf(
 		"After: TotalSupply %v, FeeCollector %v\n",
 		totalSupplyAfter,
 		feeCollectorAfter,
-	)
+	)*/
 }
 
 // go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v3/custom/auth/ante

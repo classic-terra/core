@@ -99,13 +99,8 @@ func (k Keeper) DeductTax(
 ) (sdk.Coins, error) {
 	ctx.Logger().Info("Deducting tax", "sender", sender, "amount", amount, ctx.Value(types.ContextKeyTaxReverseCharge))
 
-	if !ctx.Value(types.ContextKeyTaxReverseCharge).(bool) {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeTax,
-				sdk.NewAttribute(types.AttributeKeyReverseCharge, types.AttributeValueNoReverseCharge),
-			),
-		)
+	if !k.IsReverseCharge(ctx, false) {
+		// do not emit here as we hopefully did it earlier already
 		return amount, nil
 	}
 
@@ -169,4 +164,20 @@ func (k Keeper) GetGasPriceForDenom(ctx sdk.Context, denom string) sdk.Dec {
 	}
 
 	return sdk.ZeroDec()
+}
+
+func (k Keeper) IsReverseCharge(ctx sdk.Context, emit bool) bool {
+	if !ctx.Value(types.ContextKeyTaxReverseCharge).(bool) {
+		if emit {
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeTax,
+					sdk.NewAttribute(types.AttributeKeyReverseCharge, types.AttributeValueNoReverseCharge),
+				),
+			)
+		}
+		return false
+	}
+
+	return true
 }

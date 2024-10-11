@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strings"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -54,7 +53,9 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, simulate bool, m
 		case *marketexported.MsgSwapSend:
 			taxes = taxes.Add(computeTax(ctx, tk, sdk.NewCoins(msg.OfferCoin), simulate)...)
 
-		case *wasmtypes.MsgInstantiateContract:
+		// The contract messages were disabled to remove double-taxation
+		// whenever a contract sends funds to a wallet, it is taxed (deducted from sent amount)
+		/*case *wasmtypes.MsgInstantiateContract:
 			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds, simulate)...)
 
 		case *wasmtypes.MsgInstantiateContract2:
@@ -64,7 +65,7 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, simulate bool, m
 			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
 				taxes = taxes.Add(computeTax(ctx, tk, msg.Funds, simulate)...)
 			}
-
+		*/
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err == nil {

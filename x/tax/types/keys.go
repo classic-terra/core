@@ -7,6 +7,8 @@ const (
 	RouterKey = ModuleName
 
 	ContextKeyTaxReverseCharge = "tax.reverse_charge"
+	ContextKeyWasmFunds        = "tax.wasm_funds"
+	ContextKeyWasmBalance      = "tax.wasm_balance"
 
 	EventTypeTax                  = "tax_payment"
 	AttributeKeyReverseCharge     = "reverse_charge"

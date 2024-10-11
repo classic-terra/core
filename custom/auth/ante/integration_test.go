@@ -1,8 +1,6 @@
 package ante_test
 
 import (
-	"fmt"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +13,7 @@ import (
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	core "github.com/classic-terra/core/v3/types"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
@@ -30,6 +29,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		privs = append(privs, priv)
 		addrs = append(addrs, addr)
+
 	}
 
 	// set send amount
@@ -38,14 +38,15 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	feeAmt := int64(1000)
 
 	cases := []struct {
-		name              string
-		msgSigner         cryptotypes.PrivKey
-		msgCreator        func() []sdk.Msg
-		expectedFeeAmount int64
+		name                  string
+		msgSigner             int64
+		msgCreator            func() []sdk.Msg
+		expectedFeeAmount     int64
+		expectedReverseCharge bool
 	}{
 		{
 			name:      "MsgSend(exemption -> exemption)",
-			msgSigner: privs[0],
+			msgSigner: 0,
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
 
@@ -54,10 +55,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: 0,
+			expectedFeeAmount:     0,
+			expectedReverseCharge: false,
 		}, {
 			name:      "MsgSend(normal -> normal)",
-			msgSigner: privs[2],
+			msgSigner: 2,
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
 
@@ -67,10 +69,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			expectedFeeAmount: feeAmt,
+			expectedFeeAmount:     feeAmt,
+			expectedReverseCharge: false,
 		}, {
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
-			msgSigner: privs[0],
+			msgSigner: 0,
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
 
@@ -82,10 +85,11 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			expectedFeeAmount: feeAmt,
+			expectedFeeAmount:     feeAmt,
+			expectedReverseCharge: true,
 		}, {
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption)",
-			msgSigner: privs[0],
+			msgSigner: 0,
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
 
@@ -113,7 +117,8 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 
 				return msgs
 			},
-			expectedFeeAmount: feeAmt * 2,
+			expectedFeeAmount:     feeAmt * 2,
+			expectedReverseCharge: false,
 		},
 	}
 
@@ -159,6 +164,12 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 			testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
 		}
 
+		accNums := make([]uint64, len(privs))
+		for i, addr := range addrs {
+			acc := s.app.AccountKeeper.GetAccount(s.ctx, addr)
+			accNums[i] = acc.GetAccountNumber()
+		}
+
 		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
 		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
@@ -175,7 +186,15 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				s.txBuilder.SetFeeAmount(feeAmount)
 				s.txBuilder.SetGasLimit(gasLimit)
 
-				privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{3}, []uint64{0}
+				accNums := make([]uint64, len(privs))
+				accSeqs := make([]uint64, len(privs))
+				for i, addr := range addrs {
+					acc := ak.GetAccount(s.ctx, addr)
+					accNums[i] = acc.GetAccountNumber()
+					accSeqs[i] = acc.GetSequence()
+				}
+
+				privs, accNums, accSeqs := []cryptotypes.PrivKey{privs[c.msgSigner]}, []uint64{accNums[c.msgSigner]}, []uint64{accSeqs[c.msgSigner]}
 				tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 				s.Require().NoError(err)
 
@@ -187,11 +206,13 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 				communityBefore := dk.GetFeePool(s.ctx).CommunityPool.AmountOf(core.MicroSDRDenom)
 				supplyBefore := bk.GetSupply(s.ctx, core.MicroSDRDenom)
 
-				_, err = antehandler(s.ctx, tx, false)
+				newCtx, err := antehandler(s.ctx, tx, false)
 				if i == 0 && c.expectedFeeAmount != 0 {
-					s.Require().EqualError(err, fmt.Sprintf(
-						"insufficient fees; got: \"\", required: \"%dusdr\" = \"\"(gas) + \"%dusdr\"(stability): insufficient fee",
-						c.expectedFeeAmount, c.expectedFeeAmount))
+					/*s.Require().EqualError(err, fmt.Sprintf(
+					"insufficient fees; got: \"\", required: \"%dusdr\" = \"\"(gas) + \"%dusdr\"(stability): insufficient fee",
+					c.expectedFeeAmount, c.expectedFeeAmount))*/
+					s.Require().NoError(err)
+					s.Require().Equal(newCtx.Value(taxtypes.ContextKeyTaxReverseCharge), true) // reverse charge due to lack of fee
 				} else {
 					s.Require().NoError(err)
 				}

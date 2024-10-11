@@ -236,20 +236,20 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 
 		requiredFees := requiredGasFees.Add(taxes...)
 
-		fmt.Println("requiredFees", requiredFees, "feeCoins", feeCoins, "requiredGasFees", requiredGasFees, "taxes", taxes, "minGasPrices", minGasPrices)
+		//		fmt.Println("requiredFees", requiredFees, "feeCoins", feeCoins, "requiredGasFees", requiredGasFees, "taxes", taxes, "minGasPrices", minGasPrices)
 
 		// Check required fees
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
 			// we don't have enough for tax and gas fees. But do we have enough for gas alone?
-			if !feeCoins.IsAnyGTE(requiredGasFees) {
+			if !requiredGasFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
 				return 0, false, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
 			}
 
 			// we have enough for gas fees but not for tax fees
 			reverseCharge = true
-			ctx.Logger().Info("Insufficient fees to pay for gas and taxes (doing reverse charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees, "minGasPrices", minGasPrices)
-		} else {
-			ctx.Logger().Info("Sufficient fees to pay for gas and taxes (doing normal tax charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees, "minGasPrices", minGasPrices)
+			//	ctx.Logger().Info("Insufficient fees to pay for gas and taxes (doing reverse charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees)
+			// } else {
+			//	ctx.Logger().Info("Sufficient fees to pay for gas and taxes (doing normal tax charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees)
 		}
 	}
 

@@ -30,6 +30,11 @@ func NewBankMsgServer(bankKeeper bankkeeper.Keeper, treasuryKeeper treasurykeepe
 // Send handles MsgSend with tax deduction
 func (s *BankMsgServer) Send(ctx context.Context, msg *banktypes.MsgSend) (*banktypes.MsgSendResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if !s.taxKeeper.IsReverseCharge(sdkCtx, true) {
+		return s.messageServer.Send(ctx, msg)
+	}
+
 	fromAddr := sdk.MustAccAddressFromBech32(msg.FromAddress)
 
 	if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, msg.FromAddress, msg.ToAddress) {
@@ -48,6 +53,10 @@ func (s *BankMsgServer) Send(ctx context.Context, msg *banktypes.MsgSend) (*bank
 // MultiSend handles MsgMultiSend with tax deduction
 func (s *BankMsgServer) MultiSend(ctx context.Context, msg *banktypes.MsgMultiSend) (*banktypes.MsgMultiSendResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if !s.taxKeeper.IsReverseCharge(sdkCtx, true) {
+		return s.messageServer.MultiSend(ctx, msg)
+	}
 
 	tainted := false
 	for _, input := range msg.Inputs {

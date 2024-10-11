@@ -394,6 +394,7 @@ func NewAppKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
+		appKeepers.TaxKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
 	)

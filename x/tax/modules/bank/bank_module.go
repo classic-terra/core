@@ -15,9 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// ConsensusVersion defines the current x/bank module consensus version.
-const ConsensusVersion = 4
-
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}

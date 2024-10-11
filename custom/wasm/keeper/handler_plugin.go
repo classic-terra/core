@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/custom/auth/ante"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -9,12 +8,13 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 )
 
 // msgEncoder is an extension point to customize encodings
@@ -35,6 +35,7 @@ type SDKMessageHandler struct {
 	treasuryKeeper treasurykeeper.Keeper
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankKeeper.Keeper
+	taxKeeper      taxkeeper.Keeper
 }
 
 func NewMessageHandler(
@@ -45,6 +46,7 @@ func NewMessageHandler(
 	bankKeeper bankKeeper.Keeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	accountKeeper authkeeper.AccountKeeper,
+	taxKeeper taxkeeper.Keeper,
 	unpacker codectypes.AnyUnpacker,
 	portSource wasmtypes.ICS20TransferPortSource,
 	customEncoders ...*wasmkeeper.MessageEncoders,
@@ -54,19 +56,20 @@ func NewMessageHandler(
 		encoders = encoders.Merge(e)
 	}
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper),
+		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper, taxKeeper),
 		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
 
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper) SDKMessageHandler {
+func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper, taxKeeper taxkeeper.Keeper) SDKMessageHandler {
 	return SDKMessageHandler{
 		router:         router,
 		encoders:       encoders,
 		treasuryKeeper: treasuryKeeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		taxKeeper:      taxKeeper,
 	}
 }
 
@@ -76,21 +79,13 @@ func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddr
 		return nil, nil, err
 	}
 
+	// contract handling is ALWAYS reverse charged
+	ctx = ctx.WithValue(taxtypes.ContextKeyTaxReverseCharge, true)
+
 	for _, sdkMsg := range sdkMsgs {
 		// Charge tax on result msg
 		// we set simulate to false here as it is not available and we don't need to
 		// increase the tax amount for simulation inside of wasm
-		taxes := ante.FilterMsgAndComputeTax(ctx, h.treasuryKeeper, false, sdkMsg)
-		if !taxes.IsZero() {
-			eventManager := sdk.NewEventManager()
-			contractAcc := h.accountKeeper.GetAccount(ctx, contractAddr)
-			if err := cosmosante.DeductFees(h.bankKeeper, ctx.WithEventManager(eventManager), contractAcc, taxes); err != nil {
-				return nil, nil, err
-			}
-
-			events = eventManager.Events()
-		}
-
 		res, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)
 		if err != nil {
 			return nil, nil, err

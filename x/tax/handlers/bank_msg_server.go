@@ -60,13 +60,20 @@ func (s *BankMsgServer) MultiSend(ctx context.Context, msg *banktypes.MsgMultiSe
 
 	tainted := false
 	for _, input := range msg.Inputs {
-		if s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, input.Address) {
+		if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, input.Address) {
 			tainted = true
 			break
 		}
 	}
 
-	if !tainted {
+	for _, output := range msg.Outputs {
+		if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, output.Address) {
+			tainted = true
+			break
+		}
+	}
+
+	if tainted {
 		for i, input := range msg.Inputs {
 			fromAddr := sdk.MustAccAddressFromBech32(input.Address)
 			netCoins, err := s.taxKeeper.DeductTax(sdkCtx, fromAddr, input.Coins)
@@ -75,9 +82,18 @@ func (s *BankMsgServer) MultiSend(ctx context.Context, msg *banktypes.MsgMultiSe
 			}
 			msg.Inputs[i].Coins = netCoins
 		}
+
+		for i, output := range msg.Outputs {
+			toAddr := sdk.MustAccAddressFromBech32(output.Address)
+			netCoins, err := s.taxKeeper.DeductTax(sdkCtx, toAddr, output.Coins)
+			if err != nil {
+				return nil, err
+			}
+			msg.Outputs[i].Coins = netCoins
+		}
 	}
 
-	sdkCtx.Logger().Info("Custom MultiSend handler altered the message", "newAmount", msg.Inputs)
+	sdkCtx.Logger().Info("Custom MultiSend handler altered the message", "newAmount", msg.Inputs, msg.Outputs)
 
 	return s.messageServer.MultiSend(ctx, msg)
 }

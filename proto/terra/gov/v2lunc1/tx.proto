@@ -1,11 +1,9 @@
 syntax = "proto3";
 package terra.gov.v2lunc1;
 
-import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/gov/v1/tx.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
-import "google/protobuf/duration.proto";
+import "terra/gov/v2lunc1/gov.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
@@ -17,59 +15,46 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // SubmitProposal defines a method to create new proposal given the messages.
-  rpc SubmitProposal(MsgSubmitProposal) returns (MsgSubmitProposalResponse);
+  rpc SubmitProposal(cosmos.gov.v1.MsgSubmitProposal) returns (cosmos.gov.v1.MsgSubmitProposalResponse);
 
-   // Deposit defines a method to add deposit on a specific proposal.
-  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
-}
+  // ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
+  // to execute a legacy content-based proposal.
+  rpc ExecLegacyContent(cosmos.gov.v1.MsgExecLegacyContent) returns (cosmos.gov.v1.MsgExecLegacyContentResponse);
 
-message MsgSubmitProposal {
-  option (cosmos.msg.v1.signer) = "proposer";
-  option (amino.name)           = "cosmos-sdk/v1/MsgSubmitProposal";
+  // Vote defines a method to add a vote on a specific proposal.
+  rpc Vote(cosmos.gov.v1.MsgVote) returns (cosmos.gov.v1.MsgVoteResponse);
 
-  // messages are the arbitrary messages to be executed if proposal passes.
-  repeated google.protobuf.Any messages             = 1;
+  // VoteWeighted defines a method to add a weighted vote on a specific proposal.
+  rpc VoteWeighted(cosmos.gov.v1.MsgVoteWeighted) returns (cosmos.gov.v1.MsgVoteWeightedResponse);
 
-  // initial_deposit is the deposit value that must be paid at proposal submission.
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  
-  // proposer is the account address of the proposer.
-  string                            proposer        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
-  // metadata is any arbitrary metadata attached to the proposal.
-  string metadata = 4;
+  // Deposit defines a method to add deposit on a specific proposal.
+  rpc Deposit(cosmos.gov.v1.MsgDeposit) returns (cosmos.gov.v1.MsgDepositResponse);
 
-  // title is the title of the proposal.
+  // UpdateParams defines a governance operation for updating the x/gov module
+  // parameters. The authority is defined in the keeper.
   //
   // Since: cosmos-sdk 0.47
-  string title = 5;
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+}
 
-  // summary is the summary of the proposal
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the x/gov parameters to update.
   //
-  // Since: cosmos-sdk 0.47
-  string summary = 6;
+  // NOTE: All parameters must be supplied.
+  terra.gov.v2lunc1.Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
-message MsgSubmitProposalResponse {
-  // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
-}
-
-// MsgDeposit defines a message to submit a deposit to an existing proposal.
-message MsgDeposit {
-  option (cosmos.msg.v1.signer) = "depositor";
-  option (amino.name)           = "cosmos-sdk/v1/MsgDeposit";
-
-  // proposal_id defines the unique id of the proposal.
-  uint64   proposal_id                     = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
-  
-  // depositor defines the deposit addresses from the proposals.
-  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
-  // amount to be deposited by depositor.
-  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-}
-
-// MsgDepositResponse defines the Msg/Deposit response type.
-message MsgDepositResponse {}
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: cosmos-sdk 0.47
+message MsgUpdateParamsResponse {}

@@ -2,7 +2,6 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	govkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 
+	customgovkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
 	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,7 +35,7 @@ type HandlerOptions struct {
 	IBCKeeper              ibckeeper.Keeper
 	WasmKeeper             *wasmkeeper.Keeper
 	DistributionKeeper     distributionkeeper.Keeper
-	GovKeeper              govkeeper.Keeper
+	GovKeeper              customgovkeeper.Keeper
 	WasmConfig             *wasmtypes.WasmConfig
 	TXCounterStoreKey      storetypes.StoreKey
 	DyncommKeeper          dyncommkeeper.Keeper

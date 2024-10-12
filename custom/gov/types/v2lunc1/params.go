@@ -2,37 +2,57 @@ package v2lunc1
 
 import (
 	fmt "fmt"
-	"time"
+	time "time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/codec"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-// Default period for deposits & voting
-const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+	"github.com/classic-terra/core/v3/types/assets"
 )
-
-// Default governance params
 
 // Default governance params
 var (
-	DefaultMinDepositTokens       = sdk.NewInt(10000000)
-	DefaultQuorum                 = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio = sdk.ZeroDec()
-	DefaultBurnProposalPrevote    = false           // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorom         = false           // set to false to  replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteVeto           = true            // set to true to replicate behavior of when this change was made (0.47)
-	DefaultMinUusdDepositTokens   = sdk.NewInt(500) // Minimal uusd deposit for a proposal to enter voting period
-
+	DefaultMinUusdDepositTokens = sdk.NewInt(500000000) // Minimal uusd deposit for a proposal to enter voting period
 )
+
+var _ sdk.Msg = &MsgUpdateParams{}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgUpdateParams) Route() string { return govtypes.RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUpdateParams) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
+	return msg.Params.ValidateBasic()
+}
+
+// GetSignBytes returns the message bytes to sign over.
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners returns the expected signers for a MsgUpdateParams.
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
 
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod, votingPeriod time.Duration,
-	quorum, threshold, vetoThreshold, minInitialDepositRatio string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool, minUusdDeposit sdk.Coin,
+	quorum, threshold, vetoThreshold, minInitialDepositRatio string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
+	minUusdDeposit sdk.Coin,
 ) Params {
 	return Params{
 		MinDeposit:                 minDeposit,
@@ -52,17 +72,17 @@ func NewParams(
 // DefaultParams returns the default governance params
 func DefaultParams() Params {
 	return NewParams(
-		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
-		DefaultPeriod,
-		DefaultPeriod,
-		DefaultQuorum.String(),
-		DefaultThreshold.String(),
-		DefaultVetoThreshold.String(),
-		DefaultMinInitialDepositRatio.String(),
-		DefaultBurnProposalPrevote,
-		DefaultBurnVoteQuorom,
-		DefaultBurnVoteVeto,
-		sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinUusdDepositTokens),
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, govv1.DefaultMinDepositTokens)),
+		govv1.DefaultPeriod,
+		govv1.DefaultPeriod,
+		govv1.DefaultQuorum.String(),
+		govv1.DefaultThreshold.String(),
+		govv1.DefaultVetoThreshold.String(),
+		govv1.DefaultMinInitialDepositRatio.String(),
+		govv1.DefaultBurnProposalPrevote,
+		govv1.DefaultBurnVoteQuorom,
+		govv1.DefaultBurnVoteVeto,
+		sdk.NewCoin(assets.MicroUSDDenom, DefaultMinUusdDepositTokens), // 1,000,000 microLuna
 	)
 }
 
@@ -132,8 +152,8 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
-	if minUusdDeposit := p.MinUusdDeposit; !minUusdDeposit.IsValid() {
-		return fmt.Errorf("invalid minimum uusd deposit: %s", minUusdDeposit)
+	if p.MinUusdDeposit.IsZero() || !p.MinUusdDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum uusd deposit: %s", p.MinUusdDeposit)
 	}
 
 	return nil

@@ -95,7 +95,6 @@ func (keeper Keeper) assertMetadataLength(metadata string) error {
 	return nil
 }
 
-// SetHooks sets the hooks for governance
 func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	if keeper.hooks != nil {
 		panic("cannot set governance hooks twice")

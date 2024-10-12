@@ -3,8 +3,6 @@ package terra.gov.v2lunc1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
@@ -199,7 +197,7 @@ message Params {
 
   // burn deposits if the proposal does not enter voting period
   bool burn_proposal_deposit_prevote = 14;
-  
+
   // burn deposits if quorum with vote type no_veto is met
   bool burn_vote_veto = 15;
 

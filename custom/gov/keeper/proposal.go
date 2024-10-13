@@ -102,7 +102,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
 
-	er := keeper.SetDepositLimitBaseUusd(ctx, proposalID, math.LegacyDec(totalLuncDeposit))
+	er := keeper.SetDepositLimitBaseUusd(ctx, proposalID, math.LegacyNewDecFromInt(totalLuncDeposit))
 	if er != nil {
 		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, er.Error())
 	}
@@ -125,7 +125,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount sdk.Dec) error {
 	store := ctx.KVStore(keeper.storeKey)
 	key := v2lunc1types.TotalDepositKey(proposalID)
-
+	fmt.Printf("amount %s\n", amount)
 	bz, err := amount.Marshal()
 	if err == nil {
 		store.Set(key, bz)
@@ -143,7 +143,6 @@ func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error
 	}
 	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
 	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
-
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}

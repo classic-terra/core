@@ -107,7 +107,7 @@ func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64)
 		return sdk.ZeroDec()
 	}
 	err := depositLimit.Unmarshal(bz)
-	if err == nil {
+	if err != nil {
 		return sdk.ZeroDec()
 	}
 

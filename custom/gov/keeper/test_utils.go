@@ -4,7 +4,6 @@ package keeper
 //DONTCOVER
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 	customparams "github.com/classic-terra/core/v3/custom/params"
 	customstaking "github.com/classic-terra/core/v3/custom/staking"
 	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/market/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	"github.com/classic-terra/core/v3/x/oracle"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
@@ -35,6 +34,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -45,6 +45,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -68,6 +69,25 @@ func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
+var (
+	_, _, addr   = testdata.KeyTestPubAddr()
+	govAcct      = authtypes.NewModuleAddress(govtypes.ModuleName)
+	TestProposal = getTestProposal()
+)
+
+// getTestProposal creates and returns a test proposal message.
+func getTestProposal() []sdk.Msg {
+	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.Msg{
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
+		legacyProposalMsg,
+	}
+}
+
 // MakeEncodingConfig
 func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	amino := codec.NewLegacyAmino()
@@ -84,8 +104,8 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	v1beta1.RegisterInterfaces(interfaceRegistry)
 	v2lunc1.RegisterLegacyAminoCodec(amino)
 	v2lunc1.RegisterInterfaces(interfaceRegistry)
-	types.RegisterLegacyAminoCodec(amino)
-	types.RegisterInterfaces(interfaceRegistry)
+	markettypes.RegisterLegacyAminoCodec(amino)
+	markettypes.RegisterInterfaces(interfaceRegistry)
 
 	return simparams.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
@@ -124,7 +144,7 @@ type TestInput struct {
 	Cdc           *codec.LegacyAmino
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
-	OracleKeeper  types.OracleKeeper
+	OracleKeeper  markettypes.OracleKeeper
 	GovKeeper     *Keeper
 }
 
@@ -136,7 +156,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	keyOracle := sdk.NewKVStoreKey(oracletypes.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(stakingtypes.StoreKey)
 	keyDistr := sdk.NewKVStoreKey(distrtypes.StoreKey)
-	keyMarket := sdk.NewKVStoreKey(types.StoreKey)
+	keyMarket := sdk.NewKVStoreKey(markettypes.StoreKey)
 	keyGov := sdk.NewKVStoreKey(govtypes.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -172,7 +192,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		distrtypes.ModuleName:          nil,
 		oracletypes.ModuleName:         nil,
-		types.ModuleName:               {authtypes.Burner, authtypes.Minter},
+		markettypes.ModuleName:         {authtypes.Burner, authtypes.Minter},
 		govtypes.ModuleName:            nil,
 	}
 
@@ -216,7 +236,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 	oracleAcc := authtypes.NewEmptyModuleAccount(oracletypes.ModuleName)
-	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner, authtypes.Minter)
+	marketAcc := authtypes.NewEmptyModuleAccount(markettypes.ModuleName, authtypes.Burner, authtypes.Minter)
 	govAcc := authtypes.NewEmptyModuleAccount(govtypes.ModuleName, authtypes.Burner, authtypes.Minter, authtypes.Staking)
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs))))))
@@ -229,12 +249,6 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, oracleAcc)
 	accountKeeper.SetModuleAccount(ctx, marketAcc)
 	accountKeeper.SetModuleAccount(ctx, govAcc)
-
-	addr := accountKeeper.GetModuleAddress(govtypes.ModuleName)
-	if addr == nil {
-		fmt.Println("addr is nil")
-	}
-	fmt.Println("address: ", addr.String())
 
 	for _, addr := range Addrs {
 		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))

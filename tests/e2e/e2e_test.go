@@ -200,8 +200,10 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	balance1, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 	// 400000000 - 100000000 - 100000000 * TaxRate = 300000000 - 10000000 * TaxRate
-	taxAmount := initialization.BurnTaxRate.MulInt(transferAmount).TruncateInt()
-	s.Require().Equal(balance1.Amount, transferAmount.Mul(sdk.NewInt(3)).Sub(taxAmount))
+	// taxAmount := initialization.BurnTaxRate.MulInt(transferAmount).TruncateInt()
+	// s.Require().Equal(balance1.Amount, transferAmount.Mul(sdk.NewInt(3)).Sub(taxAmount))
+	// no longer taxed
+	s.Require().Equal(balance1.Amount, transferAmount.Mul(sdk.NewInt(3)))
 
 	stabilityFee := sdk.NewDecWithPrec(2, 2).MulInt(transferAmount)
 
@@ -218,8 +220,10 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	balance2, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 	// balance1 - 100000000 - 100000000 * TaxRate
-	taxAmount = initialization.BurnTaxRate.MulInt(transferAmount).TruncateInt()
-	s.Require().Equal(balance2.Amount, balance1.Amount.Sub(transferAmount).Sub(taxAmount))
+	// taxAmount = initialization.BurnTaxRate.MulInt(transferAmount).TruncateInt()
+	// s.Require().Equal(balance2.Amount, balance1.Amount.Sub(transferAmount).Sub(taxAmount))
+	// no longer taxed
+	s.Require().Equal(balance2.Amount, balance1.Amount.Sub(transferAmount))
 
 	contractAddr := contracts[0]
 	node.WasmExecute(contractAddr, `{"donate": {}}`, transferCoin.String(), fmt.Sprintf("%duluna", stabilityFee), "test")
@@ -227,6 +231,8 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	balance3, err := node.QuerySpecificBalance(testAddr, initialization.TerraDenom)
 	s.Require().NoError(err)
 	// balance2 - 100000000 - 100000000 * TaxRate
-	taxAmount = initialization.BurnTaxRate.MulInt(transferAmount).TruncateInt()
-	s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount).Sub(taxAmount))
+	// taxAmount = initialization.BurnTaxRate.MulInt(transferAmount).TruncateInt()
+	// s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount).Sub(taxAmount))
+	// no longer taxed
+	s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount))
 }

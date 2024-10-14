@@ -312,7 +312,7 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 
 func updateTaxGenesis(taxGenState *taxtypes.GenesisState) {
 	taxGenState.Params.BurnTaxRate = BurnTaxRate
-	taxGenState.Params.GasPrices = sdk.DecCoins{sdk.NewDecCoinFromDec(TerraDenom, sdk.MustNewDecFromStr(MinGasPrice))}
+	taxGenState.Params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(TerraDenom, sdk.MustNewDecFromStr(MinGasPrice)))
 }
 
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {

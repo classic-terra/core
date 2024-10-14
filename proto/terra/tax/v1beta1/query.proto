@@ -24,7 +24,7 @@ message QueryParamsResponse {
 
 message QueryBurnTaxRateRequest {}
 message QueryBurnTaxRateResponse {
-  string burn_tax_rate = 1 [
+  string tax_rate = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];

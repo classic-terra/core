@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// DefaultMinGasPrices is set at runtime to the staking token with zero amount i.e. "0uatom"
+// DefaultGasPrices is set at runtime to the staking token with zero amount i.e. "0uatom"
 // see DefaultZeroGlobalFee method in gaia/x/globalfee/ante/fee.go.
 var DefaultGasPrices = sdk.NewDecCoins(
 	sdk.NewDecCoinFromDec("uluna", sdk.NewDecWithPrec(28325, 3)),

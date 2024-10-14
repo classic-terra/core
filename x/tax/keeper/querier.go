@@ -19,5 +19,5 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 // BurnTaxRate queries burn tax rate of tax module
 func (k Keeper) BurnTaxRate(c context.Context, _ *types.QueryBurnTaxRateRequest) (*types.QueryBurnTaxRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	return &types.QueryBurnTaxRateResponse{BurnTaxRate: k.GetBurnTaxRate(ctx)}, nil
+	return &types.QueryBurnTaxRateResponse{TaxRate: k.GetBurnTaxRate(ctx)}, nil
 }

@@ -132,7 +132,7 @@ func (n *NodeConfig) QueryBurnTaxRate() (sdk.Dec, error) {
 	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
 		return sdk.ZeroDec(), err
 	}
-	return taxRateResp.BurnTaxRate, nil
+	return taxRateResp.TaxRate, nil
 }
 
 func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {

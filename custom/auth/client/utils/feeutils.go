@@ -206,7 +206,7 @@ func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
-	return res.BurnTaxRate, err
+	return res.TaxRate, err
 }
 
 func queryTaxCap(clientCtx client.Context, denom string) (math.Int, error) {

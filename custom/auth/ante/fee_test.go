@@ -22,6 +22,7 @@ import (
 	core "github.com/classic-terra/core/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/classic-terra/core/v3/x/tax/post"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 )
 
@@ -735,6 +736,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 
 		mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
 		antehandler := sdk.ChainAnteDecorators(mfd)
+		pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
+		posthandler := sdk.ChainPostDecorators(pd)
 
 		for i := 0; i < 4; i++ {
 			coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(10000000)))
@@ -753,6 +756,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		require.NoError(err)
 
 		newCtx, err := antehandler(s.ctx, tx, false)
+		require.NoError(err)
+		newCtx, err = posthandler(newCtx, tx, false, true)
 		require.NoError(err)
 
 		actualTaxRate := s.app.TaxKeeper.GetBurnTaxRate(s.ctx)
@@ -812,7 +817,9 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	dk := s.app.DistrKeeper
 	th := s.app.TaxKeeper
 	mfd := ante.NewFeeDecorator(ak, bk, s.app.FeeGrantKeeper, tk, dk, th)
+	pd := post.NewTaxDecorator(th, bk, ak, tk)
 	antehandler := sdk.ChainAnteDecorators(mfd)
+	postHandler := sdk.ChainPostDecorators(pd)
 
 	// Set burn split tax
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
@@ -867,8 +874,9 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	)*/
 
 	// send tx to BurnTaxFeeDecorator antehandler
-	_, err = antehandler(s.ctx, tx, false)
+	newCtx, err := antehandler(s.ctx, tx, false)
 	require.NoError(err)
+	_, err = postHandler(newCtx, tx, false, true)
 
 	// burn the burn account
 	tk.BurnCoinsFromBurnAccount(s.ctx)

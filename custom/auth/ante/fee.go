@@ -75,18 +75,19 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		taxes = sdk.Coins{}
 	}
 
-	if err := fd.checkDeductFee(ctx, feeTx, taxes, simulate); err != nil {
-		return ctx, err
+	newCtx, err := fd.checkDeductFee(ctx, feeTx, taxes, simulate)
+	if err != nil {
+		return newCtx, err
 	}
 
-	newCtx := ctx.WithPriority(priority).WithValue(taxtypes.ContextKeyTaxReverseCharge, reverseCharge)
+	newCtx = newCtx.WithPriority(priority).WithValue(taxtypes.ContextKeyTaxReverseCharge, reverseCharge)
 
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) error {
+func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) (sdk.Context, error) {
 	if addr := fd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	fee := feeTx.GetFee()
@@ -98,11 +99,11 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	// this works with only when feegrant enabled.
 	if feeGranter != nil {
 		if fd.feegrantKeeper == nil {
-			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		} else if !feeGranter.Equals(feePayer) {
 			err := fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, feeTx.GetMsgs())
 			if err != nil {
-				return errorsmod.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
+				return ctx, errorsmod.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
 			}
 		}
 
@@ -111,7 +112,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 
 	deductFeesFromAcc := fd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
-		return sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
+		return ctx, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	feesOrTax := fee
@@ -146,31 +147,31 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 			if !needMint.IsZero() {
 				err := fd.bankKeeper.MintCoins(ctx, minttypes.ModuleName, needMint)
 				if err != nil {
-					return err
+					return ctx, err
 				}
 
 				// we need to add the fees to the account balance to avoid deduction errors
 				err = fd.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, deductFeesFromAcc.GetAddress(), needMint)
 				if err != nil {
-					return err
+					return ctx, err
 				}
 			}
 		}
 	}
 
 	if !feesOrTax.IsZero() {
-		err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, feesOrTax)
-		if err != nil {
-			return err
-		}
+		// we will only deduct the fees from the account, not the tax
+		// the tax will be deducted in the message route for reverse charge
+		// or in the post handler for normal tax charge
+		deductFees := feesOrTax.Sub(taxes...) // feesOrTax can never be lower than taxes
 
-		if !taxes.IsZero() {
-			err := fd.taxKeeper.ProcessTaxSplits(ctx, taxes)
+		ctx = ctx.WithValue(taxtypes.ContextKeyTaxDue, taxes).WithValue(taxtypes.ContextKeyTaxPayer, deductFeesFrom.String())
+
+		if !deductFees.IsZero() {
+			err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, deductFees)
 			if err != nil {
-				return err
+				return ctx, err
 			}
-			// Record tax proceeds
-			fd.treasuryKeeper.RecordEpochTaxProceeds(ctx, taxes)
 		}
 	}
 
@@ -183,7 +184,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	}
 	ctx.EventManager().EmitEvents(events)
 
-	return nil
+	return ctx, nil
 }
 
 // DeductFees deducts fees from the given account.

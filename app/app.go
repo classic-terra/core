@@ -256,7 +256,11 @@ func NewTerraApp(
 
 	postHandler, err := custompost.NewPostHandler(
 		custompost.HandlerOptions{
-			DyncommKeeper: app.DyncommKeeper,
+			DyncommKeeper:  app.DyncommKeeper,
+			TaxKeeper:      app.TaxKeeper,
+			BankKeeper:     app.BankKeeper,
+			AccountKeeper:  app.AccountKeeper,
+			TreasuryKeeper: app.TreasuryKeeper,
 		},
 	)
 	if err != nil {

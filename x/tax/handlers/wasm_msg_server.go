@@ -6,11 +6,8 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // THIS FILE IS NOT USED CURRENTLY IN THE TAX MODULE
@@ -35,10 +32,10 @@ func NewWasmMsgServer(wasmKeeper wasmkeeper.Keeper, treasuryKeeper treasurykeepe
 	}
 }
 
-func (s *WasmMsgServer) WithContractValue(ctx sdk.Context, address sdk.AccAddress) sdk.Context {
+/*func (s *WasmMsgServer) WithContractValue(ctx sdk.Context, address sdk.AccAddress) sdk.Context {
 	balance := s.bankKeeper.GetAllBalances(ctx, address)
 	return ctx.WithValue(taxtypes.ContextKeyWasmFunds, balance)
-}
+}*/
 
 // ExecuteContract handles MsgExecuteContract with tax deduction
 func (s *WasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {

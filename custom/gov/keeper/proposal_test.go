@@ -83,10 +83,6 @@ func TestActivateVotingPeriod(t *testing.T) {
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 
-	fmt.Printf("proposal: %v\n", proposal)
-	param := govKeeper.GetParams(ctx)
-
-	fmt.Printf("param: %v\n", param)
 	require.Nil(t, proposal.VotingStartTime)
 
 	govKeeper.ActivateVotingPeriod(ctx, proposal)

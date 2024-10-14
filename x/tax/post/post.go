@@ -30,7 +30,6 @@ func NewTaxDecorator(tk taxkeeper.Keeper, bk bankkeeper.Keeper, ak accountkeeper
 }
 
 func (dd TaxDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (sdk.Context, error) {
-
 	value := ctx.Value(taxtypes.ContextKeyTaxDue)
 	dueTax, ok := value.(sdk.Coins)
 	if !ok {

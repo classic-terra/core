@@ -11,6 +11,7 @@ const (
 	ContextKeyTaxPayer         = "tax.payer"
 
 	EventTypeTax                  = "tax_payment"
+	EventTypeTaxRefund            = "tax_refund"
 	AttributeKeyReverseCharge     = "reverse_charge"
 	AttributeValueReverseCharge   = "true"
 	AttributeValueNoReverseCharge = "false"

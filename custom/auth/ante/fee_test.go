@@ -877,13 +877,14 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	newCtx, err := antehandler(s.ctx, tx, false)
 	require.NoError(err)
 	_, err = postHandler(newCtx, tx, false, true)
+	require.NoError(err)
 
 	// burn the burn account
 	tk.BurnCoinsFromBurnAccount(s.ctx)
 
 	feeCollectorAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))
 	oracleAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(oracletypes.ModuleName))
-	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, th, false, msg)
+	taxes, _ := ante.FilterMsgAndComputeTax(s.ctx, tk, th, false, msg)
 	communityPoolAfter, _ := dk.GetFeePoolCommunityCoins(s.ctx).TruncateDecimal()
 	if communityPoolAfter.IsZero() {
 		communityPoolAfter = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.ZeroInt()))

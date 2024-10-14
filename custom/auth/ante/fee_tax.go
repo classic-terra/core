@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -19,8 +20,9 @@ func isIBCDenom(denom string) bool {
 }
 
 // FilterMsgAndComputeTax computes the stability tax on messages.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, simulate bool, msgs ...sdk.Msg) sdk.Coins {
+func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, simulate bool, msgs ...sdk.Msg) (sdk.Coins, sdk.Coins) {
 	taxes := sdk.Coins{}
+	nonTaxableTaxes := sdk.Coins{}
 
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
@@ -55,26 +57,27 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, si
 
 		// The contract messages were disabled to remove double-taxation
 		// whenever a contract sends funds to a wallet, it is taxed (deducted from sent amount)
-		/*case *wasmtypes.MsgInstantiateContract:
-			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds, simulate)...)
+		case *wasmtypes.MsgInstantiateContract:
+			nonTaxableTaxes = nonTaxableTaxes.Add(computeTax(ctx, tk, th, msg.Funds, simulate)...)
 
 		case *wasmtypes.MsgInstantiateContract2:
-			taxes = taxes.Add(computeTax(ctx, tk, msg.Funds, simulate)...)
+			nonTaxableTaxes = nonTaxableTaxes.Add(computeTax(ctx, tk, th, msg.Funds, simulate)...)
 
 		case *wasmtypes.MsgExecuteContract:
 			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
-				taxes = taxes.Add(computeTax(ctx, tk, msg.Funds, simulate)...)
+				nonTaxableTaxes = nonTaxableTaxes.Add(computeTax(ctx, tk, th, msg.Funds, simulate)...)
 			}
-		*/
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err == nil {
-				taxes = taxes.Add(FilterMsgAndComputeTax(ctx, tk, th, simulate, messages...)...)
+				execTaxes, execNonTaxable := FilterMsgAndComputeTax(ctx, tk, th, simulate, messages...)
+				taxes = taxes.Add(execTaxes...)
+				nonTaxableTaxes = nonTaxableTaxes.Add(execNonTaxable...)
 			}
 		}
 	}
 
-	return taxes
+	return taxes, nonTaxableTaxes
 }
 
 // computes the stability tax according to tax-rate and tax-cap

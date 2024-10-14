@@ -56,16 +56,21 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, fd.taxKeeper, simulate, msgs...)
+	taxes, nonTaxableTaxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, fd.taxKeeper, simulate, msgs...)
 
 	// check if the tx has paid fees for both(!) fee and tax
 	// if not, then set the tax to zero at this point as it then is handled in the message route
 	reverseCharge := false
+	refundNonTaxableTax := false
 
 	if !simulate {
-		priority, reverseCharge, err = fd.checkTxFee(ctx, tx, taxes)
+		priority, reverseCharge, refundNonTaxableTax, err = fd.checkTxFee(ctx, tx, taxes, nonTaxableTaxes)
 		if err != nil {
 			return ctx, err
+		}
+
+		if !refundNonTaxableTax {
+			nonTaxableTaxes = sdk.Coins{}
 		}
 	}
 
@@ -75,7 +80,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 		taxes = sdk.Coins{}
 	}
 
-	newCtx, err := fd.checkDeductFee(ctx, feeTx, taxes, simulate)
+	newCtx, err := fd.checkDeductFee(ctx, feeTx, taxes, nonTaxableTaxes, simulate)
 	if err != nil {
 		return newCtx, err
 	}
@@ -85,7 +90,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 	return next(newCtx, tx, simulate)
 }
 
-func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, simulate bool) (sdk.Context, error) {
+func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sdk.Coins, nonTaxableTaxes sdk.Coins, simulate bool) (sdk.Context, error) {
 	if addr := fd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
@@ -159,11 +164,29 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		}
 	}
 
+	events := sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+		),
+	}
+
 	if !feesOrTax.IsZero() {
 		// we will only deduct the fees from the account, not the tax
 		// the tax will be deducted in the message route for reverse charge
 		// or in the post handler for normal tax charge
 		deductFees := feesOrTax.Sub(taxes...) // feesOrTax can never be lower than taxes
+		if !nonTaxableTaxes.IsZero() {
+			// if we have non-taxable taxes, we need to subtract them from the fees to be deducted
+			deductFees = deductFees.Sub(nonTaxableTaxes...)
+
+			// add the non-taxable taxes to the events
+			events = append(events, sdk.NewEvent(
+				taxtypes.EventTypeTaxRefund,
+				sdk.NewAttribute(taxtypes.AttributeKeyTaxAmount, nonTaxableTaxes.String()),
+			))
+		}
 
 		ctx = ctx.WithValue(taxtypes.ContextKeyTaxDue, taxes).WithValue(taxtypes.ContextKeyTaxPayer, deductFeesFrom.String())
 
@@ -175,13 +198,6 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		}
 	}
 
-	events := sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
-		),
-	}
 	ctx.EventManager().EmitEvents(events)
 
 	return ctx, nil
@@ -205,10 +221,10 @@ func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
 // Transaction with only oracle messages will skip gas fee check and will have the most priority.
 // It also checks enough fee for treasury tax
-func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (int64, bool, error) {
+func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, nonTaxableTaxes sdk.Coins) (int64, bool, bool, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return 0, false, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return 0, false, false, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	feeCoins := feeTx.GetFee()
@@ -217,6 +233,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 	isOracleTx := isOracleTx(msgs)
 	minGasPrices := fd.taxKeeper.GetEffectiveGasPrices(ctx)
 	reverseCharge := false
+	refundNonTaxableTaxes := false
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
@@ -236,21 +253,22 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 		}
 
 		requiredFees := requiredGasFees.Add(taxes...)
-
-		//		fmt.Println("requiredFees", requiredFees, "feeCoins", feeCoins, "requiredGasFees", requiredGasFees, "taxes", taxes, "minGasPrices", minGasPrices)
+		allFees := requiredFees.Add(nonTaxableTaxes...)
 
 		// Check required fees
 		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
 			// we don't have enough for tax and gas fees. But do we have enough for gas alone?
 			if !requiredGasFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
-				return 0, false, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
+				return 0, false, false, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
 			}
 
 			// we have enough for gas fees but not for tax fees
 			reverseCharge = true
-			//	ctx.Logger().Info("Insufficient fees to pay for gas and taxes (doing reverse charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees)
-			// } else {
-			//	ctx.Logger().Info("Sufficient fees to pay for gas and taxes (doing normal tax charge)", "sentFee", feeCoins, "taxes", taxes, "requiredGasFees", requiredGasFees, "requiredFees", requiredFees)
+		}
+
+		if !allFees.IsZero() && feeCoins.IsAnyGTE(allFees) {
+			// we have enough for all fees
+			refundNonTaxableTaxes = true
 		}
 	}
 
@@ -260,7 +278,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins) (
 		priority = getTxPriority(feeCoins, int64(gas))
 	}
 
-	return priority, reverseCharge, nil
+	return priority, reverseCharge, refundNonTaxableTaxes, nil
 }
 
 // getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price

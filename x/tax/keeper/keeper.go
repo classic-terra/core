@@ -79,7 +79,7 @@ func (k Keeper) GetBurnTaxRate(ctx sdk.Context) sdk.Dec {
 }
 
 func (k Keeper) ComputeTax(ctx sdk.Context, amount sdk.Coins) sdk.Coins {
-	burnTaxRate := k.treasuryKeeper.GetTaxRate(ctx)
+	burnTaxRate := k.GetBurnTaxRate(ctx)
 	taxes := sdk.Coins{}
 	for _, coin := range amount {
 		taxAmount := sdk.NewDecFromInt(coin.Amount).Mul(burnTaxRate).TruncateInt()

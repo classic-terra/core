@@ -1,7 +1,7 @@
 package types
 
 // DefaultGenesis returns the default tax genesis state.
-func DefaultGenesis() *GenesisState {
+func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),
 	}

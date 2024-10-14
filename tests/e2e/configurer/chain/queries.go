@@ -21,6 +21,7 @@ import (
 	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 	"github.com/classic-terra/core/v3/tests/e2e/util"
 
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
@@ -120,6 +121,18 @@ func (n *NodeConfig) QueryTaxRate() (sdk.Dec, error) {
 		return sdk.ZeroDec(), err
 	}
 	return taxRateResp.TaxRate, nil
+}
+
+func (n *NodeConfig) QueryBurnTaxRate() (sdk.Dec, error) {
+	path := "terra/tax/v1beta1/burn_tax_rate"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var taxRateResp taxtypes.QueryBurnTaxRateResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
+		return sdk.ZeroDec(), err
+	}
+	return taxRateResp.BurnTaxRate, nil
 }
 
 func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {

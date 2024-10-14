@@ -14,8 +14,8 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasuryexported "github.com/classic-terra/core/v3/x/treasury/exported"
 )
 
@@ -144,29 +144,29 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 
 			taxes = taxes.Add(tax...)
 
-		case *wasmtypes.MsgInstantiateContract:
-			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-			if err != nil {
-				return nil, err
-			}
+			/*case *wasmtypes.MsgInstantiateContract:
+				tax, err := computeTax(clientCtx, taxRate, msg.Funds)
+				if err != nil {
+					return nil, err
+				}
 
-			taxes = taxes.Add(tax...)
+				taxes = taxes.Add(tax...)
 
-		case *wasmtypes.MsgInstantiateContract2:
-			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-			if err != nil {
-				return nil, err
-			}
+			case *wasmtypes.MsgInstantiateContract2:
+				tax, err := computeTax(clientCtx, taxRate, msg.Funds)
+				if err != nil {
+					return nil, err
+				}
 
-			taxes = taxes.Add(tax...)
+				taxes = taxes.Add(tax...)
 
-		case *wasmtypes.MsgExecuteContract:
-			tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-			if err != nil {
-				return nil, err
-			}
+			case *wasmtypes.MsgExecuteContract:
+				tax, err := computeTax(clientCtx, taxRate, msg.Funds)
+				if err != nil {
+					return nil, err
+				}
 
-			taxes = taxes.Add(tax...)
+				taxes = taxes.Add(tax...)*/
 		}
 	}
 
@@ -200,13 +200,13 @@ func computeTax(clientCtx client.Context, taxRate sdk.Dec, principal sdk.Coins) 
 }
 
 func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
-	queryClient := treasuryexported.NewQueryClient(clientCtx)
+	queryClient := taxtypes.NewQueryClient(clientCtx)
 
-	res, err := queryClient.TaxRate(context.Background(), &treasuryexported.QueryTaxRateRequest{})
+	res, err := queryClient.BurnTaxRate(context.Background(), &taxtypes.QueryBurnTaxRateRequest{})
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
-	return res.TaxRate, err
+	return res.BurnTaxRate, err
 }
 
 func queryTaxCap(clientCtx client.Context, denom string) (math.Int, error) {

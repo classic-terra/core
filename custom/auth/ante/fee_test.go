@@ -202,7 +202,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	th := s.app.TaxKeeper
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -256,7 +257,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	th := s.app.TaxKeeper
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -318,7 +320,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	th := s.app.TaxKeeper
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -384,7 +387,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	th := s.app.TaxKeeper
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -442,7 +446,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	th := s.app.TaxKeeper
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -495,7 +500,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.Require().Error(err, "Decorator should errored on low fee for local gasPrice + tax")
 
 	tk := s.app.TreasuryKeeper
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	th := s.app.TaxKeeper
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -527,7 +533,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	// set send amount
 	sendAmt := int64(1000000)
 	sendCoin := sdk.NewInt64Coin(core.MicroSDRDenom, sendAmt)
-	feeAmt := int64(1000)
+	feeAmt := int64(5000)
 
 	cases := []struct {
 		name                string
@@ -712,6 +718,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		tk := s.app.TreasuryKeeper
 		ak := s.app.AccountKeeper
 		bk := s.app.BankKeeper
+		burnTaxRate := sdk.NewDecWithPrec(5, 3)
 		burnSplitRate := sdk.NewDecWithPrec(5, 1)
 		oracleSplitRate := sdk.ZeroDec()
 
@@ -748,16 +755,24 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		newCtx, err := antehandler(s.ctx, tx, false)
 		require.NoError(err)
 
+		actualTaxRate := s.app.TaxKeeper.GetBurnTaxRate(s.ctx)
+		require.Equal(burnTaxRate, actualTaxRate)
+
+		require.Equal(c.expectReverseCharge, newCtx.Value(taxtypes.ContextKeyTaxReverseCharge))
+
 		// check fee collector
 		feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
 		amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
-		require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
+		if c.expectReverseCharge {
+			// tax is NOT split in this case in the ante handler
+			require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.minFeeAmount)))
+		} else {
+			require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
+		}
 
 		// check tax proceeds
 		taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
 		require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))))
-
-		require.Equal(newCtx.Value(taxtypes.ContextKeyTaxReverseCharge), c.expectReverseCharge)
 	}
 }
 
@@ -802,7 +817,6 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	// Set burn split tax
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
-	// taxRate := tk.GetTaxRate(s.ctx)
 
 	// Set community tax
 	dkParams := dk.GetParams(s.ctx)
@@ -822,7 +836,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	gasLimit := testdata.NewTestGasLimit()
 	require.NoError(s.txBuilder.SetMsgs(msg))
 	s.txBuilder.SetGasLimit(gasLimit)
-	expectedTax := tk.GetTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
+	expectedTax := th.GetBurnTaxRate(s.ctx).MulInt64(sendAmount).TruncateInt()
 	if taxCap := tk.GetTaxCap(s.ctx, core.MicroSDRDenom); expectedTax.GT(taxCap) {
 		expectedTax = taxCap
 	}
@@ -861,7 +875,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 
 	feeCollectorAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))
 	oracleAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(oracletypes.ModuleName))
-	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, false, msg)
+	taxes := ante.FilterMsgAndComputeTax(s.ctx, tk, th, false, msg)
 	communityPoolAfter, _ := dk.GetFeePoolCommunityCoins(s.ctx).TruncateDecimal()
 	if communityPoolAfter.IsZero() {
 		communityPoolAfter = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.ZeroInt()))

@@ -1,12 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	ibcchanneltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 )
 
 var (
@@ -37,20 +32,6 @@ var (
 		sdk.NewDecCoinFromDec("umyr", sdk.NewDecWithPrec(3, 0)),
 		sdk.NewDecCoinFromDec("utwd", sdk.NewDecWithPrec(20, 0)),
 	)
-	DefaultBypassMinFeeMsgTypes = []string{
-		sdk.MsgTypeURL(&ibcclienttypes.MsgUpdateClient{}),
-		sdk.MsgTypeURL(&ibcchanneltypes.MsgRecvPacket{}),
-		sdk.MsgTypeURL(&ibcchanneltypes.MsgAcknowledgement{}),
-		sdk.MsgTypeURL(&ibcchanneltypes.MsgTimeout{}),
-		sdk.MsgTypeURL(&ibcchanneltypes.MsgTimeoutOnClose{}),
-	}
-
-	// maxTotalBypassMinFeeMsgGasUsage is the allowed maximum gas usage
-	// for all the bypass msgs in a transactions.
-	// A transaction that contains only bypass message types and the gas usage does not
-	// exceed maxTotalBypassMinFeeMsgGasUsage can be accepted with a zero fee.
-	// For details, see gaiafeeante.NewFeeDecorator()
-	DefaultmaxTotalBypassMinFeeMsgGasUsage uint64 = 1_000_000
 )
 
 func NewParams() Params {
@@ -67,9 +48,10 @@ func DefaultParams() Params {
 
 // Validate validates params.
 func (p Params) Validate() error {
-	if len(p.GasPrices) == 0 {
+	/*if len(p.GasPrices) == 0 {
 		return fmt.Errorf("must provide at least 1 gas prices")
-	}
+	}*/
+	// gas prices can be empty in case of 0 gas price
 
 	return nil
 }

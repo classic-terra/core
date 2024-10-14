@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/simulation"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,7 +39,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
+	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the tax module.
@@ -97,10 +98,10 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	// workaround so that the staking module
 	// simulation would not fail
-	taxGenesis := types.DefaultGenesis()
+	taxGenesis := types.DefaultGenesisState()
 	params := types.DefaultParams()
 	params.BurnTaxRate = sdk.NewDecWithPrec(1, 2)
-	params.GasPrices = sdk.NewDecCoins() // no gas prices because tests always rely on 0 min gas price
+	params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoin(core.MicroSDRDenom, sdk.ZeroInt())) // tests normally rely on zero gas price, so we are setting it here and fall back to the normal ctx.MinGasPrices
 	taxGenesis.Params = params
 	bz, err := json.MarshalIndent(&taxGenesis, "", " ")
 	if err != nil {
@@ -121,7 +122,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 
 	cdc.MustUnmarshalJSON(gs, &genesisState)
 	InitGenesis(ctx, am.k, &genesisState)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the tax.

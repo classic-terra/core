@@ -56,7 +56,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, simulate, msgs...)
+	taxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, fd.taxKeeper, simulate, msgs...)
 
 	// check if the tx has paid fees for both(!) fee and tax
 	// if not, then set the tax to zero at this point as it then is handled in the message route

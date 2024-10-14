@@ -21,13 +21,15 @@ var _ ServiceServer = txServer{}
 type txServer struct {
 	clientCtx      client.Context
 	treasuryKeeper customante.TreasuryKeeper
+	taxKeeper      customante.TaxKeeper
 }
 
 // NewTxServer creates a new Tx service server.
-func NewTxServer(clientCtx client.Context, treasuryKeeper customante.TreasuryKeeper) ServiceServer {
+func NewTxServer(clientCtx client.Context, treasuryKeeper customante.TreasuryKeeper, taxKeeper customante.TaxKeeper) ServiceServer {
 	return txServer{
 		clientCtx:      clientCtx,
 		treasuryKeeper: treasuryKeeper,
+		taxKeeper:      taxKeeper,
 	}
 }
 
@@ -52,7 +54,7 @@ func (ts txServer) ComputeTax(c context.Context, req *ComputeTaxRequest) (*Compu
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, false, msgs...)
+	taxAmount := customante.FilterMsgAndComputeTax(ctx, ts.treasuryKeeper, ts.taxKeeper, false, msgs...)
 	return &ComputeTaxResponse{
 		TaxAmount: taxAmount,
 	}, nil
@@ -63,10 +65,11 @@ func RegisterTxService(
 	qrt gogogrpc.Server,
 	clientCtx client.Context,
 	treasuryKeeper customante.TreasuryKeeper,
+	taxKeeper customante.TaxKeeper,
 ) {
 	RegisterServiceServer(
 		qrt,
-		NewTxServer(clientCtx, treasuryKeeper),
+		NewTxServer(clientCtx, treasuryKeeper, taxKeeper),
 	)
 }
 

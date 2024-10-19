@@ -1,6 +1,7 @@
 package keepers
 
 import (
+	"fmt"
 	"path/filepath"
 
 	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7"
@@ -204,6 +205,8 @@ func NewAppKeepers(
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	fmt.Printf("sdk.GetConfig().GetBech32AccountAddrPrefix(): %v\n", sdk.GetConfig())
+	fmt.Printf("authtypes.NewModuleAddress(govtypes.ModuleName).String(): %v\n", authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	appKeepers.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		appKeepers.keys[banktypes.StoreKey],

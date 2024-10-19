@@ -4,6 +4,7 @@ package keeper
 //DONTCOVER
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -197,6 +198,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		govtypes.ModuleName:            {authtypes.Burner, authtypes.Minter},
 	}
 
+	fmt.Printf("sdk.GetConfig().GetBech32AccountAddrPrefix(): %v\n", sdk.GetConfig())
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
 	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())

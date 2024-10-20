@@ -91,7 +91,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 // module.
 func (am AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	// customize to set default genesis state deposit denom to uluna
-	defaultGenesisState := v1.DefaultGenesisState()
+	defaultGenesisState := v2lunc1.DefaultGenesisState()
 	defaultGenesisState.Params.MinDeposit[0].Denom = core.MicroLunaDenom
 
 	return cdc.MustMarshalJSON(defaultGenesisState)

@@ -31,7 +31,7 @@ func TestSubmitProposalReq(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := input.Ctx
 	govAcct := authtypes.NewModuleAddress(types.ModuleName)
-	_, _, addr = testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
@@ -166,7 +166,7 @@ func TestVoteReq(t *testing.T) {
 	govKeeper := input.GovKeeper
 	ctx := input.Ctx
 	govAcct := authtypes.NewModuleAddress(types.ModuleName)
-	_, _, addr = testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
@@ -313,7 +313,7 @@ func TestVoteWeightedReq(t *testing.T) {
 	govKeeper := input.GovKeeper
 	ctx := input.Ctx
 	govAcct := authtypes.NewModuleAddress(types.ModuleName)
-	_, _, addr = testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
@@ -456,7 +456,7 @@ func TestDepositReq(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := input.Ctx
 	govAcct := authtypes.NewModuleAddress(types.ModuleName)
-	_, _, addr = testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
@@ -822,7 +822,7 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 	ctx := input.Ctx
 	govKeeper := input.GovKeeper
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.NewDecWithPrec(2, 1))
-	_, _, address := testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 
 	// setup desposit value when test
 	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
@@ -868,10 +868,20 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 		},
 	}
 
+	govAcct := authtypes.NewModuleAddress(types.ModuleName)
+	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), authtypes.NewModuleAddress(types.ModuleName).String())
+	if err != nil {
+		panic(err)
+	}
+
+	msgs := []sdk.Msg{
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
+		legacyProposalMsg,
+	}
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			// Fund the proposer's account
-			FundAccount(input, address, tc.minDeposit)
+			FundAccount(input, addr, tc.minDeposit)
 			govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 
 			params := v2lunc1types.DefaultParams()
@@ -879,7 +889,7 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
 			govKeeper.SetParams(ctx, params)
 
-			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal")
+			msg, err := v1.NewMsgSubmitProposal(msgs, tc.initialDeposit, addr.String(), "test", "Proposal", "description of proposal")
 			require.NoError(t, err)
 
 			// System under test
@@ -901,7 +911,7 @@ func TestLegacyMsgSubmitProposal(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := input.Ctx
 	govAcct := authtypes.NewModuleAddress(types.ModuleName)
-	_, _, addr = testdata.KeyTestPubAddr()
+	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 UUSD

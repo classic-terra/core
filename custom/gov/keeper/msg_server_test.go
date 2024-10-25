@@ -194,7 +194,7 @@ func TestVoteReq(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res.ProposalId)
 	proposalId := res.ProposalId
-	requiredAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalId).TruncateInt()
+	requiredAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalId)
 
 	cases := map[string]struct {
 		preRun    func() uint64

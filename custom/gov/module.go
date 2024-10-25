@@ -33,7 +33,7 @@ import (
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 )
 
-const ConsensusVersion = 4
+const ConsensusVersion = 5
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
@@ -157,12 +157,13 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
 	v2lunc1.RegisterMsgServer(cfg.MsgServer(), msgServer)
 
+	queryServer := keeper.NewQueryServerImpl(am.keeper)
+	v2lunc1.RegisterQueryServer(cfg.QueryServer(), queryServer)
+
 	legacyQueryServer := govkeeper.NewLegacyQueryServer(am.keeper.Keeper)
 	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
-	// TODO: handle query
-	// v2lunc1.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	v1.RegisterQueryServer(cfg.QueryServer(), am.keeper.Keeper)
 
-	// TODO: migrator
 	m := keeper.NewMigrator(&am.keeper, am.legacySubspace)
 	err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2)
 	if err != nil {

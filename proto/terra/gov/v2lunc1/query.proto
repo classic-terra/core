@@ -8,16 +8,31 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
+import "terra/gov/v2lunc1/gov.proto";
 import "amino/amino.proto";
 
 option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1";
 
 // Query defines the gRPC querier service for gov module
 service Query {
+  // Params queries the parameters for custom gov module
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v2lunc1/params";
+  }
+
   // Proposal queries proposal details based on ProposalID.
   rpc ProposalMinimalLUNCByUusd(QueryProposalRequest) returns (QueryMinimalDepositProposalResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/minimal-deposits/{proposal_id}";
+    option (google.api.http).get = "/cosmos/gov/v2lunc1/proposals/minimal-deposits/{proposal_id}";
   }
+}
+
+// QueryParams is the request type for the Query/Params RPC method.
+message QueryParamsRequest {
+}
+// QueryParamsResponse defines the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryProposalRequest is the request type for the Query/Proposal RPC method.

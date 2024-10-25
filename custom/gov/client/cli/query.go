@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 
 	govQueryCmd.AddCommand(
 		GetCmdQueryMinimalDeposit(),
+		GetCmdQueryCustomParams(),
 		govcli.GetCmdQueryProposal(),
 		govcli.GetCmdQueryProposals(),
 		govcli.GetCmdQueryVote(),
@@ -43,18 +44,18 @@ func GetQueryCmd() *cobra.Command {
 	return govQueryCmd
 }
 
-// GetCmdQueryMinimalDeposit implements the query proposal command.
+// GetCmdQueryMinimalDeposit implements the query proposal's min uluna deposit command.
 func GetCmdQueryMinimalDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-minimal-deposit [proposal-id]",
+		Use:   "min-deposit [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query minimal deposit by min uusd of a single proposal",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query minimal deposit for a proposal. You can find the
-proposal-id by running "%s query gov proposals".
+proposal-id by running "%s query gov min-deposit [proposal-id]".
 
 Example:
-$ %s query gov get-minimal-deposit 1
+$ %s query gov min-deposit 1
 `,
 				version.AppName, version.AppName,
 			),
@@ -87,5 +88,32 @@ $ %s query gov get-minimal-deposit 1
 
 	flags.AddQueryFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// GetCmdQueryCustomParams implements the query custom params command.
+func GetCmdQueryCustomParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "custom-params",
+		Args:  cobra.NoArgs,
+		Short: "Query custom params of module",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := v2lunc1types.NewQueryClient(clientCtx)
+			// Query the proposal
+			res, err := queryClient.Params(
+				cmd.Context(),
+				&v2lunc1types.QueryParamsRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

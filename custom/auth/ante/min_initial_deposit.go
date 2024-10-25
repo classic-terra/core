@@ -49,14 +49,13 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper custom
 	default:
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")
 	}
-	requiredAmount, err := govKeeper.GetMinimumDepositBaseUusd(ctx)
+	minLuncAmount, err := govKeeper.GetMinimumDepositBaseUusd(ctx)
 
-	if err == nil && requiredAmount.GT(sdk.ZeroInt()) {
+	if err == nil && minLuncAmount.GT(sdk.ZeroInt()) {
+		minLuncAmount = minLuncAmount.Mul(treasuryKeeper.GetMinInitialDepositRatio(ctx).TruncateInt())
 		requiredDepositCoins := sdk.NewCoins(
-			sdk.NewCoin(core.MicroLunaDenom, requiredAmount),
+			sdk.NewCoin(core.MicroLunaDenom, minLuncAmount),
 		)
-
-		fmt.Printf("\n Expected %q; got %q", requiredDepositCoins, initialDepositCoins)
 
 		if initialDepositCoins.IsAllLT(requiredDepositCoins) {
 			return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)

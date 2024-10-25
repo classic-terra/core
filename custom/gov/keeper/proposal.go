@@ -102,9 +102,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
 
-	er := keeper.SetDepositLimitBaseUusd(ctx, proposalID, math.LegacyNewDecFromInt(totalLuncDeposit))
-	if er != nil {
-		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, er.Error())
+	err = keeper.SetDepositLimitBaseUusd(ctx, proposalID, totalLuncDeposit)
+	if err != nil {
+		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, err.Error())
 	}
 
 	// called right after a proposal is submitted
@@ -122,7 +122,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 }
 
 // SetDepositLimitBaseUusd sets a limit deposit(Lunc) base on Uusd to store.
-func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount sdk.Dec) error {
+func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount math.Int) error {
 	store := ctx.KVStore(keeper.storeKey)
 	key := v2lunc1types.TotalDepositKey(proposalID)
 	bz, err := amount.Marshal()

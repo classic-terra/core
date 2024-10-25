@@ -22,8 +22,6 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	fmt.Printf("module account: %v\n", moduleAcc)
-
 	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
 		k.SetDeposit(ctx, *deposit)

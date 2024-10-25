@@ -1,39 +1,40 @@
 package keeper
 
 import (
-    "context"
-    "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/status"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
-    
+	"context"
+
+	v2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	core "github.com/classic-terra/core/v3/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
-var (
-    _ v2lunc1types.QueryServer = queryServer{}
-)
-type queryServer struct{ k *Keeper }
 
-func NewQueryServer(k *Keeper) v2lunc1types.QueryServer {
-    return queryServer{k: k}
+var _ v2lunc1.QueryServer = queryServer{}
+
+func NewQueryServerImpl(k Keeper) v2lunc1.QueryServer {
+	return queryServer{
+		k:              k,
+		govQueryServer: govkeeper.NewLegacyQueryServer(k.Keeper)}
 }
 
-func (q queryServer) ProposalMinimalLUNCByUusd(ctx context.Context, req *v2lunc1types.QueryProposalRequest) (*v2lunc1types.QueryMinimalDepositProposalResponse, error) {
-    // Fetch the proposal using the proposal ID
-        if req == nil {
-            return nil, status.Error(codes.InvalidArgument, "invalid request")
-        }
-
-if req.ProposalId == 0 {
-	return nil, status.Error(codes.InvalidArgument, "proposal id can not be 0")
+type queryServer struct {
+	k              Keeper
+	govQueryServer v1beta1.QueryServer
 }
-_, found := q.k.GetProposal(ctx.(sdk.Context), req.ProposalId)
-if !found {
-	return nil, status.Error(codes.NotFound, "proposal not found")
-}
-depositLimit := q.k.GetDepositLimitBaseUusd(ctx.(sdk.Context), req.ProposalId)
-minimalDeposits := sdk.NewCoins(sdk.NewCoin("uusd", depositLimit.TruncateInt())) // Convert depositLimit to Int
-return &v2lunc1types.QueryMinimalDepositProposalResponse{
-	MinimalDeposit: minimalDeposits[0],
-}, nil
 
+// Params returns params of the mint module.
+func (q queryServer) Params(ctx context.Context, _ *v2lunc1.QueryParamsRequest) (*v2lunc1.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := q.k.GetParams(sdkCtx)
+
+	return &v2lunc1.QueryParamsResponse{Params: params}, nil
+}
+
+// ProposalMinimalLUNCByUusd returns min Usd amount proposal needs to deposit
+func (q queryServer) ProposalMinimalLUNCByUusd(ctx context.Context, req *v2lunc1.QueryProposalRequest) (*v2lunc1.QueryMinimalDepositProposalResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	depositAmount := q.k.GetDepositLimitBaseUusd(sdkCtx, req.ProposalId)
+
+	return &v2lunc1.QueryMinimalDepositProposalResponse{MinimalDeposit: sdk.NewCoin(core.MicroLunaDenom, depositAmount)}, nil
 }

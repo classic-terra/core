@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -52,11 +53,11 @@ func TestMigrateStore(t *testing.T) {
 	// Marshal and set the old params into the KV store
 	bz, err := cdc.Marshal(&oldParams)
 	require.NoError(t, err)
-	store.Set(v5.ParamsKey, bz)
+	store.Set(govtypes.ParamsKey, bz)
 
 	// Ensure the params are correctly stored before migration
 	var params v1.Params
-	bz = store.Get(v5.ParamsKey)
+	bz = store.Get(govtypes.ParamsKey)
 	require.NoError(t, cdc.Unmarshal(bz, &params))
 	t.Logf("params: %v", params)
 	require.Equal(t, sdk.NewDecWithPrec(500, 3).String(), params.Threshold)
@@ -67,7 +68,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Fetch the params after migration
-	bz = store.Get(v5.ParamsKey)
+	bz = store.Get(govtypes.ParamsKey)
 
 	var newParams v2lunc1.Params
 	require.NoError(t, cdc.Unmarshal(bz, &newParams))

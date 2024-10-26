@@ -5,10 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
-
-var ParamsKey = []byte{0x30}
 
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	return migrateParams(ctx, storeKey, cdc)
@@ -17,7 +16,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
-	bz := store.Get(ParamsKey)
+	bz := store.Get(govtypes.ParamsKey)
 	var params govv1.Params
 	err := cdc.Unmarshal(bz, &params)
 	if err != nil {
@@ -44,7 +43,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Bina
 		return err
 	}
 
-	store.Set(ParamsKey, bz)
+	store.Set(govtypes.ParamsKey, bz)
 
 	return nil
 }

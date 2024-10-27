@@ -28,7 +28,6 @@ func GetQueryCmd() *cobra.Command {
 
 	govQueryCmd.AddCommand(
 		GetCmdQueryMinimalDeposit(),
-		GetCmdQueryCustomParams(),
 		govcli.GetCmdQueryProposal(),
 		govcli.GetCmdQueryProposals(),
 		govcli.GetCmdQueryVote(),

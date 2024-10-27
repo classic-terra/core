@@ -1,13 +1,16 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
+	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
+	core "github.com/classic-terra/core/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 // Keeper defines the governance module Keeper
@@ -20,17 +23,11 @@ type Keeper struct {
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
 
-	// GovHooks
-	hooks types.GovHooks
-
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey storetypes.StoreKey
 
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
-
-	// Legacy Proposal router
-	legacyRouter v1beta1.Router
 
 	// Msg server router
 	router *baseapp.MsgServiceRouter
@@ -79,11 +76,49 @@ func (keeper Keeper) assertMetadataLength(metadata string) error {
 }
 
 func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
-	if keeper.hooks != nil {
-		panic("cannot set governance hooks twice")
+	keeper.Keeper = keeper.Keeper.SetHooks(gh)
+	return keeper
+}
+
+// SetDepositLimitBaseUusd sets a limit deposit(Lunc) base on Uusd to store.
+func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount math.Int) error {
+	store := ctx.KVStore(keeper.storeKey)
+	key := v2lunc1types.TotalDepositKey(proposalID)
+	bz, err := amount.Marshal()
+	if err == nil {
+		store.Set(key, bz)
+	}
+	return err
+}
+
+// GetDepositLimitBaseUusd: calculate the minimum LUNC amount to deposit base on Uusd for the proposal
+func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error) {
+	// Get exchange rate betweent Lunc/uusd from oracle
+	// save it to store
+	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
+	if err != nil && price.LTE(sdk.ZeroDec()) {
+		return sdk.ZeroInt(), err
+	}
+	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
+	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+	return totalLuncDeposit, nil
+}
+
+// GetDepositLimitBaseUUSD gets the deposit limit (Lunc) for a specific proposal
+func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64) (depositLimit math.Int) {
+	store := ctx.KVStore(keeper.storeKey)
+	key := v2lunc1types.TotalDepositKey(proposalID)
+	bz := store.Get(key)
+	if bz == nil {
+		return sdk.ZeroInt()
+	}
+	err := depositLimit.Unmarshal(bz)
+	if err != nil {
+		return sdk.ZeroInt()
 	}
 
-	keeper.hooks = gh
-
-	return keeper
+	return depositLimit
 }

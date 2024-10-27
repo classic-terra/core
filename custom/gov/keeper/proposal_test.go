@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -56,7 +55,7 @@ func TestGetSetProposal(t *testing.T) {
 	// Get min luna amount by uusd
 	minLunaAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalID)
 	fmt.Printf("minLunaAmount %s\n", minLunaAmount)
-	require.Equal(t, math.LegacyNewDecFromInt(totalLuncMinDeposit), minLunaAmount)
+	require.Equal(t, totalLuncMinDeposit, minLunaAmount)
 
 }
 

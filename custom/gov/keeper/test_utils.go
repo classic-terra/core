@@ -274,20 +274,20 @@ func CreateTestInput(t *testing.T) TestInput {
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(govtypes.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
-	govKeeper.SetParams(ctx, v2lunc1.DefaultParams())
 	govKeeper.Keeper.SetParams(ctx, v1.DefaultParams())
+	govKeeper.SetParams(ctx, v2lunc1.DefaultParams())
 
-	govparamsv2 := govKeeper.GetParams(ctx)
-	govparamsv2.MinDeposit = sdk.NewCoins(
-		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
-	)
-	govKeeper.SetParams(ctx, govparamsv2)
+	// govparamsv2 := govKeeper.GetParams(ctx)
+	// govparamsv2.MinDeposit = sdk.NewCoins(
+	// 	sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
+	// )
+	// govKeeper.SetParams(ctx, govparamsv2)
 
-	govparamsv1 := govKeeper.Keeper.GetParams(ctx)
-	govparamsv1.MinDeposit = sdk.NewCoins(
-		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
-	)
-	govKeeper.Keeper.SetParams(ctx, govparamsv1)
+	// govparamsv1 := govKeeper.Keeper.GetParams(ctx)
+	// govparamsv1.MinDeposit = sdk.NewCoins(
+	// 	sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000)),
+	// )
+	// govKeeper.Keeper.SetParams(ctx, govparamsv1)
 
 	// Register all handlers for the MegServiceRouter.
 	msr.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)

@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/math"
 	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
-	core "github.com/classic-terra/core/v3/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -119,31 +117,4 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	)
 
 	return proposal, nil
-}
-
-// SetDepositLimitBaseUusd sets a limit deposit(Lunc) base on Uusd to store.
-func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount math.Int) error {
-	store := ctx.KVStore(keeper.storeKey)
-	key := v2lunc1types.TotalDepositKey(proposalID)
-	bz, err := amount.Marshal()
-	if err == nil {
-		store.Set(key, bz)
-	}
-	return err
-}
-
-// GetDepositLimitBaseUusd: calculate the minimum LUNC amount to deposit base on Uusd for the proposal
-func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error) {
-	// Get exchange rate betweent Lunc/uusd from oracle
-	// save it to store
-	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
-	if err != nil && price.LTE(sdk.ZeroDec()) {
-		return sdk.ZeroInt(), err
-	}
-	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
-	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
-	if err != nil {
-		return sdk.ZeroInt(), err
-	}
-	return totalLuncDeposit, nil
 }

@@ -16,7 +16,7 @@ import (
 
 // Default governance params
 var (
-	DefaultMinUusdDepositTokens = sdk.NewInt(500000000) // Minimal uusd deposit for a proposal to enter voting period
+	DefaultMinUusdDepositTokens = sdk.NewInt(500_000_000) // Minimal uusd deposit for a proposal to enter voting period
 )
 
 var _ sdk.Msg = &MsgUpdateParams{}

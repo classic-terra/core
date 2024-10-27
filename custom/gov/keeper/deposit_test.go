@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
@@ -25,12 +26,11 @@ func TestAddDeposits(t *testing.T) {
 	input := CreateTestInput(t)
 	bankKeeper := input.BankKeeper
 	govKeeper := input.GovKeeper
-	// stakingKeeper := input.StakingKeeper
 	oracleKeeper := input.OracleKeeper
 	ctx := input.Ctx
 
 	oracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
-	lunaCoin := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(10_000_000_000)))
+	lunaCoin := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000_000)))
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -51,15 +51,15 @@ func TestAddDeposits(t *testing.T) {
 	}
 
 	tp := []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))),
 		legacyProposalMsg,
 	}
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", addr1)
 	require.NoError(t, err)
 	proposalID := proposal.Id
 
-	amountDeposit1 := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(100_000_000)))
-	amountDeposit2 := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(500_000_000)))
+	amountDeposit1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)))
+	amountDeposit2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000)))
 
 	require.True(t, sdk.NewCoins(proposal.TotalDeposit...).IsEqual(sdk.NewCoins()))
 
@@ -117,6 +117,7 @@ func TestAddDeposits(t *testing.T) {
 	// Test deposit iterator
 	// NOTE order of deposits is determined by the addresses
 	deposits := govKeeper.GetAllDeposits(ctx)
+	fmt.Printf("deposits: %v\n", deposits)
 	require.Len(t, deposits, 2)
 	require.Equal(t, deposits, govKeeper.GetDeposits(ctx, proposalID))
 	require.Equal(t, addr1.String(), deposits[0].Depositor)
@@ -147,6 +148,16 @@ func TestAddDeposits(t *testing.T) {
 }
 
 func TestValidateInitialDeposit(t *testing.T) {
+	input := CreateTestInput(t)
+	govKeeper := input.GovKeeper
+	ctx := input.Ctx
+	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.NewDec(1))
+	minLuncDeposit, err := input.GovKeeper.GetMinimumDepositBaseUusd(ctx)
+	require.NoError(t, err)
+
+	// setup deposit value when test
+	meetsDepositValue := minLuncDeposit.Mul(sdk.NewInt(baseDepositTestPercent)).Quo(sdk.NewInt(100))
+
 	testcases := map[string]struct {
 		minDeposit               sdk.Coins
 		minInitialDepositPercent int64
@@ -155,51 +166,50 @@ func TestValidateInitialDeposit(t *testing.T) {
 		expectError bool
 	}{
 		"min deposit * initial percent == initial deposit: success": {
-			minDeposit:               sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount))),
+			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, meetsDepositValue)),
 		},
 		"min deposit * initial percent < initial deposit: success": {
-			minDeposit:               sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount))),
+			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100+1))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, meetsDepositValue.Add(sdk.NewInt(1)))),
 		},
 		"min deposit * initial percent > initial deposit: error": {
-			minDeposit:               sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount))),
+			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100-1))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, meetsDepositValue.Sub(sdk.NewInt(1)))),
 
 			expectError: true,
 		},
 		"min deposit * initial percent == initial deposit (non-base values and denom): success": {
-			minDeposit:               sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(56912))),
+			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(56912))),
 			minInitialDepositPercent: 50,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(56912/2+10))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit.Mul(sdk.NewInt(50)).Quo(sdk.NewInt(100)).Add(sdk.NewInt(10)))),
 		},
 		"min deposit * initial percent == initial deposit but different denoms: error": {
 			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100))),
-
-			expectError: true,
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin("uosmo", minLuncDeposit)),
+			expectError:              true,
 		},
 		"min deposit * initial percent == initial deposit (multiple coins): success": {
 			minDeposit: sdk.NewCoins(
-				sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount)),
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount)),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2))),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
-				sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100)),
+				sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2*baseDepositTestPercent/100)),
 			),
 		},
 		"min deposit * initial percent > initial deposit (multiple coins): error": {
 			minDeposit: sdk.NewCoins(
-				sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount)),
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount)),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2))),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
-				sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100)),
+				sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2*baseDepositTestPercent/100-1)),
 			),
 
@@ -207,33 +217,26 @@ func TestValidateInitialDeposit(t *testing.T) {
 		},
 		"min deposit * initial percent < initial deposit (multiple coins - coin not required by min deposit): success": {
 			minDeposit: sdk.NewCoins(
-				sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount))),
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
-				sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100)),
+				sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100-1)),
 			),
 		},
 		"0 initial percent: success": {
-			minDeposit:               sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount))),
+			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: 0,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit)),
 		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			input := CreateTestInput(t)
-			govKeeper := input.GovKeeper
-			ctx := input.Ctx
-			input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.NewDec(1))
 
 			params := v2lunc1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
-			params.MinUusdDeposit = tc.minDeposit[0]
-			params.MinDeposit[0].Denom = core.MicroLunaDenom
 			params.MinInitialDepositRatio = sdk.NewDec(tc.minInitialDepositPercent).Quo(sdk.NewDec(100)).String()
-
 			govKeeper.SetParams(ctx, params)
 
 			err := govKeeper.validateInitialDeposit(ctx, tc.initialDeposit)

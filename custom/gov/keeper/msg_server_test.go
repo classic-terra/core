@@ -34,7 +34,7 @@ func TestSubmitProposalReq(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 Default Bond Denom
 	initialDeposit := coins
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 
@@ -169,7 +169,7 @@ func TestVoteReq(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 Default Bond Denom
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 
 	bankMsg := &banktypes.MsgSend{
@@ -208,7 +208,7 @@ func TestVoteReq(t *testing.T) {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
-					coins,
+					sdk.NewCoins(),
 					proposer.String(),
 					"",
 					"Proposal",
@@ -316,7 +316,7 @@ func TestVoteWeightedReq(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 Default Bond Denom
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 
 	bankMsg := &banktypes.MsgSend{
@@ -354,7 +354,7 @@ func TestVoteWeightedReq(t *testing.T) {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
-					coins,
+					sdk.NewCoins(),
 					proposer.String(),
 					"",
 					"Proposal",
@@ -459,7 +459,7 @@ func TestDepositReq(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 Default Bond Denom
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 
@@ -820,12 +820,14 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 	// Set up the necessary dependencies and context
 	input := CreateTestInput(t)
 	ctx := input.Ctx
-	govKeeper := input.GovKeeper
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.NewDecWithPrec(2, 1))
 	_, _, addr := testdata.KeyTestPubAddr()
 
-	// setup desposit value when test
-	const meetsDepositValue = baseDepositTestAmount * baseDepositTestPercent / 100
+	minLuncDeposit, err := input.GovKeeper.GetMinimumDepositBaseUusd(ctx)
+	require.NoError(t, err)
+
+	// setup deposit value when test
+	meetsDepositValue := minLuncDeposit.Mul(sdk.NewInt(baseDepositTestPercent)).Quo(sdk.NewInt(100))
 	baseDepositRatioDec := sdk.NewDec(baseDepositTestPercent).Quo(sdk.NewDec(100))
 
 	testcases := map[string]struct {
@@ -837,32 +839,32 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 		expectError bool
 	}{
 		"meets initial deposit, enough balance - success": {
-			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit)),
 			minInitialDepositRatio: baseDepositRatioDec,
-			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
-			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue))),
 		},
 		"does not meet initial deposit, enough balance - error": {
-			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit)),
 			minInitialDepositRatio: baseDepositRatioDec,
-			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
-			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue.Sub(sdk.NewInt(1))))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue))),
 
 			expectError: true,
 		},
 		"meets initial deposit, not enough balance - error": {
-			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit)),
 			minInitialDepositRatio: baseDepositRatioDec,
-			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue))),
-			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue.Sub(sdk.NewInt(1))))),
 
 			expectError: true,
 		},
 		"does not meet initial deposit and not enough balance - error": {
-			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseDepositTestAmount))),
+			minDeposit:             sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit)),
 			minInitialDepositRatio: baseDepositRatioDec,
-			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
-			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(meetsDepositValue-1))),
+			initialDeposit:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, meetsDepositValue.Sub(sdk.NewInt(1)))),
+			accountBalance:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, (meetsDepositValue.Sub(sdk.NewInt(1))))),
 
 			expectError: true,
 		},
@@ -885,9 +887,7 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 			govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 
 			params := v2lunc1types.DefaultParams()
-			params.MinUusdDeposit = tc.minDeposit[0]
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
-			govKeeper.SetParams(ctx, params)
 
 			msg, err := v1.NewMsgSubmitProposal(msgs, tc.initialDeposit, addr.String(), "test", "Proposal", "description of proposal")
 			require.NoError(t, err)
@@ -914,7 +914,7 @@ func TestLegacyMsgSubmitProposal(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 UUSD
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 UUSD
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	initialDeposit := coins
 
@@ -983,7 +983,7 @@ func TestLegacyMsgVote(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 UUSD
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 UUSD
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	FundAccount(input, addr, coins)
 
@@ -1019,7 +1019,7 @@ func TestLegacyMsgVote(t *testing.T) {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
-					coins,
+					sdk.NewCoins(),
 					proposer.String(),
 					"",
 					"Proposal",
@@ -1106,7 +1106,7 @@ func TestLegacyVoteWeighted(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 Default Bond Denom
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	FundAccount(input, addr, coins)
 
@@ -1141,7 +1141,7 @@ func TestLegacyVoteWeighted(t *testing.T) {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
-					coins,
+					sdk.NewCoins(),
 					proposer.String(),
 					"",
 					"Proposal",
@@ -1228,7 +1228,7 @@ func TestLegacyMsgDeposit(t *testing.T) {
 	govAcct := authtypes.NewModuleAddress(types.ModuleName)
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000))) //  500 Default Bond Denom
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 Default Bond Denom
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	FundAccount(input, addr, coins)
 

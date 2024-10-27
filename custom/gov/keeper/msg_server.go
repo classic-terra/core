@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/errors"
 	v2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -34,13 +33,13 @@ var _ v2lunc1.MsgServer = msgServer{}
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *govv1.MsgSubmitProposal) (*govv1.MsgSubmitProposalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// initialDeposit := msg.GetInitialDeposit()
+	initialDeposit := msg.GetInitialDeposit()
 
-	// if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
-	// 	return nil, err
-	// }
+	if err := k.validateInitialDeposit(ctx, initialDeposit); err != nil {
+		return nil, err
+	}
 
-	proposalMsgs, err := sdktx.GetMsgs(msg.Messages, "sdk.MsgProposal")
+	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
 	}

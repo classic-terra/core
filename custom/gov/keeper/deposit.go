@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -105,20 +103,4 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
 	}
 	return nil
-}
-
-// GetDepositLimitBaseUUSD gets the deposit limit (Lunc) for a specific proposal
-func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64) (depositLimit math.Int) {
-	store := ctx.KVStore(keeper.storeKey)
-	key := v2lunc1types.TotalDepositKey(proposalID)
-	bz := store.Get(key)
-	if bz == nil {
-		return sdk.ZeroInt()
-	}
-	err := depositLimit.Unmarshal(bz)
-	if err != nil {
-		return sdk.ZeroInt()
-	}
-
-	return depositLimit
 }

@@ -35,6 +35,12 @@ func (q queryServer) Params(ctx context.Context, _ *v2lunc1.QueryParamsRequest) 
 func (q queryServer) ProposalMinimalLUNCByUusd(ctx context.Context, req *v2lunc1.QueryProposalRequest) (*v2lunc1.QueryMinimalDepositProposalResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	depositAmount := q.k.GetDepositLimitBaseUusd(sdkCtx, req.ProposalId)
+	coin := sdk.NewCoin(core.MicroLunaDenom, depositAmount)
 
-	return &v2lunc1.QueryMinimalDepositProposalResponse{MinimalDeposit: sdk.NewCoin(core.MicroLunaDenom, depositAmount)}, nil
+	// if no min deposit amount by uusd exists, return default min deposit amount
+	if depositAmount.IsZero() {
+		coin = q.k.GetParams(sdkCtx).MinDeposit[0]
+	}
+
+	return &v2lunc1.QueryMinimalDepositProposalResponse{MinimalDeposit: coin}, nil
 }

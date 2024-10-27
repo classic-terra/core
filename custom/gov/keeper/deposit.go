@@ -39,6 +39,9 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// HandleCheckLimitDeposit
 	minDeposit := keeper.GetParams(ctx).MinDeposit
 	requiredAmount := keeper.GetDepositLimitBaseUusd(ctx, proposalID)
+	if requiredAmount.IsZero() {
+		requiredAmount = minDeposit[0].Amount
+	}
 
 	// Should not set like this
 	requiredDepositCoins := sdk.NewCoins(

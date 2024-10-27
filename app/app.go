@@ -58,7 +58,7 @@ import (
 	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v3/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
-	"github.com/classic-terra/core/v3/app/upgrades/v8_4"
+	v8_4 "github.com/classic-terra/core/v3/app/upgrades/v8_4"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"

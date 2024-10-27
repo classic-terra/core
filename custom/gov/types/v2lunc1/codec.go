@@ -34,6 +34,16 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
+// RegisterProposalTypeCodec registers an external proposal content type defined
+// in another module for the internal ModuleCdc. This allows the MsgSubmitProposal
+// to be correctly Amino encoded and decoded.
+//
+// NOTE: This should only be used for applications that are still using a concrete
+// Amino codec for serialization.
+func RegisterProposalTypeCodec(o interface{}, name string) {
+	amino.RegisterConcrete(o, name, nil)
+}
+
 var (
 	amino = codec.NewLegacyAmino()
 

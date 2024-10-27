@@ -752,7 +752,6 @@ func (m *TallyParams) GetVetoThreshold() string {
 //
 // Since: cosmos-sdk 0.47
 type Params struct {
-	// Deprecated: min_deposit is deprecated and replaced by the min_uusd_deposit
 	// Minimum deposit for a proposal to enter voting period.
 	MinDeposit []types.Coin `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3" json:"min_deposit"`
 	// Maximum period for Atom holders to deposit on a proposal. Initial value: 2

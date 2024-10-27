@@ -168,8 +168,6 @@ message TallyParams {
 //
 // Since: cosmos-sdk 0.47
 message Params {
-
-  // Deprecated: min_deposit is deprecated and replaced by the min_uusd_deposit
   // Minimum deposit for a proposal to enter voting period.
   repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 

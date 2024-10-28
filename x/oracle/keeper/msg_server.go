@@ -79,7 +79,7 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	// params := ms.GetParams(ctx)
+	params := ms.GetParams(ctx)
 
 	aggregatePrevote, err := ms.GetAggregateExchangeRatePrevote(ctx, valAddr)
 	if err != nil {
@@ -87,9 +87,9 @@ func (ms msgServer) AggregateExchangeRateVote(goCtx context.Context, msg *types.
 	}
 
 	// Check a msg is submitted proper period
-	// if (uint64(ctx.BlockHeight())/params.VotePeriod)-(aggregatePrevote.SubmitBlock/params.VotePeriod) != 1 {
-	// 	return nil, types.ErrRevealPeriodMissMatch
-	// }
+	if (uint64(ctx.BlockHeight())/params.VotePeriod)-(aggregatePrevote.SubmitBlock/params.VotePeriod) != 1 {
+		return nil, types.ErrRevealPeriodMissMatch
+	}
 
 	exchangeRateTuples, err := types.ParseExchangeRateTuples(msg.ExchangeRates)
 	if err != nil {

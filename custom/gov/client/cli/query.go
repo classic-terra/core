@@ -27,6 +27,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	govQueryCmd.AddCommand(
+		GetCmdQueryCustomParams(),
 		GetCmdQueryMinimalDeposit(),
 		govcli.GetCmdQueryProposal(),
 		govcli.GetCmdQueryProposals(),
@@ -48,7 +49,7 @@ func GetCmdQueryMinimalDeposit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "min-deposit [proposal-id]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query minimal deposit by min uusd of a single proposal",
+		Short: "Query minimal deposit of a single proposal",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query minimal deposit for a proposal. You can find the
 proposal-id by running "%s query gov min-deposit [proposal-id]".

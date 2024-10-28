@@ -100,7 +100,7 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 		return err
 	}
 	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
+		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).TruncateInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)

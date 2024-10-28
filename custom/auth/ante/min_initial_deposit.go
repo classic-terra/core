@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	customgovkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
-	core "github.com/classic-terra/core/v3/types"
 )
 
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
@@ -50,13 +50,11 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper custom
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")
 	}
 	minLuncAmount, err := govKeeper.GetMinimumDepositBaseUusd(ctx)
+	minInitialDepositRatio := treasuryKeeper.GetMinInitialDepositRatio(ctx)
 
 	if err == nil && minLuncAmount.GT(sdk.ZeroInt()) {
-		minLuncAmount = minLuncAmount.Mul(treasuryKeeper.GetMinInitialDepositRatio(ctx).TruncateInt())
-		requiredDepositCoins := sdk.NewCoins(
-			sdk.NewCoin(core.MicroLunaDenom, minLuncAmount),
-		)
-
+		requiredDeposit := sdk.NewDecFromInt(minLuncAmount).Mul(minInitialDepositRatio).TruncateInt()
+		requiredDepositCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, requiredDeposit))
 		if initialDepositCoins.IsAllLT(requiredDepositCoins) {
 			return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)
 		}

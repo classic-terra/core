@@ -64,7 +64,7 @@ func TestAddDeposits(t *testing.T) {
 	require.True(t, sdk.NewCoins(proposal.TotalDeposit...).IsEqual(sdk.NewCoins()))
 
 	// Check no deposits at beginning
-	deposit, found := govKeeper.GetDeposit(ctx, proposalID, addr1)
+	_, found := govKeeper.GetDeposit(ctx, proposalID, addr1)
 	require.False(t, found)
 	proposal, ok := govKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -74,7 +74,7 @@ func TestAddDeposits(t *testing.T) {
 	votingStarted, err := govKeeper.AddDeposit(ctx, proposalID, addr1, amountDeposit1)
 	require.NoError(t, err)
 	require.False(t, votingStarted)
-	deposit, found = govKeeper.GetDeposit(ctx, proposalID, addr1)
+	deposit, found := govKeeper.GetDeposit(ctx, proposalID, addr1)
 	require.True(t, found)
 	require.Equal(t, amountDeposit1, sdk.NewCoins(deposit.Amount...))
 	require.Equal(t, addr1.String(), deposit.Depositor)
@@ -233,7 +233,6 @@ func TestValidateInitialDeposit(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-
 			params := v2lunc1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = sdk.NewDec(tc.minInitialDepositPercent).Quo(sdk.NewDec(100)).String()

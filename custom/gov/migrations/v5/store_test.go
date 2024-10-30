@@ -33,8 +33,8 @@ func TestMigrateStore(t *testing.T) {
 
 	storeService := storetypes.StoreKey(govKey)
 
-	maxDepositPeriod := time.Duration(time.Hour * 24 * 2)
-	votingPeriod := time.Duration(time.Hour * 24 * 3)
+	maxDepositPeriod := (time.Hour * 24 * 2)
+	votingPeriod := (time.Hour * 24 * 3)
 
 	// Setup initial governance params in the store (old params before migration)
 	oldParams := v1.Params{
@@ -88,5 +88,4 @@ func TestMigrateStore(t *testing.T) {
 
 	// Check any new fields from the `v2lunc1.Params`
 	require.Equal(t, v2lunc1.DefaultParams().MinUusdDeposit, newParams.MinUusdDeposit)
-
 }

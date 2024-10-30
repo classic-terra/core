@@ -56,7 +56,6 @@ func TestGetSetProposal(t *testing.T) {
 	minLunaAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalID)
 	fmt.Printf("minLunaAmount %s\n", minLunaAmount)
 	require.Equal(t, totalLuncMinDeposit, minLunaAmount)
-
 }
 
 func TestDeleteProposal(t *testing.T) {

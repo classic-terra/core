@@ -15,7 +15,8 @@ var _ v2lunc1.QueryServer = queryServer{}
 func NewQueryServerImpl(k Keeper) v2lunc1.QueryServer {
 	return queryServer{
 		k:              k,
-		govQueryServer: govkeeper.NewLegacyQueryServer(k.Keeper)}
+		govQueryServer: govkeeper.NewLegacyQueryServer(k.Keeper),
+	}
 }
 
 type queryServer struct {

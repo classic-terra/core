@@ -1,13 +1,12 @@
 package keeper
 
 import (
+	"strings"
+	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/stretchr/testify/require"
-
-	"strings"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,10 +20,10 @@ import (
 )
 
 const (
-	baseDepositTestAmount = 100
+	// baseDepositTestAmount = 100
+	testQuorumABC   = "abc"
+	testQuorumNeg01 = "-0.1"
 )
-
-var ()
 
 func TestSubmitProposalReq(t *testing.T) {
 	// Set up the necessary dependencies and context
@@ -193,8 +192,8 @@ func TestVoteReq(t *testing.T) {
 	res, err := govMsgSvr.SubmitProposal(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res.ProposalId)
-	proposalId := res.ProposalId
-	requiredAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalId)
+	proposalID := res.ProposalId
+	requiredAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalID)
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -230,11 +229,11 @@ func TestVoteReq(t *testing.T) {
 		"metadata too long": {
 			preRun: func() uint64 {
 				// set proposal to status activedVoting
-				proposal, ok := govKeeper.GetProposal(ctx, proposalId)
+				proposal, ok := govKeeper.GetProposal(ctx, proposalID)
 				require.True(t, ok)
 				proposal.Status = v1.StatusVotingPeriod
 				govKeeper.SetProposal(ctx, proposal)
-				return proposalId
+				return proposalID
 			},
 			option:    v1.VoteOption_VOTE_OPTION_YES,
 			voter:     proposer,
@@ -244,7 +243,7 @@ func TestVoteReq(t *testing.T) {
 		},
 		"voter error": {
 			preRun: func() uint64 {
-				return proposalId
+				return proposalID
 			},
 			option:    v1.VoteOption_VOTE_OPTION_YES,
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
@@ -284,10 +283,9 @@ func TestVoteReq(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-
-			pId := tc.preRun()
+			pID := tc.preRun()
 			FundAccount(input, addr, coins)
-			voteReq := v1.NewMsgVote(tc.voter, pId, tc.option, tc.metadata)
+			voteReq := v1.NewMsgVote(tc.voter, pID, tc.option, tc.metadata)
 			_, err := govMsgSvr.Vote(ctx, voteReq)
 			if tc.expErr {
 				if err == nil {
@@ -338,7 +336,7 @@ func TestVoteWeightedReq(t *testing.T) {
 	res, err := govMsgSvr.SubmitProposal(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res.ProposalId)
-	proposalId := res.ProposalId
+	proposalID := res.ProposalId
 	// requiredAmount := suite.govKeeper.GetDepositLimitBaseUusd(suite.ctx, proposalId).TruncateInt()
 
 	cases := map[string]struct {
@@ -376,11 +374,11 @@ func TestVoteWeightedReq(t *testing.T) {
 		"metadata too long": {
 			preRun: func() uint64 {
 				// set proposal to status activedVoting
-				proposal, ok := govKeeper.GetProposal(ctx, proposalId)
+				proposal, ok := govKeeper.GetProposal(ctx, proposalID)
 				require.True(t, ok)
 				proposal.Status = v1.StatusVotingPeriod
 				govKeeper.SetProposal(ctx, proposal)
-				return proposalId
+				return proposalID
 			},
 			option:    v1.VoteOption_VOTE_OPTION_YES,
 			voter:     proposer,
@@ -390,7 +388,7 @@ func TestVoteWeightedReq(t *testing.T) {
 		},
 		"voter error": {
 			preRun: func() uint64 {
-				return proposalId
+				return proposalID
 			},
 			option:    v1.VoteOption_VOTE_OPTION_YES,
 			voter:     sdk.AccAddress(strings.Repeat("a", 300)),
@@ -429,9 +427,8 @@ func TestVoteWeightedReq(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-
-			pId := tc.preRun()
-			voteReq := v1.NewMsgVoteWeighted(tc.voter, pId, v1.NewNonSplitVoteOption(tc.option), tc.metadata)
+			pID := tc.preRun()
+			voteReq := v1.NewMsgVoteWeighted(tc.voter, pID, v1.NewNonSplitVoteOption(tc.option), tc.metadata)
 			_, err := govMsgSvr.VoteWeighted(ctx, voteReq)
 			if tc.expErr {
 				if err == nil {
@@ -482,12 +479,12 @@ func TestDepositReq(t *testing.T) {
 	res, err := govMsgSvr.SubmitProposal(ctx, msg)
 	require.NoError(t, err)
 	require.NotNil(t, res.ProposalId)
-	pId := res.ProposalId
+	pID := res.ProposalId
 
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
-		proposalId uint64
+		proposalID uint64
 		depositor  sdk.AccAddress
 		deposit    sdk.Coins
 		options    v1.WeightedVoteOptions
@@ -503,7 +500,7 @@ func TestDepositReq(t *testing.T) {
 		},
 		"all good": {
 			preRun: func() uint64 {
-				return pId
+				return pID
 			},
 			depositor: proposer,
 			deposit:   coins,
@@ -514,9 +511,9 @@ func TestDepositReq(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			proposalId := tc.preRun()
+			proposalID := tc.preRun()
 			FundAccount(input, addr, coins)
-			depositReq := v1.NewMsgDeposit(tc.depositor, proposalId, tc.deposit)
+			depositReq := v1.NewMsgDeposit(tc.depositor, proposalID, tc.deposit)
 			_, err := govMsgSvr.Deposit(ctx, depositReq)
 			if tc.expErr {
 				if err == nil {
@@ -632,7 +629,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			name: "invalid quorum",
 			input: func() *v2lunc1types.MsgUpdateParams {
 				params1 := params
-				params1.Quorum = "abc"
+				params1.Quorum = testQuorumABC
 
 				return &v2lunc1types.MsgUpdateParams{
 					Authority: authority,
@@ -646,7 +643,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			name: "negative quorum",
 			input: func() *v2lunc1types.MsgUpdateParams {
 				params1 := params
-				params1.Quorum = "-0.1"
+				params1.Quorum = testQuorumNeg01
 
 				return &v2lunc1types.MsgUpdateParams{
 					Authority: authority,
@@ -674,7 +671,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			name: "invalid threshold",
 			input: func() *v2lunc1types.MsgUpdateParams {
 				params1 := params
-				params1.Threshold = "abc"
+				params1.Threshold = testQuorumABC
 
 				return &v2lunc1types.MsgUpdateParams{
 					Authority: authority,
@@ -688,7 +685,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			name: "negative threshold",
 			input: func() *v2lunc1types.MsgUpdateParams {
 				params1 := params
-				params1.Threshold = "-0.1"
+				params1.Threshold = testQuorumNeg01
 
 				return &v2lunc1types.MsgUpdateParams{
 					Authority: authority,
@@ -716,7 +713,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			name: "invalid veto threshold",
 			input: func() *v2lunc1types.MsgUpdateParams {
 				params1 := params
-				params1.VetoThreshold = "abc"
+				params1.VetoThreshold = testQuorumABC
 
 				return &v2lunc1types.MsgUpdateParams{
 					Authority: authority,
@@ -730,7 +727,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			name: "negative veto threshold",
 			input: func() *v2lunc1types.MsgUpdateParams {
 				params1 := params
-				params1.VetoThreshold = "-0.1"
+				params1.VetoThreshold = testQuorumNeg01
 
 				return &v2lunc1types.MsgUpdateParams{
 					Authority: authority,
@@ -947,10 +944,8 @@ func TestLegacyMsgSubmitProposal(t *testing.T) {
 	legacyMsgSrvr := NewLegacyMsgServerImpl(govAcct.String(), NewMsgServerImpl(input.GovKeeper))
 
 	for name, c := range cases {
-
 		t.Run(name, func(t *testing.T) {
 			msg, err := c.preRun()
-
 			if err != nil {
 				t.Fatalf("preRun error: %v", err)
 			}
@@ -1081,8 +1076,8 @@ func TestLegacyMsgVote(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			pId := tc.preRun()
-			voteReq := v1beta1.NewMsgVote(tc.voter, pId, tc.option)
+			pID := tc.preRun()
+			voteReq := v1beta1.NewMsgVote(tc.voter, pID, tc.option)
 			_, err := legacyMsgSrvr.Vote(ctx, voteReq)
 			proposal.Status = v1.StatusVotingPeriod
 			input.GovKeeper.SetProposal(ctx, proposal)
@@ -1111,7 +1106,6 @@ func TestLegacyVoteWeighted(t *testing.T) {
 	FundAccount(input, addr, coins)
 
 	proposal, err := input.GovKeeper.SubmitProposal(ctx, []sdk.Msg{}, "", "Test Proposal", "This is a test proposal", proposer)
-
 	if err != nil {
 		t.Fatalf("preRun error: %v", err)
 	}
@@ -1203,9 +1197,9 @@ func TestLegacyVoteWeighted(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			pId := tc.preRun()
+			pID := tc.preRun()
 
-			voteReq := v1beta1.NewMsgVoteWeighted(tc.voter, pId, v1beta1.NewNonSplitVoteOption(v1beta1.VoteOption(tc.option)))
+			voteReq := v1beta1.NewMsgVoteWeighted(tc.voter, pID, v1beta1.NewNonSplitVoteOption(tc.option))
 			proposal.Status = v1.StatusVotingPeriod
 			input.GovKeeper.SetProposal(ctx, proposal)
 			_, err := legacyMsgSrvr.VoteWeighted(ctx, voteReq)
@@ -1240,7 +1234,7 @@ func TestLegacyMsgDeposit(t *testing.T) {
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
-		proposalId uint64
+		proposalID uint64
 		depositor  sdk.AccAddress
 		deposit    sdk.Coins
 		options    v1beta1.WeightedVoteOptions
@@ -1269,8 +1263,8 @@ func TestLegacyMsgDeposit(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			proposalId := tc.preRun()
-			depositReq := v1beta1.NewMsgDeposit(tc.depositor, proposalId, tc.deposit)
+			proposalID := tc.preRun()
+			depositReq := v1beta1.NewMsgDeposit(tc.depositor, proposalID, tc.deposit)
 			_, err := legacyMsgSrvr.Deposit(ctx, depositReq)
 			if tc.expErr {
 				require.Error(t, err)

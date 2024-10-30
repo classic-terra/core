@@ -31,4 +31,3 @@ func TestNewMigrator(t *testing.T) {
 	migrator := keeper.NewMigrator(mockKeeper, mockSubspace)
 	require.NotNil(t, migrator)
 }
-

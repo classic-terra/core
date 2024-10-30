@@ -52,4 +52,3 @@ func TestKeeperWithMockQueryServer(t *testing.T) {
 		require.Equal(t, "proposal not found", err.Error())
 	})
 }
-

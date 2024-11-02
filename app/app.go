@@ -43,6 +43,7 @@ import (
 
 	"github.com/classic-terra/core/v3/app/keepers"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+	anteauth "github.com/classic-terra/core/v3/custom/auth/ante"
 
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -307,8 +308,46 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 }
 
 func (app *TerraApp) PreBlocker(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	// get current txs
+	currentTxs := req.Txs
 
-	return abci.ResponsePrepareProposal{}
+	// Create slices for oracle and non-oracle txs
+	oracleTxs := make([][]byte, 0)
+	otherTxs := make([][]byte, 0)
+
+	// Track seen txs to prevent duplicates
+	seenTxs := make(map[string]bool)
+
+	// Separate oracle and non-oracle txs
+	for _, tx := range currentTxs {
+		// Skip if we've seen this tx before
+		txHash := string(tx)
+		if seenTxs[txHash] {
+			continue
+		}
+		seenTxs[txHash] = true
+
+		// Decode the transaction
+		txDecoder := app.txConfig.TxDecoder()
+		decodedTx, err := txDecoder(tx)
+		if err != nil {
+			continue
+		}
+
+		// Check if it's an oracle tx
+		if anteauth.IsOracleTx(decodedTx.GetMsgs()) {
+			oracleTxs = append(oracleTxs, tx)
+		} else {
+			otherTxs = append(otherTxs, tx)
+		}
+	}
+
+	// Combine txs with oracle txs first
+	orderedTxs := append(oracleTxs, otherTxs...)
+
+	return abci.ResponsePrepareProposal{
+		Txs: orderedTxs,
+	}
 }
 
 // EndBlocker application updates every end block
@@ -329,6 +368,11 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 // LoadHeight loads a particular height
 func (app *TerraApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
+}
+
+// GetTxConfig for testing
+func (app *TerraApp) GetTxConfig() client.TxConfig {
+	return app.txConfig
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.

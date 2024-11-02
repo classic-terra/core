@@ -262,6 +262,7 @@ func NewTerraApp(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetPostHandler(postHandler)
+	app.SetPrepareProposal(app.PreBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
 	// must be before Loading version
@@ -303,6 +304,11 @@ func (app *TerraApp) DefaultGenesis() map[string]json.RawMessage {
 func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	BeginBlockForks(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
+}
+
+func (app *TerraApp) PreBlocker(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+
+	return abci.ResponsePrepareProposal{}
 }
 
 // EndBlocker application updates every end block

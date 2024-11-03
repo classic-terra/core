@@ -96,14 +96,15 @@ func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error
 	// Get exchange rate betweent Lunc/uusd from oracle
 	// save it to store
 	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
-	if err != nil && price.LTE(sdk.ZeroDec()) {
-		return sdk.ZeroInt(), err
+
+	// If can't get price from oracle, use min deposit
+	if err != nil {
+		return keeper.GetParams(ctx).MinDeposit[0].Amount, nil
 	}
+
 	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
 	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
-	if err != nil {
-		return sdk.ZeroInt(), err
-	}
+
 	return totalLuncDeposit, nil
 }
 

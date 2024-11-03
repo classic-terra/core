@@ -96,7 +96,6 @@ func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error
 	// Get exchange rate betweent Lunc/uusd from oracle
 	// save it to store
 	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
-
 	// If can't get price from oracle, use min deposit
 	if err != nil {
 		return keeper.GetParams(ctx).MinDeposit[0].Amount, nil

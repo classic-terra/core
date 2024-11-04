@@ -46,6 +46,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -164,6 +165,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		stakingtypes.NotBondedPoolName: true,
 		stakingtypes.BondedPoolName:    true,
 		distrtypes.ModuleName:          true,
+		minttypes.ModuleName:           true,
 	}
 
 	maccPerms := map[string][]string{
@@ -175,6 +177,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		oracletypes.ModuleName:         nil,
 		markettypes.ModuleName:         {authtypes.Burner, authtypes.Minter},
 		govtypes.ModuleName:            {authtypes.Burner, authtypes.Minter},
+		minttypes.ModuleName:           {authtypes.Minter},
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)

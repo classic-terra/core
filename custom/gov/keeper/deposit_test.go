@@ -6,6 +6,7 @@ import (
 
 	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
 	core "github.com/classic-terra/core/v3/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -27,13 +28,16 @@ func TestAddDeposits(t *testing.T) {
 	bankKeeper := input.BankKeeper
 	govKeeper := input.GovKeeper
 	oracleKeeper := input.OracleKeeper
+	stakingKeeper := input.StakingKeeper
 	ctx := input.Ctx
 
 	oracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	lunaCoin := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000_000)))
 
-	_, _, addr1 := testdata.KeyTestPubAddr()
-	_, _, addr2 := testdata.KeyTestPubAddr()
+	TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10_000_000))
+	addr1 := TestAddrs[0]
+	addr2 := TestAddrs[1]
+
 	err := FundAccount(input, addr1, lunaCoin)
 	require.NoError(t, err)
 	err1 := FundAccount(input, addr2, lunaCoin)

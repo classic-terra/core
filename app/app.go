@@ -263,7 +263,7 @@ func NewTerraApp(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetPostHandler(postHandler)
-	app.SetPrepareProposal(app.PreBlocker)
+	app.SetPrepareProposal(app.prepareProposal)
 	app.SetEndBlocker(app.EndBlocker)
 
 	// must be before Loading version
@@ -307,7 +307,7 @@ func (app *TerraApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) a
 	return app.mm.BeginBlock(ctx, req)
 }
 
-func (app *TerraApp) PreBlocker(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+func (app *TerraApp) prepareProposal(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 	// get current txs
 	currentTxs := req.Txs
 

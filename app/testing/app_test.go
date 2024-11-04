@@ -1,9 +1,12 @@
 package helpers
 
 import (
+	"encoding/hex"
 	"fmt"
-	anteauth "github.com/classic-terra/core/v3/custom/auth/ante"
 	"testing"
+
+	anteauth "github.com/classic-terra/core/v3/custom/auth/ante"
+	"github.com/cometbft/cometbft/libs/rand"
 
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -64,7 +67,7 @@ func (s *AppTestSuite) TestPreBlocker() {
 				Txs: tc.txs,
 			}
 
-			response := s.App.PreBlocker(s.Ctx, req)
+			response := s.App.PrepareProposal(req)
 			s.Require().Equal(len(tc.expected), len(response.Txs), "number of transactions should match")
 
 			for i := range tc.expected {
@@ -113,18 +116,18 @@ func (s *AppTestSuite) TestOraclePriorityProcessing() {
 		s.Run(tc.name, func() {
 			txs := tc.setup()
 
-			// Process transactions through PreBlocker
+			// Process transactions through PrepareProposal
 			req := abci.RequestPrepareProposal{
 				Txs: txs,
 			}
 
-			response := s.App.PreBlocker(s.Ctx, req)
+			response := s.App.PrepareProposal(req)
 
 			// Verify the number of transactions
 			s.Require().Equal(tc.numTxs, len(response.Txs),
 				"expected %d transactions, got %d", tc.numTxs, len(response.Txs))
 			// Verify oracle transactions are prioritized
-			s.verifyOraclePriority(response.Txs[:tc.numOracle])
+			s.verifyOraclePriority(response.Txs, tc.numOracle)
 		})
 	}
 }
@@ -135,7 +138,7 @@ func (s *AppTestSuite) createNumberedTx(i uint64, isOracle bool) []byte {
 	if isOracle {
 		if i%3 == 0 {
 			msg = &oracletypes.MsgAggregateExchangeRatePrevote{
-				Hash:      fmt.Sprintf("hash_%d", i),
+				Hash:      hex.EncodeToString([]byte(rand.Str(20))),
 				Feeder:    fmt.Sprintf("feeder_%d", i),
 				Validator: fmt.Sprintf("validator_%d", i),
 			}
@@ -157,20 +160,23 @@ func (s *AppTestSuite) createNumberedTx(i uint64, isOracle bool) []byte {
 }
 
 // Helper function to verify oracle transactions come first
-func (s *AppTestSuite) verifyOraclePriority(txs [][]byte) {
-	oracleFound := false
+func (s *AppTestSuite) verifyOraclePriority(txs [][]byte, numOracleTx int) {
+	i := 0
+
+	txDecoder := s.App.GetTxConfig().TxDecoder()
 	for _, tx := range txs {
+		if i == numOracleTx {
+			break
+		}
 		// Decode tx to check if it's an oracle tx
-		decodedTx, err := s.App.GetTxConfig().TxDecoder()(tx)
+		decodedTx, err := txDecoder(tx)
 		s.Require().NoError(err)
 		msgs := decodedTx.GetMsgs()
 		isOracleTx := anteauth.IsOracleTx(msgs)
-		if isOracleTx {
-			oracleFound = true
-		} else if oracleFound {
-			// If we find a non-oracle tx after an oracle tx, fail the test
-			s.Require().Fail("Non-oracle transaction found after oracle transaction")
+		if !isOracleTx {
+			s.Require().FailNowf("Invalid transaction order", "expected oracle transaction at index %d, but found non-oracle transaction", i)
 		}
+		i++
 	}
 }
 
@@ -181,7 +187,7 @@ func (s *AppTestSuite) createTestTx(msgs []sdk.Msg) []byte {
 
 	// Add a dummy signature
 	sigV2 := signing.SignatureV2{
-		PubKey: nil,
+		PubKey: NewPV().PrivKey.PubKey(),
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 			Signature: []byte("dummy_signature"),

@@ -1,4 +1,4 @@
-package v9
+package v10
 
 import (
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -7,11 +7,11 @@ import (
 	tax2gastypes "github.com/classic-terra/core/v3/x/tax/types"
 )
 
-const UpgradeName = "v9"
+const UpgradeName = "v10"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
-	CreateUpgradeHandler: CreateV9UpgradeHandler,
+	CreateUpgradeHandler: CreateV10UpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
 			tax2gastypes.ModuleName,

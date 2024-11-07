@@ -179,13 +179,17 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		deductFees := feesOrTax.Sub(taxes...) // feesOrTax can never be lower than taxes
 		if !nonTaxableTaxes.IsZero() {
 			// if we have non-taxable taxes, we need to subtract them from the fees to be deducted
-			deductFees = deductFees.Sub(nonTaxableTaxes...)
+			for _, coin := range nonTaxableTaxes {
+				if deductFees.AmountOf(coin.Denom).GTE(coin.Amount) {
+					deductFees = deductFees.Sub(coin)
 
-			// add the non-taxable taxes to the events
-			events = append(events, sdk.NewEvent(
-				taxtypes.EventTypeTaxRefund,
-				sdk.NewAttribute(taxtypes.AttributeKeyTaxAmount, nonTaxableTaxes.String()),
-			))
+					// add the non-taxable taxes to the events
+					events = append(events, sdk.NewEvent(
+						taxtypes.EventTypeTaxRefund,
+						sdk.NewAttribute(taxtypes.AttributeKeyTaxAmount, coin.String()),
+					))
+				}
+			}
 		}
 
 		ctx = ctx.WithValue(taxtypes.ContextKeyTaxDue, taxes).WithValue(taxtypes.ContextKeyTaxPayer, deductFeesFrom.String())

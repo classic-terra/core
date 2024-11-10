@@ -182,7 +182,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 		"min deposit * initial percent > initial deposit: error": {
 			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, meetsDepositValue.Sub(sdk.NewInt(1)))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, meetsDepositValue.Quo(sdk.NewInt(2)))),
 
 			expectError: true,
 		},

@@ -85,6 +85,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins) error {
 	params := keeper.GetParams(ctx)
 	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+	// set offset price change 3%
+	offsetPrice := sdk.NewDecWithPrec(97, 2)
 	if err != nil {
 		return err
 	}
@@ -100,7 +102,7 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 		return err
 	}
 	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).TruncateInt()
+		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).Mul(offsetPrice).TruncateInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)

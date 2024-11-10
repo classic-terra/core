@@ -1,27 +1,14 @@
 package ante_test
 
 import (
-	// "fmt"
-
 	"fmt"
 
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	core "github.com/classic-terra/core/v3/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/classic-terra/core/v3/custom/auth/ante"
-	core "github.com/classic-terra/core/v3/types"
-
-	// core "github.com/terra-money/core/types"
-	// treasury "github.com/terra-money/core/x/treasury/types"
-
-	// "github.com/cosmos/cosmos-sdk/types/query"
-	// cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	// "github.com/cosmos/cosmos-sdk/x/auth/types"
-	// minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -93,7 +80,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	midd := ante.NewMinInitialDepositDecorator(suite.app.GovKeeper, suite.app.TreasuryKeeper)
 	antehandler := sdk.ChainAnteDecorators(midd)
 
-	lunaPriceInUSD := sdk.MustNewDecFromStr("0.00008905")
+	lunaPriceInUSD := sdk.MustNewDecFromStr("0.0001")
 	fmt.Printf("\n lunaPriceInUSD %s", lunaPriceInUSD.String())
 	suite.app.OracleKeeper.SetLunaExchangeRate(suite.ctx, core.MicroUSDDenom, lunaPriceInUSD)
 
@@ -112,7 +99,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 
 	// keys and addresses
 
-	initDeposit, _ := sdk.NewIntFromString("10000000000000")
+	initDeposit, _ := sdk.NewIntFromString("1000000000000")
 	fmt.Printf("\n initDeposit %s", initDeposit.String())
 
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

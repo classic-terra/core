@@ -40,7 +40,6 @@ func IsMsgSubmitProposal(msg sdk.Msg) bool {
 // HandleCheckMinInitialDeposit
 func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper customgovkeeper.Keeper, treasuryKeeper TreasuryKeeper) (err error) {
 	var initialDepositCoins sdk.Coins
-
 	switch submitPropMsg := msg.(type) {
 	case *govv1beta1.MsgSubmitProposal:
 		initialDepositCoins = submitPropMsg.GetInitialDeposit()
@@ -49,16 +48,16 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper custom
 	default:
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")
 	}
+	// set offset price change 3%
+	offsetPrice := sdk.NewDecWithPrec(97, 2)
 	minLuncAmount, err := govKeeper.GetMinimumDepositBaseUusd(ctx)
 	minInitialDepositRatio := treasuryKeeper.GetMinInitialDepositRatio(ctx)
-
 	if err == nil && minLuncAmount.GT(sdk.ZeroInt()) {
-		requiredDeposit := sdk.NewDecFromInt(minLuncAmount).Mul(minInitialDepositRatio).TruncateInt()
+		requiredDeposit := sdk.NewDecFromInt(minLuncAmount).Mul(minInitialDepositRatio).Mul(offsetPrice).TruncateInt()
 		requiredDepositCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, requiredDeposit))
 		if initialDepositCoins.IsAllLT(requiredDepositCoins) {
 			return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)
 		}
-
 		return nil
 	}
 	return fmt.Errorf("could not get minimum deposit base uusd")

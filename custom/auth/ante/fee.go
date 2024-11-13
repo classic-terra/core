@@ -235,7 +235,6 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
 	isOracleTx := isOracleTx(msgs)
-	minGasPrices := fd.taxKeeper.GetEffectiveGasPrices(ctx)
 	reverseCharge := false
 	refundNonTaxableTaxes := false
 
@@ -244,6 +243,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 	// is only ran on check tx.
 	if !isOracleTx {
 		requiredGasFees := sdk.Coins{}
+		minGasPrices := fd.taxKeeper.GetEffectiveGasPrices(ctx)
 		if !minGasPrices.IsZero() {
 			requiredGasFees = make(sdk.Coins, len(minGasPrices))
 

@@ -1,13 +1,8 @@
 package app
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
-	"github.com/classic-terra/core/v3/app/mempool"
-	signer_extraction "github.com/skip-mev/block-sdk/adapters/signer_extraction_adapter"
-	"github.com/skip-mev/block-sdk/block"
-	blockbase "github.com/skip-mev/block-sdk/block/base"
 	"io"
 	stdlog "log"
 	"net/http"
@@ -48,6 +43,7 @@ import (
 
 	"github.com/classic-terra/core/v3/app/keepers"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
 	v2 "github.com/classic-terra/core/v3/app/upgrades/v2"
@@ -152,6 +148,15 @@ func NewTerraApp(
 	txConfig := encodingConfig.TxConfig
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
+	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
+		mempool := NewPriorityMempool()
+		handler := baseapp.NewDefaultProposalHandler(mempool, app)
+		app.SetMempool(mempool)
+		app.SetTxEncoder(txConfig.TxEncoder())
+		app.SetPrepareProposal(handler.PrepareProposalHandler())
+		app.SetProcessProposal(handler.ProcessProposalHandler())
+	})
+
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
@@ -263,25 +268,6 @@ func NewTerraApp(
 		panic(err)
 	}
 
-	signerExtractor := signer_extraction.NewDefaultAdapter()
-	defaultLaneConfig := blockbase.LaneConfig{
-		Logger:          app.Logger(),
-		TxEncoder:       app.txConfig.TxEncoder(),
-		TxDecoder:       app.txConfig.TxDecoder(),
-		MaxBlockSpace:   math.LegacyZeroDec(),
-		MaxTxs:          0,
-		SignerExtractor: signerExtractor,
-	}
-
-	defaultLane := mempool.NewDefaultLane(defaultLaneConfig)
-	lanes := []block.Lane{defaultLane}
-	mempool, err := block.NewLanedMempool(app.Logger(), lanes)
-	if err != nil {
-		panic(err)
-	}
-
-	app.SetMempool(mempool)
-
 	app.SetAnteHandler(anteHandler)
 	app.SetPostHandler(postHandler)
 	app.SetEndBlocker(app.EndBlocker)
@@ -345,11 +331,6 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abc
 // LoadHeight loads a particular height
 func (app *TerraApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
-}
-
-// GetTxConfig for testing
-func (app *TerraApp) GetTxConfig() client.TxConfig {
-	return app.txConfig
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -496,4 +477,9 @@ func (app *TerraApp) setupUpgradeHandlers() {
 			),
 		)
 	}
+}
+
+// GetTxConfig for testing
+func (app *TerraApp) GetTxConfig() client.TxConfig {
+	return app.txConfig
 }

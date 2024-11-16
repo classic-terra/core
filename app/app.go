@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	mempool2 "github.com/classic-terra/core/v3/app/mempool"
 	"io"
 	stdlog "log"
 	"net/http"
@@ -149,7 +150,7 @@ func NewTerraApp(
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
-		mempool := NewPriorityMempool()
+		mempool := mempool2.NewPriorityMempool()
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetMempool(mempool)
 		app.SetTxEncoder(txConfig.TxEncoder())

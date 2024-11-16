@@ -1,4 +1,4 @@
-package app
+package mempool
 
 import (
 	"context"
@@ -215,8 +215,18 @@ func (mp *PriorityOracleMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
 	nonce := sig.Sequence
 
-	// Check if tx is Oracle tx
+	// Boost priority for Oracle transactions to ensure they come first
 	isOracleTx := ante.IsOracleTx(tx.GetMsgs())
+	if isOracleTx {
+		if len(tx.GetMsgs()) == 1 {
+			// Pure oracle tx gets highest priority
+			priority = math.MaxInt64/2 + priority
+		} else {
+			// Mixed tx (contains oracle + other msgs) gets second highest priority
+			priority = math.MaxInt64/4 + priority
+		}
+	}
+
 	fmt.Println("isOracleTx:", isOracleTx)
 	key := txMeta{nonce: nonce, priority: priority, sender: sender, isOracleTx: isOracleTx}
 
@@ -449,6 +459,37 @@ func (mp *PriorityOracleMempool) Remove(tx sdk.Tx) error {
 	senderTxs.Remove(tk)
 	delete(mp.scores, scoreKey)
 	mp.priorityCounts[score.priority]--
+
+	return nil
+}
+
+func IsEmpty(mempool mempool.Mempool) error {
+	mp := mempool.(*PriorityOracleMempool)
+	if mp.priorityIndex.Len() != 0 {
+		return fmt.Errorf("priorityIndex not empty")
+	}
+
+	var countKeys []int64
+	for k := range mp.priorityCounts {
+		countKeys = append(countKeys, k)
+	}
+
+	for _, k := range countKeys {
+		if mp.priorityCounts[k] != 0 {
+			return fmt.Errorf("priorityCounts not zero at %v, got %v", k, mp.priorityCounts[k])
+		}
+	}
+
+	var senderKeys []string
+	for k := range mp.senderIndices {
+		senderKeys = append(senderKeys, k)
+	}
+
+	for _, k := range senderKeys {
+		if mp.senderIndices[k].Len() != 0 {
+			return fmt.Errorf("senderIndex not empty for sender %v", k)
+		}
+	}
 
 	return nil
 }

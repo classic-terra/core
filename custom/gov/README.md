@@ -116,7 +116,7 @@ The governance module contains the following parameters:
 | burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_uusd_deposit              | coins            |{"denom":"uusd","amount":"500000"}       |
+| min_uusd_deposit              | coins            |{"denom":"uusd","amount":"500000000"}    |
 **NOTE**: 
 Aiming to establish a clearer and more consistent minimum deposit requirement for governance proposals, the default value of `min_uusd_deposit` is currently set to 500 USD. However, this value can be updated by the community in the future. This approach allows the module to adapt to fluctuations in the value of LUNC over time, ensuring a consistent threshold for proposals.
 

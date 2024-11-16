@@ -86,13 +86,13 @@ func txMetaLess(a, b any) int {
 	keyA := a.(txMeta)
 	keyB := b.(txMeta)
 
-	// First compare if tx is Oracle tx
-	if keyA.isOracleTx != keyB.isOracleTx {
-		if keyA.isOracleTx {
-			return -1 // A is Oracle tx, should come first
-		}
-		return 1 // B is Oracle tx, should come first
-	}
+	//// First compare if tx is Oracle tx
+	//if keyA.isOracleTx != keyB.isOracleTx {
+	//	if keyA.isOracleTx {
+	//		return -1 // A is Oracle tx, should come first
+	//	}
+	//	return 1 // B is Oracle tx, should come first
+	//}
 
 	res := skiplist.Int64.Compare(keyA.priority, keyB.priority)
 	if res != 0 {

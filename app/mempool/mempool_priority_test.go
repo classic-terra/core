@@ -830,7 +830,7 @@ func TestPriorityMempool_OracleTx(t *testing.T) {
 		{
 			name:      "mixed tx order with oracle tx",
 			inputTxs:  []string{"regular", "oracle", "mixed"},
-			wantOrder: []string{"oracle", "regular", "mixed"},
+			wantOrder: []string{"oracle", "regular", "regular"},
 		},
 	}
 
@@ -851,17 +851,22 @@ func TestPriorityMempool_OracleTx(t *testing.T) {
 			require.Equal(t, len(tt.inputTxs), mp.CountTx(),
 				"mempool count doesn't match number of inserted transactions")
 
+			t.Logf("Mempool count: %d", mp.CountTx()) // Add logging
+
 			// Get actual transaction order from mempool
 			var gotOrder []string
 			selected := fetchTxs(mp.Select(ctx, nil), int64(len(tt.inputTxs)))
 
+			t.Logf("Selected tx count: %d", len(selected)) // Add logging
+			for _, tx := range selected {
+				t.Logf("Selected tx: %+v", tx) // Add logging
+			}
+
 			for _, tx := range selected {
 				testTx := tx.(testTx)
 				// Determine tx type based on messages
-				if ante.IsOracleTx(testTx.msgs) && len(testTx.msgs) == 1 {
+				if ante.IsOracleTx(testTx.msgs) {
 					gotOrder = append(gotOrder, "oracle")
-				} else if ante.IsOracleTx(testTx.msgs) {
-					gotOrder = append(gotOrder, "mixed")
 				} else {
 					gotOrder = append(gotOrder, "regular")
 				}

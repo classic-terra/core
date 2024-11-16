@@ -143,30 +143,6 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 			}
 
 			taxes = taxes.Add(tax...)
-
-			/*case *wasmtypes.MsgInstantiateContract:
-				tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-				if err != nil {
-					return nil, err
-				}
-
-				taxes = taxes.Add(tax...)
-
-			case *wasmtypes.MsgInstantiateContract2:
-				tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-				if err != nil {
-					return nil, err
-				}
-
-				taxes = taxes.Add(tax...)
-
-			case *wasmtypes.MsgExecuteContract:
-				tax, err := computeTax(clientCtx, taxRate, msg.Funds)
-				if err != nil {
-					return nil, err
-				}
-
-				taxes = taxes.Add(tax...)*/
 		}
 	}
 

@@ -194,7 +194,6 @@ func (mp *PriorityOracleMempool) NextSenderTx(sender string) sdk.Tx {
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
 func (mp *PriorityOracleMempool) Insert(ctx context.Context, tx sdk.Tx) error {
-	fmt.Printf("Insert the tx %v", tx.GetMsgs())
 	if mp.maxTx > 0 && mp.CountTx() >= mp.maxTx {
 		return mempool.ErrMempoolTxMaxCapacity
 	} else if mp.maxTx < 0 {
@@ -219,15 +218,12 @@ func (mp *PriorityOracleMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	isOracleTx := ante.IsOracleTx(tx.GetMsgs())
 	if isOracleTx {
 		if len(tx.GetMsgs()) == 1 {
-			// Pure oracle tx gets highest priority
-			priority = math.MaxInt64/2 + priority
-		} else {
-			// Mixed tx (contains oracle + other msgs) gets second highest priority
-			priority = math.MaxInt64/4 + priority
+			priority += 1000000 + priority
 		}
 	}
 
-	fmt.Println("isOracleTx:", isOracleTx)
+	fmt.Printf("Insert the tx %d %v\n", priority, isOracleTx)
+
 	key := txMeta{nonce: nonce, priority: priority, sender: sender, isOracleTx: isOracleTx}
 
 	senderIndex, ok := mp.senderIndices[sender]
@@ -357,6 +353,7 @@ func (i *PriorityNonceIterator) Tx() sdk.Tx {
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
 func (mp *PriorityOracleMempool) Select(_ context.Context, _ [][]byte) mempool.Iterator {
+	fmt.Println("Mempool priority Select")
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
@@ -431,6 +428,7 @@ func (mp *PriorityOracleMempool) CountTx() int {
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityOracleMempool) Remove(tx sdk.Tx) error {
+	fmt.Printf("Remove tx %v\n", tx.GetMsgs())
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

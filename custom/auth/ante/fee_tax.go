@@ -119,6 +119,9 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, principal sdk.Coins, simulat
 }
 
 func IsOracleTx(msgs []sdk.Msg) bool {
+	if len(msgs) == 0 {
+		return false
+	}
 	for _, msg := range msgs {
 		switch msg.(type) {
 		case *oracleexported.MsgAggregateExchangeRatePrevote:

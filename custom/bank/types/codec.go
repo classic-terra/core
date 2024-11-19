@@ -1,82 +1,70 @@
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+// Wrapper type for backward compatibility
 type LegacyMsgSend struct {
-	*banktypes.MsgSend
+	types.MsgSend
 }
 
+// Wrapper type for backward compatibility
 type LegacyMsgMultiSend struct {
-	*banktypes.MsgMultiSend
+	types.MsgMultiSend
 }
 
-const (
-	LegacyMsgSendRoute = "bank"
-	LegacyMsgSendType  = "MsgSend"
-)
-
-// CustomAminoCodec wraps the original codec to handle both legacy and new formats
-type CustomAminoCodec struct {
-	*codec.LegacyAmino
+type LegacySendAuthorization struct {
+	types.SendAuthorization
 }
 
-// NewCustomAminoCodec creates a new CustomAminoCodec
-func NewCustomAminoCodec() *CustomAminoCodec {
-	return &CustomAminoCodec{codec.NewLegacyAmino()}
+func (m LegacyMsgSend) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.MsgSend)
 }
 
-// MarshalJSON implements custom marshaling
-func (msg *LegacyMsgSend) MarshalJSON() ([]byte, error) {
-	if msg.Type() == LegacyMsgSendType {
-		// Handle legacy format
-		return ModuleCdc.MarshalJSON(msg.MsgSend)
-	}
-	// Handle new format
-	return ModuleCdc.MarshalJSON(msg)
+func (m *LegacyMsgSend) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &m.MsgSend)
 }
 
-// UnmarshalJSON implements custom unmarshaling
-func (msg *LegacyMsgSend) UnmarshalJSON(data []byte) error {
-	var err error
-
-	// Try legacy format first
-	legacyMsg := &LegacyMsgSend{}
-	err = ModuleCdc.UnmarshalJSON(data, legacyMsg)
-	if err == nil && legacyMsg.Type() == LegacyMsgSendType {
-		*msg = *legacyMsg
-		return nil
-	}
-
-	// Try new format
-	return ModuleCdc.UnmarshalJSON(data, msg.MsgSend)
+func (m LegacyMsgMultiSend) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.MsgMultiSend)
 }
 
-// RegisterLegacyAminoCodec modification
+func (m *LegacyMsgMultiSend) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &m.MsgMultiSend)
+}
+
+func (m LegacySendAuthorization) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.SendAuthorization)
+}
+
+func (m *LegacySendAuthorization) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &m.SendAuthorization)
+}
+
+// RegisterLegacyAminoCodec registers the necessary x/bank interfaces and concrete types
+// on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	// Register legacy types with custom names
+	// register the normal bank message types
+	types.RegisterLegacyAminoCodec(cdc)
+
 	legacy.RegisterAminoMsg(cdc, &LegacyMsgSend{}, "bank/MsgSend")
 	legacy.RegisterAminoMsg(cdc, &LegacyMsgMultiSend{}, "bank/MsgMultiSend")
-
-	// Register new types
-	banktypes.RegisterLegacyAminoCodec(cdc)
-
-	// Register the concrete types
-	//cdc.RegisterConcrete(&LegacySendAuthorization{}, "msgauth/SendAuthorization", nil)
+	cdc.RegisterConcrete(&LegacySendAuthorization{}, "msgauth/SendAuthorization", nil)
 }
 
-// Initialize custom codec
 var (
-	CustomCdc = NewCustomAminoCodec()
-	ModuleCdc = codec.NewAminoCodec(CustomCdc.LegacyAmino)
+	amino     = codec.NewLegacyAmino()
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {
-	RegisterLegacyAminoCodec(CustomCdc.LegacyAmino)
-	cryptocodec.RegisterCrypto(CustomCdc.LegacyAmino)
-	CustomCdc.Seal()
+	RegisterLegacyAminoCodec(amino)
+	cryptocodec.RegisterCrypto(amino)
+	amino.Seal()
 }

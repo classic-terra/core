@@ -2,10 +2,13 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -24,12 +27,36 @@ type LegacySendAuthorization struct {
 }
 
 func (m LegacyMsgSend) MarshalJSON() ([]byte, error) {
+	fmt.Println("MarshalJSON")
 	return json.Marshal(m.MsgSend)
 }
 
-func (m *LegacyMsgSend) UnmarshalJSON(data []byte) error {
+func (m LegacyMsgSend) UnmarshalJSON(data []byte) error {
+	fmt.Println("UnmarshalJSON")
 	return json.Unmarshal(data, &m.MsgSend)
 }
+
+/*// Implement sdk.Msg interface
+func (msg LegacyMsgSend) Route() string {
+	fmt.Println("Route")
+	return msg.MsgSend.Route()
+}
+func (msg LegacyMsgSend) Type() string {
+	fmt.Println("Type")
+	return msg.MsgSend.Type()
+}
+func (msg LegacyMsgSend) ValidateBasic() error {
+	fmt.Println("ValidateBasic")
+	return msg.MsgSend.ValidateBasic()
+}
+func (msg LegacyMsgSend) GetSignBytes() []byte {
+	fmt.Println("GetSignBytes")
+	return msg.MsgSend.GetSignBytes()
+}
+func (msg LegacyMsgSend) GetSigners() []sdk.AccAddress {
+	fmt.Println("GetSigners")
+	return msg.MsgSend.GetSigners()
+}*/
 
 func (m LegacyMsgMultiSend) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.MsgMultiSend)
@@ -56,6 +83,15 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &LegacyMsgSend{}, "bank/MsgSend")
 	legacy.RegisterAminoMsg(cdc, &LegacyMsgMultiSend{}, "bank/MsgMultiSend")
 	cdc.RegisterConcrete(&LegacySendAuthorization{}, "msgauth/SendAuthorization", nil)
+}
+
+func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	// register the normal bank message types
+	types.RegisterInterfaces(registry)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&LegacyMsgSend{},
+		&LegacyMsgMultiSend{},
+	)
 }
 
 var (

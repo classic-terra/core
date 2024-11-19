@@ -87,11 +87,10 @@ func (m *LegacySendAuthorization) UnmarshalJSON(data []byte) error {
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// register the normal bank message types
-	types.RegisterLegacyAminoCodec(cdc)
-
 	legacy.RegisterAminoMsg(cdc, &LegacyMsgSend{}, "bank/MsgSend")
 	legacy.RegisterAminoMsg(cdc, &LegacyMsgMultiSend{}, "bank/MsgMultiSend")
 	cdc.RegisterConcrete(&LegacySendAuthorization{}, "msgauth/SendAuthorization", nil)
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

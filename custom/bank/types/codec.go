@@ -13,6 +13,11 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
+var (
+	_ sdk.Msg = &LegacyMsgSend{}
+	_ sdk.Msg = &LegacyMsgMultiSend{}
+)
+
 // Wrapper type for backward compatibility
 type LegacyMsgSend struct {
 	types.MsgSend
@@ -40,12 +45,7 @@ func (m LegacyMsgSend) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &m.MsgSend)
 }
 
-func (m LegacyMsgSend) GetSignBytes() []byte {
-	fmt.Println("GetSignBytes")
-	return m.MsgSend.GetSignBytes()
-}
-
-/*// Implement sdk.Msg interface
+// Implement sdk.Msg interface
 func (msg LegacyMsgSend) Route() string {
 	fmt.Println("Route")
 	return msg.MsgSend.Route()
@@ -65,7 +65,7 @@ func (msg LegacyMsgSend) GetSignBytes() []byte {
 func (msg LegacyMsgSend) GetSigners() []sdk.AccAddress {
 	fmt.Println("GetSigners")
 	return msg.MsgSend.GetSigners()
-}*/
+}
 
 func (m LegacyMsgMultiSend) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.MsgMultiSend)

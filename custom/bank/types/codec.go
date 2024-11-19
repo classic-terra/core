@@ -10,6 +10,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // Wrapper type for backward compatibility
@@ -25,6 +26,9 @@ type LegacyMsgMultiSend struct {
 type LegacySendAuthorization struct {
 	types.SendAuthorization
 }
+
+func (m LegacyMsgSend) ProtoMessage()      {}
+func (m LegacyMsgMultiSend) ProtoMessage() {}
 
 func (m LegacyMsgSend) MarshalJSON() ([]byte, error) {
 	fmt.Println("MarshalJSON")
@@ -87,11 +91,15 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	// register the normal bank message types
+	proto.RegisterType((*LegacyMsgSend)(nil), "cosmos.bank.v1beta1.LegacyMsgSend")
+	proto.RegisterType((*LegacyMsgMultiSend)(nil), "cosmos.bank.v1beta1.LegacyMsgMultiSend")
+
 	types.RegisterInterfaces(registry)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&LegacyMsgSend{},
 		&LegacyMsgMultiSend{},
 	)
+
 }
 
 var (

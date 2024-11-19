@@ -40,6 +40,11 @@ func (m LegacyMsgSend) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &m.MsgSend)
 }
 
+func (m LegacyMsgSend) GetSignBytes() []byte {
+	fmt.Println("GetSignBytes")
+	return m.MsgSend.GetSignBytes()
+}
+
 /*// Implement sdk.Msg interface
 func (msg LegacyMsgSend) Route() string {
 	fmt.Println("Route")

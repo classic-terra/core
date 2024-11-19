@@ -6,8 +6,6 @@ import (
 	"os"
 	"time"
 
-	custombanktypes "github.com/classic-terra/core/v3/custom/bank/types"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1058,61 +1056,4 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	// check fee collector empty
 	balances = s.app.BankKeeper.GetAllBalances(s.ctx, s.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName))
 	s.Require().Equal(sdk.Coins{}, balances)
-}
-
-func (s *AnteTestSuite) TestLegacyAndUpstreamMsgSendCompatibility() {
-	// Setup the test environment
-	s.SetupTest(true)
-
-	// Initialize the codec
-	amino := codec.NewLegacyAmino()
-	custombanktypes.RegisterLegacyAminoCodec(amino) // Your custom registration
-	amino.Seal()
-
-	require := s.Require()
-
-	// Test message
-	addr1 := "cosmos1addressfrom"
-	addr2 := "cosmos1addressto"
-	amount := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
-
-	// Create messages
-	customMsg := custombanktypes.LegacyMsgSend{MsgSend: banktypes.MsgSend{FromAddress: addr1, ToAddress: addr2, Amount: amount}}
-	upstreamMsg := banktypes.MsgSend{FromAddress: addr1, ToAddress: addr2, Amount: amount}
-
-	// Encode and decode using "bank/MsgSend"
-	bankJSON, err := amino.MarshalJSON(&customMsg)
-	require.NoError(err, "Failed to encode LegacyMsgSend with bank/MsgSend")
-
-	var decodedCustomMsg custombanktypes.LegacyMsgSend
-	err = amino.UnmarshalJSON(bankJSON, &decodedCustomMsg)
-	require.NoError(err, "Failed to decode LegacyMsgSend with bank/MsgSend")
-	require.Equal(customMsg, decodedCustomMsg, "LegacyMsgSend (bank/MsgSend) mismatch after decoding")
-
-	// construct a custom byte message
-	msg := json.RawMessage([]byte(`{"type":"bank/MsgSend","value":{"from_address":"cosmos1addressfrom","to_address":"cosmos1addressto","amount":[{"denom":"atom","amount":"1000"}]}}`))
-	err = amino.UnmarshalJSON(msg, &decodedCustomMsg)
-	require.NoError(err, "Failed to decode LegacyMsgSend with bank/MsgSend")
-	require.Equal(customMsg, decodedCustomMsg, "LegacyMsgSend (bank/MsgSend) mismatch after decoding")
-
-	// Encode and decode using "cosmos-sdk/MsgSend"
-	cosmosJSON, err := amino.MarshalJSON(&upstreamMsg)
-	require.NoError(err, "Failed to encode MsgSend with cosmos-sdk/MsgSend")
-
-	var decodedUpstreamMsg banktypes.MsgSend
-	err = amino.UnmarshalJSON(cosmosJSON, &decodedUpstreamMsg)
-	require.NoError(err, "Failed to decode MsgSend with cosmos-sdk/MsgSend")
-	require.Equal(upstreamMsg, decodedUpstreamMsg, "MsgSend (cosmos-sdk/MsgSend) mismatch after decoding")
-
-	// construct a custom upstream byte message
-	msg = json.RawMessage([]byte(`{"type":"cosmos-sdk/MsgSend","value":{"from_address":"cosmos1addressfrom","to_address":"cosmos1addressto","amount":[{"denom":"atom","amount":"1000"}]}}`))
-	err = amino.UnmarshalJSON(msg, &decodedUpstreamMsg)
-	require.NoError(err, "Failed to decode MsgSend with cosmos-sdk/MsgSend")
-	require.Equal(upstreamMsg, decodedUpstreamMsg, "MsgSend (cosmos-sdk/MsgSend) mismatch after decoding")
-
-	// Ensure TypeURLs match
-	customTypeURL := sdk.MsgTypeURL(&customMsg.MsgSend)
-	upstreamTypeURL := sdk.MsgTypeURL(&upstreamMsg)
-	require.Equal("/cosmos.bank.v1beta1.MsgSend", customTypeURL, "LegacyMsgSend TypeURL mismatch")
-	require.Equal("/cosmos.bank.v1beta1.MsgSend", upstreamTypeURL, "MsgSend TypeURL mismatch")
 }

@@ -2,7 +2,6 @@ package ante_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"time"
 
@@ -573,6 +572,22 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        feeAmt,
 			expectProceeds:      feeAmt,
 			expectReverseCharge: false,
+		},
+		{
+			name:      "MsgSend(normal -> normal), non-zero not enough",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+
+				return msgs
+			},
+			// don't tax this because we are not sending enough
+			minFeeAmount:        feeAmt / 2,
+			expectProceeds:      0,
+			expectReverseCharge: true,
 		}, {
 			name:      "MsgSend(normal -> normal, reverse charge)",
 			msgSigner: privs[2],
@@ -585,7 +600,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				return msgs
 			},
 			// tax this one hence burn amount is fee amount
-			minFeeAmount:        0,
+			minFeeAmount:        1000,
 			expectProceeds:      0,
 			expectReverseCharge: true,
 		}, {
@@ -603,7 +618,24 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        feeAmt,
 			expectProceeds:      feeAmt,
 			expectReverseCharge: false,
-		}, {
+		},
+		{
+			name:      "MsgExec(MsgSend(normal -> normal))",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+
+				msg1 := authz.NewMsgExec(addrs[1], []sdk.Msg{banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin))})
+				msgs = append(msgs, &msg1)
+
+				return msgs
+			},
+			// tax this one hence burn amount is fee amount
+			minFeeAmount:        feeAmt,
+			expectProceeds:      feeAmt,
+			expectReverseCharge: false,
+		},
+		{
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -709,75 +741,123 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds:      0,
 			expectReverseCharge: false,
 		},
+
+		{
+			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
+			msgSigner: privs[3],
+			msgCreator: func() []sdk.Msg {
+				sendAmount := int64(1000000)
+				sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
+				// get wasm code for wasm contract create and instantiate
+				wasmCode, err := os.ReadFile("./testdata/hackatom.wasm")
+				s.Require().NoError(err)
+				per := wasmkeeper.NewDefaultPermissionKeeper(s.app.WasmKeeper)
+				// set wasm default params
+				s.app.WasmKeeper.SetParams(s.ctx, wasmtypes.DefaultParams())
+				// wasm create
+				CodeID, _, err := per.Create(s.ctx, addrs[0], wasmCode, nil)
+				s.Require().NoError(err)
+				// params for contract init
+				r := wasmkeeper.HackatomExampleInitMsg{Verifier: addrs[0], Beneficiary: addrs[0]}
+				bz, err := json.Marshal(r)
+				s.Require().NoError(err)
+				// change block time for contract instantiate
+				s.ctx = s.ctx.WithBlockTime(time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC))
+				// instantiate contract then not set to tax exemption
+				addr, _, err := per.Instantiate(s.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
+				s.Require().NoError(err)
+
+				var msgs []sdk.Msg
+				// msg and signatures
+				msg1 := &wasmtypes.MsgExecuteContract{
+					Sender:   addrs[0].String(),
+					Contract: addr.String(),
+					Msg:      []byte{},
+					Funds:    sendCoins,
+				}
+				msgs = append(msgs, msg1)
+
+				msg2 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin))
+
+				msgs = append(msgs, msg2)
+				return msgs
+			},
+			minFeeAmount:        feeAmt,
+			expectProceeds:      feeAmt,
+			expectReverseCharge: false,
+		},
 	}
 
 	// there should be no coin in burn module
 	// run once with reverse charge and once without
 	for _, c := range cases {
-		s.SetupTest(true) // setup
-		require := s.Require()
-		tk := s.app.TreasuryKeeper
-		ak := s.app.AccountKeeper
-		bk := s.app.BankKeeper
-		burnTaxRate := sdk.NewDecWithPrec(5, 3)
-		burnSplitRate := sdk.NewDecWithPrec(5, 1)
-		oracleSplitRate := sdk.ZeroDec()
 
-		// Set burn split rate to 50%
-		// oracle split to 0% (oracle split is covered in another test)
-		tk.SetBurnSplitRate(s.ctx, burnSplitRate)
-		tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
+		s.Run(c.name, func() {
+			s.SetupTest(true) // setup
+			require := s.Require()
+			tk := s.app.TreasuryKeeper
+			ak := s.app.AccountKeeper
+			bk := s.app.BankKeeper
+			burnTaxRate := sdk.NewDecWithPrec(5, 3)
+			burnSplitRate := sdk.NewDecWithPrec(5, 1)
+			oracleSplitRate := sdk.ZeroDec()
 
-		fmt.Printf("CASE = %s \n", c.name)
-		s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+			// Set burn split rate to 50%
+			// oracle split to 0% (oracle split is covered in another test)
+			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
-		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
-		tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
+			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-		mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
-		antehandler := sdk.ChainAnteDecorators(mfd)
-		pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
-		posthandler := sdk.ChainPostDecorators(pd)
+			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
+			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
-		for i := 0; i < 4; i++ {
-			coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(10000000)))
-			testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
-		}
+			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
+			antehandler := sdk.ChainAnteDecorators(mfd)
+			pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
+			posthandler := sdk.ChainPostDecorators(pd)
 
-		// msg and signatures
-		feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.minFeeAmount))
-		gasLimit := testdata.NewTestGasLimit()
-		require.NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
-		s.txBuilder.SetFeeAmount(feeAmount)
-		s.txBuilder.SetGasLimit(gasLimit)
+			for i := 0; i < 4; i++ {
+				coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(10000000)))
+				testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+			}
 
-		privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{0}, []uint64{0}
-		tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
-		require.NoError(err)
+			// msg and signatures
+			feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, c.minFeeAmount))
+			gasLimit := testdata.NewTestGasLimit()
+			require.NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
+			s.txBuilder.SetFeeAmount(feeAmount)
+			s.txBuilder.SetGasLimit(gasLimit)
 
-		newCtx, err := antehandler(s.ctx, tx, false)
-		require.NoError(err)
-		newCtx, err = posthandler(newCtx, tx, false, true)
-		require.NoError(err)
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{0}, []uint64{0}
+			tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+			require.NoError(err)
 
-		actualTaxRate := s.app.TaxKeeper.GetBurnTaxRate(s.ctx)
-		require.Equal(burnTaxRate, actualTaxRate)
+			newCtx, err := antehandler(s.ctx, tx, false)
+			require.NoError(err)
+			newCtx, err = posthandler(newCtx, tx, false, true)
+			require.NoError(err)
 
-		require.Equal(c.expectReverseCharge, newCtx.Value(taxtypes.ContextKeyTaxReverseCharge))
+			actualTaxRate := s.app.TaxKeeper.GetBurnTaxRate(s.ctx)
+			require.Equal(burnTaxRate, actualTaxRate)
 
-		// check fee collector
-		feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
-		amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
-		if c.expectReverseCharge {
-			// tax is NOT split in this case in the ante handler
-			require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.minFeeAmount)))
-		} else {
-			require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
-		}
+			require.Equal(c.expectReverseCharge, newCtx.Value(taxtypes.ContextKeyTaxReverseCharge))
 
-		// check tax proceeds
-		taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
-		require.Equal(taxProceeds, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))))
+			// check fee collector
+			feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
+			amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
+			if c.expectReverseCharge {
+				// tax is NOT split in this case in the ante handler
+				require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.minFeeAmount)))
+			} else {
+				require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
+			}
+
+			// check tax proceeds
+			taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
+			require.Equal(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))), taxProceeds)
+		})
+
 	}
 }
 

@@ -35,7 +35,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 	// set send amount
 	sendAmt := int64(1_000_000)
 	sendCoin := sdk.NewInt64Coin(core.MicroSDRDenom, sendAmt)
-	feeAmt := int64(1000)
+	feeAmt := int64(5000)
 
 	cases := []struct {
 		name                  string
@@ -179,7 +179,7 @@ func (s *AnteTestSuite) TestIntegrationTaxExemption() {
 			// case 1 provides zero fee so not enough fee
 			// case 2 provides enough fee
 			feeCases := []int64{0, feeAmt}
-			for i := 0; i < 1; i++ {
+			for i := 0; i <= 1; i++ {
 				feeAmount := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, feeCases[i]))
 				gasLimit := testdata.NewTestGasLimit()
 				s.Require().NoError(s.txBuilder.SetMsgs(c.msgCreator()...))

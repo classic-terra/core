@@ -260,9 +260,9 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 		allFees := requiredFees.Add(nonTaxableTaxes...)
 
 		// Check required fees
-		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
+		if !requiredFees.IsZero() && !feeCoins.IsAllGTE(requiredFees) {
 			// we don't have enough for tax and gas fees. But do we have enough for gas alone?
-			if !requiredGasFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
+			if !requiredGasFees.IsZero() && !feeCoins.IsAllGTE(requiredGasFees) {
 				return 0, false, false, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
 			}
 

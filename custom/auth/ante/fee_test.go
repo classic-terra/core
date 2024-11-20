@@ -859,6 +859,187 @@ func (s *AnteTestSuite) TestTaxExemption() {
 		})
 
 	}
+
+}
+
+func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
+	// keys and addresses
+	var privs []cryptotypes.PrivKey
+	var addrs []sdk.AccAddress
+
+	// 0, 1: exemption
+	// 2, 3: normal
+	for i := 0; i < 4; i++ {
+		priv, _, addr := testdata.KeyTestPubAddr()
+		privs = append(privs, priv)
+		addrs = append(addrs, addr)
+	}
+
+	// use two different denoms but with same gas price
+	denom1 := "uaad"
+	denom2 := "ucud"
+
+	// set send amount
+	sendAmt := int64(1000000)
+	sendCoin := sdk.NewInt64Coin(denom1, sendAmt)
+	anotherSendCoin := sdk.NewInt64Coin(denom2, sendAmt)
+
+	cases := []struct {
+		name                string
+		msgSigner           cryptotypes.PrivKey
+		msgCreator          func() []sdk.Msg
+		minFeeAmounts       []sdk.Coin
+		expectProceeds      sdk.Coins
+		expectReverseCharge bool
+	}{
+		{
+			name:      "MsgSend(exemption -> exemption) with multiple fee denoms",
+			msgSigner: privs[0],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
+				msgs = append(msgs, msg1)
+				return msgs
+			},
+			minFeeAmounts: []sdk.Coin{
+				sdk.NewInt64Coin(denom1, 0),
+				sdk.NewInt64Coin(denom2, 0),
+			},
+			expectProceeds:      sdk.NewCoins(),
+			expectReverseCharge: false,
+		},
+		{
+			name:      "MsgSend(normal -> normal) with multiple fee denoms",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin, anotherSendCoin))
+				msgs = append(msgs, msg1)
+				return msgs
+			},
+			minFeeAmounts: []sdk.Coin{
+				sdk.NewInt64Coin(denom1, 5000),
+				sdk.NewInt64Coin(denom2, 5000),
+			},
+			expectProceeds: sdk.NewCoins(
+				sdk.NewInt64Coin(denom1, 5000),
+				sdk.NewInt64Coin(denom2, 5000),
+			),
+			expectReverseCharge: false,
+		},
+		{
+			name:      "MsgSend(normal -> normal), enough taxes for both denoms",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin, anotherSendCoin))
+				msgs = append(msgs, msg1)
+				return msgs
+			},
+			minFeeAmounts: []sdk.Coin{
+				sdk.NewInt64Coin(denom1, 5000),
+				sdk.NewInt64Coin(denom2, 5000),
+			},
+			expectProceeds: []sdk.Coin{
+				sdk.NewInt64Coin(denom1, 5000),
+				sdk.NewInt64Coin(denom2, 5000),
+			},
+			expectReverseCharge: false,
+		},
+		{
+			name:      "MsgSend(normal -> normal), one denom not enough tax",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin, anotherSendCoin))
+				msgs = append(msgs, msg1)
+				return msgs
+			},
+			minFeeAmounts: []sdk.Coin{
+				sdk.NewInt64Coin(denom1, 5000),
+				sdk.NewInt64Coin(denom2, 2500),
+			},
+			expectProceeds:      []sdk.Coin{},
+			expectReverseCharge: true,
+		},
+	}
+
+	for _, c := range cases {
+		s.Run(c.name, func() {
+			s.SetupTest(true) // setup
+			require := s.Require()
+			tk := s.app.TreasuryKeeper
+			ak := s.app.AccountKeeper
+			bk := s.app.BankKeeper
+
+			burnTaxRate := sdk.NewDecWithPrec(5, 3)
+			burnSplitRate := sdk.NewDecWithPrec(5, 1)
+			oracleSplitRate := sdk.ZeroDec()
+
+			// Set burn split rate to 50%
+			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
+
+			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+
+			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
+			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
+
+			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
+			antehandler := sdk.ChainAnteDecorators(mfd)
+			pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
+			posthandler := sdk.ChainPostDecorators(pd)
+
+			// Fund accounts with both denoms
+			for i := 0; i < 4; i++ {
+				coins := sdk.NewCoins(
+					sdk.NewCoin(denom1, sdk.NewInt(10000000)),
+					sdk.NewCoin(denom2, sdk.NewInt(10000000)),
+				)
+				testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+			}
+
+			// Set up transaction with multiple fee denoms
+			feeAmount := sdk.NewCoins(c.minFeeAmounts...)
+			gasLimit := testdata.NewTestGasLimit()
+			require.NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
+			s.txBuilder.SetFeeAmount(feeAmount)
+			s.txBuilder.SetGasLimit(gasLimit)
+
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{c.msgSigner}, []uint64{0}, []uint64{0}
+			tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+			require.NoError(err)
+
+			newCtx, err := antehandler(s.ctx, tx, false)
+			require.NoError(err)
+			newCtx, err = posthandler(newCtx, tx, false, true)
+			require.NoError(err)
+
+			actualTaxRate := s.app.TaxKeeper.GetBurnTaxRate(s.ctx)
+			require.Equal(burnTaxRate, actualTaxRate)
+
+			require.Equal(c.expectReverseCharge, newCtx.Value(taxtypes.ContextKeyTaxReverseCharge))
+
+			// Check fee collector for each denom
+			feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
+			for _, feeCoin := range c.minFeeAmounts {
+				amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), feeCoin.Denom)
+				if c.expectReverseCharge {
+					require.Equal(amountFee, feeCoin)
+				} else {
+					expectedFee := sdk.NewCoin(
+						feeCoin.Denom,
+						sdk.NewDec(feeCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
+					)
+					require.Equal(expectedFee, amountFee)
+				}
+			}
+
+			// Check tax proceeds
+			taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
+			require.Equal(c.expectProceeds, taxProceeds)
+		})
+	}
 }
 
 // go test -v -run ^TestAnteTestSuite/TestBurnSplitTax$ github.com/classic-terra/core/v3/custom/auth/ante

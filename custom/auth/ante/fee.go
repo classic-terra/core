@@ -239,40 +239,63 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 	refundNonTaxableTaxes := false
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
-	// if this is a CheckTx. This is only for local mempool purposes, and thus
-	// is only ran on check tx.
+	// Check if the transaction is an oracle transaction and skip gas fees for such transactions.
 	if !isOracleTx {
-		requiredGasFees := sdk.Coins{}
+		minRequiredGasFees := sdk.Coins{}
 		minGasPrices := fd.taxKeeper.GetEffectiveGasPrices(ctx)
 		if !minGasPrices.IsZero() {
-			requiredGasFees = make(sdk.Coins, len(minGasPrices))
-
 			// Determine the required fees by multiplying each required minimum gas
 			// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 			glDec := sdk.NewDec(int64(gas))
-			for i, gp := range minGasPrices {
-				fee := gp.Amount.Mul(glDec)
-				requiredGasFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+			minRequiredGasFees = make(sdk.Coins, len(minGasPrices))
+			for i, gasPrice := range minGasPrices {
+				fee := gasPrice.Amount.Mul(glDec)
+				minRequiredGasFees[i] = sdk.NewCoin(gasPrice.Denom, fee.Ceil().RoundInt())
 			}
 		}
 
-		requiredFees := requiredGasFees.Add(taxes...)
-		allFees := requiredFees.Add(nonTaxableTaxes...)
+		remainingFees := feeCoins
 
-		// Check required fees
-		if !requiredFees.IsZero() && !feeCoins.IsAnyGTE(requiredFees) {
-			// we don't have enough for tax and gas fees. But do we have enough for gas alone?
-			if !requiredGasFees.IsZero() && !feeCoins.IsAnyGTE(requiredGasFees) {
-				return 0, false, false, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q, required: %q = %q(gas) + %q(stability)", feeCoins, requiredFees, requiredGasFees, taxes)
+		// Check if taxes are covered by the fees
+		if !taxes.IsZero() {
+			if !remainingFees.IsAllGTE(taxes) {
+				// If the fees do not cover the taxes, reverse charge
+				reverseCharge = true
+			} else {
+				remainingFees = remainingFees.Sub(taxes...)
+
+				// Check if remaining fees cover gas after taxes
+				if !minRequiredGasFees.IsZero() && !remainingFees.IsAnyGTE(minRequiredGasFees) {
+					// If the remaining fees do not cover the gas fees, tax cannot be covered
+					// So fall back to reverse charge
+					reverseCharge = true
+					remainingFees = feeCoins
+				}
 			}
-
-			// we have enough for gas fees but not for tax fees
-			reverseCharge = true
 		}
 
-		if !allFees.IsZero() && feeCoins.IsAnyGTE(allFees) {
-			// we have enough for all fees
-			refundNonTaxableTaxes = true
+		// Attempt to refund non-taxable taxes
+		if !nonTaxableTaxes.IsZero() && remainingFees.IsAllGTE(nonTaxableTaxes) {
+			feeCoinsAfterTax := remainingFees.Sub(nonTaxableTaxes...)
+
+			// Check if remaining fees cover gas after non-taxable taxes
+			if !minRequiredGasFees.IsZero() && !feeCoinsAfterTax.IsAnyGTE(minRequiredGasFees) {
+				// If the remaining fees do not cover the gas fees, non-taxable taxes cannot be refunded
+				// We cannot reset to feeCoins as tax might have been deducted earlier
+				refundNonTaxableTaxes = false
+			} else {
+				refundNonTaxableTaxes = true
+				remainingFees = feeCoinsAfterTax
+			}
+		}
+
+		// Check if the remaining paid fees are enough to cover the gas fees
+		if !minRequiredGasFees.IsZero() && !remainingFees.IsAnyGTE(minRequiredGasFees) {
+			return 0, reverseCharge, refundNonTaxableTaxes, errorsmod.Wrapf(
+				sdkerrors.ErrInsufficientFee,
+				"insufficient fees; got: %q, required: %q(gas) [+ %q(tax)]",
+				feeCoins, minRequiredGasFees, taxes,
+			)
 		}
 	}
 

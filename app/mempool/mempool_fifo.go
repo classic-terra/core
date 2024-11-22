@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/classic-terra/core/v3/custom/auth/ante"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 
 	"github.com/huandu/skiplist"
@@ -14,19 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-var cdc *codec.LegacyAmino
-
 var (
 	_ mempool.Mempool  = (*FifoSenderNonceMempool)(nil)
 	_ mempool.Iterator = (*senderNonceMempoolIterator)(nil)
 )
 
 var DefaultMaxTx = 0
-
-// Initialize the codec somewhere in your application setup
-func init() {
-	cdc = codec.NewLegacyAmino()
-}
 
 // FifoSenderNonceMempool is a mempool that prioritizes oracle transactions first,
 // followed by regular transactions. Within each type, transactions are ordered by sender

@@ -41,8 +41,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 20, n: 1, a: sa},
 			},
 			order: []int{3, 4, 2, 1, 0},
-			// Index order base on seed 0: 0  0  1  0  1  0  0
-			seed: 0,
+			seed:  0,
 		},
 		{
 			txs: []txSpec{
@@ -53,9 +52,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{3, 4, 0, 5, 1, 2},
-			// Index order base on seed 0: 0  0  1  0  1  0  0
-			seed: 0,
+			order: []int{3, 4, 5, 0, 1, 2},
+			seed:  0,
 		},
 		{
 			txs: []txSpec{
@@ -64,8 +62,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 20, n: 1, a: sa},
 			},
 			order: []int{1, 2, 0},
-			// Index order base on seed 0: 0  0  1  0  1  0  0
-			seed: 0,
+			seed:  0,
 		},
 		{
 			txs: []txSpec{
@@ -76,8 +73,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 21, n: 2, a: sb},
 			},
 			order: []int{3, 4, 2, 1, 0},
-			// Index order base on seed 0: 0  0  1  0  1  0  0
-			seed: 0,
+			seed:  0,
 		},
 		{
 			txs: []txSpec{
@@ -88,8 +84,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 8, n: 2, a: sb},
 			},
 			order: []int{3, 4, 2, 1, 0},
-			// Index order base on seed 0: 0  0  1  0  1  0  0
-			seed: 0,
+			seed:  0,
 		},
 		{
 			txs: []txSpec{
@@ -101,9 +96,8 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 6, a: sa, n: 3},
 				{p: 4, a: sb, n: 3},
 			},
-			order: []int{4, 1, 3, 6, 2, 0, 5},
-			// Index order base on seed 0: 0  0  1  0  1  0  1 1 0
-			seed: 0,
+			order: []int{4, 1, 6, 3, 2, 0, 5},
+			seed:  0,
 		},
 		{
 			txs: []txSpec{
@@ -113,13 +107,12 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 99, n: 2, a: sb},
 			},
 			order: []int{2, 3, 0, 1},
-			// Index order base on seed 0: 0  0  1  0  1  0  1 1 0
-			seed: 0,
+			seed:  0,
 		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceSeedOpt(tt.seed))
+			pool := appmempool.NewFifoSenderNonceMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
@@ -154,7 +147,6 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 		txs   []testTx
 		order []int
 		fail  bool
-		seed  int64
 	}{
 		{
 			txs: []testTx{
@@ -173,13 +165,12 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 					address:  sb,
 				},
 			},
-			order: []int{2, 1},
-			seed:  0,
+			order: []int{1, 0},
 		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceSeedOpt(tt.seed))
+			pool := appmempool.NewFifoSenderNonceMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: ts.priority, nonce: uint64(ts.nonce), address: ts.address, msgs: ts.msgs}
@@ -206,12 +197,12 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 func (s *MempoolTestSuite) TestOracleTx() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
 	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(3))
 
 	tx := testTx{
 		id:       0,
-		nonce:    0,
+		nonce:    2,
 		address:  accounts[0].Address,
 		priority: rand.Int63(),
 	}
@@ -220,29 +211,36 @@ func (s *MempoolTestSuite) TestOracleTx() {
 		nonce:    1,
 		address:  accounts[0].Address,
 		priority: rand.Int63(),
-		msgs:     []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+		msgs: []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{
+			Salt: "1",
+		}},
 	}
 	tx2 := testTx{
 		id:       2,
 		nonce:    1,
-		address:  accounts[1].Address,
+		address:  accounts[2].Address,
 		priority: rand.Int63(),
-		msgs:     []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+		msgs: []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{
+			Salt: "2",
+		}},
 	}
 
 	// empty mempool behavior
 	require.Equal(t, 0, s.mempool.CountTx())
 	itr := mp.Select(ctx, nil)
 	require.Nil(t, itr)
-	err := mp.Insert(ctx, tx1)
+	err := mp.Insert(ctx, tx)
 	require.NoError(t, err)
-	err = mp.Insert(ctx, tx)
+	err = mp.Insert(ctx, tx1)
 	require.NoError(t, err)
 	err = mp.Insert(ctx, tx2)
 	require.NoError(t, err)
 
 	itr = mp.Select(ctx, nil)
 	orderedTxs := fetchTxs(itr, 1000)
+	for _, tmpTx := range orderedTxs {
+		fmt.Println(tmpTx.GetMsgs())
+	}
 	require.Equal(t, 3, len(orderedTxs))
 
 	require.True(t, ante.IsOracleTx(orderedTxs[0].GetMsgs()))

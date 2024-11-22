@@ -221,7 +221,7 @@ func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
 		return mempool.ErrTxNotFound
 	}
 
-	if ante.IsOracleTx(tx.GetMsgs()) {
+	if ante.IsOracleTx(tx.GetMsgs()) && found2 {
 		res := senderOracleTxs.Remove(nonce)
 		if res == nil {
 			return mempool.ErrTxNotFound
@@ -230,7 +230,7 @@ func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
 		if senderOracleTxs.Len() == 0 {
 			delete(snm.senders, sender)
 		}
-	} else {
+	} else if found1 {
 		res := senderTxs.Remove(nonce)
 		if res == nil {
 			return mempool.ErrTxNotFound

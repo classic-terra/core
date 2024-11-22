@@ -2,11 +2,12 @@ package mempool_test
 
 import (
 	"fmt"
+	"math/rand"
+	"testing"
+
 	"github.com/classic-terra/core/v3/custom/auth/ante"
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"math/rand"
-	"testing"
 
 	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -151,21 +152,103 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 		{
 			txs: []testTx{
 				{
-					id:       1,
-					priority: 1,
-					nonce:    1,
-					msgs:     []sdk.Msg{&banktypes.MsgSend{}},
-					address:  sa,
+					id:      1,
+					nonce:   1,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sa,
 				},
 				{
-					id:       2,
-					priority: 1,
-					nonce:    1,
-					msgs:     []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
-					address:  sb,
+					id:      2,
+					nonce:   1,
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					address: sb,
 				},
 			},
 			order: []int{1, 0},
+		},
+		{
+			// Test multiple oracle txs vs regular txs
+			txs: []testTx{
+				{
+					id:      0,
+					nonce:   1,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sa,
+				},
+				{
+					id:      1,
+					nonce:   1,
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					address: sb,
+				},
+				{
+					id:      2,
+					nonce:   2,
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					address: sa,
+				},
+				{
+					id:      3,
+					nonce:   2,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sb,
+				},
+			},
+			order: []int{1, 2, 3, 0},
+		},
+		{
+			// Test oracle tx priority with different nonces
+			txs: []testTx{
+				{
+					id:      0,
+					nonce:   5,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sa,
+				},
+				{
+					id:      1,
+					nonce:   10,
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					address: sa,
+				},
+				{
+					id:      2,
+					nonce:   1,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sa,
+				},
+			},
+			order: []int{1, 2, 0},
+		},
+		{
+			// Test multiple oracle txs from different senders
+			txs: []testTx{
+				{
+					id:      0,
+					nonce:   2,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sb,
+				},
+				{
+					id:      1,
+					nonce:   2,
+					msgs:    []sdk.Msg{&banktypes.MsgSend{}},
+					address: sa,
+				},
+				{
+					id:      2,
+					nonce:   1,
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					address: sa,
+				},
+				{
+					id:      3,
+					nonce:   1,
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					address: sb,
+				},
+			},
+			order: []int{3, 2, 0, 1}, // All oracle txs first, then regular txs
 		},
 	}
 	for i, tt := range tests {
@@ -173,9 +256,8 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 			pool := appmempool.NewFifoSenderNonceMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
-				tx := testTx{id: i, priority: ts.priority, nonce: uint64(ts.nonce), address: ts.address, msgs: ts.msgs}
-				c := ctx.WithPriority(tx.priority)
-				err := pool.Insert(c, tx)
+				tx := testTx{id: i, nonce: uint64(ts.nonce), address: ts.address, msgs: ts.msgs}
+				err := pool.Insert(ctx, tx)
 				require.NoError(t, err)
 			}
 

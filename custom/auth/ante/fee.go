@@ -270,7 +270,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 			reverseCharge = true
 		}
 
-		if !allFees.IsZero() && feeCoins.IsAnyGTE(allFees) {
+		if !allFees.IsZero() && feeCoins.IsAllGTE(allFees) {
 			// we have enough for all fees
 			refundNonTaxableTaxes = true
 		}

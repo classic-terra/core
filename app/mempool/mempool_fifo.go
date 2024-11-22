@@ -3,7 +3,6 @@ package mempool
 import (
 	"context"
 	"fmt"
-	"math/rand"
 
 	"github.com/classic-terra/core/v3/custom/auth/ante"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,13 +28,15 @@ func init() {
 	cdc = codec.NewLegacyAmino()
 }
 
-// FifoSenderNonceMempool is a mempool that prioritizes transactions within a sender
-// by nonce, the lowest first, but selects a random sender on each iteration.
+// FifoSenderNonceMempool is a mempool that prioritizes oracle transactions first,
+// followed by regular transactions. Within each type, transactions are ordered by sender
+// and nonce.
 // The mempool is iterated by:
 //
-// 1) Maintaining a separate list of nonce ordered txs per sender
-// 2) For each select iteration, randomly choose a sender and pick the next nonce ordered tx from their list
-// 3) Repeat 1,2 until the mempool is exhausted
+// 1) Maintaining separate lists of nonce-ordered txs per sender for both oracle and regular transactions
+// 2) Processing all oracle transactions first, in order of sender address and nonce
+// 3) After oracle transactions are exhausted, processing regular transactions in order of sender address and nonce
+// 4) Repeat until the mempool is exhausted
 //
 // Note that PrepareProposal could choose to stop iteration before reaching the
 // end if maxBytes is reached.
@@ -53,8 +54,6 @@ type txKey struct {
 	nonce   uint64
 }
 
-// NewFifoSenderNonceMempool creates a new mempool that prioritizes transactions by
-// nonce, the lowest first, picking a random sender on each iteration.
 func NewFifoSenderNonceMempool(opts ...SenderNonceOptions) *FifoSenderNonceMempool {
 	senderMap := make(map[string]*skiplist.SkipList)
 	senderOracleMap := make(map[string]*skiplist.SkipList)
@@ -248,7 +247,6 @@ func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
 }
 
 type senderNonceMempoolIterator struct {
-	rnd           *rand.Rand
 	currentTx     *skiplist.Element
 	senders       []string
 	senderCursors map[string]*skiplist.Element

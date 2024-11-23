@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/classic-terra/core/v3/custom/auth/ante"
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -256,7 +258,7 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 			pool := appmempool.NewFifoSenderNonceMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
-				tx := testTx{id: i, nonce: uint64(ts.nonce), address: ts.address, msgs: ts.msgs}
+				tx := testTx{id: i, nonce: ts.nonce, address: ts.address, msgs: ts.msgs}
 				err := pool.Insert(ctx, tx)
 				require.NoError(t, err)
 			}
@@ -365,7 +367,6 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	mp := appmempool.NewFifoSenderNonceMempool()
-
 	txSender := testTx{
 		nonce:    0,
 		address:  accounts[0].Address,
@@ -383,4 +384,206 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	require.NoError(t, err)
 	err = mp.Remove(tx)
 	require.Equal(t, mempool.ErrTxNotFound, err)
+}
+
+func (s *MempoolTestSuite) TestBatchTx_WhenEnoughMemPool() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
+	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(150))
+
+	// Create 150 transactions (50 each of oracle, send, and staking)
+	var allTxs []testTx
+
+	// Create 50 oracle transactions (25 votes and 25 prevotes)
+	for i := 0; i < 50; i++ {
+		var msg sdk.Msg
+		if i%2 == 0 {
+			msg = &oracleexported.MsgAggregateExchangeRateVote{
+				Salt: fmt.Sprintf("salt_vote_%d", i),
+			}
+		} else {
+			msg = &oracleexported.MsgAggregateExchangeRatePrevote{
+				Hash: fmt.Sprintf("hash_prevote_%d", i),
+			}
+		}
+
+		tx := testTx{
+			id:       i,
+			nonce:    uint64(i),
+			address:  accounts[rand.Intn(len(accounts))].Address,
+			priority: rand.Int63(),
+			msgs:     []sdk.Msg{msg},
+		}
+		allTxs = append(allTxs, tx)
+	}
+
+	// Create 50 send transactions
+	for i := 50; i < 100; i++ {
+		tx := testTx{
+			id:       i,
+			nonce:    uint64(i),
+			address:  accounts[rand.Intn(len(accounts))].Address,
+			priority: rand.Int63(),
+			msgs:     []sdk.Msg{&banktypes.MsgSend{}},
+		}
+		allTxs = append(allTxs, tx)
+	}
+
+	// Create 50 staking transactions
+	for i := 100; i < 150; i++ {
+		tx := testTx{
+			id:       i,
+			nonce:    uint64(i),
+			address:  accounts[rand.Intn(len(accounts))].Address,
+			priority: rand.Int63(),
+			msgs:     []sdk.Msg{&stakingtypes.MsgDelegate{}},
+		}
+		allTxs = append(allTxs, tx)
+	}
+
+	// Shuffle the transactions
+	rand.Shuffle(len(allTxs), func(i, j int) {
+		allTxs[i], allTxs[j] = allTxs[j], allTxs[i]
+	})
+
+	// Insert transactions into mempool
+	for _, tx := range allTxs {
+		err := mp.Insert(ctx, tx)
+		require.NoError(t, err)
+	}
+
+	// Verify mempool size
+	require.Equal(t, 150, mp.CountTx())
+
+	// Get ordered transactions
+	itr := mp.Select(ctx, nil)
+	orderedTxs := fetchTxs(itr, 1000)
+	require.Equal(t, 150, len(orderedTxs))
+
+	// Count oracle transactions in first batch
+	oracleCount := 0
+	for _, tx := range orderedTxs[:50] {
+		if ante.IsOracleTx(tx.GetMsgs()) {
+			oracleCount++
+		}
+	}
+
+	// Verify oracle transactions are prioritized
+	require.True(t, oracleCount == 50, "Expected majority of first 50 transactions to be oracle transactions")
+
+	// Cleanup
+	for _, tx := range orderedTxs {
+		require.NoError(t, mp.Remove(tx))
+	}
+	require.Equal(t, 0, mp.CountTx())
+}
+
+func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
+	maxMempoolSize := 100
+	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(maxMempoolSize))
+
+	// Create 150 transactions (50 each of oracle, send, and staking)
+	var allTxs []testTx
+
+	// Create 50 oracle transactions (25 votes and 25 prevotes)
+	for i := 0; i < 50; i++ {
+		var msg sdk.Msg
+		if i%2 == 0 {
+			msg = &oracleexported.MsgAggregateExchangeRateVote{
+				Salt: fmt.Sprintf("salt_vote_%d", i),
+			}
+		} else {
+			msg = &oracleexported.MsgAggregateExchangeRatePrevote{
+				Hash: fmt.Sprintf("hash_prevote_%d", i),
+			}
+		}
+
+		tx := testTx{
+			id:       i,
+			nonce:    uint64(i),
+			address:  accounts[rand.Intn(len(accounts))].Address,
+			priority: rand.Int63(),
+			msgs:     []sdk.Msg{msg},
+		}
+		allTxs = append(allTxs, tx)
+	}
+
+	// Create 50 send transactions
+	for i := 50; i < 100; i++ {
+		tx := testTx{
+			id:       i,
+			nonce:    uint64(i),
+			address:  accounts[rand.Intn(len(accounts))].Address,
+			priority: rand.Int63(),
+			msgs:     []sdk.Msg{&banktypes.MsgSend{}},
+		}
+		allTxs = append(allTxs, tx)
+	}
+
+	// Create 50 staking transactions
+	for i := 100; i < 150; i++ {
+		tx := testTx{
+			id:       i,
+			nonce:    uint64(i),
+			address:  accounts[rand.Intn(len(accounts))].Address,
+			priority: rand.Int63(),
+			msgs:     []sdk.Msg{&stakingtypes.MsgDelegate{}},
+		}
+		allTxs = append(allTxs, tx)
+	}
+
+	// Shuffle the transactions
+	rand.Shuffle(len(allTxs), func(i, j int) {
+		allTxs[i], allTxs[j] = allTxs[j], allTxs[i]
+	})
+
+	// Insert transactions into mempool
+	i := 0
+	for _, tx := range allTxs {
+		err := mp.Insert(ctx, tx)
+		if i < maxMempoolSize {
+			require.NoError(t, err)
+		} else {
+			require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
+		}
+		i += 1
+	}
+
+	// Verify mempool size
+	require.Equal(t, 100, mp.CountTx())
+
+	// Get ordered transactions
+	itr := mp.Select(ctx, nil)
+	orderedTxs := fetchTxs(itr, 1000)
+	require.Equal(t, 100, len(orderedTxs))
+
+	// Verify oracle transactions come first, followed by regular transactions
+	var lastOracleIndex = -1
+	var firstRegularIndex = -1
+
+	for i, tx := range orderedTxs {
+		if ante.IsOracleTx(tx.GetMsgs()) {
+			lastOracleIndex = i
+			// If we've already seen a regular transaction, this is an error
+			require.Equal(t, -1, firstRegularIndex,
+				"Found oracle tx after regular tx at index %d", i)
+		} else {
+			if firstRegularIndex == -1 {
+				firstRegularIndex = i
+			}
+		}
+	}
+
+	// Verify oracle transactions are prioritized
+	require.True(t, lastOracleIndex < firstRegularIndex, "Expected majority oracle transactions come first")
+
+	// Cleanup
+	for _, tx := range orderedTxs {
+		require.NoError(t, mp.Remove(tx))
+	}
+	require.Equal(t, 0, mp.CountTx())
 }

@@ -2,15 +2,17 @@ package mempool
 
 import (
 	"context"
+	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
+	"encoding/binary"
 	"fmt"
+	"math/rand"
+	"sync"
 
 	"github.com/classic-terra/core/v3/custom/auth/ante"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
-
-	"github.com/huandu/skiplist"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/huandu/skiplist"
 )
 
 var (
@@ -18,7 +20,9 @@ var (
 	_ mempool.Iterator = (*senderNonceMempoolIterator)(nil)
 )
 
-var DefaultMaxTx = 0
+var DefaultMaxTx = 5000
+var prefixSenderOracle = "oracle:"
+var prefixSenderRegular = "regular:"
 
 // FifoSenderNonceMempool is a mempool that prioritizes oracle transactions first,
 // followed by regular transactions. Within each type, transactions are ordered by sender
@@ -33,20 +37,22 @@ var DefaultMaxTx = 0
 // Note that PrepareProposal could choose to stop iteration before reaching the
 // end if maxBytes is reached.
 type FifoSenderNonceMempool struct {
+	mtx           sync.Mutex
 	senders       map[string]*skiplist.SkipList
 	maxTx         int
 	existingTx    map[txKey]bool
+	rnd           *rand.Rand
 	sendersOracle map[string]*skiplist.SkipList
 }
 
-type SenderNonceOptions func(mp *FifoSenderNonceMempool)
+type FifoSenderNonceOptions func(mp *FifoSenderNonceMempool)
 
 type txKey struct {
 	address string
 	nonce   uint64
 }
 
-func NewFifoSenderNonceMempool(opts ...SenderNonceOptions) *FifoSenderNonceMempool {
+func NewFifoSenderNonceMempool(opts ...FifoSenderNonceOptions) *FifoSenderNonceMempool {
 	senderMap := make(map[string]*skiplist.SkipList)
 	senderOracleMap := make(map[string]*skiplist.SkipList)
 	existingTx := make(map[txKey]bool)
@@ -57,11 +63,32 @@ func NewFifoSenderNonceMempool(opts ...SenderNonceOptions) *FifoSenderNonceMempo
 		sendersOracle: senderOracleMap,
 	}
 
+	var seed int64
+	err := binary.Read(crand.Reader, binary.BigEndian, &seed)
+	if err != nil {
+		panic(err)
+	}
+
+	snp.setSeed(seed)
+
 	for _, opt := range opts {
 		opt(snp)
 	}
 
 	return snp
+}
+
+// SenderNonceSeedOpt Option To add a Seed for random type when calling the
+// constructor NewSenderNonceMempool.
+//
+// Example:
+//
+//	random_seed := int64(1000)
+//	NewSenderNonceMempool(SenderNonceSeedTxOpt(random_seed))
+func SenderNonceSeedOpt(seed int64) FifoSenderNonceOptions {
+	return func(snp *FifoSenderNonceMempool) {
+		snp.setSeed(seed)
+	}
 }
 
 // SenderNonceMaxTxOpt Option To set limit of max tx when calling the constructor
@@ -70,10 +97,15 @@ func NewFifoSenderNonceMempool(opts ...SenderNonceOptions) *FifoSenderNonceMempo
 // Example:
 //
 //	NewSenderNonceMempool(SenderNonceMaxTxOpt(100))
-func SenderNonceMaxTxOpt(maxTx int) SenderNonceOptions {
+func SenderNonceMaxTxOpt(maxTx int) FifoSenderNonceOptions {
 	return func(snp *FifoSenderNonceMempool) {
 		snp.maxTx = maxTx
 	}
+}
+
+func (snm *FifoSenderNonceMempool) setSeed(seed int64) {
+	s1 := rand.NewSource(seed)
+	snm.rnd = rand.New(s1) //#nosec // math/rand is seeded from crypto/rand by default
 }
 
 // NextSenderTx returns the next transaction for a given sender by nonce order,
@@ -92,7 +124,9 @@ func (mp *FifoSenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have
 // at least one signer. Note, priority is ignored.
 func (snm *FifoSenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
-	if snm.maxTx > 0 && snm.CountTx() >= snm.maxTx {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
+	if snm.maxTx > 0 && len(snm.existingTx) >= snm.maxTx {
 		return mempool.ErrMempoolTxMaxCapacity
 	}
 	if snm.maxTx < 0 {
@@ -112,23 +146,21 @@ func (snm *FifoSenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	nonce := sig.Sequence
 
 	isOracleTx := ante.IsOracleTx(tx.GetMsgs())
-	senderTxs, found := snm.senders[sender]
-	if !found && !isOracleTx {
-		senderTxs = skiplist.New(skiplist.Uint64)
-		snm.senders[sender] = senderTxs
-	}
-	if !isOracleTx {
-		senderTxs.Set(nonce, tx)
+	// Select the appropriate transaction map based on type
+	txMap := snm.senders
+	if isOracleTx {
+		txMap = snm.sendersOracle
 	}
 
-	senderOracleTxs, found := snm.sendersOracle[sender]
-	if !found && isOracleTx {
-		senderOracleTxs = skiplist.New(skiplist.Uint64)
-		snm.sendersOracle[sender] = senderOracleTxs
+	// Get or create the skiplist for this sender
+	senderTxs, found := txMap[sender]
+	if !found {
+		senderTxs = skiplist.New(skiplist.Uint64)
+		txMap[sender] = senderTxs
 	}
-	if isOracleTx {
-		senderOracleTxs.Set(nonce, tx)
-	}
+
+	// Add the transaction
+	senderTxs.Set(nonce, tx)
 
 	key := txKey{nonce: nonce, address: sender}
 	snm.existingTx[key] = true
@@ -142,6 +174,8 @@ func (snm *FifoSenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
 func (snm *FifoSenderNonceMempool) Select(_ context.Context, _ [][]byte) mempool.Iterator {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
 	var oracleSenders, regularSenders []string
 	senderCursors := make(map[string]*skiplist.Element)
 
@@ -156,7 +190,7 @@ func (snm *FifoSenderNonceMempool) Select(_ context.Context, _ [][]byte) mempool
 		sender := s1.Value.(string)
 		// Add oracle prefix to distinguish from regular transactions
 		oracleSenders = append(oracleSenders, sender)
-		oracleKey := "oracle:" + sender
+		oracleKey := prefixSenderOracle + sender
 		senderCursors[oracleKey] = snm.sendersOracle[sender].Front()
 		s1 = s1.Next()
 	}
@@ -171,7 +205,7 @@ func (snm *FifoSenderNonceMempool) Select(_ context.Context, _ [][]byte) mempool
 	for s != nil {
 		sender := s.Value.(string)
 		regularSenders = append(regularSenders, sender)
-		regularKey := "regular:" + sender
+		regularKey := prefixSenderRegular + sender
 		senderCursors[regularKey] = snm.senders[sender].Front()
 		s = s.Next()
 	}
@@ -188,12 +222,16 @@ func (snm *FifoSenderNonceMempool) Select(_ context.Context, _ [][]byte) mempool
 
 // CountTx returns the total count of txs in the mempool.
 func (snm *FifoSenderNonceMempool) CountTx() int {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
 	return len(snm.existingTx)
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not
 // have at least one signer or the tx was not found in the pool.
 func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -239,6 +277,7 @@ func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
 }
 
 type senderNonceMempoolIterator struct {
+	rnd           *rand.Rand
 	currentTx     *skiplist.Element
 	senders       []string
 	senderCursors map[string]*skiplist.Element
@@ -250,52 +289,31 @@ func (i *senderNonceMempoolIterator) Next() mempool.Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := 0
 		sender := i.senders[senderIndex]
-		isOracle := false
-		checkKey := "oracle:" + sender
-		_, ok := i.senderCursors[checkKey]
-		if ok {
-			isOracle = true
+		// Determine if this is an oracle transaction and get the appropriate key
+		checkKey := prefixSenderRegular + sender
+		if _, ok := i.senderCursors[prefixSenderOracle+sender]; ok {
+			checkKey = prefixSenderOracle + sender
 		}
-		if isOracle {
-			checkKey = "oracle:" + sender
-			senderCursor, found := i.senderCursors[checkKey]
-			if !found {
-				i.senders = removeAtIndex(i.senders, senderIndex)
-				continue
-			}
 
-			if nextCursor := senderCursor.Next(); nextCursor != nil {
-				i.senderCursors[checkKey] = nextCursor
-			} else {
-				i.senders = removeAtIndex(i.senders, senderIndex)
-				delete(i.senderCursors, checkKey)
-			}
+		// Get and process the cursor
+		senderCursor, found := i.senderCursors[checkKey]
+		if !found {
+			i.senders = removeAtIndex(i.senders, senderIndex)
+			continue
+		}
 
-			return &senderNonceMempoolIterator{
-				senders:       i.senders,
-				currentTx:     senderCursor,
-				senderCursors: i.senderCursors,
-			}
+		// Handle cursor advancement
+		if nextCursor := senderCursor.Next(); nextCursor != nil {
+			i.senderCursors[checkKey] = nextCursor
 		} else {
-			checkKey = "regular:" + sender
-			senderCursor, found := i.senderCursors[checkKey]
-			if !found {
-				i.senders = removeAtIndex(i.senders, senderIndex)
-				continue
-			}
+			i.senders = removeAtIndex(i.senders, senderIndex)
+			delete(i.senderCursors, checkKey)
+		}
 
-			if nextCursor := senderCursor.Next(); nextCursor != nil {
-				i.senderCursors[checkKey] = nextCursor
-			} else {
-				i.senders = removeAtIndex(i.senders, senderIndex)
-				delete(i.senderCursors, checkKey)
-			}
-
-			return &senderNonceMempoolIterator{
-				senders:       i.senders,
-				currentTx:     senderCursor,
-				senderCursors: i.senderCursors,
-			}
+		return &senderNonceMempoolIterator{
+			senders:       i.senders,
+			currentTx:     senderCursor,
+			senderCursors: i.senderCursors,
 		}
 	}
 

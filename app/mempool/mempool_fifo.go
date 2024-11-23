@@ -21,21 +21,22 @@ var (
 )
 
 var DefaultMaxTx = 5000
-var prefixSenderOracle = "oracle:"
-var prefixSenderRegular = "regular:"
 
-// FifoSenderNonceMempool is a mempool that prioritizes oracle transactions first,
-// followed by regular transactions. Within each type, transactions are ordered by sender
-// and nonce.
-// The mempool is iterated by:
+// FifoSenderNonceMempool is a mempool implementation that maintains two separate transaction pools:
+// one for oracle transactions and another for regular transactions. Oracle transactions are given
+// priority during iteration.
 //
-// 1) Maintaining separate lists of nonce-ordered txs per sender for both oracle and regular transactions
-// 2) Processing all oracle transactions first, in order of sender address and nonce
-// 3) After oracle transactions are exhausted, processing regular transactions in order of sender address and nonce
-// 4) Repeat until the mempool is exhausted
+// Key characteristics:
+// 1. Maintains two separate maps of sender-to-transactions (oracle and regular)
+// 2. Each sender's transactions are stored in a skiplist ordered by nonce
+// 3. During iteration:
+//    - Oracle transactions are processed first, with random sender selection
+//    - Regular transactions follow, also with random sender selection
+//    - For each sender, transactions are processed in nonce order
+// 4. Transaction capacity is limited by maxTx (if > 0)
 //
-// Note that PrepareProposal could choose to stop iteration before reaching the
-// end if maxBytes is reached.
+// Note: PrepareProposal may terminate iteration early if block size limits are reached.
+
 type FifoSenderNonceMempool struct {
 	mtx           sync.Mutex
 	senders       map[string]*skiplist.SkipList
@@ -168,56 +169,52 @@ func (snm *FifoSenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	return nil
 }
 
-// Select returns an iterator ordering transactions the mempool with the lowest
-// nonce of a random selected sender first.
+// Select returns an iterator for processing mempool transactions in the following order:
+// 1. Oracle transactions are processed first:
+//   - Senders are ordered lexicographically but selected randomly
+//   - Each sender's transactions are processed in nonce order
+//
+// 2. Regular transactions are processed second:
+//   - Senders are ordered lexicographically but selected randomly
+//   - Each sender's transactions are processed in nonce order
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
 func (snm *FifoSenderNonceMempool) Select(_ context.Context, _ [][]byte) mempool.Iterator {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
-	var oracleSenders, regularSenders []string
-	senderCursors := make(map[string]*skiplist.Element)
-
 	// Handle oracle transactions first
-	orderedSendersOracle := skiplist.New(skiplist.String)
-	for s := range snm.sendersOracle {
-		orderedSendersOracle.Set(s, s)
-	}
-
-	s1 := orderedSendersOracle.Front()
-	for s1 != nil {
-		sender := s1.Value.(string)
-		// Add oracle prefix to distinguish from regular transactions
-		oracleSenders = append(oracleSenders, sender)
-		oracleKey := prefixSenderOracle + sender
-		senderCursors[oracleKey] = snm.sendersOracle[sender].Front()
-		s1 = s1.Next()
-	}
+	oracleSenders, senderOracleCursors := snm.getSenderList(snm.sendersOracle)
 
 	// Handle regular transactions
+	regularSenders, senderCursors := snm.getSenderList(snm.senders)
+
+	iter := &senderNonceMempoolIterator{
+		senders:             regularSenders,
+		sendersOracle:       oracleSenders,
+		senderCursors:       senderCursors,
+		rnd:                 snm.rnd,
+		senderOracleCursors: senderOracleCursors,
+	}
+	return iter.Next()
+}
+
+func (snm *FifoSenderNonceMempool) getSenderList(senderMap map[string]*skiplist.SkipList) ([]string, map[string]*skiplist.Element) {
+	senders := make([]string, 0, len(senderMap))
+	cursors := make(map[string]*skiplist.Element)
+
 	orderedSenders := skiplist.New(skiplist.String)
-	for s := range snm.senders {
+	for s := range senderMap {
 		orderedSenders.Set(s, s)
 	}
 
-	s := orderedSenders.Front()
-	for s != nil {
+	for s := orderedSenders.Front(); s != nil; s = s.Next() {
 		sender := s.Value.(string)
-		regularSenders = append(regularSenders, sender)
-		regularKey := prefixSenderRegular + sender
-		senderCursors[regularKey] = snm.senders[sender].Front()
-		s = s.Next()
+		senders = append(senders, sender)
+		cursors[sender] = senderMap[sender].Front()
 	}
 
-	// Combine senders with oracle transactions first
-	senders := append(oracleSenders, regularSenders...)
-
-	iter := &senderNonceMempoolIterator{
-		senders:       senders,
-		senderCursors: senderCursors,
-	}
-	return iter.Next()
+	return senders, cursors
 }
 
 // CountTx returns the total count of txs in the mempool.
@@ -257,7 +254,7 @@ func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
 		}
 
 		if senderOracleTxs.Len() == 0 {
-			delete(snm.senders, sender)
+			delete(snm.sendersOracle, sender)
 		}
 	} else if found1 {
 		res := senderTxs.Remove(nonce)
@@ -277,43 +274,70 @@ func (snm *FifoSenderNonceMempool) Remove(tx sdk.Tx) error {
 }
 
 type senderNonceMempoolIterator struct {
-	rnd           *rand.Rand
-	currentTx     *skiplist.Element
-	senders       []string
-	senderCursors map[string]*skiplist.Element
+	rnd                 *rand.Rand
+	currentTx           *skiplist.Element
+	senders             []string
+	sendersOracle       []string
+	senderCursors       map[string]*skiplist.Element
+	senderOracleCursors map[string]*skiplist.Element
 }
 
 // Next returns the next iterator state which will contain a tx with the next
 // smallest nonce of a randomly selected sender.
 func (i *senderNonceMempoolIterator) Next() mempool.Iterator {
-	for len(i.senders) > 0 {
-		senderIndex := 0
-		sender := i.senders[senderIndex]
-		// Determine if this is an oracle transaction and get the appropriate key
-		checkKey := prefixSenderRegular + sender
-		if _, ok := i.senderCursors[prefixSenderOracle+sender]; ok {
-			checkKey = prefixSenderOracle + sender
-		}
-
-		// Get and process the cursor
-		senderCursor, found := i.senderCursors[checkKey]
+	// process oracle sender first
+	for len(i.sendersOracle) > 0 {
+		senderIndex := i.rnd.Intn(len(i.sendersOracle))
+		sender := i.sendersOracle[senderIndex]
+		cursor, found := i.senderOracleCursors[sender]
 		if !found {
-			i.senders = removeAtIndex(i.senders, senderIndex)
+			i.sendersOracle = removeAtIndex(i.sendersOracle, senderIndex)
 			continue
 		}
 
 		// Handle cursor advancement
-		if nextCursor := senderCursor.Next(); nextCursor != nil {
-			i.senderCursors[checkKey] = nextCursor
+		if nextCursor := cursor.Next(); nextCursor != nil {
+			i.senderOracleCursors[sender] = nextCursor
 		} else {
-			i.senders = removeAtIndex(i.senders, senderIndex)
-			delete(i.senderCursors, checkKey)
+			i.sendersOracle = removeAtIndex(i.sendersOracle, senderIndex)
+			delete(i.senderOracleCursors, sender)
 		}
 
 		return &senderNonceMempoolIterator{
-			senders:       i.senders,
-			currentTx:     senderCursor,
-			senderCursors: i.senderCursors,
+			sendersOracle:       i.sendersOracle,
+			senders:             i.senders,
+			currentTx:           cursor,
+			rnd:                 i.rnd,
+			senderCursors:       i.senderCursors,
+			senderOracleCursors: i.senderOracleCursors,
+		}
+	}
+
+	// process regular transactions
+	for len(i.senders) > 0 {
+		senderIndex := i.rnd.Intn(len(i.senders))
+		sender := i.senders[senderIndex]
+		cursor, found := i.senderCursors[sender]
+		if !found {
+			i.sendersOracle = removeAtIndex(i.senders, senderIndex)
+			continue
+		}
+
+		// Handle cursor advancement
+		if nextCursor := cursor.Next(); nextCursor != nil {
+			i.senderCursors[sender] = nextCursor
+		} else {
+			i.senders = removeAtIndex(i.senders, senderIndex)
+			delete(i.senderCursors, sender)
+		}
+
+		return &senderNonceMempoolIterator{
+			sendersOracle:       i.sendersOracle,
+			senders:             i.senders,
+			currentTx:           cursor,
+			rnd:                 i.rnd,
+			senderCursors:       i.senderCursors,
+			senderOracleCursors: i.senderOracleCursors,
 		}
 	}
 

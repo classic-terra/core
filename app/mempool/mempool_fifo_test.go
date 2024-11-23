@@ -1,6 +1,7 @@
 package mempool_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -55,7 +56,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{3, 4, 5, 0, 1, 2},
+			order: []int{3, 4, 0, 5, 1, 2},
 			seed:  0,
 		},
 		{
@@ -99,7 +100,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 6, a: sa, n: 3},
 				{p: 4, a: sb, n: 3},
 			},
-			order: []int{4, 1, 6, 3, 2, 0, 5},
+			order: []int{4, 1, 3, 6, 2, 0, 5},
 			seed:  0,
 		},
 		{
@@ -115,7 +116,9 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := appmempool.NewFifoSenderNonceMempool()
+			pool := appmempool.NewFifoSenderNonceMempool(
+				appmempool.SenderNonceSeedOpt(tt.seed),
+			)
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
@@ -147,9 +150,9 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 	sb := accounts[1].Address
 
 	tests := []struct {
-		txs   []testTx
-		order []int
-		fail  bool
+		txs            []testTx
+		numberTxOracle int
+		fail           bool
 	}{
 		{
 			txs: []testTx{
@@ -166,7 +169,7 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 					address: sb,
 				},
 			},
-			order: []int{1, 0},
+			numberTxOracle: 1,
 		},
 		{
 			// Test multiple oracle txs vs regular txs
@@ -196,7 +199,7 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 					address: sb,
 				},
 			},
-			order: []int{1, 2, 3, 0},
+			numberTxOracle: 2,
 		},
 		{
 			// Test oracle tx priority with different nonces
@@ -220,7 +223,7 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 					address: sa,
 				},
 			},
-			order: []int{1, 2, 0},
+			numberTxOracle: 1,
 		},
 		{
 			// Test multiple oracle txs from different senders
@@ -246,11 +249,11 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 				{
 					id:      3,
 					nonce:   1,
-					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRateVote{}},
+					msgs:    []sdk.Msg{&oracleexported.MsgAggregateExchangeRatePrevote{}},
 					address: sb,
 				},
 			},
-			order: []int{3, 2, 0, 1}, // All oracle txs first, then regular txs
+			numberTxOracle: 2,
 		},
 	}
 	for i, tt := range tests {
@@ -265,14 +268,18 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 
 			itr := pool.Select(ctx, nil)
 			orderedTxs := fetchTxs(itr, 1000)
-			var txOrder []int
+			numberTxOracle := 0
 			for _, tx := range orderedTxs {
-				txOrder = append(txOrder, tx.(testTx).id)
+				if ante.IsOracleTx(tx.GetMsgs()) {
+					numberTxOracle += +1
+				} else {
+					break
+				}
 			}
 			for _, tx := range orderedTxs {
 				require.NoError(t, pool.Remove(tx))
 			}
-			require.Equal(t, tt.order, txOrder)
+			require.Equal(t, tt.numberTxOracle, numberTxOracle)
 			require.Equal(t, 0, pool.CountTx())
 		})
 	}
@@ -586,4 +593,75 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 		require.NoError(t, mp.Remove(tx))
 	}
 	require.Equal(t, 0, mp.CountTx())
+}
+
+func BenchmarkMempool(b *testing.B) {
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
+	maxMempoolSize := 1000
+
+	benchmarks := []struct {
+		name string
+		size int
+	}{
+		{"Small-100", 100},
+		{"Medium-500", 500},
+		{"Large-1000", 1000},
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			// Reset timer for setup
+			b.StopTimer()
+
+			var allTxs []testTx
+			// Create mixed transaction types (oracle, send, staking)
+			for i := 0; i < bm.size; i++ {
+				var msg sdk.Msg
+				switch i % 3 {
+				case 0:
+					msg = &oracleexported.MsgAggregateExchangeRateVote{
+						Salt: fmt.Sprintf("salt_vote_%d", i),
+					}
+				case 1:
+					msg = &banktypes.MsgSend{}
+				case 2:
+					msg = &stakingtypes.MsgDelegate{}
+				}
+
+				tx := testTx{
+					id:       i,
+					nonce:    uint64(i),
+					address:  accounts[rand.Intn(len(accounts))].Address,
+					priority: rand.Int63(),
+					msgs:     []sdk.Msg{msg},
+				}
+				allTxs = append(allTxs, tx)
+			}
+
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(maxMempoolSize))
+
+				// Benchmark insertion
+				for _, tx := range allTxs {
+					err := mp.Insert(ctx, tx)
+					if err != nil && !errors.Is(err, mempool.ErrMempoolTxMaxCapacity) {
+						b.Fatal(err)
+					}
+				}
+
+				// Benchmark selection
+				itr := mp.Select(ctx, nil)
+				orderedTxs := fetchTxs(itr, int64(bm.size))
+
+				// Benchmark removal
+				for _, tx := range orderedTxs {
+					if err := mp.Remove(tx); err != nil {
+						b.Fatal(err)
+					}
+				}
+			}
+		})
+	}
 }

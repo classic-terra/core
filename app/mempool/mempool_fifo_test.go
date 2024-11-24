@@ -44,7 +44,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{3, 4, 2, 1, 0},
+			order: []int{0, 1, 2, 3, 4},
 			seed:  0,
 		},
 		{
@@ -56,7 +56,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{3, 4, 0, 5, 1, 2},
+			order: []int{0, 1, 2, 3, 4, 5},
 			seed:  0,
 		},
 		{
@@ -65,7 +65,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: []int{1, 2, 0},
+			order: []int{0, 1, 2},
 			seed:  0,
 		},
 		{
@@ -76,7 +76,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 21, n: 2, a: sb},
 			},
-			order: []int{3, 4, 2, 1, 0},
+			order: []int{0, 1, 2, 3, 4},
 			seed:  0,
 		},
 		{
@@ -87,7 +87,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: []int{3, 4, 2, 1, 0},
+			order: []int{0, 1, 2, 3, 4},
 			seed:  0,
 		},
 		{
@@ -100,7 +100,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 6, a: sa, n: 3},
 				{p: 4, a: sb, n: 3},
 			},
-			order: []int{4, 1, 3, 6, 2, 0, 5},
+			order: []int{0, 1, 2, 3, 4, 5, 6},
 			seed:  0,
 		},
 		{
@@ -110,15 +110,13 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 99, n: 2, a: sb},
 			},
-			order: []int{2, 3, 0, 1},
+			order: []int{0, 1, 2, 3},
 			seed:  0,
 		},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := appmempool.NewFifoSenderNonceMempool(
-				appmempool.SenderNonceSeedOpt(tt.seed),
-			)
+			pool := appmempool.NewFifoMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
@@ -258,7 +256,7 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := appmempool.NewFifoSenderNonceMempool()
+			pool := appmempool.NewFifoMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, nonce: ts.nonce, address: ts.address, msgs: ts.msgs}
@@ -289,7 +287,7 @@ func (s *MempoolTestSuite) TestOracleTx() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
-	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(3))
+	mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(3))
 
 	tx := testTx{
 		id:       0,
@@ -331,19 +329,23 @@ func (s *MempoolTestSuite) TestOracleTx() {
 	orderedTxs := fetchTxs(itr, 1000)
 	for _, tmpTx := range orderedTxs {
 		fmt.Println(tmpTx.GetMsgs())
+		err = mp.Remove(tmpTx)
+		require.NoError(t, err)
 	}
 	require.Equal(t, 3, len(orderedTxs))
 
 	require.True(t, ante.IsOracleTx(orderedTxs[0].GetMsgs()))
 	require.True(t, ante.IsOracleTx(orderedTxs[1].GetMsgs()))
 	require.False(t, ante.IsOracleTx(orderedTxs[2].GetMsgs()))
+
+	require.Equal(t, 0, mp.CountTx())
 }
 
 func (s *MempoolTestSuite) TestMaxTx() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(1))
+	mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(1))
 
 	tx := testTx{
 		nonce:    0,
@@ -373,7 +375,7 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	mp := appmempool.NewFifoSenderNonceMempool()
+	mp := appmempool.NewFifoMempool()
 	txSender := testTx{
 		nonce:    0,
 		address:  accounts[0].Address,
@@ -397,7 +399,7 @@ func (s *MempoolTestSuite) TestBatchTx_WhenEnoughMemPool() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
-	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(150))
+	mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(150))
 
 	// Create 150 transactions (50 each of oracle, send, and staking)
 	var allTxs []testTx
@@ -491,7 +493,7 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	maxMempoolSize := 100
-	mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(maxMempoolSize))
+	mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxMempoolSize))
 
 	// Create 150 transactions (50 each of oracle, send, and staking)
 	var allTxs []testTx
@@ -641,7 +643,7 @@ func BenchmarkMempool(b *testing.B) {
 
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
-				mp := appmempool.NewFifoSenderNonceMempool(appmempool.SenderNonceMaxTxOpt(maxMempoolSize))
+				mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxMempoolSize))
 
 				// Benchmark insertion
 				for _, tx := range allTxs {

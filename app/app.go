@@ -150,9 +150,9 @@ func NewTerraApp(
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
-		mempool := mempool2.NewFifoSenderNonceMempool()
+		mempool := mempool2.NewFifoMempool()
 		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs >= 0 {
-			mempool = mempool2.NewFifoSenderNonceMempool(mempool2.SenderNonceMaxTxOpt(maxTxs))
+			mempool = mempool2.NewFifoMempool(mempool2.FifoMaxTxOpt(maxTxs))
 		}
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetMempool(mempool)

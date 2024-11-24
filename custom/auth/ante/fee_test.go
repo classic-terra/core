@@ -1067,19 +1067,19 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 	denom2Price := sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(10, 1))
 	customGasPrices := []sdk.DecCoin{denom1Price, denom2Price}
 
-	requiredFees := sdk.NewCoins(sdk.NewInt64Coin(denom1, 200000), sdk.NewInt64Coin(denom2, 200000))
-
+	requiredFees := sdk.NewCoins(sdk.NewInt64Coin(denom2, 200000))
+	requiredTaxes := sdk.NewCoins(sdk.NewInt64Coin(denom1, 5000), sdk.NewInt64Coin(denom2, 5000))
 	cases := []struct {
 		name                string
 		msgSigner           cryptotypes.PrivKey
 		msgCreator          func() []sdk.Msg
 		minFeeAmounts       []sdk.Coin
 		expectProceeds      sdk.Coins
-		expectPanic         bool
+		expectAnteError     bool
 		expectReverseCharge bool
 	}{
 		{
-			name:      "MsgSend(exemption -> exemption) with multiple fee denoms, not enough gas fees",
+			name:      "MsgSend(exemption -> exemption) with multiple fee denoms, two denom not enough gases",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
 				var msgs []sdk.Msg
@@ -1092,7 +1092,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				sdk.NewInt64Coin(denom2, 0),
 			},
 			expectProceeds:      sdk.NewCoins(),
-			expectPanic:         true,
+			expectAnteError:     true,
 			expectReverseCharge: false,
 		},
 		{
@@ -1109,25 +1109,6 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			expectReverseCharge: true,
 		},
 		{
-			name:      "MsgSend(normal -> normal), enough taxes for both denoms",
-			msgSigner: privs[2],
-			msgCreator: func() []sdk.Msg {
-				var msgs []sdk.Msg
-				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin, anotherSendCoin))
-				msgs = append(msgs, msg1)
-				return msgs
-			},
-			minFeeAmounts: []sdk.Coin{
-				sdk.NewInt64Coin(denom1, 5000),
-				sdk.NewInt64Coin(denom2, 5000),
-			},
-			expectProceeds: []sdk.Coin{
-				sdk.NewInt64Coin(denom1, 5000),
-				sdk.NewInt64Coin(denom2, 5000),
-			},
-			expectReverseCharge: false,
-		},
-		{
 			name:      "MsgSend(normal -> normal), one denom not enough tax",
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
@@ -1136,12 +1117,22 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				msgs = append(msgs, msg1)
 				return msgs
 			},
-			minFeeAmounts: []sdk.Coin{
-				sdk.NewInt64Coin(denom1, 5000),
-				sdk.NewInt64Coin(denom2, 2500),
-			},
-			expectProceeds:      []sdk.Coin{},
+			minFeeAmounts:       requiredFees.Add(requiredTaxes...).Sub(sdk.NewInt64Coin(denom1, 1)),
+			expectProceeds:      sdk.NewCoins(),
 			expectReverseCharge: true,
+		},
+		{
+			name:      "MsgSend(normal -> normal), enough taxes + gases",
+			msgSigner: privs[2],
+			msgCreator: func() []sdk.Msg {
+				var msgs []sdk.Msg
+				msg1 := banktypes.NewMsgSend(addrs[2], addrs[3], sdk.NewCoins(sendCoin, anotherSendCoin))
+				msgs = append(msgs, msg1)
+				return msgs
+			},
+			minFeeAmounts:       requiredFees.Add(requiredTaxes...),
+			expectProceeds:      requiredTaxes,
+			expectReverseCharge: false,
 		},
 	}
 
@@ -1194,7 +1185,12 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			require.NoError(err)
 
 			newCtx, err := antehandler(s.ctx, tx, false)
-			require.NoError(err)
+			if c.expectAnteError {
+				require.Error(err)
+				return
+			} else {
+				require.NoError(err)
+			}
 			newCtx, err = posthandler(newCtx, tx, false, true)
 			require.NoError(err)
 

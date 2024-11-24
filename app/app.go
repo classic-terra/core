@@ -3,17 +3,16 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	mempool2 "github.com/classic-terra/core/v3/app/mempool"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
 	"io"
 	stdlog "log"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
-
+	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -150,9 +149,9 @@ func NewTerraApp(
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
-		mempool := mempool2.NewFifoMempool()
+		mempool := appmempool.NewFifoMempool()
 		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs >= 0 {
-			mempool = mempool2.NewFifoMempool(mempool2.FifoMaxTxOpt(maxTxs))
+			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs))
 		}
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetMempool(mempool)

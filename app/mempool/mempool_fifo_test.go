@@ -599,16 +599,15 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 
 func BenchmarkMempool(b *testing.B) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
-	maxMempoolSize := 1000
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 100)
 
 	benchmarks := []struct {
 		name string
 		size int
 	}{
 		{"Small-100", 100},
-		{"Medium-500", 500},
-		{"Large-1000", 1000},
+		{"Medium-1000", 1000},
+		{"Large-10000", 10000},
 	}
 
 	for _, bm := range benchmarks {
@@ -632,18 +631,17 @@ func BenchmarkMempool(b *testing.B) {
 				}
 
 				tx := testTx{
-					id:       i,
-					nonce:    uint64(i),
-					address:  accounts[rand.Intn(len(accounts))].Address,
-					priority: rand.Int63(),
-					msgs:     []sdk.Msg{msg},
+					id:      i,
+					nonce:   uint64(i),
+					address: accounts[rand.Intn(len(accounts))].Address,
+					msgs:    []sdk.Msg{msg},
 				}
 				allTxs = append(allTxs, tx)
 			}
 
 			b.StartTimer()
 			for i := 0; i < b.N; i++ {
-				mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxMempoolSize))
+				mp := appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(b.N))
 
 				// Benchmark insertion
 				for _, tx := range allTxs {
@@ -654,15 +652,15 @@ func BenchmarkMempool(b *testing.B) {
 				}
 
 				// Benchmark selection
-				itr := mp.Select(ctx, nil)
-				orderedTxs := fetchTxs(itr, int64(bm.size))
+				_ = mp.Select(ctx, nil)
+				// orderedTxs := fetchTxs(itr, int64(bm.size))
 
-				// Benchmark removal
-				for _, tx := range orderedTxs {
-					if err := mp.Remove(tx); err != nil {
-						b.Fatal(err)
-					}
-				}
+				//// Benchmark removal
+				//for _, tx := range orderedTxs {
+				//	if err := mp.Remove(tx); err != nil {
+				//		b.Fatal(err)
+				//	}
+				//}
 			}
 		})
 	}

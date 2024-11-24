@@ -26,12 +26,11 @@ var DefaultMaxTx = 5000
 // priority during iteration.
 //
 // Key characteristics:
-// 1. Maintains two separate maps of sender-to-transactions (oracle and regular)
-// 2. Each sender's transactions are stored in a skiplist ordered by nonce
+// 1. Maintains two separate FIFO queues (CList) for transactions (oracle and regular)
+// 2. Uses sync.Map for quick transaction lookup
 // 3. During iteration:
-//   - Oracle transactions are processed first, with random sender selection
-//   - Regular transactions follow, also with random sender selection
-//   - For each sender, transactions are processed in nonce order
+//   - Oracle transactions are processed first in FIFO order
+//   - Regular transactions follow in FIFO order
 //
 // 4. Transaction capacity is limited by maxTx (if > 0)
 //

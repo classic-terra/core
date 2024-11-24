@@ -3,14 +3,15 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
 	"io"
 	stdlog "log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
 
 	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	dbm "github.com/cometbft/cometbft-db"
@@ -33,7 +34,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -43,6 +43,7 @@ import (
 
 	"github.com/classic-terra/core/v3/app/keepers"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+	customserver "github.com/classic-terra/core/v3/server"
 
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -148,6 +149,14 @@ func NewTerraApp(
 	txConfig := encodingConfig.TxConfig
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
+	iavlCacheSize := cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))
+	iavlDisableFastNode := cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))
+
+	// option for cosmos sdk
+	baseAppOptions = append(baseAppOptions, baseapp.SetIAVLCacheSize(iavlCacheSize))
+	baseAppOptions = append(baseAppOptions, baseapp.SetIAVLDisableFastNode(iavlDisableFastNode))
+
+	// option for mempool
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
 		mempool := appmempool.NewFifoMempool()
 		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs >= 0 {
@@ -161,8 +170,6 @@ func NewTerraApp(
 	})
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	app := &TerraApp{
@@ -408,6 +415,9 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 	if apiConfig.Swagger {
 		RegisterSwaggerAPI(apiSvr.Router)
 	}
+
+	// Apply custom middleware
+	apiSvr.Router.Use(customserver.BlockHeightMiddleware)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.

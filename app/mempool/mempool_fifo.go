@@ -1,17 +1,16 @@
 package mempool
 
 import (
-	"context" // #nosec // crypto/rand is used for seed generation
+	"context"
 	"fmt"
 	"sync"
 
+	"github.com/classic-terra/core/v3/custom/auth/ante"
 	"github.com/cometbft/cometbft/libs/clist"
 	cmtsync "github.com/cometbft/cometbft/libs/sync"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	"github.com/classic-terra/core/v3/custom/auth/ante"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -36,7 +35,7 @@ var DefaultMaxTx = 5000
 //
 // Note: PrepareProposal may terminate iteration early if block size limits are reached.
 type FifoMempool struct {
-	updateMtx    cmtsync.RWMutex
+	mtx          cmtsync.RWMutex
 	txs          *clist.CList // Regular transactions FIFO queue
 	txsOracle    *clist.CList // Oracle transactions FIFO queue
 	txsMap       sync.Map     // For quick lookup of existing transactions
@@ -67,8 +66,8 @@ func FifoMaxTxOpt(maxTx int) FifoMempoolOptions {
 }
 
 func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
-	mp.updateMtx.RLock()
-	defer mp.updateMtx.RUnlock()
+	mp.mtx.RLock()
+	defer mp.mtx.RUnlock()
 	totalTxs := mp.txs.Len() + mp.txsOracle.Len()
 	if mp.maxTx >= 0 && totalTxs > mp.maxTx {
 		return mempool.ErrMempoolTxMaxCapacity
@@ -94,8 +93,8 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 }
 
 func (mp *FifoMempool) Select(_ context.Context, _ [][]byte) mempool.Iterator {
-	mp.updateMtx.RLock()
-	defer mp.updateMtx.RUnlock()
+	mp.mtx.RLock()
+	defer mp.mtx.RUnlock()
 	// Pre-allocate slice with exact capacity needed
 	totalTxs := mp.txsOracle.Len() + mp.txs.Len()
 	listTxKey := make([]customTxKey, 0, totalTxs)
@@ -160,8 +159,8 @@ func (it *fifoIterator) Tx() sdk.Tx {
 }
 
 func (mp *FifoMempool) Remove(tx sdk.Tx) error {
-	mp.updateMtx.RLock()
-	defer mp.updateMtx.RUnlock()
+	mp.mtx.RLock()
+	defer mp.mtx.RUnlock()
 	txKey, err := getTxKey(tx)
 	if err != nil {
 		return err
@@ -184,8 +183,8 @@ func (mp *FifoMempool) Remove(tx sdk.Tx) error {
 }
 
 func (mp *FifoMempool) CountTx() int {
-	mp.updateMtx.RLock()
-	defer mp.updateMtx.RUnlock()
+	mp.mtx.RLock()
+	defer mp.mtx.RUnlock()
 	return mp.txs.Len() + mp.txsOracle.Len()
 }
 

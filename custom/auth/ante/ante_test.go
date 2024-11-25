@@ -22,6 +22,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	terraapp "github.com/classic-terra/core/v3/app"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -53,6 +54,9 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
 	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
 
+	taxParams := taxtypes.DefaultParams()
+	taxParams.GasPrices = sdk.NewDecCoins() // tests normally rely on zero gas price, so we are setting it here and fall back to the normal ctx.MinGasPrices
+	app.TaxKeeper.SetParams(ctx, taxParams)
 	return app, ctx
 }
 

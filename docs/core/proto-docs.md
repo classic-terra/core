@@ -926,7 +926,14 @@
     - [QueryTaxRateResponse](#terra.treasury.v1beta1.QueryTaxRateResponse)
   
     - [Query](#terra.treasury.v1beta1.Query)
+
+- [terra/tax/v1beta1/query.proto](#terra/tax/v1beta1/service.proto)
+    - [QueryBurnTaxRateRequest](#terra.tax.v1beta1.QueryBurnTaxRateRequest)
+    - [QueryBurnTaxRateResponse](#terra.tax.v1beta1.QueryBurnTaxRateResponse)
+    - [QueryParamsRequest](#terra.tax.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#terra.tax.v1beta1.QueryParamsResponse)
   
+
 - [terra/tx/v1beta1/service.proto](#terra/tx/v1beta1/service.proto)
     - [ComputeTaxRequest](#terra.tx.v1beta1.ComputeTaxRequest)
     - [ComputeTaxResponse](#terra.tx.v1beta1.ComputeTaxResponse)

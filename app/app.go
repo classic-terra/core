@@ -60,6 +60,9 @@ import (
 	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
 	v8_4 "github.com/classic-terra/core/v3/app/upgrades/v8_4"
 
+	// v9 had been used by tax2gas and has to be skipped
+	v10 "github.com/classic-terra/core/v3/app/upgrades/v10"
+
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"
 	customauthtx "github.com/classic-terra/core/v3/custom/auth/tx"
@@ -93,6 +96,7 @@ var (
 		v8_2.Upgrade,
 		v8_3.Upgrade,
 		v8_4.Upgrade,
+		v10.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -246,6 +250,7 @@ func NewTerraApp(
 			TXCounterStoreKey:  app.GetKey(wasmtypes.StoreKey),
 			DyncommKeeper:      app.DyncommKeeper,
 			StakingKeeper:      app.StakingKeeper,
+			TaxKeeper:          &app.TaxKeeper,
 			Cdc:                app.appCodec,
 		},
 	)
@@ -255,7 +260,11 @@ func NewTerraApp(
 
 	postHandler, err := custompost.NewPostHandler(
 		custompost.HandlerOptions{
-			DyncommKeeper: app.DyncommKeeper,
+			DyncommKeeper:  app.DyncommKeeper,
+			TaxKeeper:      app.TaxKeeper,
+			BankKeeper:     app.BankKeeper,
+			AccountKeeper:  app.AccountKeeper,
+			TreasuryKeeper: app.TreasuryKeeper,
 		},
 	)
 	if err != nil {
@@ -404,7 +413,7 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *TerraApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
-	customauthtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.TreasuryKeeper)
+	customauthtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.TreasuryKeeper, app.TaxKeeper)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.

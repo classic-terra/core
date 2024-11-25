@@ -22,6 +22,7 @@ import (
 	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
 
 	"github.com/classic-terra/core/v3/tests/e2e/util"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
@@ -78,10 +79,11 @@ var (
 	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
-	OneMin  = time.Minute              // nolint
-	TwoMin  = 2 * time.Minute          // nolint
-	FiveMin = 5 * time.Minute          // nolint
-	TaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
+	OneMin      = time.Minute              // nolint
+	TwoMin      = 2 * time.Minute          // nolint
+	FiveMin     = 5 * time.Minute          // nolint
+	TaxRate     = sdk.ZeroDec()            // 0.02
+	BurnTaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -241,6 +243,11 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, taxtypes.ModuleName, &taxtypes.GenesisState{}, updateTaxGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, treasurytypes.ModuleName, &treasurytypes.GenesisState{}, updateTreasuryGenesis)
 	if err != nil {
 		return err
@@ -301,6 +308,11 @@ func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
 
 func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = TerraDenom
+}
+
+func updateTaxGenesis(taxGenState *taxtypes.GenesisState) {
+	taxGenState.Params.BurnTaxRate = BurnTaxRate
+	taxGenState.Params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(TerraDenom, sdk.MustNewDecFromStr(MinGasPrice)))
 }
 
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {

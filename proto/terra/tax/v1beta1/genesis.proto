@@ -1,0 +1,31 @@
+syntax = "proto3";
+package terra.tax.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/tax/types";
+
+message Params {
+  option (gogoproto.goproto_stringer) = true;
+  option (amino.name)                 = "terra/x/tax/Params";
+
+  repeated cosmos.base.v1beta1.DecCoin gas_prices = 1 [
+    (gogoproto.moretags)   = "yaml:\"gas_prices\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty)   = true
+  ];
+
+  string burn_tax_rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// GenesisState defines the tax module's genesis state.
+message GenesisState {
+  // params contains tax handling parameters.
+  Params params = 1 [(gogoproto.nullable) = false];
+}

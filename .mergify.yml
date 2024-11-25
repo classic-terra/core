@@ -1,21 +1,17 @@
 queue_rules:
   - name: default
-    conditions:
-      - "#approved-reviews-by>2"
-
-pull_request_rules:
-  - name: automerge to main with label automerge and branch protection passing
-    conditions:
+    queue_conditions:
       - "#approved-reviews-by>2"
       - base=main
       - label=A:automerge
-    actions:
-      queue:
-        name: default
-        method: squash
-        commit_message_template: |
-          {{ title }} (#{{ number }})
-          {{ body }}
+    merge_conditions:
+      - "#approved-reviews-by>2"
+    commit_message_template: |
+      {{ title }} (#{{ number }})
+      {{ body }}
+    merge_method: squash
+
+pull_request_rules:
   - name: backport patches to v2.1.x branch
     conditions:
       - base=main
@@ -24,3 +20,7 @@ pull_request_rules:
       backport:
         branches:
           - release/v2.1.x
+  - name: automerge to main with label automerge and branch protection passing
+    conditions: []
+    actions:
+      queue:

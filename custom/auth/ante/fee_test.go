@@ -1067,13 +1067,14 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 	denom2Price := sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(10, 1))
 	customGasPrices := []sdk.DecCoin{denom1Price, denom2Price}
 
-	requiredFees := sdk.NewCoins(sdk.NewInt64Coin(denom2, 200000))
+	requiredFees := []sdk.Coin{sdk.NewInt64Coin(denom1, 0), sdk.NewInt64Coin(denom2, 200000)}
 	requiredTaxes := sdk.NewCoins(sdk.NewInt64Coin(denom1, 5000), sdk.NewInt64Coin(denom2, 5000))
 	cases := []struct {
 		name                string
 		msgSigner           cryptotypes.PrivKey
 		msgCreator          func() []sdk.Msg
-		minFeeAmounts       []sdk.Coin
+		minFeeAmounts       sdk.Coins
+		taxAmounts          sdk.Coins
 		expectProceeds      sdk.Coins
 		expectAnteError     bool
 		expectReverseCharge bool
@@ -1087,10 +1088,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				msgs = append(msgs, msg1)
 				return msgs
 			},
-			minFeeAmounts: []sdk.Coin{
-				sdk.NewInt64Coin(denom1, 0),
-				sdk.NewInt64Coin(denom2, 0),
-			},
+			minFeeAmounts:       sdk.NewCoins(),
+			taxAmounts:          sdk.NewCoins(),
 			expectProceeds:      sdk.NewCoins(),
 			expectAnteError:     true,
 			expectReverseCharge: false,
@@ -1105,6 +1104,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				return msgs
 			},
 			minFeeAmounts:       requiredFees,
+			taxAmounts:          []sdk.Coin{sdk.NewInt64Coin(denom1, 0), sdk.NewInt64Coin(denom2, 0)},
 			expectProceeds:      sdk.NewCoins(),
 			expectReverseCharge: true,
 		},
@@ -1117,7 +1117,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				msgs = append(msgs, msg1)
 				return msgs
 			},
-			minFeeAmounts:       requiredFees.Add(requiredTaxes...).Sub(sdk.NewInt64Coin(denom1, 1)),
+			minFeeAmounts:       requiredFees,
+			taxAmounts:          requiredTaxes.Sub(sdk.NewInt64Coin(denom2, 1)),
 			expectProceeds:      sdk.NewCoins(),
 			expectReverseCharge: true,
 		},
@@ -1130,7 +1131,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				msgs = append(msgs, msg1)
 				return msgs
 			},
-			minFeeAmounts:       requiredFees.Add(requiredTaxes...),
+			minFeeAmounts:       requiredFees,
+			taxAmounts:          requiredTaxes,
 			expectProceeds:      requiredTaxes,
 			expectReverseCharge: false,
 		},
@@ -1174,7 +1176,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			}
 
 			// Set up transaction with multiple fee denoms
-			feeAmount := sdk.NewCoins(c.minFeeAmounts...)
+			feeAmount := sdk.NewCoins(c.minFeeAmounts...).Add(c.taxAmounts...)
 			gasLimit := testdata.NewTestGasLimit()
 			require.NoError(s.txBuilder.SetMsgs(c.msgCreator()...))
 			s.txBuilder.SetFeeAmount(feeAmount)
@@ -1201,15 +1203,16 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 
 			// Check fee collector for each denom
 			feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
-			for _, feeCoin := range c.minFeeAmounts {
+			for i, feeCoin := range c.minFeeAmounts {
+				taxCoin := c.taxAmounts[i]
 				amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), feeCoin.Denom)
 				if c.expectReverseCharge {
-					require.Equal(amountFee, feeCoin)
+					require.Equal(amountFee, feeCoin.Add(taxCoin)) // tax that isn't paid enough will not be refunded.
 				} else {
 					expectedFee := sdk.NewCoin(
 						feeCoin.Denom,
-						sdk.NewDec(feeCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
-					)
+						sdk.NewDec(taxCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
+					).Add(feeCoin)
 					require.Equal(expectedFee, amountFee)
 				}
 			}

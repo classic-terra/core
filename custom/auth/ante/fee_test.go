@@ -557,7 +557,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        0,
 			expectProceeds:      0,
 			expectReverseCharge: false,
-		}, {
+		},
+		{
 			name:      "MsgSend(normal -> normal)",
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
@@ -588,7 +589,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        feeAmt / 2,
 			expectProceeds:      0,
 			expectReverseCharge: true,
-		}, {
+		},
+		{
 			name:      "MsgSend(normal -> normal, reverse charge)",
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
@@ -603,7 +605,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        1000,
 			expectProceeds:      0,
 			expectReverseCharge: true,
-		}, {
+		},
+		{
 			name:      "MsgExec(MsgSend(normal -> normal))",
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
@@ -652,7 +655,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        feeAmt,
 			expectProceeds:      feeAmt,
 			expectReverseCharge: false,
-		}, {
+		},
+		{
 			name:      "MsgSend(exemption -> exemption), MsgMultiSend(exemption -> normal, exemption -> exemption)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -689,7 +693,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        feeAmt * 2,
 			expectProceeds:      feeAmt * 2,
 			expectReverseCharge: false,
-		}, {
+		},
+		{
 			name:      "MsgExecuteContract(exemption), MsgExecuteContract(normal)",
 			msgSigner: privs[3],
 			msgCreator: func() []sdk.Msg {
@@ -791,7 +796,6 @@ func (s *AnteTestSuite) TestTaxExemption() {
 	// there should be no coin in burn module
 	// run once with reverse charge and once without
 	for _, c := range cases {
-
 		s.Run(c.name, func() {
 			s.SetupTest(true) // setup
 			require := s.Require()
@@ -857,9 +861,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
 			require.Equal(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))), taxProceeds)
 		})
-
 	}
-
 }
 
 func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {

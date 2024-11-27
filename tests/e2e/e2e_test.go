@@ -205,7 +205,6 @@ func (s *IntegrationTestSuite) TestAuthz() {
 
 	s.Require().Equal(transferAmount1, balanceTest2.Amount)
 	s.Require().Equal(validatorBalance.Amount.Sub(transferAmount1).Sub(initialization.BurnTaxRate.MulInt(transferAmount1).TruncateInt()), newValidatorBalance.Amount)
-
 }
 
 func (s *IntegrationTestSuite) TestFeeTaxWasm() {

@@ -1192,9 +1192,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			if c.expectAnteError {
 				require.Error(err)
 				return
-			} else {
-				require.NoError(err)
 			}
+			require.NoError(err)
 			newCtx, err = posthandler(newCtx, tx, false, true)
 			require.NoError(err)
 

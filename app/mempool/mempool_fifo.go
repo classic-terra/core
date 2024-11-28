@@ -69,7 +69,7 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	mp.mtx.RLock()
 	defer mp.mtx.RUnlock()
 	totalTxs := mp.txs.Len() + mp.txsOracle.Len()
-	if mp.maxTx >= 0 && totalTxs > mp.maxTx {
+	if mp.maxTx >= 0 && totalTxs >= mp.maxTx {
 		return mempool.ErrMempoolTxMaxCapacity
 	}
 	if mp.maxTx < 0 {

@@ -234,4 +234,6 @@ replace (
 	// replace goleveldb to optimized one
 	github.com/syndtr/goleveldb => github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	google.golang.org/grpc => google.golang.org/grpc v1.58.3
+
 )

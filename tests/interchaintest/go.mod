@@ -125,7 +125,6 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
@@ -153,7 +152,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -241,7 +239,7 @@ require (
 	modernc.org/opt v0.1.3 // indirect
 	modernc.org/sqlite v1.25.0 // indirect
 	modernc.org/strutil v1.1.3 // indirect
-	modernc.org/token v1.0.1 // indirect
+	modernc.org/token v1.1.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
@@ -257,8 +255,10 @@ replace (
 replace (
 	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-classic
 	github.com/classic-terra/core/v3 => ../../
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.4
 	github.com/cosmos/ibc-go/v7 => github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
+	github.com/creachadair/taskgroup => github.com/creachadair/taskgroup v0.6.0
 	// replace goleveldb to optimized one
 	github.com/syndtr/goleveldb => github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121
 )
@@ -268,5 +268,6 @@ replace (
 	github.com/ComposableFi/go-substrate-rpc-client/v4 => github.com/Genuine-labs/go-substrate-rpc-client/v4 v4.0.0-terra47.1
 	github.com/strangelove-ventures/interchaintest/v7 => github.com/Genuine-labs/interchaintest/v7 v7.0.0-terra.1
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+	google.golang.org/grpc => google.golang.org/grpc v1.58.3
 
 )

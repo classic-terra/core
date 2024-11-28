@@ -46,6 +46,9 @@ func (h TerraStakingHooks) AfterDelegationModified(ctx sdk.Context, _ sdk.AccAdd
 
 	// Get the total power of the validator set
 	totalPower := h.sk.GetLastTotalPower(ctx)
+	if totalPower.IsZero() {
+		return nil
+	}
 
 	// Get validator delegation percent
 	validatorDelegationPercent := sdk.NewDec(validatorPower).QuoInt64(totalPower.Int64())

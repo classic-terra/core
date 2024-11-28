@@ -571,8 +571,8 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 	require.Equal(t, 100, len(orderedTxs))
 
 	// Verify oracle transactions come first, followed by regular transactions
-	var lastOracleIndex = -1
-	var firstRegularIndex = -1
+	lastOracleIndex := -1
+	firstRegularIndex := -1
 
 	for i, tx := range orderedTxs {
 		if ante.IsOracleTx(tx.GetMsgs()) {
@@ -656,7 +656,7 @@ func BenchmarkMempool(b *testing.B) {
 				// orderedTxs := fetchTxs(itr, int64(bm.size))
 
 				//// Benchmark removal
-				//for _, tx := range orderedTxs {
+				// for _, tx := range orderedTxs {
 				//	if err := mp.Remove(tx); err != nil {
 				//		b.Fatal(err)
 				//	}

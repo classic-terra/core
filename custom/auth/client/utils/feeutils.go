@@ -72,7 +72,7 @@ func ComputeFeesWithCmd(
 	gasPrices := txf.GasPrices()
 
 	if !gasPrices.IsZero() {
-		glDec := sdk.NewDec(int64git(gas))
+		glDec := sdk.NewDec(int64(gas))
 		adjustment := sdk.NewDecWithPrec(int64(txf.GasAdjustment())*100, 2)
 
 		if adjustment.LT(sdk.OneDec()) {

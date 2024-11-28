@@ -36,9 +36,9 @@ func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
 func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+func (t testPubKey) VerifySignature(_ []byte, _ []byte) bool { panic("not implemented") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
+func (t testPubKey) Equals(_ cryptotypes.PubKey) bool { panic("not implemented") }
 
 func (t testPubKey) Type() string { panic("not implemented") }
 
@@ -49,8 +49,8 @@ type testTx struct {
 	nonce    uint64
 	address  sdk.AccAddress
 	// useful for debugging
-	strAddress string
-	msgs       []sdk.Msg // New field for messages
+	// _strAddress string
+	msgs []sdk.Msg // New field for messages
 }
 
 // Add these interface implementations to testTx if not already present
@@ -88,15 +88,15 @@ type sigErrTx struct {
 	getSigs func() ([]txsigning.SignatureV2, error)
 }
 
-func (_ sigErrTx) Size() int64 { return 0 }
+func (sigErrTx) Size() int64 { return 0 }
 
-func (_ sigErrTx) GetMsgs() []sdk.Msg { return nil }
+func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
 
-func (_ sigErrTx) ValidateBasic() error { return nil }
+func (sigErrTx) ValidateBasic() error { return nil }
 
-func (_ sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+func (sigErrTx) GetSigners() []sdk.AccAddress { return nil }
 
-func (_ sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
+func (sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
 
 func (t sigErrTx) GetSignaturesV2() ([]txsigning.SignatureV2, error) { return t.getSigs() }
 

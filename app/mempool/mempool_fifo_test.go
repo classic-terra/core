@@ -559,7 +559,7 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 		} else {
 			require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
 		}
-		i += 1
+		i++
 	}
 
 	// Verify mempool size
@@ -580,10 +580,8 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 			// If we've already seen a regular transaction, this is an error
 			require.Equal(t, -1, firstRegularIndex,
 				"Found oracle tx after regular tx at index %d", i)
-		} else {
-			if firstRegularIndex == -1 {
-				firstRegularIndex = i
-			}
+		} else if firstRegularIndex == -1 {
+			firstRegularIndex = i
 		}
 	}
 
@@ -631,7 +629,8 @@ func BenchmarkMempool(b *testing.B) {
 				}
 
 				tx := testTx{
-					id:      i,
+					id: i,
+					// #nosec
 					nonce:   uint64(i),
 					address: accounts[rand.Intn(len(accounts))].Address,
 					msgs:    []sdk.Msg{msg},

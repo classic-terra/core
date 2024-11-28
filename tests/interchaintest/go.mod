@@ -27,7 +27,7 @@ require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
-	github.com/BurntSushi/toml v1.3.2 // indirect
+	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
 	github.com/ComposableFi/go-substrate-rpc-client/v4 v4.0.0-00010101000000-000000000000 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
@@ -125,6 +125,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
@@ -152,6 +153,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -255,8 +257,6 @@ replace (
 replace (
 	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-classic
 	github.com/classic-terra/core/v3 => ../../
-	github.com/cometbft/cometbft => github.com/classic-terra/cometbft v0.37.4-classic
-	github.com/cosmos/cosmos-sdk => github.com/classic-terra/cosmos-sdk v0.47.10-classic
 	github.com/cosmos/ibc-go/v7 => github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	// replace goleveldb to optimized one

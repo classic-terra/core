@@ -81,7 +81,7 @@ func TestBlockHeightMiddleware(t *testing.T) {
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 
 			if tc.expectedHeader != "" {
-				assert.Equal(t, tc.expectedHeader, rec.Header().Get(grpctypes.GRPCBlockHeightHeader))
+				assert.Equal(t, tc.expectedHeader, req.Header.Get(grpctypes.GRPCBlockHeightHeader))
 			} else {
 				assert.Empty(t, rec.Header().Get(grpctypes.GRPCBlockHeightHeader))
 			}

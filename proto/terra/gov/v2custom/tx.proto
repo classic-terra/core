@@ -1,14 +1,14 @@
 syntax = "proto3";
-package terra.gov.v2lunc1;
+package terra.gov.v2custom;
 
 import "cosmos/gov/v1/tx.proto";
 import "gogoproto/gogo.proto";
-import "terra/gov/v2lunc1/gov.proto";
+import "terra/gov/v2custom/gov.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1";
+option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2custom";
 
 // Msg defines the gov Msg service.
 service Msg {
@@ -50,7 +50,7 @@ message MsgUpdateParams {
   // params defines the x/gov parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  terra.gov.v2lunc1.Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  terra.gov.v2custom.Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

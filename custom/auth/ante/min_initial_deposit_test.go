@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/classic-terra/core/v3/custom/auth/ante"
-	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	govv2custom "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	core "github.com/classic-terra/core/v3/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -25,13 +25,13 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	suite.app.OracleKeeper.SetLunaExchangeRate(suite.ctx, core.MicroUSDDenom, lunaPriceInUSD)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetParams(suite.ctx, govv2lunc1.DefaultParams())
+	suite.app.GovKeeper.SetParams(suite.ctx, govv2custom.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinUusdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
 	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
-	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUusd(suite.ctx)
-	fmt.Printf("\n GetMinimumDepositBaseUusd %s", price.String())
+	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUstc(suite.ctx)
+	fmt.Printf("\n GetMinimumDepositBaseUstc %s", price.String())
 
 	// set initial deposit ratio to 0.0
 	ratio := sdk.ZeroDec()
@@ -85,13 +85,13 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	suite.app.OracleKeeper.SetLunaExchangeRate(suite.ctx, core.MicroUSDDenom, lunaPriceInUSD)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetParams(suite.ctx, govv2lunc1.DefaultParams())
+	suite.app.GovKeeper.SetParams(suite.ctx, govv2custom.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinUusdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
 	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
-	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUusd(suite.ctx)
-	fmt.Printf("\n GetMinimumDepositBaseUusd %s", price.String())
+	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUstc(suite.ctx)
+	fmt.Printf("\n GetMinimumDepositBaseUstc %s", price.String())
 
 	// set initial deposit ratio to 0.2
 	ratio := sdk.NewDecWithPrec(2, 1)
@@ -151,13 +151,13 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	suite.app.OracleKeeper.SetLunaExchangeRate(suite.ctx, core.MicroUSDDenom, lunaPriceInUSD)
 
 	// set required deposit to uluna
-	suite.app.GovKeeper.SetParams(suite.ctx, govv2lunc1.DefaultParams())
+	suite.app.GovKeeper.SetParams(suite.ctx, govv2custom.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
 	govparams.MinUusdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
 	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
-	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUusd(suite.ctx)
-	fmt.Printf("\n GetMinimumDepositBaseUusd %s", price.String())
+	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUstc(suite.ctx)
+	fmt.Printf("\n GetMinimumDepositBaseUstc %s", price.String())
 
 	// set initial deposit ratio to 0.2
 	ratio := sdk.NewDecWithPrec(2, 1)

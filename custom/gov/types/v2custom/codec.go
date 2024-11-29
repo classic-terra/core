@@ -1,4 +1,4 @@
-package v2lunc1
+package v2custom
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

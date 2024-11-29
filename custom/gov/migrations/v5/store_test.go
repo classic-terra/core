@@ -5,7 +5,7 @@ import (
 	"time"
 
 	v5 "github.com/classic-terra/core/v3/custom/gov/migrations/v5"
-	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	"github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -70,7 +70,7 @@ func TestMigrateStore(t *testing.T) {
 	// Fetch the params after migration
 	bz = store.Get(govtypes.ParamsKey)
 
-	var newParams v2lunc1.Params
+	var newParams v2custom.Params
 	require.NoError(t, cdc.Unmarshal(bz, &newParams))
 
 	t.Logf("params2: %v", newParams)
@@ -86,6 +86,6 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, oldParams.BurnVoteQuorum, newParams.BurnVoteQuorum)
 	require.Equal(t, oldParams.BurnVoteVeto, newParams.BurnVoteVeto)
 
-	// Check any new fields from the `v2lunc1.Params`
-	require.Equal(t, v2lunc1.DefaultParams().MinUusdDeposit, newParams.MinUusdDeposit)
+	// Check any new fields from the `v2custom.Params`
+	require.Equal(t, v2custom.DefaultParams().MinUusdDeposit, newParams.MinUusdDeposit)
 }

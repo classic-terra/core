@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
+	v2customtypes "github.com/classic-terra/core/v3/custom/gov/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -94,14 +94,14 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, *proposal.DepositEndTime)
 	keeper.SetProposalID(ctx, proposalID+1)
 
-	totalLuncDeposit, err := keeper.GetMinimumDepositBaseUusd(ctx)
+	totalUlunaDeposit, err := keeper.GetMinimumDepositBaseUstc(ctx)
 	if err != nil {
-		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, err.Error())
+		return v1.Proposal{}, sdkerrors.Wrap(v2customtypes.ErrQueryExchangeRateUstcFail, err.Error())
 	}
 
-	err = keeper.SetDepositLimitBaseUusd(ctx, proposalID, totalLuncDeposit)
+	err = keeper.SetDepositLimitBaseUstc(ctx, proposalID, totalUlunaDeposit)
 	if err != nil {
-		return v1.Proposal{}, sdkerrors.Wrap(v2lunc1types.ErrQueryExchangeRateUusdFail, err.Error())
+		return v1.Proposal{}, sdkerrors.Wrap(v2customtypes.ErrQueryExchangeRateUstcFail, err.Error())
 	}
 
 	// called right after a proposal is submitted

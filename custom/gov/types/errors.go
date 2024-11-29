@@ -7,5 +7,5 @@ import (
 
 // x/gov module sentinel errors
 var (
-	ErrQueryExchangeRateUusdFail = sdkerrors.Register(govtypes.ModuleName, 17, "Get exchange rate lunc-uusd from oracle failed")
+	ErrQueryExchangeRateUstcFail = sdkerrors.Register(govtypes.ModuleName, 17, "Get exchange rate lunc-uusd from oracle failed")
 )

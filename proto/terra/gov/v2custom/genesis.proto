@@ -1,10 +1,10 @@
 syntax = "proto3";
-package terra.gov.v2lunc1;
+package terra.gov.v2custom;
 
-import "terra/gov/v2lunc1/gov.proto";
+import "terra/gov/v2custom/gov.proto";
 import "cosmos/gov/v1/gov.proto";
 
-option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1";
+option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2custom";
 
 // GenesisState defines the gov module's genesis state.
 message GenesisState {
@@ -28,5 +28,5 @@ message GenesisState {
   // params defines all the paramaters of x/gov module.
   //
   // Since: cosmos-sdk 0.47
-  terra.gov.v2lunc1.Params params = 8;
+  terra.gov.v2custom.Params params = 8;
 }

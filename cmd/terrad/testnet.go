@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
-	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	govv2custom "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
@@ -309,7 +309,7 @@ func initGenFiles(
 	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
 
 	// set gov in the genesis state
-	var govGenState govv2lunc1.GenesisState
+	var govGenState govv2custom.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
 	votingPeriod := time.Minute * 3
 	govGenState.Params.VotingPeriod = &votingPeriod

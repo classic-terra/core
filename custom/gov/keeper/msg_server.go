@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/errors"
-	v2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	v2custom "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -20,14 +20,14 @@ type msgServer struct {
 
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper *Keeper) v2lunc1.MsgServer {
+func NewMsgServerImpl(keeper *Keeper) v2custom.MsgServer {
 	return &msgServer{
 		Keeper:      keeper,
 		v1MsgServer: govkeeper.NewMsgServerImpl(keeper.Keeper),
 	}
 }
 
-var _ v2lunc1.MsgServer = msgServer{}
+var _ v2custom.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
 func (k msgServer) SubmitProposal(goCtx context.Context, msg *govv1.MsgSubmitProposal) (*govv1.MsgSubmitProposalResponse, error) {
@@ -119,7 +119,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *govv1.MsgVoteWeighte
 	return k.v1MsgServer.VoteWeighted(goCtx, msg)
 }
 
-func (k msgServer) UpdateParams(goCtx context.Context, msg *v2lunc1.MsgUpdateParams) (*v2lunc1.MsgUpdateParamsResponse, error) {
+func (k msgServer) UpdateParams(goCtx context.Context, msg *v2custom.MsgUpdateParams) (*v2custom.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
@@ -129,18 +129,18 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *v2lunc1.MsgUpdatePar
 		return nil, err
 	}
 
-	return &v2lunc1.MsgUpdateParamsResponse{}, nil
+	return &v2custom.MsgUpdateParamsResponse{}, nil
 }
 
 type legacyMsgServer struct {
 	govAcct string
-	server  v2lunc1.MsgServer
+	server  v2custom.MsgServer
 }
 
 // NewLegacyMsgServerImpl returns an implementation of the v1beta1 legacy MsgServer interface. It wraps around
 // the current MsgServer
-func NewLegacyMsgServerImpl(govAcct string, v2lunc1Server v2lunc1.MsgServer) govv1beta1.MsgServer {
-	return &legacyMsgServer{govAcct: govAcct, server: v2lunc1Server}
+func NewLegacyMsgServerImpl(govAcct string, v2customServer v2custom.MsgServer) govv1beta1.MsgServer {
+	return &legacyMsgServer{govAcct: govAcct, server: v2customServer}
 }
 
 var _ govv1beta1.MsgServer = legacyMsgServer{}

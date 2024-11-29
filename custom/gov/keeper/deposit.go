@@ -38,7 +38,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// HandleCheckLimitDeposit
 	minDeposit := keeper.GetParams(ctx).MinDeposit
-	requiredAmount := keeper.GetDepositLimitBaseUusd(ctx, proposalID)
+	requiredAmount := keeper.GetDepositLimitBaseUstc(ctx, proposalID)
 	if requiredAmount.IsZero() {
 		requiredAmount = minDeposit[0].Amount
 	}
@@ -93,7 +93,7 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 	if minInitialDepositRatio.IsZero() {
 		return nil
 	}
-	totalLuncDeposit, err := keeper.GetMinimumDepositBaseUusd(ctx)
+	totalLuncDeposit, err := keeper.GetMinimumDepositBaseUstc(ctx)
 	luncCoin := sdk.NewCoin(params.MinDeposit[0].Denom, totalLuncDeposit)
 	minDepositCoins := params.MinDeposit
 	minDepositCoins[0] = luncCoin

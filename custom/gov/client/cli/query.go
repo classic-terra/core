@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	v2customtypes "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -65,7 +65,7 @@ $ %s query gov min-deposit 1
 			if err != nil {
 				return err
 			}
-			queryClient := v2lunc1types.NewQueryClient(clientCtx)
+			queryClient := v2customtypes.NewQueryClient(clientCtx)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -74,9 +74,9 @@ $ %s query gov min-deposit 1
 			}
 
 			// Query the proposal
-			res, err := queryClient.ProposalMinimalLUNCByUusd(
+			res, err := queryClient.ProposalMinimalLUNCByUstc(
 				cmd.Context(),
-				&v2lunc1types.QueryProposalRequest{ProposalId: proposalID},
+				&v2customtypes.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
 				return err
@@ -102,11 +102,11 @@ func GetCmdQueryCustomParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			queryClient := v2lunc1types.NewQueryClient(clientCtx)
+			queryClient := v2customtypes.NewQueryClient(clientCtx)
 			// Query the proposal
 			res, err := queryClient.Params(
 				cmd.Context(),
-				&v2lunc1types.QueryParamsRequest{},
+				&v2customtypes.QueryParamsRequest{},
 			)
 			if err != nil {
 				return err

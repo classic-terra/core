@@ -28,7 +28,7 @@ import (
 
 	customcli "github.com/classic-terra/core/v3/custom/gov/client/cli"
 	"github.com/classic-terra/core/v3/custom/gov/keeper"
-	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	"github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	core "github.com/classic-terra/core/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 )
@@ -78,20 +78,20 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	v1beta1.RegisterLegacyAminoCodec(cdc)
-	v2lunc1.RegisterLegacyAminoCodec(cdc)
+	v2custom.RegisterLegacyAminoCodec(cdc)
 }
 
 // RegisterInterfaces implements InterfaceModule.RegisterInterfaces
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	v1beta1.RegisterInterfaces(registry)
-	v2lunc1.RegisterInterfaces(registry)
+	v2custom.RegisterInterfaces(registry)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the gov
 // module.
 func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	// customize to set default genesis state deposit denom to uluna
-	defaultGenesisState := v2lunc1.DefaultGenesisState()
+	defaultGenesisState := v2custom.DefaultGenesisState()
 	defaultGenesisState.Params.MinDeposit[0].Denom = core.MicroLunaDenom
 
 	return cdc.MustMarshalJSON(defaultGenesisState)
@@ -99,12 +99,12 @@ func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 
 // ValidateGenesis performs genesis state validation for the gov module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
-	var data v2lunc1.GenesisState
+	var data v2custom.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
 	}
 
-	return v2lunc1.ValidateGenesis(&data)
+	return v2custom.ValidateGenesis(&data)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
@@ -155,10 +155,10 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	msgServer := keeper.NewMsgServerImpl(&am.keeper)
 	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
-	v2lunc1.RegisterMsgServer(cfg.MsgServer(), msgServer)
+	v2custom.RegisterMsgServer(cfg.MsgServer(), msgServer)
 
 	queryServer := keeper.NewQueryServerImpl(am.keeper)
-	v2lunc1.RegisterQueryServer(cfg.QueryServer(), queryServer)
+	v2custom.RegisterQueryServer(cfg.QueryServer(), queryServer)
 
 	legacyQueryServer := govkeeper.NewLegacyQueryServer(am.keeper.Keeper)
 	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
@@ -186,7 +186,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // InitGenesis performs genesis initialization for the gov module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState v2lunc1.GenesisState
+	var genesisState v2custom.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, am.bankKeeper, &am.keeper, &genesisState)
 	return []abci.ValidatorUpdate{}

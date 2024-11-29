@@ -1,5 +1,5 @@
 syntax = "proto3";
-package terra.gov.v2lunc1;
+package terra.gov.v2custom;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1";
+option go_package = "github.com/classic-terra/core/v3/custom/gov/types/v2custom";
 
 // VoteOption enumerates the valid vote options for a given governance proposal.
 enum VoteOption {

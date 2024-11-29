@@ -3,12 +3,12 @@
 # Step 1: Run old chain --> Sub Proposal Upgrade (soft-upgrade)
 # Step 2: Vote --> Proposal Passed
 # Step 3: Stop old chain --> Switch new code --> Build --> Run new chain 
-# Step 4: Test Submit Proposal New Flow with MinUusd Deposit
+# Step 4: Test Submit Proposal New Flow with MinUstc Deposit
 
 
 HOME_DIR=mytestnet
 
-./build/terrad tx gov submit-legacy-proposal software-upgrade v8_4 --upgrade-height 20 --upgrade-info v8_4 --title "upgrade" --description "upgrade" --no-validate --deposit "100000000uluna" --from test0 --keyring-backend test --home mytestnet -y
+./build/terrad tx gov submit-legacy-proposal software-upgrade v10_1 --upgrade-height 20 --upgrade-info v10_1 --title "upgrade" --description "upgrade" --no-validate --deposit "100000000uluna" --from test0 --keyring-backend test --home mytestnet -y
 
 ./build/terrad tx gov vote 1 yes --from test0 --home mytestnet --keyring-backend test -y
 ./build/terrad tx gov vote 1 yes --from test1 --home mytestnet --keyring-backend test -y

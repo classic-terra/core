@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/math"
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types"
+	v2customtypes "github.com/classic-terra/core/v3/custom/gov/types"
 	core "github.com/classic-terra/core/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -80,10 +80,10 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	return keeper
 }
 
-// SetDepositLimitBaseUusd sets a limit deposit(Lunc) base on Uusd to store.
-func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64, amount math.Int) error {
+// SetDepositLimitBaseUstc sets a limit deposit(Lunc) base on Ustc to store.
+func (keeper Keeper) SetDepositLimitBaseUstc(ctx sdk.Context, proposalID uint64, amount math.Int) error {
 	store := ctx.KVStore(keeper.storeKey)
-	key := v2lunc1types.TotalDepositKey(proposalID)
+	key := v2customtypes.TotalDepositKey(proposalID)
 	bz, err := amount.Marshal()
 	if err == nil {
 		store.Set(key, bz)
@@ -91,8 +91,8 @@ func (keeper Keeper) SetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64,
 	return err
 }
 
-// GetDepositLimitBaseUusd: calculate the minimum LUNC amount to deposit base on Uusd for the proposal
-func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error) {
+// GetDepositLimitBaseUstc: calculate the minimum LUNC amount to deposit base on Ustc for the proposal
+func (keeper Keeper) GetMinimumDepositBaseUstc(ctx sdk.Context) (math.Int, error) {
 	// Get exchange rate betweent Lunc/uusd from oracle
 	// save it to store
 	price, err := keeper.oracleKeeper.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
@@ -101,16 +101,16 @@ func (keeper Keeper) GetMinimumDepositBaseUusd(ctx sdk.Context) (math.Int, error
 		return keeper.GetParams(ctx).MinDeposit[0].Amount, nil
 	}
 
-	minUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
-	totalLuncDeposit := sdk.NewDecFromInt(minUusdDeposit.Amount).Quo(price).TruncateInt()
+	MinUusdDeposit := keeper.GetParams(ctx).MinUusdDeposit
+	totalUlunaDeposit := sdk.NewDecFromInt(MinUusdDeposit.Amount).Quo(price).TruncateInt()
 
-	return totalLuncDeposit, nil
+	return totalUlunaDeposit, nil
 }
 
-// GetDepositLimitBaseUUSD gets the deposit limit (Lunc) for a specific proposal
-func (keeper Keeper) GetDepositLimitBaseUusd(ctx sdk.Context, proposalID uint64) (depositLimit math.Int) {
+// GetDepositLimitBaseUstc gets the deposit limit (Lunc) for a specific proposal
+func (keeper Keeper) GetDepositLimitBaseUstc(ctx sdk.Context, proposalID uint64) (depositLimit math.Int) {
 	store := ctx.KVStore(keeper.storeKey)
-	key := v2lunc1types.TotalDepositKey(proposalID)
+	key := v2customtypes.TotalDepositKey(proposalID)
 	bz := store.Get(key)
 	if bz == nil {
 		return sdk.ZeroInt()

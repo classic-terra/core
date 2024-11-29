@@ -10,7 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	v2customtypes "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	core "github.com/classic-terra/core/v3/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -193,7 +193,7 @@ func TestVoteReq(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res.ProposalId)
 	proposalID := res.ProposalId
-	requiredAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalID)
+	requiredAmount := govKeeper.GetDepositLimitBaseUstc(ctx, proposalID)
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -337,7 +337,7 @@ func TestVoteWeightedReq(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res.ProposalId)
 	proposalID := res.ProposalId
-	// requiredAmount := suite.govKeeper.GetDepositLimitBaseUusd(suite.ctx, proposalId).TruncateInt()
+	// requiredAmount := suite.govKeeper.GetDepositLimitBaseUstc(suite.ctx, proposalId).TruncateInt()
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -536,18 +536,18 @@ func TestMsgUpdateParams(t *testing.T) {
 	ctx := input.Ctx
 	govKeeper := input.GovKeeper
 	authority := govKeeper.GetAuthority()
-	params := v2lunc1types.DefaultParams()
+	params := v2customtypes.DefaultParams()
 	govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 	testCases := []struct {
 		name      string
-		input     func() *v2lunc1types.MsgUpdateParams
+		input     func() *v2customtypes.MsgUpdateParams
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "valid",
-			input: func() *v2lunc1types.MsgUpdateParams {
-				return &v2lunc1types.MsgUpdateParams{
+			input: func() *v2customtypes.MsgUpdateParams {
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params,
 				}
@@ -556,8 +556,8 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid authority",
-			input: func() *v2lunc1types.MsgUpdateParams {
-				return &v2lunc1types.MsgUpdateParams{
+			input: func() *v2customtypes.MsgUpdateParams {
+				return &v2customtypes.MsgUpdateParams{
 					Authority: "authority",
 					Params:    params,
 				}
@@ -567,11 +567,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid min deposit",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.MinDeposit = nil
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -581,14 +581,14 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "negative deposit",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.MinDeposit = sdk.Coins{{
 					Denom:  sdk.DefaultBondDenom,
 					Amount: sdk.NewInt(-100),
 				}}
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -598,11 +598,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid max deposit period",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.MaxDepositPeriod = nil
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -612,12 +612,12 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "zero max deposit period",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				duration := time.Duration(0)
 				params1.MaxDepositPeriod = &duration
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -627,11 +627,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid quorum",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.Quorum = testQuorumABC
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -641,11 +641,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "negative quorum",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.Quorum = testQuorumNeg01
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -655,11 +655,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "quorum > 1",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.Quorum = "2"
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -669,11 +669,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid threshold",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.Threshold = testQuorumABC
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -683,11 +683,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "negative threshold",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.Threshold = testQuorumNeg01
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -697,11 +697,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "threshold > 1",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.Threshold = "2"
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -711,11 +711,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid veto threshold",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.VetoThreshold = testQuorumABC
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -725,11 +725,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "negative veto threshold",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.VetoThreshold = testQuorumNeg01
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -739,11 +739,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "veto threshold > 1",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.VetoThreshold = "2"
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -753,11 +753,11 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "invalid voting period",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				params1.VotingPeriod = nil
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -767,12 +767,12 @@ func TestMsgUpdateParams(t *testing.T) {
 		},
 		{
 			name: "zero voting period",
-			input: func() *v2lunc1types.MsgUpdateParams {
+			input: func() *v2customtypes.MsgUpdateParams {
 				params1 := params
 				duration := time.Duration(0)
 				params1.VotingPeriod = &duration
 
-				return &v2lunc1types.MsgUpdateParams{
+				return &v2customtypes.MsgUpdateParams{
 					Authority: authority,
 					Params:    params1,
 				}
@@ -786,7 +786,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := tc.input()
-			exec := func(updateParams *v2lunc1types.MsgUpdateParams) error {
+			exec := func(updateParams *v2customtypes.MsgUpdateParams) error {
 				if err := msg.ValidateBasic(); err != nil {
 					return err
 				}
@@ -820,7 +820,7 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.NewDecWithPrec(2, 1))
 	_, _, addr := testdata.KeyTestPubAddr()
 
-	minLuncDeposit, err := input.GovKeeper.GetMinimumDepositBaseUusd(ctx)
+	minLuncDeposit, err := input.GovKeeper.GetMinimumDepositBaseUstc(ctx)
 	require.NoError(t, err)
 
 	// setup deposit value when test
@@ -883,7 +883,7 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 			FundAccount(input, addr, tc.minDeposit)
 			govMsgSvr := NewMsgServerImpl(input.GovKeeper)
 
-			params := v2lunc1types.DefaultParams()
+			params := v2customtypes.DefaultParams()
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
 
 			msg, err := v1.NewMsgSubmitProposal(msgs, tc.initialDeposit, addr.String(), "test", "Proposal", "description of proposal")
@@ -911,7 +911,7 @@ func TestLegacyMsgSubmitProposal(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 UUSD
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 USTC
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	initialDeposit := coins
 
@@ -978,7 +978,7 @@ func TestLegacyMsgVote(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
 	proposer := addr
 
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 UUSD
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000))) //  500 USTC
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.OneDec())
 	FundAccount(input, addr, coins)
 

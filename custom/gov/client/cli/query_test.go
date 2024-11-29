@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	v2lunc1cli "github.com/classic-terra/core/v3/custom/gov/client/cli"
+	v2customcli "github.com/classic-terra/core/v3/custom/gov/client/cli"
 )
 
 func (s *CLITestSuite) TestGetCmdQueryMinimalDeposit() {
@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestGetCmdQueryMinimalDeposit() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := v2lunc1cli.GetCmdQueryMinimalDeposit()
+			cmd := v2customcli.GetCmdQueryMinimalDeposit()
 			cmd.SetArgs(tc.args)
 			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})

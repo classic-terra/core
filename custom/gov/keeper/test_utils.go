@@ -12,7 +12,7 @@ import (
 	customauth "github.com/classic-terra/core/v3/custom/auth"
 	custombank "github.com/classic-terra/core/v3/custom/bank"
 	customdistr "github.com/classic-terra/core/v3/custom/distribution"
-	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	"github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	customparams "github.com/classic-terra/core/v3/custom/params"
 	customstaking "github.com/classic-terra/core/v3/custom/staking"
 	core "github.com/classic-terra/core/v3/types"
@@ -83,8 +83,8 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	ModuleBasics.RegisterInterfaces(interfaceRegistry)
 	v1beta1.RegisterLegacyAminoCodec(amino)
 	v1beta1.RegisterInterfaces(interfaceRegistry)
-	v2lunc1.RegisterLegacyAminoCodec(amino)
-	v2lunc1.RegisterInterfaces(interfaceRegistry)
+	v2custom.RegisterLegacyAminoCodec(amino)
+	v2custom.RegisterInterfaces(interfaceRegistry)
 	markettypes.RegisterLegacyAminoCodec(amino)
 	markettypes.RegisterInterfaces(interfaceRegistry)
 
@@ -278,7 +278,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	govRouter.AddRoute(govtypes.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
 	govKeeper.Keeper.SetParams(ctx, v1.DefaultParams())
-	govKeeper.SetParams(ctx, v2lunc1.DefaultParams())
+	govKeeper.SetParams(ctx, v2custom.DefaultParams())
 
 	// govparamsv2 := govKeeper.GetParams(ctx)
 	// govparamsv2.MinDeposit = sdk.NewCoins(
@@ -296,7 +296,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	msr.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	msgServer := NewMsgServerImpl(govKeeper)
 	v1beta1.RegisterMsgServer(msr, NewLegacyMsgServerImpl(accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
-	v2lunc1.RegisterMsgServer(msr, msgServer)
+	v2custom.RegisterMsgServer(msr, msgServer)
 	banktypes.RegisterMsgServer(msr, nil) //
 
 	return TestInput{ctx, legacyAmino, accountKeeper, bankKeeper, oracleKeeper, stakingKeeper, govKeeper}

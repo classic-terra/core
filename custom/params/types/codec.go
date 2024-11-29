@@ -1,7 +1,7 @@
 package types
 
 import (
-	govtypes "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	govtypes "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )

@@ -33,24 +33,24 @@ module uses the `MsgServiceRouter` to check that these messages are correctly co
 and have a respective path to execute on but do not perform a full validity check.
 ### Deposit
 
-To prevent spam, proposals must be submitted with a deposit in the coins defined by the equation `luncMinDepositAmountBasedOnUusd` = `MinUusdDeposit` / real-time price of LUNC at the time of proposal submission.
+To prevent spam, proposals must be submitted with a deposit in the coins defined by the equation `luncMinDepositAmountBasedOnUstc` = `MinUusdDeposit` / real-time price of LUNC at the time of proposal submission.
 ```keeper reference
 github.com/classic-terra/core/v3/custom/gov/keeper/proposal.go#L136-L149
 ```
-The value of `luncMinDepositAmountBasedOnUusd` will be stored in KVStores, using a key defined as `UUSDMinKeyPrefix|proposalID`, where the proposal ID is appended to the prefix, represented as a single byte.
+The value of `luncMinDepositAmountBasedOnUstc` will be stored in KVStores, using a key defined as `USTCMinKeyPrefix|proposalID`, where the proposal ID is appended to the prefix, represented as a single byte.
 ```types reference
 github.com/classic-terra/core/v3/custom/gov/types/keys.go#L20-L22
 ```
 
 When a proposal is submitted, it has to be accompanied with a deposit that must be
-strictly positive, but can be inferior to `luncMinDepositAmountBasedOnUusd`. The submitter doesn't need
+strictly positive, but can be inferior to `luncMinDepositAmountBasedOnUstc`. The submitter doesn't need
 to pay for the entire deposit on their own. The newly created proposal is stored in
-an *inactive proposal queue* and stays there until its deposit passes the `luncMinDepositAmountBasedOnUusd`.
+an *inactive proposal queue* and stays there until its deposit passes the `luncMinDepositAmountBasedOnUstc`.
 Other token holders can increase the proposal's deposit by sending a `Deposit`
-transaction. If a proposal doesn't pass the `luncMinDepositAmountBasedOnUusd` before the deposit end time
+transaction. If a proposal doesn't pass the `luncMinDepositAmountBasedOnUstc` before the deposit end time
 (the time when deposits are no longer accepted), the proposal will be destroyed: the
 proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
-When a proposal deposit passes the `luncMinDepositAmountBasedOnUusd` threshold (even during the proposal
+When a proposal deposit passes the `luncMinDepositAmountBasedOnUstc` threshold (even during the proposal
 submission) before the deposit end time, the proposal will be moved into the
 *active proposal queue* and the voting period will begin.
 
@@ -73,7 +73,7 @@ according to the final tally of the proposal:
 
 #### Voting period
 
-Once a proposal reaches `luncMinDepositAmountBasedOnUusd`, it immediately enters `Voting period`. We
+Once a proposal reaches `luncMinDepositAmountBasedOnUstc`, it immediately enters `Voting period`. We
 define `Voting period` as the interval between the moment the vote opens and
 the moment the vote closes. `Voting period` should always be shorter than
 `Unbonding period` to prevent double voting. The initial value of
@@ -94,7 +94,7 @@ We will use one KVStore `Governance` to store five mappings:
   x/gov params.
 * A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
   us to know if a proposal is in the voting period or not with very low gas cost.
-* A mapping from `UUSDMinKeyPrefix|proposalID` to a single byte. This allows us to determine the minimum amount of LUNC that a specific proposal must deposit to pass the deposit phase.
+* A mapping from `USTCMinKeyPrefix|proposalID` to a single byte. This allows us to determine the minimum amount of LUNC that a specific proposal must deposit to pass the deposit phase.
   
 For pseudocode purposes, here are the two function we will use to read or write in stores:
 
@@ -128,7 +128,7 @@ A user can query and interact with the `gov` module using the CLI.
 We have added two new commands 
 
 ##### MinimalDeposit
-The `MinimalDeposit` command enables users to query the minimum LUNC deposit required for a specific proposal, calculated based on the UUSD value. 
+The `MinimalDeposit` command enables users to query the minimum LUNC deposit required for a specific proposal, calculated based on the USTC value. 
 
 
 ```bash

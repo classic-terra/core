@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	"github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	core "github.com/classic-terra/core/v3/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
@@ -156,11 +156,11 @@ func TestValidateInitialDeposit(t *testing.T) {
 	govKeeper := input.GovKeeper
 	ctx := input.Ctx
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, sdk.NewDec(1))
-	minLuncDeposit, err := input.GovKeeper.GetMinimumDepositBaseUusd(ctx)
+	minUlunaAmount, err := input.GovKeeper.GetMinimumDepositBaseUstc(ctx)
 	require.NoError(t, err)
 
 	// setup deposit value when test
-	meetsDepositValue := minLuncDeposit.Mul(sdk.NewInt(baseDepositTestPercent)).Quo(sdk.NewInt(100))
+	meetsDepositValue := minUlunaAmount.Mul(sdk.NewInt(baseDepositTestPercent)).Quo(sdk.NewInt(100))
 
 	testcases := map[string]struct {
 		minDeposit               sdk.Coins
@@ -189,12 +189,12 @@ func TestValidateInitialDeposit(t *testing.T) {
 		"min deposit * initial percent == initial deposit (non-base values and denom): success": {
 			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(56912))),
 			minInitialDepositPercent: 50,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit.Mul(sdk.NewInt(50)).Quo(sdk.NewInt(100)).Add(sdk.NewInt(10)))),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minUlunaAmount.Mul(sdk.NewInt(50)).Quo(sdk.NewInt(100)).Add(sdk.NewInt(10)))),
 		},
 		"min deposit * initial percent == initial deposit but different denoms: error": {
 			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin("uosmo", minLuncDeposit)),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin("uosmo", minUlunaAmount)),
 			expectError:              true,
 		},
 		"min deposit * initial percent == initial deposit (multiple coins): success": {
@@ -203,7 +203,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2))),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit),
+				sdk.NewCoin(sdk.DefaultBondDenom, minUlunaAmount),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2*baseDepositTestPercent/100)),
 			),
 		},
@@ -213,7 +213,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*3))),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit),
+				sdk.NewCoin(sdk.DefaultBondDenom, minUlunaAmount),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*2*baseDepositTestPercent/100-1)),
 			),
 
@@ -224,20 +224,20 @@ func TestValidateInitialDeposit(t *testing.T) {
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: baseDepositTestPercent,
 			initialDeposit: sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit),
+				sdk.NewCoin(sdk.DefaultBondDenom, minUlunaAmount),
 				sdk.NewCoin("uosmo", sdk.NewInt(baseUSDDepositTestAmount*baseDepositTestPercent/100-1)),
 			),
 		},
 		"0 initial percent: success": {
 			minDeposit:               sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseUSDDepositTestAmount))),
 			minInitialDepositPercent: 0,
-			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minLuncDeposit)),
+			initialDeposit:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, minUlunaAmount)),
 		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			params := v2lunc1.DefaultParams()
+			params := v2custom.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = sdk.NewDec(tc.minInitialDepositPercent).Quo(sdk.NewDec(100)).String()
 			govKeeper.SetParams(ctx, params)

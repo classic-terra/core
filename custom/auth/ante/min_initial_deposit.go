@@ -50,10 +50,10 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper custom
 	}
 	// set offset price change 3%
 	offsetPrice := sdk.NewDecWithPrec(97, 2)
-	minLuncAmount, err := govKeeper.GetMinimumDepositBaseUusd(ctx)
+	minUlunaAmount, err := govKeeper.GetMinimumDepositBaseUstc(ctx)
 	minInitialDepositRatio := treasuryKeeper.GetMinInitialDepositRatio(ctx)
-	if err == nil && minLuncAmount.GT(sdk.ZeroInt()) {
-		requiredDeposit := sdk.NewDecFromInt(minLuncAmount).Mul(minInitialDepositRatio).Mul(offsetPrice).TruncateInt()
+	if err == nil && minUlunaAmount.GT(sdk.ZeroInt()) {
+		requiredDeposit := sdk.NewDecFromInt(minUlunaAmount).Mul(minInitialDepositRatio).Mul(offsetPrice).TruncateInt()
 		requiredDepositCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, requiredDeposit))
 		if initialDepositCoins.IsAllLT(requiredDepositCoins) {
 			return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)

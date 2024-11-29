@@ -19,7 +19,7 @@ import (
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 
-	govv2lunc1 "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	govv2custom "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 
 	"github.com/classic-terra/core/v3/tests/e2e/util"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
@@ -253,7 +253,7 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govv2lunc1.GenesisState{}, updateGovGenesis)
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govv2custom.GenesisState{}, updateGovGenesis)
 	if err != nil {
 		return err
 	}
@@ -324,7 +324,7 @@ func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 	}
 }
 
-func updateGovGenesis(govGenState *govv2lunc1.GenesisState) {
+func updateGovGenesis(govGenState *govv2custom.GenesisState) {
 	govGenState.Params.VotingPeriod = &OneMin
 	govGenState.Params.Quorum = sdk.NewDecWithPrec(2, 1).String()
 	govGenState.Params.MinDeposit = tenTerra

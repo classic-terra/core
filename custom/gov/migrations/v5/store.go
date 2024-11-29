@@ -1,7 +1,7 @@
 package v5
 
 import (
-	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	"github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,8 +23,8 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Bina
 		return err
 	}
 
-	defaultParams := v2lunc1.DefaultParams()
-	newParams := v2lunc1.NewParams(
+	defaultParams := v2custom.DefaultParams()
+	newParams := v2custom.NewParams(
 		params.MinDeposit,
 		*params.MaxDepositPeriod,
 		*params.VotingPeriod,

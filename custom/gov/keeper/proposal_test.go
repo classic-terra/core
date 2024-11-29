@@ -40,7 +40,7 @@ func TestGetSetProposal(t *testing.T) {
 	lunaPriceInUSD := sdk.MustNewDecFromStr("0.10008905")
 	oracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, lunaPriceInUSD)
 
-	totalLuncMinDeposit, err := govKeeper.GetMinimumDepositBaseUusd(ctx)
+	totalLuncMinDeposit, err := govKeeper.GetMinimumDepositBaseUstc(ctx)
 	require.NoError(t, err)
 
 	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
@@ -53,7 +53,7 @@ func TestGetSetProposal(t *testing.T) {
 	require.Equal(t, proposal, gotProposal)
 
 	// Get min luna amount by uusd
-	minLunaAmount := govKeeper.GetDepositLimitBaseUusd(ctx, proposalID)
+	minLunaAmount := govKeeper.GetDepositLimitBaseUstc(ctx, proposalID)
 	fmt.Printf("minLunaAmount %s\n", minLunaAmount)
 	require.Equal(t, totalLuncMinDeposit, minLunaAmount)
 }

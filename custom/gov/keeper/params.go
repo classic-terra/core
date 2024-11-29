@@ -1,13 +1,13 @@
 package keeper
 
 import (
-	v2lunc1types "github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	v2customtypes "github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // SetParams sets the gov module's parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params v2lunc1types.Params) error {
+func (k Keeper) SetParams(ctx sdk.Context, params v2customtypes.Params) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {
@@ -19,7 +19,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params v2lunc1types.Params) error {
 }
 
 // GetParams gets the gov module's parameters.
-func (k Keeper) GetParams(clientCtx sdk.Context) (params v2lunc1types.Params) {
+func (k Keeper) GetParams(clientCtx sdk.Context) (params v2customtypes.Params) {
 	store := clientCtx.KVStore(k.storeKey)
 	bz := store.Get(govtypes.ParamsKey)
 	if bz == nil {

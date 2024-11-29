@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/classic-terra/core/v3/custom/gov/keeper"
-	"github.com/classic-terra/core/v3/custom/gov/types/v2lunc1"
+	"github.com/classic-terra/core/v3/custom/gov/types/v2custom"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -12,7 +12,7 @@ import (
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v2lunc1.GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v2custom.GenesisState) {
 	k.SetProposalID(ctx, data.StartingProposalId)
 	k.SetParams(ctx, *data.Params)
 
@@ -55,7 +55,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v2lunc1.GenesisState {
+func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v2custom.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	proposals := k.GetProposals(ctx)
 	params := k.GetParams(ctx)
@@ -70,7 +70,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v2lunc1.GenesisState {
 		proposalsVotes = append(proposalsVotes, votes...)
 	}
 
-	return &v2lunc1.GenesisState{
+	return &v2custom.GenesisState{
 		StartingProposalId: startingProposalID,
 		Deposits:           proposalsDeposits,
 		Votes:              proposalsVotes,

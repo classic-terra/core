@@ -71,7 +71,10 @@ update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 $SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME_DIR/config/app.toml
 $SED_BINARY -i 's/swagger = false/swagger = true/' $HOME_DIR/config/app.toml
 $SED_BINARY -i -e 's/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' $HOME_DIR/config/app.toml
+$SED_BINARY -i -e 's/max-txs = 5000/max-txs = 3/g' $HOME_DIR/config/app.toml
 $SED_BINARY -i -e 's/timeout_commit = "5s"/timeout_commit = "2s"/g' $HOME_DIR/config/config.toml
+
+
 
 
 

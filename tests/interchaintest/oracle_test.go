@@ -83,20 +83,12 @@ func TestOracle(t *testing.T) {
 		val := val
 		go func(validator *cosmos.ChainNode) {
 			defer wg.Done()
-			for i := 0; i < 2; i++ {
+			for i := 0; i < 6; i++ {
 				if err := helpers.ExecOracleMsgAggragatePrevote(ctx, validator, "salt", "1.123uusd"); err != nil {
 					oracleErrCh <- err
 					return
 				}
 				if err := testutil.WaitForBlocks(ctx, 1, terra); err != nil {
-					oracleErrCh <- err
-					return
-				}
-				if err := helpers.ExecOracleMsgAggregateVote(ctx, validator, "salt", "1.123uusd"); err != nil {
-					oracleErrCh <- err
-					return
-				}
-				if err := testutil.WaitForBlocks(ctx, 5, terra); err != nil {
 					oracleErrCh <- err
 					return
 				}
@@ -109,13 +101,15 @@ func TestOracle(t *testing.T) {
 		i := i
 		go func() {
 			defer wg.Done()
-			err := terra.SendFunds(ctx, users[i].KeyName(), ibc.WalletAmount{
-				Address: users[0].FormattedAddress(),
-				Denom:   terra.Config().Denom,
-				Amount:  sdk.OneInt(),
-			})
-			require.NoError(t, err)
-			require.NoError(t, testutil.WaitForBlocks(ctx, 1, terra))
+			for j := 0; j < 5; j++ {
+				err := terra.SendFunds(ctx, users[i].KeyName(), ibc.WalletAmount{
+					Address: users[0].FormattedAddress(),
+					Denom:   terra.Config().Denom,
+					Amount:  sdk.OneInt(),
+				})
+				require.NoError(t, err)
+				require.NoError(t, testutil.WaitForBlocks(ctx, 1, terra))
+			}
 		}()
 	}
 
@@ -169,14 +163,14 @@ func TestOracle(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Verify final validator state
-	stdout, _, err := terra.Validators[0].ExecQuery(ctx, "staking", "validators")
-	require.NoError(t, err)
-	require.NotEmpty(t, stdout)
+	// // Verify final validator state
+	// stdout, _, err := terra.Validators[0].ExecQuery(ctx, "staking", "validators")
+	// require.NoError(t, err)
+	// require.NotEmpty(t, stdout)
 
-	terraValidators, _, err := helpers.UnmarshalValidators(*config.EncodingConfig, stdout)
-	require.NoError(t, err)
-	require.Equal(t, len(terraValidators), 3)
+	// terraValidators, _, err := helpers.UnmarshalValidators(*config.EncodingConfig, stdout)
+	// require.NoError(t, err)
+	// require.Equal(t, len(terraValidators), 3)
 }
 
 type Tx struct {

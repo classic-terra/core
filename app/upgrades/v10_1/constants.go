@@ -15,7 +15,7 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateV101UpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
-			tax2gastypes.ModuleName,
+			//tax2gastypes.ModuleName,
 		},
 	},
 }

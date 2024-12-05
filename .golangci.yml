@@ -1,5 +1,5 @@
 run:
-  tests: false
+  tests: true
   timeout: 10m
   sort-results: true
   allow-parallel-runners: true

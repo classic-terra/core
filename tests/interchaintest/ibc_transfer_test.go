@@ -143,10 +143,13 @@ func TestTerraGaiaIBCTranfer(t *testing.T) {
 	terraTokenDenom := transfertypes.GetPrefixedDenom(terraChannels[0].Counterparty.PortID, terraChannels[0].Counterparty.ChannelID, terra.Config().Denom)
 	terraIBCDenom := transfertypes.ParseDenomTrace(terraTokenDenom).IBCDenom()
 
+	// the transfer is using 200000 gas, gas price is 28.325uluna
+	gasFee := math.LegacyNewDec(200000).Mul(math.LegacyNewDecWithPrec(28325, 3))
+
 	// Assert that the funds are no longer present in user acc on Terra Classic and are in the user acc on Gaia
 	terraUserUpdateBal, err := terra.GetBalance(ctx, terraUserAddr, terra.Config().Denom)
 	require.NoError(t, err)
-	require.True(t, terraUserUpdateBal.Equal(terraUserInitialBal.Sub(transferAmount)))
+	require.Equal(t, terraUserUpdateBal, terraUserInitialBal.Sub(transferAmount).Sub(gasFee.RoundInt()))
 
 	gaiaUserUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, terraIBCDenom)
 	require.NoError(t, err)
@@ -169,10 +172,10 @@ func TestTerraGaiaIBCTranfer(t *testing.T) {
 	_, err = testutil.PollForAck(ctx, gaia, gaiaHeight, gaiaHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Assert that the funds are now back on Terra Classic and not on Gaia
+	// Assert that the funds are now back on Terra Classic and not on Gaia (except gas fees paid of course)
 	terraUserUpdateBal, err = terra.GetBalance(ctx, terraUserAddr, terra.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, terraUserInitialBal, terraUserUpdateBal)
+	require.Equal(t, terraUserInitialBal.Sub(gasFee.RoundInt()), terraUserUpdateBal)
 
 	gaiaUserUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, terraIBCDenom)
 	require.NoError(t, err)

@@ -259,6 +259,14 @@ func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, wal
 	n.LogActionF("successfully granted for address %s", gratee)
 }
 
+func (n *NodeConfig) GrantBankSend(gratee string, spendLimit string, walletName string) {
+	n.LogActionF("granting for address %s", gratee)
+	cmd := []string{"terrad", "tx", "authz", "grant", gratee, "send", fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", spendLimit)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully granted bank send for address %s", gratee)
+}
+
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"terrad", "keys", "add", walletName, "--keyring-backend=test"}

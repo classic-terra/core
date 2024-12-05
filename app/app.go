@@ -59,7 +59,9 @@ import (
 	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v3/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
-	v8_4 "github.com/classic-terra/core/v3/app/upgrades/v8_4"
+
+	// v9 had been used by tax2gas and has to be skipped
+	v10_1 "github.com/classic-terra/core/v3/app/upgrades/v10_1"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"
@@ -93,7 +95,7 @@ var (
 		v8_1.Upgrade,
 		v8_2.Upgrade,
 		v8_3.Upgrade,
-		v8_4.Upgrade,
+		v10_1.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -264,6 +266,7 @@ func NewTerraApp(
 			TXCounterStoreKey:  app.GetKey(wasmtypes.StoreKey),
 			DyncommKeeper:      app.DyncommKeeper,
 			StakingKeeper:      app.StakingKeeper,
+			TaxKeeper:          &app.TaxKeeper,
 			Cdc:                app.appCodec,
 		},
 	)
@@ -273,7 +276,11 @@ func NewTerraApp(
 
 	postHandler, err := custompost.NewPostHandler(
 		custompost.HandlerOptions{
-			DyncommKeeper: app.DyncommKeeper,
+			DyncommKeeper:  app.DyncommKeeper,
+			TaxKeeper:      app.TaxKeeper,
+			BankKeeper:     app.BankKeeper,
+			AccountKeeper:  app.AccountKeeper,
+			TreasuryKeeper: app.TreasuryKeeper,
 		},
 	)
 	if err != nil {
@@ -425,7 +432,7 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *TerraApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
-	customauthtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.TreasuryKeeper)
+	customauthtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.TreasuryKeeper, app.TaxKeeper)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
@@ -444,11 +451,10 @@ func (app *TerraApp) RegisterNodeService(clientCtx client.Context) {
 
 // RegisterSwaggerAPI registers swagger route with API Server
 func RegisterSwaggerAPI(rtr *mux.Router) {
-	statikFS, err := fs.New()
+	statikFS, err := fs.NewWithNamespace("terrad")
 	if err != nil {
 		panic(err)
 	}
-
 	staticServer := http.FileServer(statikFS)
 	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 }

@@ -18,6 +18,8 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
+	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -103,6 +105,7 @@ type AppKeepers struct {
 	DyncommKeeper         dyncommkeeper.Keeper
 	IBCHooksKeeper        *ibchookskeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
+	TaxKeeper             taxkeeper.Keeper
 
 	Ics20WasmHooks  *ibchooks.WasmHooks
 	IBCHooksWrapper *ibchooks.ICS4Middleware
@@ -156,6 +159,7 @@ func NewAppKeepers(
 		treasurytypes.StoreKey,
 		wasmtypes.StoreKey,
 		dyncommtypes.StoreKey,
+		taxtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -390,6 +394,7 @@ func NewAppKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
+		appKeepers.TaxKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
 	)
@@ -457,6 +462,15 @@ func NewAppKeepers(
 		),
 	)
 
+	appKeepers.TaxKeeper = taxkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[taxtypes.StoreKey],
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		appKeepers.DistrKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	appKeepers.DyncommKeeper = dyncommkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[dyncommtypes.StoreKey],
@@ -504,6 +518,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
+	paramsKeeper.Subspace(taxtypes.ModuleName)
 
 	return paramsKeeper
 }

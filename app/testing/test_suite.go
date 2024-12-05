@@ -9,9 +9,11 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v3/app"
 	appparams "github.com/classic-terra/core/v3/app/params"
+	core "github.com/classic-terra/core/v3/types"
 	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -282,6 +284,11 @@ func genesisStateWithValSet(t *testing.T,
 	// update treasury genesis state
 	treasuryGensis := treasurytypes.DefaultGenesisState()
 	genesisState[treasurytypes.ModuleName] = app.AppCodec().MustMarshalJSON(treasuryGensis)
+
+	// update tax genesis state
+	taxGenesis := taxtypes.DefaultGenesisState()
+	taxGenesis.Params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoin(core.MicroSDRDenom, sdk.ZeroInt())) // tests normally rely on zero gas price, so we are setting it here and fall back to the normal ctx.MinGasPrices
+	genesisState[taxtypes.ModuleName] = app.AppCodec().MustMarshalJSON(taxGenesis)
 
 	// update wasm genesis state
 	wasmGenesis := &wasmtypes.GenesisState{

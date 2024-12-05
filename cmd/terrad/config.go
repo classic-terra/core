@@ -7,6 +7,14 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
+const (
+	// DefaultIAVLCacheSize defines the number of iavl cache item, which is supposed to be 100MB size.
+	// Each cache item consumes 128 bytes, 64 bytes for the left sibling, and 64 bytes for the right sibling.
+	// The number of cache item is calculated as 100 MB = 10,000,000 / 128 = 781_250
+	DefaultIAVLCacheSize       = 781_250
+	IavlDisablefastNodeDefault = true
+)
+
 // TerraAppConfig terra specify app config
 type TerraAppConfig struct {
 	serverconfig.Config
@@ -51,6 +59,10 @@ func initAppConfig() (string, interface{}) {
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
+
+	// Override default config
+	srvCfg.IAVLCacheSize = DefaultIAVLCacheSize
+	srvCfg.IAVLDisableFastNode = IavlDisablefastNodeDefault
 
 	// The SDK's default minimum gas price is set to "" (empty value) inside
 	// app.toml. If left empty by validators, the node will halt on startup.

@@ -13,6 +13,7 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 
+	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -33,7 +34,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -43,6 +43,7 @@ import (
 
 	"github.com/classic-terra/core/v3/app/keepers"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+	customserver "github.com/classic-terra/core/v3/server"
 
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -58,6 +59,7 @@ import (
 	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v3/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
+	v8_4 "github.com/classic-terra/core/v3/app/upgrades/v8_4"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"
@@ -91,6 +93,7 @@ var (
 		v8_1.Upgrade,
 		v8_2.Upgrade,
 		v8_3.Upgrade,
+		v8_4.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -148,10 +151,27 @@ func NewTerraApp(
 	txConfig := encodingConfig.TxConfig
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
+	iavlCacheSize := cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))
+	iavlDisableFastNode := cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))
+
+	// option for cosmos sdk
+	baseAppOptions = append(baseAppOptions, baseapp.SetIAVLCacheSize(iavlCacheSize))
+	baseAppOptions = append(baseAppOptions, baseapp.SetIAVLDisableFastNode(iavlDisableFastNode))
+
+	// option for mempool
+	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
+		mempool := appmempool.NewFifoMempool()
+		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs >= 0 {
+			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs))
+		}
+		handler := baseapp.NewDefaultProposalHandler(mempool, app)
+		app.SetMempool(mempool)
+		app.SetTxEncoder(txConfig.TxEncoder())
+		app.SetPrepareProposal(handler.PrepareProposalHandler())
+		app.SetProcessProposal(handler.ProcessProposalHandler())
+	})
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	app := &TerraApp{
@@ -397,6 +417,9 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 	if apiConfig.Swagger {
 		RegisterSwaggerAPI(apiSvr.Router)
 	}
+
+	// Apply custom middleware
+	apiSvr.Router.Use(customserver.BlockHeightMiddleware)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
@@ -469,4 +492,9 @@ func (app *TerraApp) setupUpgradeHandlers() {
 			),
 		)
 	}
+}
+
+// GetTxConfig for testing
+func (app *TerraApp) GetTxConfig() client.TxConfig {
+	return app.txConfig
 }

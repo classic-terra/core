@@ -4,13 +4,13 @@
 FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
-OLD_VERSION=v2.2.1
+OLD_VERSION=v3.1.6
 UPGRADE_WAIT=${UPGRADE_WAIT:-20}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
-SOFTWARE_UPGRADE_NAME="v6"
+SOFTWARE_UPGRADE_NAME="v8_4"
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 
@@ -40,7 +40,7 @@ fi
 # install new binary
 if ! command -v _build/new/terrad &> /dev/null
 then
-    cd ./_build/core-${NEW_VERSION:1}
+    mkdir -p ./_build/new
     GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
     cd ../..
 fi

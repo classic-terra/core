@@ -334,6 +334,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey
 	return msg
 }
 
+// nolint: unused
 func setupValidators(t *testing.T) (TestInput, stakingtypes.MsgServer) {
 	input := CreateTestInput(t)
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)

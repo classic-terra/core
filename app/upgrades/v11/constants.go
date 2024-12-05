@@ -1,13 +1,13 @@
 //nolint:revive
-package v8_4
+package v11
 
 import (
 	"github.com/classic-terra/core/v3/app/upgrades"
 )
 
-const UpgradeName = "v8_4"
+const UpgradeName = "v11"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
-	CreateUpgradeHandler: CreateV84UpgradeHandler,
+	CreateUpgradeHandler: CreateV11UpgradeHandler,
 }

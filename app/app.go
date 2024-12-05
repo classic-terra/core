@@ -145,7 +145,7 @@ func init() {
 
 // NewTerraApp returns a reference to an initialized TerraApp.
 func NewTerraApp(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
+	logger log.Logger, db dbm.DB, _ io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, encodingConfig terraappparams.EncodingConfig, appOpts servertypes.AppOptions,
 	wasmOpts []wasmkeeper.Option, baseAppOptions ...func(*baseapp.BaseApp),
 ) *TerraApp {

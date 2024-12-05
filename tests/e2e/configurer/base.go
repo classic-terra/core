@@ -76,11 +76,7 @@ func (bc *baseConfigurer) RunIBC() error {
 		return err
 	}
 	bc.t.Log("Run relayer 2 between chain b and chain a")
-	if err := bc.runIBCRelayer(bc.chainConfigs[1], bc.chainConfigs[0], containers.HermesContainerName2); err != nil {
-		return err
-	}
-
-	return nil
+	return bc.runIBCRelayer(bc.chainConfigs[1], bc.chainConfigs[0], containers.HermesContainerName2)
 }
 
 func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config, hermesContainerName string) error {

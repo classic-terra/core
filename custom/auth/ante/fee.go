@@ -234,7 +234,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
-	isOracleTx := isOracleTx(msgs)
+	isOracleTx := IsOracleTx(msgs)
 	reverseCharge := false
 	refundNonTaxableTaxes := false
 

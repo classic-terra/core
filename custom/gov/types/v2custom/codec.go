@@ -12,12 +12,12 @@ import (
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	legacy.RegisterAminoMsg(cdc, &govv1.MsgSubmitProposal{}, "cosmos-sdk/v1/MsgSubmitProposal")
-	legacy.RegisterAminoMsg(cdc, &govv1.MsgDeposit{}, "cosmos-sdk/v1/MsgDeposit")
-	legacy.RegisterAminoMsg(cdc, &govv1.MsgVote{}, "cosmos-sdk/v1/MsgVote")
-	legacy.RegisterAminoMsg(cdc, &govv1.MsgVoteWeighted{}, "cosmos-sdk/v1/MsgVoteWeighted")
-	legacy.RegisterAminoMsg(cdc, &govv1.MsgExecLegacyContent{}, "cosmos-sdk/v1/MsgExecLegacyContent")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/gov/v1/MsgUpdateParams")
+	legacy.RegisterAminoMsg(cdc, &govv1.MsgSubmitProposal{}, "gov/MsgSubmitProposal")
+	legacy.RegisterAminoMsg(cdc, &govv1.MsgDeposit{}, "gov/MsgDeposit")
+	legacy.RegisterAminoMsg(cdc, &govv1.MsgVote{}, "gov/MsgVote")
+	legacy.RegisterAminoMsg(cdc, &govv1.MsgVoteWeighted{}, "gov/MsgVoteWeighted")
+	legacy.RegisterAminoMsg(cdc, &govv1.MsgExecLegacyContent{}, "gov/MsgExecLegacyContent")
+	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "gov/MsgUpdateParams")
 }
 
 // RegisterInterfaces registers the interfaces types with the Interface Registry.

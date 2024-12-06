@@ -1,6 +1,8 @@
 package staking
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -54,7 +56,7 @@ func (h TerraStakingHooks) AfterDelegationModified(ctx sdk.Context, _ sdk.AccAdd
 	validatorDelegationPercent := sdk.NewDec(validatorPower).QuoInt64(totalPower.Int64())
 
 	if validatorDelegationPercent.GT(sdk.NewDecWithPrec(20, 2)) {
-		panic("validator power is over the allowed limit")
+		return fmt.Errorf("validator power is over the allowed limit")
 	}
 
 	return nil

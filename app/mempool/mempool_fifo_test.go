@@ -8,7 +8,7 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/classic-terra/core/v3/custom/auth/ante"
+	"github.com/classic-terra/core/v3/app/helper"
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -268,7 +268,7 @@ func (s *MempoolTestSuite) TestTxOrderWithOracle() {
 			orderedTxs := fetchTxs(itr, 1000)
 			numberTxOracle := 0
 			for _, tx := range orderedTxs {
-				if ante.IsOracleTx(tx.GetMsgs()) {
+				if helper.IsOracleTx(tx.GetMsgs()) {
 					numberTxOracle += +1
 				} else {
 					break
@@ -334,9 +334,9 @@ func (s *MempoolTestSuite) TestOracleTx() {
 	}
 	require.Equal(t, 3, len(orderedTxs))
 
-	require.True(t, ante.IsOracleTx(orderedTxs[0].GetMsgs()))
-	require.True(t, ante.IsOracleTx(orderedTxs[1].GetMsgs()))
-	require.False(t, ante.IsOracleTx(orderedTxs[2].GetMsgs()))
+	require.True(t, helper.IsOracleTx(orderedTxs[0].GetMsgs()))
+	require.True(t, helper.IsOracleTx(orderedTxs[1].GetMsgs()))
+	require.False(t, helper.IsOracleTx(orderedTxs[2].GetMsgs()))
 
 	require.Equal(t, 0, mp.CountTx())
 }
@@ -473,7 +473,7 @@ func (s *MempoolTestSuite) TestBatchTx_WhenEnoughMemPool() {
 	// Count oracle transactions in first batch
 	oracleCount := 0
 	for _, tx := range orderedTxs[:50] {
-		if ante.IsOracleTx(tx.GetMsgs()) {
+		if helper.IsOracleTx(tx.GetMsgs()) {
 			oracleCount++
 		}
 	}
@@ -575,7 +575,7 @@ func (s *MempoolTestSuite) TestBatchTx_WhenNotEnoughMemPool() {
 	firstRegularIndex := -1
 
 	for i, tx := range orderedTxs {
-		if ante.IsOracleTx(tx.GetMsgs()) {
+		if helper.IsOracleTx(tx.GetMsgs()) {
 			lastOracleIndex = i
 			// If we've already seen a regular transaction, this is an error
 			require.Equal(t, -1, firstRegularIndex,

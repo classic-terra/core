@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/classic-terra/core/v3/custom/auth/ante"
+	"github.com/classic-terra/core/v3/app/helper"
 	"github.com/cometbft/cometbft/libs/clist"
 	cmtsync "github.com/cometbft/cometbft/libs/sync"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,7 +81,7 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 		return err
 	}
 	// Add to appropriate queue based on transaction type
-	if ante.IsOracleTx(tx.GetMsgs()) {
+	if helper.IsOracleTx(tx.GetMsgs()) {
 		e := mp.txsOracle.PushBack(tx)
 		mp.txsMapOracle.Store(txKey, e)
 	} else {
@@ -166,7 +166,7 @@ func (mp *FifoMempool) Remove(tx sdk.Tx) error {
 		return err
 	}
 
-	isOracle := ante.IsOracleTx(tx.GetMsgs())
+	isOracle := helper.IsOracleTx(tx.GetMsgs())
 	if isOracle {
 		if elem, ok := mp.txsMapOracle.LoadAndDelete(txKey); ok {
 			mp.txsOracle.Remove(elem.(*clist.CElement))

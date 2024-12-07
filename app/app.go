@@ -164,9 +164,11 @@ func NewTerraApp(
 
 	// option for mempool
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
-		mempool := appmempool.NewFifoMempool()
+		var mempool *appmempool.FifoMempool
 		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs >= 0 {
 			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs))
+		} else {
+			mempool = appmempool.NewFifoMempool()
 		}
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetMempool(mempool)

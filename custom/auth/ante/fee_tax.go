@@ -10,7 +10,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
@@ -120,22 +119,4 @@ func computeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, principal sdk.
 	}
 
 	return taxes
-}
-
-func IsOracleTx(msgs []sdk.Msg) bool {
-	if len(msgs) == 0 {
-		return false
-	}
-	for _, msg := range msgs {
-		switch msg.(type) {
-		case *oracleexported.MsgAggregateExchangeRatePrevote:
-			continue
-		case *oracleexported.MsgAggregateExchangeRateVote:
-			continue
-		default:
-			return false
-		}
-	}
-
-	return true
 }

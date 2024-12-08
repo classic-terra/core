@@ -60,7 +60,7 @@ import (
 	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
 
 	// v9 had been used by tax2gas and has to be skipped
-	v10 "github.com/classic-terra/core/v3/app/upgrades/v10"
+	v10_1 "github.com/classic-terra/core/v3/app/upgrades/v10_1"
 	v10_2 "github.com/classic-terra/core/v3/app/upgrades/v10_2"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
@@ -95,8 +95,8 @@ var (
 		v8_1.Upgrade,
 		v8_2.Upgrade,
 		v8_3.Upgrade,
-		v10.Upgrade,
-    v10_2.Upgrade,
+		v10_1.Upgrade,
+		v10_2.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network

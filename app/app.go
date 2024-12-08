@@ -95,8 +95,8 @@ var (
 		v8_1.Upgrade,
 		v8_2.Upgrade,
 		v8_3.Upgrade,
-		v10_2.Upgrade,
 		v10.Upgrade,
+    v10_2.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -432,11 +432,10 @@ func (app *TerraApp) RegisterNodeService(clientCtx client.Context) {
 
 // RegisterSwaggerAPI registers swagger route with API Server
 func RegisterSwaggerAPI(rtr *mux.Router) {
-	statikFS, err := fs.New()
+	statikFS, err := fs.NewWithNamespace("terrad")
 	if err != nil {
 		panic(err)
 	}
-
 	staticServer := http.FileServer(statikFS)
 	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 }

@@ -16,7 +16,7 @@ import (
 
 // Default governance params
 var (
-	DefaultMinUusdDepositTokens = sdk.NewInt(500_000_000) // Minimal uusd deposit for a proposal to enter voting period
+	DefaultMinUsdDepositTokens = sdk.NewInt(500_000_000) // Minimal usd deposit for a proposal to enter voting period
 )
 
 var _ sdk.Msg = &MsgUpdateParams{}
@@ -52,7 +52,7 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod, votingPeriod time.Duration,
 	quorum, threshold, vetoThreshold, minInitialDepositRatio string, burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
-	minUusdDeposit sdk.Coin,
+	minUsdDeposit sdk.Coin,
 ) Params {
 	return Params{
 		MinDeposit:                 minDeposit,
@@ -65,7 +65,7 @@ func NewParams(
 		BurnProposalDepositPrevote: burnProposalDeposit,
 		BurnVoteQuorum:             burnVoteQuorum,
 		BurnVoteVeto:               burnVoteVeto,
-		MinUusdDeposit:             minUusdDeposit,
+		MinUsdDeposit:              minUsdDeposit,
 	}
 }
 
@@ -82,7 +82,7 @@ func DefaultParams() Params {
 		govv1.DefaultBurnProposalPrevote,
 		govv1.DefaultBurnVoteQuorom,
 		govv1.DefaultBurnVoteVeto,
-		sdk.NewCoin(assets.MicroUSDDenom, DefaultMinUusdDepositTokens), // 1,000,000 microLuna
+		sdk.NewCoin(assets.MicroUSDDenom, DefaultMinUsdDepositTokens), // 500,000,000 micro usd
 	)
 }
 
@@ -152,8 +152,8 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
-	if p.MinUusdDeposit.IsZero() || !p.MinUusdDeposit.IsValid() {
-		return fmt.Errorf("invalid minimum uusd deposit: %s", p.MinUusdDeposit)
+	if p.MinUsdDeposit.IsZero() || !p.MinUsdDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum usd deposit: %s", p.MinUsdDeposit)
 	}
 
 	return nil

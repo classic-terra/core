@@ -27,7 +27,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioDefault() {
 	// set required deposit to uluna
 	suite.app.GovKeeper.SetParams(suite.ctx, govv2custom.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
-	govparams.MinUusdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
+	govparams.MinUsdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
 	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUstc(suite.ctx)
@@ -87,7 +87,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithSufficientDeposit() {
 	// set required deposit to uluna
 	suite.app.GovKeeper.SetParams(suite.ctx, govv2custom.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
-	govparams.MinUusdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
+	govparams.MinUsdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
 	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUstc(suite.ctx)
@@ -153,7 +153,7 @@ func (suite *AnteTestSuite) TestMinInitialDepositRatioWithInsufficientDeposit() 
 	// set required deposit to uluna
 	suite.app.GovKeeper.SetParams(suite.ctx, govv2custom.DefaultParams())
 	govparams := suite.app.GovKeeper.GetParams(suite.ctx)
-	govparams.MinUusdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
+	govparams.MinUsdDeposit = sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(500_000_000))
 	suite.app.GovKeeper.SetParams(suite.ctx, govparams)
 
 	price, _ := suite.app.GovKeeper.GetMinimumDepositBaseUstc(suite.ctx)

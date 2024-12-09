@@ -35,7 +35,7 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Bina
 		params.BurnProposalDepositPrevote,
 		params.BurnVoteQuorum,
 		params.BurnVoteVeto,
-		defaultParams.MinUusdDeposit,
+		defaultParams.MinUsdDeposit,
 	)
 
 	bz, err = cdc.Marshal(&newParams)

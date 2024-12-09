@@ -38,7 +38,7 @@ func (q queryServer) ProposalMinimalLUNCByUstc(ctx context.Context, req *v2custo
 	depositAmount := q.k.GetDepositLimitBaseUstc(sdkCtx, req.ProposalId)
 	coin := sdk.NewCoin(core.MicroLunaDenom, depositAmount)
 
-	// if no min deposit amount by uusd exists, return default min deposit amount
+	// if no min deposit amount by usd exists, return default min deposit amount
 	if depositAmount.IsZero() {
 		coin = q.k.GetParams(sdkCtx).MinDeposit[0]
 	}

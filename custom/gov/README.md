@@ -13,7 +13,7 @@ The governance process is divided in a few steps that are outlined below:
 * **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
 * **Vote:** When the deposit for a proposal reaches a minimum threshold equivalent to
- 500 USD (`MinUusdDeposit`), proposal is confirmed and vote opens. 
+ 500 USD (`MinUsdDeposit`), proposal is confirmed and vote opens. 
 * **Execution** After a period of time, the votes are tallied and depending
   on the result, the messages in the proposal will be executed.
 ### Proposal submission
@@ -33,7 +33,7 @@ module uses the `MsgServiceRouter` to check that these messages are correctly co
 and have a respective path to execute on but do not perform a full validity check.
 ### Deposit
 
-To prevent spam, proposals must be submitted with a deposit in the coins defined by the equation `luncMinDepositAmountBasedOnUstc` = `MinUusdDeposit` / real-time price of LUNC at the time of proposal submission.
+To prevent spam, proposals must be submitted with a deposit in the coins defined by the equation `luncMinDepositAmountBasedOnUstc` = `MinUsdDeposit` / real-time price of LUNC at the time of proposal submission.
 ```keeper reference
 github.com/classic-terra/core/v3/custom/gov/keeper/proposal.go#L136-L149
 ```
@@ -116,9 +116,9 @@ The governance module contains the following parameters:
 | burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_uusd_deposit              | coins            |{"denom":"uusd","amount":"500000000"}    |
+| min_usd_deposit              | coins            |{"denom":"uusd","amount":"500000000"}    |
 **NOTE**: 
-Aiming to establish a clearer and more consistent minimum deposit requirement for governance proposals, the default value of `min_uusd_deposit` is currently set to 500 USD. However, this value can be updated by the community in the future. This approach allows the module to adapt to fluctuations in the value of LUNC over time, ensuring a consistent threshold for proposals.
+Aiming to establish a clearer and more consistent minimum deposit requirement for governance proposals, the default value of `min_usd_deposit` is currently set to 500 USD. However, this value can be updated by the community in the future. This approach allows the module to adapt to fluctuations in the value of LUNC over time, ensuring a consistent threshold for proposals.
 
 ## Client
 

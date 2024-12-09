@@ -87,5 +87,5 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, oldParams.BurnVoteVeto, newParams.BurnVoteVeto)
 
 	// Check any new fields from the `v2custom.Params`
-	require.Equal(t, v2custom.DefaultParams().MinUusdDeposit, newParams.MinUusdDeposit)
+	require.Equal(t, v2custom.DefaultParams().MinUsdDeposit, newParams.MinUsdDeposit)
 }

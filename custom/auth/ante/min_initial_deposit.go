@@ -60,7 +60,7 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper custom
 		}
 		return nil
 	}
-	return fmt.Errorf("could not get minimum deposit base uusd")
+	return fmt.Errorf("could not get minimum deposit base usd")
 }
 
 // AnteHandle handles checking MsgSubmitProposal

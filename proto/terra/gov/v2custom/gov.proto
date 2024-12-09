@@ -201,6 +201,6 @@ message Params {
   // burn deposits if quorum with vote type no_veto is met
   bool burn_vote_veto = 15;
 
-  // Minimal uusd deposit for a proposal to enter voting period
-  cosmos.base.v1beta1.Coin min_uusd_deposit = 16 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // Minimal usd deposit for a proposal to enter voting period
+  cosmos.base.v1beta1.Coin min_usd_deposit = 16 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

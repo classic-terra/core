@@ -52,7 +52,7 @@ func TestGetSetProposal(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, proposal, gotProposal)
 
-	// Get min luna amount by uusd
+	// Get min luna amount by usd
 	minLunaAmount := govKeeper.GetDepositLimitBaseUstc(ctx, proposalID)
 	fmt.Printf("minLunaAmount %s\n", minLunaAmount)
 	require.Equal(t, totalLuncMinDeposit, minLunaAmount)

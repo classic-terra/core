@@ -4,23 +4,23 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	core "github.com/classic-terra/core/v3/types"
+	customgovkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
 )
 
 // MinInitialDeposit Decorator will check Initial Deposits for MsgSubmitProposal
 type MinInitialDepositDecorator struct {
-	govKeeper      govkeeper.Keeper
+	govKeeper      customgovkeeper.Keeper
 	treasuryKeeper TreasuryKeeper
 }
 
 // NewMinInitialDeposit returns new min initial deposit decorator instance
-func NewMinInitialDepositDecorator(govKeeper govkeeper.Keeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
+func NewMinInitialDepositDecorator(govKeeper customgovkeeper.Keeper, treasuryKeeper TreasuryKeeper) MinInitialDepositDecorator {
 	return MinInitialDepositDecorator{
 		govKeeper:      govKeeper,
 		treasuryKeeper: treasuryKeeper,
@@ -38,9 +38,8 @@ func IsMsgSubmitProposal(msg sdk.Msg) bool {
 }
 
 // HandleCheckMinInitialDeposit
-func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkeeper.Keeper, treasuryKeeper TreasuryKeeper) (err error) {
+func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper customgovkeeper.Keeper, treasuryKeeper TreasuryKeeper) (err error) {
 	var initialDepositCoins sdk.Coins
-
 	switch submitPropMsg := msg.(type) {
 	case *govv1beta1.MsgSubmitProposal:
 		initialDepositCoins = submitPropMsg.GetInitialDeposit()
@@ -49,18 +48,19 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkee
 	default:
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")
 	}
-	minDeposit := govKeeper.GetParams(ctx).MinDeposit
-	requiredAmount := sdk.NewDecFromInt(minDeposit[0].Amount).Mul(treasuryKeeper.GetMinInitialDepositRatio(ctx)).TruncateInt()
-
-	requiredDepositCoins := sdk.NewCoins(
-		sdk.NewCoin(core.MicroLunaDenom, requiredAmount),
-	)
-
-	if !initialDepositCoins.IsAllGTE(requiredDepositCoins) {
-		return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)
+	// set offset price change 3%
+	offsetPrice := sdk.NewDecWithPrec(97, 2)
+	minUlunaAmount, err := govKeeper.GetMinimumDepositBaseUstc(ctx)
+	minInitialDepositRatio := treasuryKeeper.GetMinInitialDepositRatio(ctx)
+	if err == nil && minUlunaAmount.GT(sdk.ZeroInt()) {
+		requiredDeposit := sdk.NewDecFromInt(minUlunaAmount).Mul(minInitialDepositRatio).Mul(offsetPrice).TruncateInt()
+		requiredDepositCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, requiredDeposit))
+		if initialDepositCoins.IsAllLT(requiredDepositCoins) {
+			return fmt.Errorf("not enough initial deposit provided. Expected %q; got %q", requiredDepositCoins, initialDepositCoins)
+		}
+		return nil
 	}
-
-	return nil
+	return fmt.Errorf("could not get minimum deposit base usd")
 }
 
 // AnteHandle handles checking MsgSubmitProposal

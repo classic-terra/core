@@ -42,7 +42,6 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
@@ -61,6 +60,8 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	customwasmkeeper "github.com/classic-terra/core/v3/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v3/wasmbinding"
+
+	customgovkeeper "github.com/classic-terra/core/v3/custom/gov/keeper"
 
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
@@ -87,7 +88,7 @@ type AppKeepers struct {
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             govkeeper.Keeper
+	GovKeeper             customgovkeeper.Keeper
 	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
@@ -444,18 +445,20 @@ func NewAppKeepers(
 	// register the proposal types
 	govRouter := appKeepers.newGovRouter()
 	govConfig := govtypes.DefaultConfig()
-	govKeeper := govkeeper.NewKeeper(
+	govKeeper := customgovkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[govtypes.StoreKey],
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
+		appKeepers.OracleKeeper,
 		bApp.MsgServiceRouter(),
 		govConfig,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
+
 	appKeepers.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// register the governance hooks

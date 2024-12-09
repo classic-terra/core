@@ -1,0 +1,13 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "from_address": "terra10d07y265gmmuvt4z0w9aw880jnsr700juxf95n",
+      "to_address": "terra100kt2rszg67l6ncctrssyyjk4ef38tyewchj90",
+      "amount": [{ "denom": "uluna", "amount": "10000000" }]
+    }
+  ],
+  "metadata": "AQ==",
+  "title": "Proposal Title",
+  "summary": "Proposal Summary"
+}

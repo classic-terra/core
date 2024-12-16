@@ -23,7 +23,7 @@ type WasmMsgServer struct {
 	messageServer  wasmtypes.MsgServer
 }
 
-func NewWasmMsgServer(wasmKeeper wasmkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, taxKeeper taxkeeper.Keeper, bankKeeper bankkeeper.Keeper, messageServer wasmtypes.MsgServer) wasmtypes.MsgServer {
+func NewWasmMsgServer(wasmKeeper wasmkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, taxKeeper taxkeeper.Keeper, bankKeeper bankkeeper.Keeper, _ wasmtypes.MsgServer) wasmtypes.MsgServer {
 	return &WasmMsgServer{
 		taxKeeper:      taxKeeper,
 		wasmKeeper:     wasmKeeper,

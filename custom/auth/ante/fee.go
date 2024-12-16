@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/classic-terra/core/v3/app/helper"
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -234,7 +235,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()
 	msgs := feeTx.GetMsgs()
-	isOracleTx := isOracleTx(msgs)
+	isOracleTx := helper.IsOracleTx(msgs)
 	reverseCharge := false
 	refundNonTaxableTaxes := false
 

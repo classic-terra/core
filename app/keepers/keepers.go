@@ -59,9 +59,9 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
 	customwasmkeeper "github.com/classic-terra/core/v3/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v3/wasmbinding"
-
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
@@ -277,7 +277,7 @@ func NewAppKeepers(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	appKeepers.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(appKeepers.DistrKeeper.Hooks(), appKeepers.SlashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(customstaking.NewTerraStakingHooks(*appKeepers.StakingKeeper), appKeepers.DistrKeeper.Hooks(), appKeepers.SlashingKeeper.Hooks()),
 	)
 
 	// Create IBC Keeper

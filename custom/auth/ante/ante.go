@@ -92,6 +92,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		// SpammingPreventionDecorator prevents spamming oracle vote tx attempts at same height
 		NewSpammingPreventionDecorator(options.OracleKeeper),
+		NewIBCTransferSpamPreventionDecorator(), // prevents spamming IBC transfer tx with long memo and receiver
 		// MinInitialDepositDecorator prevents submitting governance proposal low initial deposit
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),

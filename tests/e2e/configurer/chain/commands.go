@@ -323,3 +323,20 @@ func (n *NodeConfig) Status() (resultStatus, error) { //nolint
 	}
 	return result, nil
 }
+
+func (n *NodeConfig) SubmitOracleAggregatePrevote(salt string, amount string) {
+	n.LogActionF("submitting oracle aggregate prevote")
+	cmd := []string{"terrad", "tx", "oracle", "aggregate-prevote", salt, amount, fmt.Sprintf("--from=%s", "val")}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted oracle aggregate prevote")
+}
+
+// should be submitted after prevote, and using the same salt
+func (n *NodeConfig) SubmitOracleAggregateVote(salt string, amount string) {
+	n.LogActionF("submitting oracle aggregate vote")
+	cmd := []string{"terrad", "tx", "oracle", "aggregate-vote", salt, amount, fmt.Sprintf("--from=%s", "val")}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted oracle aggregate vote")
+}

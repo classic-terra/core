@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
+      "authority": "terra10d07y265gmmuvt4z0w9aw880jnsr700juxf95n",
+      "recipient": "terra1jcdhx3ddlpunyu40ufd2z3j3wx70v2ehg9ul7y",
+      "amount": [
+        {
+          "denom": "uluna",
+          "amount": "23864258000000"
+        }
+      ]
+    }
+  ],
+  "metadata": "ipfs://QmXyAhL4ZjAhTLT88CShabyEf6FiP3rhgJNrtG1x6SYFZN",
+  "deposit": "1000000000000uluna",
+  "title": "OrbitLabs' Review of Reverse Charge Tax Mechanism",
+  "summary": "Spend Proposal for the review of the Reverse Charge Tax Mechanism."
+}

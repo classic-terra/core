@@ -38,7 +38,7 @@ func (s *BankMsgServer) Send(ctx context.Context, msg *banktypes.MsgSend) (*bank
 	fromAddr := sdk.MustAccAddressFromBech32(msg.FromAddress)
 
 	if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, msg.FromAddress, msg.ToAddress) {
-		netAmount, err := s.taxKeeper.DeductTax(sdkCtx, fromAddr, msg.Amount)
+		netAmount, err := s.taxKeeper.DeductTax(sdkCtx, fromAddr, msg.Amount, false)
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (s *BankMsgServer) MultiSend(ctx context.Context, msg *banktypes.MsgMultiSe
 	if tainted {
 		for i, input := range msg.Inputs {
 			fromAddr := sdk.MustAccAddressFromBech32(input.Address)
-			netCoins, err := s.taxKeeper.DeductTax(sdkCtx, fromAddr, input.Coins)
+			netCoins, err := s.taxKeeper.DeductTax(sdkCtx, fromAddr, input.Coins, false)
 			if err != nil {
 				return nil, err
 			}
@@ -85,7 +85,7 @@ func (s *BankMsgServer) MultiSend(ctx context.Context, msg *banktypes.MsgMultiSe
 
 		for i, output := range msg.Outputs {
 			toAddr := sdk.MustAccAddressFromBech32(output.Address)
-			netCoins, err := s.taxKeeper.DeductTax(sdkCtx, toAddr, output.Coins)
+			netCoins, err := s.taxKeeper.DeductTax(sdkCtx, toAddr, output.Coins, true)
 			if err != nil {
 				return nil, err
 			}

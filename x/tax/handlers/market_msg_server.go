@@ -37,7 +37,7 @@ func (s *MarketMsgServer) SwapSend(ctx context.Context, msg *markettypes.MsgSwap
 
 	sender := sdk.MustAccAddressFromBech32(msg.FromAddress)
 
-	netOfferCoin, err := s.taxKeeper.DeductTax(sdkCtx, sender, sdk.NewCoins(msg.OfferCoin))
+	netOfferCoin, err := s.taxKeeper.DeductTax(sdkCtx, sender, sdk.NewCoins(msg.OfferCoin), false)
 	if err != nil {
 		return nil, err
 	}

@@ -165,7 +165,7 @@ func NewTerraApp(
 	// option for mempool
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
 		var mempool *appmempool.FifoMempool
-		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs >= 0 {
+		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs > 0 {
 			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs))
 		} else {
 			mempool = appmempool.NewFifoMempool()

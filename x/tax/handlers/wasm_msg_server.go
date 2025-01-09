@@ -59,7 +59,7 @@ func (s *WasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.MsgE
 	   sender := sdk.MustAccAddressFromBech32(msg.Sender)
 
 	   	if !s.treasuryKeeper.HasBurnTaxExemptionContract(sdkCtx, msg.Contract) {
-	   		netFunds, err := s.taxKeeper.DeductTax(sdkCtx, sender, msg.Funds)
+	   		netFunds, err := s.taxKeeper.DeductTax(sdkCtx, sender, msg.Funds, false)
 	   		if err != nil {
 	   			return nil, err
 	   		}
@@ -89,7 +89,7 @@ func (s *WasmMsgServer) InstantiateContract(ctx context.Context, msg *wasmtypes.
 
 		sender := sdk.MustAccAddressFromBech32(msg.Sender)
 
-		netFunds, err := s.taxKeeper.DeductTax(sdkCtx, sender, msg.Funds)
+		netFunds, err := s.taxKeeper.DeductTax(sdkCtx, sender, msg.Funds, false)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func (s *WasmMsgServer) InstantiateContract2(ctx context.Context, msg *wasmtypes
 
 		sender := sdk.MustAccAddressFromBech32(msg.Sender)
 
-		netFunds, err := s.taxKeeper.DeductTax(sdkCtx, sender, msg.Funds)
+		netFunds, err := s.taxKeeper.DeductTax(sdkCtx, sender, msg.Funds, false)
 		if err != nil {
 			return nil, err
 		}

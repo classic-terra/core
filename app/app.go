@@ -62,6 +62,7 @@ import (
 
 	// v9 had been used by tax2gas and has to be skipped
 	v10_1 "github.com/classic-terra/core/v3/app/upgrades/v10_1"
+	v11 "github.com/classic-terra/core/v3/app/upgrades/v11"
 	v11_1 "github.com/classic-terra/core/v3/app/upgrades/v11_1"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
@@ -97,6 +98,7 @@ var (
 		v8_2.Upgrade,
 		v8_3.Upgrade,
 		v10_1.Upgrade,
+		v11.Upgrade,
 		v11_1.Upgrade,
 	}
 

@@ -1,4 +1,6 @@
-go 1.22
+go 1.22.7
+
+toolchain go1.22.12
 
 module github.com/classic-terra/core/v3
 

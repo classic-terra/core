@@ -1,4 +1,4 @@
-go 1.22
+go 1.21
 
 module github.com/classic-terra/core/v3
 

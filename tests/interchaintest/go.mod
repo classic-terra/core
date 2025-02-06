@@ -1,6 +1,8 @@
 module github.com/classic-terra/core/v3/test/interchaintest
 
-go 1.20
+go 1.22.7
+
+toolchain go1.22.12
 
 require (
 	cosmossdk.io/math v1.3.0
@@ -52,7 +54,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
-	github.com/cometbft/cometbft v0.37.13 // indirect
+	github.com/cometbft/cometbft v0.37.15 // indirect
 	github.com/cometbft/cometbft-db v0.11.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -125,6 +127,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
@@ -152,6 +155,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -172,7 +176,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.59.1 // indirect
+	github.com/prometheus/common v0.60.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rakyll/statik v0.1.7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
@@ -254,8 +258,9 @@ replace (
 
 replace (
 	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-classic
+	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.5.8
 	github.com/classic-terra/core/v3 => ../../
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.4
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.15
 	github.com/cosmos/ibc-go/v7 => github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	github.com/creachadair/taskgroup => github.com/creachadair/taskgroup v0.6.0

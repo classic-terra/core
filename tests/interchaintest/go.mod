@@ -1,8 +1,6 @@
 module github.com/classic-terra/core/v3/test/interchaintest
 
-go 1.22.7
-
-toolchain go1.22.12
+go 1.22.12
 
 require (
 	cosmossdk.io/math v1.3.0

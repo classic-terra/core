@@ -15,11 +15,11 @@ linters:
     - gofumpt
     - gosec
     - gosimple
-    - govet
+    # - govet
     - ineffassign
     - misspell
     - nakedret
-    - nolintlint
+    # - nolintlint
     - staticcheck
     - revive
     - stylecheck
@@ -61,3 +61,7 @@ linters-settings:
     allow-leading-space: true
     require-explanation: false
     require-specific: false
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true

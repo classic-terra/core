@@ -15,7 +15,7 @@ The easiest way to get started is by downloading a pre-built binary for your ope
 
 **Step 1. Install Golang**
 
-Go v1.20 is required for Terra Core.
+Go v1.22 is required for Terra Core.
 
 If you haven't already, install Golang by following the [official docs](https://golang.org/doc/install). Make sure that your `GOPATH` and `GOBIN` environment variables are properly set up.
 

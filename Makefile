@@ -272,6 +272,9 @@ ictest-ibc-pfm: ictest-build
 ictest-ibc-pfm-terra: ictest-build
 	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
 
+ictest-oracle: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestOracle .
+
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
 

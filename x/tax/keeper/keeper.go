@@ -96,6 +96,7 @@ func (k Keeper) DeductTax(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	amount sdk.Coins,
+	skipDeduct bool,
 ) (sdk.Coins, error) {
 	ctx.Logger().Info("Deducting tax", "sender", sender, "amount", amount, ctx.Value(types.ContextKeyTaxReverseCharge))
 
@@ -107,7 +108,7 @@ func (k Keeper) DeductTax(
 	taxes := k.ComputeTax(ctx, amount)
 	netAmount := amount.Sub(taxes...)
 
-	if !taxes.IsZero() {
+	if !taxes.IsZero() && !skipDeduct {
 		// Deduct the total tax amount from the sender and send to FeeCollector
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, authtypes.FeeCollectorName, taxes); err != nil {
 			return nil, err

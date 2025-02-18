@@ -568,7 +568,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: 0,
 			zoneA:          zoneInternal,
 			zoneB:          zoneInternal,
-		}, {
+		},
+		{
 			name:      "MsgSend(internal -> noexemption)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -583,7 +584,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: feeAmt,
 			zoneA:          zoneInternal,
 			zoneB:          zoneNone,
-		}, {
+		},
+		{
 			name:      "MsgSend(outgoing -> noexemption)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -598,7 +600,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: 0,
 			zoneA:          zoneOutgoing,
 			zoneB:          zoneNone,
-		}, {
+		},
+		{
 			name:      "MsgSend(noexemption -> incoming)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -613,7 +616,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: 0,
 			zoneA:          zoneNone,
 			zoneB:          zoneIncoming,
-		}, {
+		},
+		{
 			name:      "MsgSend(internal -> outgoing)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -628,7 +632,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: feeAmt,
 			zoneA:          zoneInternal,
 			zoneB:          zoneOutgoing,
-		}, {
+		},
+		{
 			name:      "MsgSend(internal -> incoming)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -643,7 +648,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: feeAmt,
 			zoneA:          zoneInternal,
 			zoneB:          zoneIncoming,
-		}, {
+		},
+		{
 			name:      "MsgSend(internal -> incoming w cross)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -658,7 +664,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: 0,
 			zoneA:          zoneInternal,
 			zoneB:          zoneCrossZoneIncoming,
-		}, {
+		},
+		{
 			name:      "MsgSend(outgoing w cross -> internal)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -673,7 +680,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: 0,
 			zoneA:          zoneCrossZoneOutgoing,
 			zoneB:          zoneInternal,
-		}, {
+		},
+		{
 			name:      "MsgSend(cross incoming -> cross outgoing)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -753,7 +761,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			minFeeAmount:        feeAmt,
 			expectProceeds:      feeAmt,
 			expectReverseCharge: false,
-		}, {
+		},
+		{
 			name:      "MsgExec(MsgSend(normal -> normal))",
 			msgSigner: privs[2],
 			msgCreator: func() []sdk.Msg {
@@ -769,7 +778,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			expectProceeds: feeAmt,
 			zoneA:          zoneInternal,
 			zoneB:          zoneInternal,
-		}, {
+		},
+		{
 			name:      "MsgSend(exemption -> normal), MsgSend(exemption -> exemption)",
 			msgSigner: privs[0],
 			msgCreator: func() []sdk.Msg {
@@ -1025,10 +1035,10 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 
 	zoneNone := types.Zone{}
 	zoneInternal := types.Zone{Name: "Internal", Outgoing: false, Incoming: false, CrossZone: false}
-	//zoneOutgoing := types.Zone{Name: "Outgoing", Outgoing: true, Incoming: false, CrossZone: false}
-	//zoneIncoming := types.Zone{Name: "Incoming", Outgoing: false, Incoming: true, CrossZone: false}
-	//zoneCrossZoneOutgoing := types.Zone{Name: "CrossOutgoing", Outgoing: true, Incoming: false, CrossZone: true}
-	//zoneCrossZoneIncoming := types.Zone{Name: "CrossIncoming", Outgoing: false, Incoming: true, CrossZone: true}
+	// zoneOutgoing := types.Zone{Name: "Outgoing", Outgoing: true, Incoming: false, CrossZone: false}
+	// zoneIncoming := types.Zone{Name: "Incoming", Outgoing: false, Incoming: true, CrossZone: false}
+	// zoneCrossZoneOutgoing := types.Zone{Name: "CrossOutgoing", Outgoing: true, Incoming: false, CrossZone: true}
+	// zoneCrossZoneIncoming := types.Zone{Name: "CrossIncoming", Outgoing: false, Incoming: true, CrossZone: true}
 
 	// 0, 1: exemption
 	// 2, 3: normal

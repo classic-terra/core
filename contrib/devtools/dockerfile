@@ -1,6 +1,6 @@
 FROM bufbuild/buf:latest as BUILDER
 
-FROM golang:1.22rc2-alpine3.18
+FROM golang:1.22.12-alpine3.20
 
 ENV GOLANG_PROTOBUF_VERSION=1.3.5 \
   GOGO_PROTOBUF_VERSION=1.3.2 \

@@ -26827,6 +26827,45 @@ paths:
           type: boolean
       tags:
         - Query
+  /terra/tax/v1beta1/burn_tax_rate:
+    get:
+      summary: BurnTaxRate return the current tax rate
+      operationId: BurnTaxRate
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tax_rate:
+                type: string
+            description: |-
+              QueryBurnTaxRateResponse is response type for the
+              Query/BurnTaxRate RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /terra/dyncomm/v1beta1/params:
     get:
       summary: Params queries all parameters.

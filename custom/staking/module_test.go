@@ -71,14 +71,9 @@ func (s *StakingTestSuite) TestValidatorVPLimit() {
 	s.Require().True(found)
 	validators[0] = validator
 
-	// test that the code panic on a delegation that surpasses the 20% VP allowed
-	// raise voting power of validator 0 by 1 (2+1)/(11+1) = 0.250000 > 0.2
-	defer func() {
-		if r := recover(); r == nil {
-			s.T().Errorf("The code did not panic")
-		}
-	}()
-
 	s.App.StakingKeeper.SetDelegation(s.Ctx, stakingtypes.NewDelegation(s.TestAccs[0], valAddrs[0], sdk.NewDec(1000000)))
-	s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], sdk.NewInt(1000000), stakingtypes.Unbonded, validators[0], true)
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], sdk.NewInt(1000000), stakingtypes.Unbonded, validators[0], true)
+	// Assert that an error was returned
+	s.Require().Error(err)
+	s.Require().Equal("validator power is over the allowed limit", err.Error())
 }

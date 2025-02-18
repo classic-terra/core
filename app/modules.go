@@ -25,6 +25,7 @@ import (
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	"github.com/classic-terra/core/v3/x/oracle"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	taxmodule "github.com/classic-terra/core/v3/x/tax/module"
 	"github.com/classic-terra/core/v3/x/taxexemption"
 	taxexemptionclient "github.com/classic-terra/core/v3/x/taxexemption/client"
 	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
@@ -37,7 +38,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -80,6 +80,10 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+
+	taxbank "github.com/classic-terra/core/v3/x/tax/modules/bank"
+	taxmarket "github.com/classic-terra/core/v3/x/tax/modules/market"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v3/client/docs/statik"
@@ -134,6 +138,7 @@ var (
 		dyncomm.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		taxmodule.AppModuleBasic{},
 	)
 	// module account permissions
 	maccPerms = map[string][]string{
@@ -172,7 +177,7 @@ func appModules(
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		taxbank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.TreasuryKeeper, app.GetSubspace(banktypes.ModuleName), app.TaxKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
@@ -188,7 +193,7 @@ func appModules(
 		transfer.NewAppModule(app.TransferKeeper),
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
-		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
+		taxmarket.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.TreasuryKeeper, app.BankKeeper, app.OracleKeeper, app.TaxKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
@@ -196,6 +201,7 @@ func appModules(
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+		taxmodule.NewAppModule(appCodec, app.TaxKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	}
 }
@@ -229,6 +235,7 @@ func simulationModules(
 		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
+		taxmodule.NewAppModule(appCodec, app.TaxKeeper),
 	}
 }
 
@@ -262,6 +269,7 @@ func orderBeginBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
+		taxtypes.ModuleName,
 		// consensus module
 		consensusparamtypes.ModuleName,
 	}
@@ -297,6 +305,7 @@ func orderEndBlockers() []string {
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
+		taxtypes.ModuleName,
 		// consensus module
 		consensusparamtypes.ModuleName,
 	}
@@ -332,6 +341,7 @@ func orderInitGenesis() []string {
 		taxexemptiontypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
+		taxtypes.ModuleName,
 		// consensus module
 		consensusparamtypes.ModuleName,
 	}

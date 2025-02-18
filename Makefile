@@ -189,7 +189,7 @@ gen-swagger-docs:
 	bash scripts/protoc-swagger-gen.sh
 
 update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
+	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m -ns terrad
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "Swagger docs are out of sync!";\
         exit 1;\
@@ -271,6 +271,9 @@ ictest-ibc-pfm: ictest-build
 
 ictest-ibc-pfm-terra: ictest-build
 	@cd tests/interchaintest && go test -race -v -run TestTerraPFM .
+
+ictest-oracle: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestOracle .
 
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .

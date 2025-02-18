@@ -18,6 +18,8 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
+	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -57,9 +59,9 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
 	customwasmkeeper "github.com/classic-terra/core/v3/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v3/wasmbinding"
-
 	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
@@ -106,6 +108,7 @@ type AppKeepers struct {
 	DyncommKeeper         dyncommkeeper.Keeper
 	IBCHooksKeeper        *ibchookskeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
+	TaxKeeper             taxkeeper.Keeper
 
 	Ics20WasmHooks  *ibchooks.WasmHooks
 	IBCHooksWrapper *ibchooks.ICS4Middleware
@@ -160,6 +163,7 @@ func NewAppKeepers(
 		taxexemptiontypes.StoreKey,
 		wasmtypes.StoreKey,
 		dyncommtypes.StoreKey,
+		taxtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -277,7 +281,7 @@ func NewAppKeepers(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	appKeepers.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(appKeepers.DistrKeeper.Hooks(), appKeepers.SlashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(customstaking.NewTerraStakingHooks(*appKeepers.StakingKeeper), appKeepers.DistrKeeper.Hooks(), appKeepers.SlashingKeeper.Hooks()),
 	)
 
 	// Create IBC Keeper
@@ -402,6 +406,7 @@ func NewAppKeepers(
 		appKeepers.TaxExemptionKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
+		appKeepers.TaxKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
 	)
@@ -469,6 +474,15 @@ func NewAppKeepers(
 		),
 	)
 
+	appKeepers.TaxKeeper = taxkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[taxtypes.StoreKey],
+		appKeepers.BankKeeper,
+		appKeepers.TreasuryKeeper,
+		appKeepers.DistrKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	appKeepers.DyncommKeeper = dyncommkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[dyncommtypes.StoreKey],
@@ -517,6 +531,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
+	paramsKeeper.Subspace(taxtypes.ModuleName)
 
 	return paramsKeeper
 }

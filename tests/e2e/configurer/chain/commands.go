@@ -259,6 +259,14 @@ func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, wal
 	n.LogActionF("successfully granted for address %s", gratee)
 }
 
+func (n *NodeConfig) GrantBankSend(gratee string, spendLimit string, walletName string) {
+	n.LogActionF("granting for address %s", gratee)
+	cmd := []string{"terrad", "tx", "authz", "grant", gratee, "send", fmt.Sprintf("--from=%s", walletName), fmt.Sprintf("--spend-limit=%s", spendLimit)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully granted bank send for address %s", gratee)
+}
+
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"terrad", "keys", "add", walletName, "--keyring-backend=test"}
@@ -314,4 +322,21 @@ func (n *NodeConfig) Status() (resultStatus, error) { //nolint
 		return resultStatus{}, err
 	}
 	return result, nil
+}
+
+func (n *NodeConfig) SubmitOracleAggregatePrevote(salt string, amount string) {
+	n.LogActionF("submitting oracle aggregate prevote")
+	cmd := []string{"terrad", "tx", "oracle", "aggregate-prevote", salt, amount, fmt.Sprintf("--from=%s", "val")}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted oracle aggregate prevote")
+}
+
+// should be submitted after prevote, and using the same salt
+func (n *NodeConfig) SubmitOracleAggregateVote(salt string, amount string) {
+	n.LogActionF("submitting oracle aggregate vote")
+	cmd := []string{"terrad", "tx", "oracle", "aggregate-vote", salt, amount, fmt.Sprintf("--from=%s", "val")}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted oracle aggregate vote")
 }

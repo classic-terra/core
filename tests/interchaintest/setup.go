@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/icza/dyno"
 
+	oracle "github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -44,7 +45,7 @@ func createConfig() (ibc.ChainConfig, error) {
 			Bin:                 "terrad",
 			Bech32Prefix:        "terra",
 			Denom:               "uluna",
-			GasPrices:           "0.0uluna",
+			GasPrices:           "28.325uluna",
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "112h",
 			NoHostMount:         false,
@@ -62,6 +63,7 @@ func coreEncoding() *testutil.TestEncodingConfig {
 
 	// register custom types
 	govv1.RegisterInterfaces(cfg.InterfaceRegistry)
+	oracle.RegisterInterfaces(cfg.InterfaceRegistry)
 	return &cfg
 }
 

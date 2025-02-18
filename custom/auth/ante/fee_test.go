@@ -1023,6 +1023,13 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 	var privs []cryptotypes.PrivKey
 	var addrs []sdk.AccAddress
 
+	zoneNone := types.Zone{}
+	zoneInternal := types.Zone{Name: "Internal", Outgoing: false, Incoming: false, CrossZone: false}
+	//zoneOutgoing := types.Zone{Name: "Outgoing", Outgoing: true, Incoming: false, CrossZone: false}
+	//zoneIncoming := types.Zone{Name: "Incoming", Outgoing: false, Incoming: true, CrossZone: false}
+	//zoneCrossZoneOutgoing := types.Zone{Name: "CrossOutgoing", Outgoing: true, Incoming: false, CrossZone: true}
+	//zoneCrossZoneIncoming := types.Zone{Name: "CrossIncoming", Outgoing: false, Incoming: true, CrossZone: true}
+
 	// 0, 1: exemption
 	// 2, 3: normal
 	for i := 0; i < 4; i++ {
@@ -1046,6 +1053,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 		msgCreator          func() []sdk.Msg
 		minFeeAmounts       []sdk.Coin
 		expectProceeds      sdk.Coins
+		zoneA               types.Zone
+		zoneB               types.Zone
 		expectReverseCharge bool
 	}{
 		{
@@ -1062,6 +1071,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 				sdk.NewInt64Coin(denom2, 0),
 			},
 			expectProceeds:      sdk.NewCoins(),
+			zoneA:               zoneInternal,
+			zoneB:               zoneInternal,
 			expectReverseCharge: false,
 		},
 		{
@@ -1125,12 +1136,28 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 			s.SetupTest(true) // setup
 			require := s.Require()
 			tk := s.app.TreasuryKeeper
+			te := s.app.TaxExemptionKeeper
 			ak := s.app.AccountKeeper
 			bk := s.app.BankKeeper
 
 			burnTaxRate := sdk.NewDecWithPrec(5, 3)
 			burnSplitRate := sdk.NewDecWithPrec(5, 1)
 			oracleSplitRate := sdk.ZeroDec()
+
+			// normal test as for prior handling
+			if c.zoneA != zoneNone {
+				te.AddTaxExemptionZone(s.ctx, c.zoneA)
+			}
+			if c.zoneB != zoneNone && c.zoneB != c.zoneA {
+				te.AddTaxExemptionZone(s.ctx, c.zoneB)
+			}
+
+			if c.zoneA != zoneNone {
+				te.AddTaxExemptionAddress(s.ctx, c.zoneA.Name, addrs[0].String())
+			}
+			if c.zoneB != zoneNone {
+				te.AddTaxExemptionAddress(s.ctx, c.zoneB.Name, addrs[1].String())
+			}
 
 			// Set burn split rate to 50%
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
@@ -1141,7 +1168,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
 			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
-			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
+			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
 			antehandler := sdk.ChainAnteDecorators(mfd)
 			pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
 			posthandler := sdk.ChainPostDecorators(pd)
@@ -1317,7 +1344,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
 			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
-			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
+			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
 			antehandler := sdk.ChainAnteDecorators(mfd)
 			pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
 			posthandler := sdk.ChainPostDecorators(pd)

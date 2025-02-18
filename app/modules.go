@@ -177,7 +177,7 @@ func appModules(
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
-		taxbank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.TreasuryKeeper, app.GetSubspace(banktypes.ModuleName), app.TaxKeeper),
+		taxbank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.TaxExemptionKeeper, app.TreasuryKeeper, app.GetSubspace(banktypes.ModuleName), app.TaxKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),

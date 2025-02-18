@@ -5,7 +5,7 @@ const (
 	ModuleName = "taxexemption"
 
 	// StoreKey is the string store representation
-	StoreKey = ModuleName
+	StoreKey = "x_" + ModuleName // StoreKey would conflict with "tax" module without the prefix
 
 	// RouterKey is the message route for treasury
 	RouterKey = ModuleName

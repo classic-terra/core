@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/classic-terra/core/v3/x/tax/handlers"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
@@ -30,31 +31,33 @@ type AppModuleBasic struct {
 type AppModule struct {
 	*bank.AppModule
 
-	keeper         keeper.Keeper
-	accountKeeper  types.AccountKeeper
-	treasuryKeeper treasurykeeper.Keeper
-	taxKeeper      taxkeeper.Keeper
+	keeper             keeper.Keeper
+	accountKeeper      types.AccountKeeper
+	taxexemptionKeeper taxexemptionkeeper.Keeper
+	treasuryKeeper     treasurykeeper.Keeper
+	taxKeeper          taxkeeper.Keeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, treasuryKeeper treasurykeeper.Keeper, ss exported.Subspace, taxKeeper taxkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper, taxexemptionKeeper taxexemptionkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, ss exported.Subspace, taxKeeper taxkeeper.Keeper) AppModule {
 	bm := bank.NewAppModule(cdc, keeper, accountKeeper, ss)
 	return AppModule{
-		AppModule:      &bm,
-		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		treasuryKeeper: treasuryKeeper,
-		legacySubspace: ss,
-		taxKeeper:      taxKeeper,
+		AppModule:          &bm,
+		keeper:             keeper,
+		accountKeeper:      accountKeeper,
+		taxexemptionKeeper: taxexemptionKeeper,
+		treasuryKeeper:     treasuryKeeper,
+		legacySubspace:     ss,
+		taxKeeper:          taxKeeper,
 	}
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	origMsgServer := keeper.NewMsgServerImpl(am.keeper)
-	types.RegisterMsgServer(cfg.MsgServer(), handlers.NewBankMsgServer(am.keeper, am.treasuryKeeper, am.taxKeeper, origMsgServer))
+	types.RegisterMsgServer(cfg.MsgServer(), handlers.NewBankMsgServer(am.keeper, am.taxexemptionKeeper, am.treasuryKeeper, am.taxKeeper, origMsgServer))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper), am.legacySubspace)

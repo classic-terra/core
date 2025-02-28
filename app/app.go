@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	v12 "github.com/classic-terra/core/v3/app/upgrades/v12"
 	"io"
 	stdlog "log"
 	"net/http"
@@ -100,6 +101,7 @@ var (
 		v10_1.Upgrade,
 		v11.Upgrade,
 		v11_1.Upgrade,
+		v12.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network

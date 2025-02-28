@@ -4,13 +4,13 @@ module github.com/classic-terra/core/v3
 
 require (
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	cosmossdk.io/simapp v0.0.0-20230602123434-616841b9704d
 	github.com/CosmWasm/wasmd v0.46.0
 	github.com/CosmWasm/wasmvm v1.5.8
 	github.com/cometbft/cometbft v0.37.15
 	github.com/cometbft/cometbft-db v0.11.0
-	github.com/cosmos/cosmos-sdk v0.47.14
+	github.com/cosmos/cosmos-sdk v0.47.16
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99
 	github.com/cosmos/ibc-go/v7 v7.4.1
@@ -228,7 +228,6 @@ replace (
 
 replace (
 	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v1.0.0
-	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.46.0-classic.2
 	// use cometbft
 	github.com/cometbft/cometbft-db => github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2

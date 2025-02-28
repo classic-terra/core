@@ -2,6 +2,9 @@
 package v12
 
 import (
+	"fmt"
+	"reflect"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/classic-terra/core/v3/app/keepers"
 	"github.com/classic-terra/core/v3/app/upgrades"
@@ -10,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"reflect"
 )
 
 func CreateV12UpgradeHandler(
@@ -37,12 +39,18 @@ func getWasmStoreKey(k wasmkeeper.Keeper) storetypes.StoreKey {
 		v = v.Elem()
 	}
 	field := v.FieldByName("storeKey")
+	if !field.IsValid() {
+		panic("could not find storeKey field in wasm keeper")
+	}
 	return field.Interface().(storetypes.StoreKey)
 }
 
 // migrateWasmKeys handles the migration of wasm keys from forked to original format
 func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper) error {
 	store := ctx.KVStore(getWasmStoreKey(wasmKeeper))
+
+	// Log the migration start
+	ctx.Logger().Info("Starting WASM key migration from forked to original format")
 
 	// 1. Migrate sequence keys
 	if err := migrateSequenceKeys(store); err != nil {
@@ -78,6 +86,8 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper) error {
 	if err := migrateParamsKey(store); err != nil {
 		return err
 	}
+
+	ctx.Logger().Info("WASM key migration completed successfully")
 
 	return nil
 }
@@ -162,13 +172,18 @@ func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte) error {
 	iterator := oldStore.Iterator(nil, nil)
 	defer iterator.Close()
 
+	var migratedCount int
+
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
 		value := iterator.Value()
 
 		newStore.Set(key, value)
 		oldStore.Delete(key)
+		migratedCount++
 	}
+
+	fmt.Println("migrated", migratedCount)
 
 	return nil
 }

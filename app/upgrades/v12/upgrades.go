@@ -3,13 +3,14 @@ package v12
 
 import (
 	"fmt"
-	"reflect"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/classic-terra/core/v3/app/keepers"
 	"github.com/classic-terra/core/v3/app/upgrades"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -23,31 +24,24 @@ func CreateV12UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// Perform wasm key migration
-		if err := migrateWasmKeys(ctx, keepers.WasmKeeper); err != nil {
+		wasmStoreKey := keepers.GetKey(wasmtypes.StoreKey)
+
+		if err := migrateWasmKeys(ctx, keepers.WasmKeeper, wasmStoreKey); err != nil {
 			return nil, err
 		}
-
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }
 
-// getWasmStoreKey uses reflection to access the unexported storeKey field
-func getWasmStoreKey(k wasmkeeper.Keeper) storetypes.StoreKey {
-	// Use reflection to access the unexported storeKey field
-	v := reflect.ValueOf(k)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	field := v.FieldByName("storeKey")
-	if !field.IsValid() {
-		panic("could not find storeKey field in wasm keeper")
-	}
-	return field.Interface().(storetypes.StoreKey)
+// MigrateWasmKeys handles the migration of wasm keys from forked to original format
+// Exported for testing
+func MigrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
+	return migrateWasmKeys(ctx, wasmKeeper, wasmStoreKey)
 }
 
 // migrateWasmKeys handles the migration of wasm keys from forked to original format
-func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper) error {
-	store := ctx.KVStore(getWasmStoreKey(wasmKeeper))
+func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
+	store := ctx.KVStore(wasmStoreKey)
 
 	// Log the migration start
 	ctx.Logger().Info("Starting WASM key migration from forked to original format")
@@ -97,9 +91,12 @@ func migrateSequenceKeys(store sdk.KVStore) error {
 	// Migrate KeySequenceCodeID: 0x01 -> append(0x04, "lastCodeId"...)
 	oldCodeIDKey := []byte{0x01}
 	oldCodeIDValue := store.Get(oldCodeIDKey)
+
 	if oldCodeIDValue != nil {
 		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
+		// Set the new key with the old value
 		store.Set(newCodeIDKey, oldCodeIDValue)
+		// Delete the old key
 		store.Delete(oldCodeIDKey)
 	}
 

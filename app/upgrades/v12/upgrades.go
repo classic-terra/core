@@ -38,18 +38,20 @@ func MigrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	return migrateWasmKeys(ctx, wasmKeeper, wasmStoreKey)
 }
 
-// migrateWasmKeys handles the migration of wasm keys from forked to original format
 func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
 	store := ctx.KVStore(wasmStoreKey)
 
 	// Log the migration start
 	ctx.Logger().Info("Starting WASM key migration from forked to original format")
-	// We need to be careful about the order of migrations to avoid overwriting data
-	// First, migrate keys that don't conflict with any destination keys
 
 	// First, collect all contract addresses before any migration
 	contractAddresses := collectContractAddresses(store)
 	ctx.Logger().Info(fmt.Sprintf("Found %d contracts for migration", len(contractAddresses)))
+
+	// Add validation of collected addresses
+	if len(contractAddresses) == 0 {
+		ctx.Logger().Info("No contracts found for migration, this might indicate an issue")
+	}
 
 	// 1. Save sequence keys (0x01, 0x02) to temporary variables
 	oldCodeIDKey := []byte{0x01}
@@ -57,6 +59,19 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 	oldInstanceIDKey := []byte{0x02}
 	oldInstanceIDValue := store.Get(oldInstanceIDKey)
+
+	// Log sequence values for debugging
+	if oldCodeIDValue != nil {
+		ctx.Logger().Info(fmt.Sprintf("Found code ID sequence: %v", oldCodeIDValue))
+	} else {
+		ctx.Logger().Info("No code ID sequence found at key 0x01")
+	}
+
+	if oldInstanceIDValue != nil {
+		ctx.Logger().Info(fmt.Sprintf("Found instance ID sequence: %v", oldInstanceIDValue))
+	} else {
+		ctx.Logger().Info("No instance ID sequence found at key 0x02")
+	}
 
 	// Make copies to avoid any issues with shared memory
 	var codeIDValue, instanceIDValue []byte
@@ -71,20 +86,25 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	}
 
 	// 2.1 Migrate contract keys (0x04 -> 0x02)
+	// This needs to happen before we write to 0x02 with sequence keys
 	if err := migrateContractKeys(store); err != nil {
-		return err
+		return fmt.Errorf("failed to migrate contract keys: %w", err)
 	}
 
 	// 2.2. Now that 0x04 is free, manually migrate sequence keys from our saved copies
 	if codeIDValue != nil {
 		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
 		store.Set(newCodeIDKey, codeIDValue)
+		// Log before deleting
+		ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence from 0x01 to %X", newCodeIDKey))
 		store.Delete(oldCodeIDKey)
 	}
 
 	if instanceIDValue != nil {
 		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...)
 		store.Set(newInstanceIDKey, instanceIDValue)
+		// Log before deleting
+		ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence from 0x02 to %X", newInstanceIDKey))
 		store.Delete(oldInstanceIDKey)
 	}
 
@@ -164,10 +184,16 @@ func removeLengthPrefixIfNeeded(bz []byte) []byte {
 	}
 
 	// Check if this looks like a length-prefixed address
-	// In Cosmos SDK, addresses are typically 20 bytes
-	// So if the first byte is 20 and the total length is 21 or more,
-	// it's likely a length-prefixed address
-	if bz[0] == 20 && len(bz) >= 21 {
+	// The first byte should indicate the length of the remaining bytes
+	prefixLen := int(bz[0])
+
+	// Validate that the prefix length makes sense:
+	// 1. It should be positive
+	// 2. It should be less than the total length minus 1 (for the prefix byte itself)
+	// 3. For Cosmos addresses, it's typically 20 bytes
+	if prefixLen > 0 && prefixLen <= len(bz)-1 && prefixLen == len(bz)-1 {
+		// This is likely a length-prefixed address
+		fmt.Printf("Removing length prefix: original %X, unprefixed %X\n", bz, bz[1:])
 		return bz[1:] // Remove the first byte (length prefix)
 	}
 
@@ -215,6 +241,7 @@ func migrateContractKeys(store sdk.KVStore) error {
 	defer iterator.Close()
 
 	var migratedCount int
+	var lengthPrefixRemovedCount int
 
 	for ; iterator.Valid(); iterator.Next() {
 		// Copy the key and value to avoid issues with shared memory
@@ -227,6 +254,13 @@ func migrateContractKeys(store sdk.KVStore) error {
 		// The key is the contract address with potential length prefix
 		// We need to check if it has a length prefix and remove it
 		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
+
+		// Track if we removed a length prefix
+		if len(unprefixedKey) != len(originalKey) {
+			lengthPrefixRemovedCount++
+			fmt.Printf("Removed length prefix from contract key: %X -> %X\n",
+				originalKey, unprefixedKey)
+		}
 
 		// Construct full keys
 		oldFullKey := append([]byte{}, oldPrefix...)
@@ -242,7 +276,8 @@ func migrateContractKeys(store sdk.KVStore) error {
 		migratedCount++
 	}
 
-	fmt.Printf("migrated contractKey, migratedCount %d\n", migratedCount)
+	fmt.Printf("migrated contractKey, migratedCount %d, lengthPrefixRemovedCount %d\n",
+		migratedCount, lengthPrefixRemovedCount)
 
 	return nil
 }

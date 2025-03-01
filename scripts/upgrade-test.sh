@@ -4,19 +4,19 @@
 FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
-OLD_VERSION=v3.3.0
+OLD_VERSION=v3.4.0
 UPGRADE_WAIT=${UPGRADE_WAIT:-20}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
-SOFTWARE_UPGRADE_NAME="v11_1"
+SOFTWARE_UPGRADE_NAME="v12"
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 
 if [[ "$FORK" == "true" ]]; then
-    export TERRAD_HALT_HEIGHT=20
+    export TERRAD_HALT_HEIGHT=100
 fi
 
 # underscore so that go tool will not take gocache into account
@@ -90,8 +90,11 @@ run_fork () {
 run_upgrade () {
     echo "upgrading"
 
-    STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
+    STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.SyncInfo.latest_block_height'))
+    echo "status info:" $STATUS_INFO
+    UPGRADE_HEIGHT=$((STATUS_INFO + 20))
+
+    echo "upgrade height:" $UPGRADE_HEIGHT
 
     tar -cf ./_build/new/terrad.tar -C ./_build/new terrad
     SUM=$(shasum -a 256 ./_build/new/terrad.tar | cut -d ' ' -f1)
@@ -131,7 +134,7 @@ run_upgrade () {
         else
             ./_build/old/terrad q gov proposal 1 --output=json | jq ".status"
             echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
-            sleep 10
+            sleep 5
         fi
     done
 }

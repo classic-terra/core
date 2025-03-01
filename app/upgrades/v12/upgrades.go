@@ -51,17 +51,41 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	contractAddresses := collectContractAddresses(store)
 	ctx.Logger().Info(fmt.Sprintf("Found %d contracts for migration", len(contractAddresses)))
 
-	// 1. Migrate contract keys (0x04 -> 0x02)
-	// This needs to happen before sequence keys migration to free up 0x04
+	// 1. Save sequence keys (0x01, 0x02) to temporary variables
+	oldCodeIDKey := []byte{0x01}
+	oldCodeIDValue := store.Get(oldCodeIDKey)
+
+	oldInstanceIDKey := []byte{0x02}
+	oldInstanceIDValue := store.Get(oldInstanceIDKey)
+
+	// Make copies to avoid any issues with shared memory
+	var codeIDValue, instanceIDValue []byte
+	if oldCodeIDValue != nil {
+		codeIDValue = make([]byte, len(oldCodeIDValue))
+		copy(codeIDValue, oldCodeIDValue)
+	}
+
+	if oldInstanceIDValue != nil {
+		instanceIDValue = make([]byte, len(oldInstanceIDValue))
+		copy(instanceIDValue, oldInstanceIDValue)
+	}
+
+	// 2.1 Migrate contract keys (0x04 -> 0x02)
 	if err := migrateContractKeys(store); err != nil {
 		return err
 	}
 
-	// 2. Migrate sequence keys (0x01 -> 0x04 with appended strings)
-	// This can only be done after contract keys are migrated away from 0x04
-	// This frees up 0x01 for code keys
-	if err := migrateSequenceKeys(store); err != nil {
-		return err
+	// 2.2. Now that 0x04 is free, manually migrate sequence keys from our saved copies
+	if codeIDValue != nil {
+		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
+		store.Set(newCodeIDKey, codeIDValue)
+		store.Delete(oldCodeIDKey)
+	}
+
+	if instanceIDValue != nil {
+		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...)
+		store.Set(newInstanceIDKey, instanceIDValue)
+		store.Delete(oldInstanceIDKey)
 	}
 
 	// 3. Migrate code keys (0x03 -> 0x01)

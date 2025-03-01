@@ -27,7 +27,7 @@ for j in $(seq 0 1); do
 		echo $out >&2
 		exit $code
 	fi
-	sleep 10
+	sleep 5
 	txhash=$(echo $out | jq -r '.txhash')
 	TXHASH+=($txhash)
 	id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
@@ -42,7 +42,7 @@ for j in $(seq 0 1); do
 		echo $out >&2
 		exit $code
 	fi
-	sleep 10
+	sleep 5
 	txhash=$(echo $out | jq -r '.txhash')
 	TXHASH+=("$txhash")
 	contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[0].value')
@@ -65,7 +65,7 @@ for j in $(seq 0 1); do
 		txhash=$(echo $out | jq -r '.txhash')
 		TXHASH+=("$txhash")
 
-		sleep 10
+		sleep 5
 	done
 
 	# sends token to other nodes
@@ -86,7 +86,7 @@ for j in $(seq 0 1); do
 		txhash=$(echo $out | jq -r '.txhash')
 		TXHASH+=("$txhash")
 
-		sleep 10
+		sleep 5
 	done
 
 		# write the contract state to a file

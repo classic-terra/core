@@ -25,7 +25,6 @@ func CreateV12UpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// Perform wasm key migration
 		wasmStoreKey := keepers.GetKey(wasmtypes.StoreKey)
-
 		if err := migrateWasmKeys(ctx, keepers.WasmKeeper, wasmStoreKey); err != nil {
 			return nil, err
 		}
@@ -45,9 +44,12 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 	// Log the migration start
 	ctx.Logger().Info("Starting WASM key migration from forked to original format")
-
 	// We need to be careful about the order of migrations to avoid overwriting data
 	// First, migrate keys that don't conflict with any destination keys
+
+	// First, collect all contract addresses before any migration
+	contractAddresses := collectContractAddresses(store)
+	ctx.Logger().Info(fmt.Sprintf("Found %d contracts for migration", len(contractAddresses)))
 
 	// 1. Migrate contract keys (0x04 -> 0x02)
 	// This needs to happen before sequence keys migration to free up 0x04
@@ -70,7 +72,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 	// 4. Migrate contract store keys (0x05 -> 0x03)
 	// This needs to happen before contract history keys migration
-	if err := migrateContractStoreKeys(store); err != nil {
+	if err := migrateContractStoreKeys(store, contractAddresses); err != nil {
 		return err
 	}
 
@@ -127,35 +129,39 @@ func migrateSequenceKeys(store sdk.KVStore) error {
 func migrateCodeKeys(store sdk.KVStore) error {
 	oldPrefix := []byte{0x03}
 	newPrefix := []byte{0x01}
-	return migratePrefix(store, oldPrefix, newPrefix)
+	return migratePrefix(store, oldPrefix, newPrefix, "codeKey")
 }
 
-// migrateContractKeys migrates contract keys from 0x04 to 0x02
-func migrateContractKeys(store sdk.KVStore) error {
-	oldPrefix := []byte{0x04}
-	newPrefix := []byte{0x02}
-	return migratePrefix(store, oldPrefix, newPrefix)
-}
+// removeLengthPrefixIfNeeded checks if a key has a length prefix and removes it if present
+// Length prefixed addresses have their first byte indicating the length of the address
+func removeLengthPrefixIfNeeded(bz []byte) []byte {
+	if len(bz) == 0 {
+		return bz
+	}
 
-// migrateContractStoreKeys migrates contract store keys from 0x05 to 0x03
-func migrateContractStoreKeys(store sdk.KVStore) error {
-	oldPrefix := []byte{0x05}
-	newPrefix := []byte{0x03}
-	return migratePrefix(store, oldPrefix, newPrefix)
+	// Check if this looks like a length-prefixed address
+	// In Cosmos SDK, addresses are typically 20 bytes
+	// So if the first byte is 20 and the total length is 21 or more,
+	// it's likely a length-prefixed address
+	if bz[0] == 20 && len(bz) >= 21 {
+		return bz[1:] // Remove the first byte (length prefix)
+	}
+
+	return bz // Return as is if not length-prefixed
 }
 
 // migrateContractHistoryKeys migrates contract history keys from 0x06 to 0x05
 func migrateContractHistoryKeys(store sdk.KVStore) error {
 	oldPrefix := []byte{0x06}
 	newPrefix := []byte{0x05}
-	return migratePrefix(store, oldPrefix, newPrefix)
+	return migratePrefix(store, oldPrefix, newPrefix, "contractHistoryKey")
 }
 
 // migrateSecondaryIndexKeys migrates secondary index keys from 0x10 to 0x06
 func migrateSecondaryIndexKeys(store sdk.KVStore) error {
 	oldPrefix := []byte{0x10}
 	newPrefix := []byte{0x06}
-	return migratePrefix(store, oldPrefix, newPrefix)
+	return migratePrefix(store, oldPrefix, newPrefix, "secondaryIndexKey")
 }
 
 // migrateParamsKey migrates params key from 0x11 to 0x10
@@ -165,15 +171,168 @@ func migrateParamsKey(store sdk.KVStore) error {
 
 	value := store.Get(oldKey)
 	if value != nil {
-		store.Set(newKey, value)
+		tmpValue := make([]byte, len(value))
+		copy(tmpValue, value)
+		store.Set(newKey, tmpValue)
 		store.Delete(oldKey)
 	}
 
 	return nil
 }
 
+// migrateContractKeys migrates contract keys from 0x04 to 0x02
+// and removes length prefixes from addresses
+func migrateContractKeys(store sdk.KVStore) error {
+	oldPrefix := []byte{0x04}
+	newPrefix := []byte{0x02}
+
+	oldStore := prefix.NewStore(store, oldPrefix)
+	iterator := oldStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	var migratedCount int
+
+	for ; iterator.Valid(); iterator.Next() {
+		// Copy the key and value to avoid issues with shared memory
+		originalKey := make([]byte, len(iterator.Key()))
+		copy(originalKey, iterator.Key())
+
+		originalValue := make([]byte, len(iterator.Value()))
+		copy(originalValue, iterator.Value())
+
+		// The key is the contract address with potential length prefix
+		// We need to check if it has a length prefix and remove it
+		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
+
+		// Construct full keys
+		oldFullKey := append([]byte{}, oldPrefix...)
+		oldFullKey = append(oldFullKey, originalKey...)
+
+		newFullKey := append([]byte{}, newPrefix...)
+		newFullKey = append(newFullKey, unprefixedKey...)
+
+		// Set with new prefix and delete old
+		store.Set(newFullKey, originalValue)
+		store.Delete(oldFullKey)
+
+		migratedCount++
+	}
+
+	fmt.Printf("migrated contractKey, migratedCount %d\n", migratedCount)
+
+	return nil
+}
+
+// migrateContractStoreKeys migrates contract store keys from 0x05 to 0x03
+// and removes length prefixes from addresses in the keys
+func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) error {
+	oldPrefix := []byte{0x05}
+	newPrefix := []byte{0x03}
+
+	fmt.Printf("Using %d pre-collected contracts to migrate storage\n", len(contractAddresses))
+
+	// Now migrate each contract's storage
+	var totalMigrated int
+	for i, originalContractAddr := range contractAddresses {
+		// Skip nil addresses if any
+		if originalContractAddr == nil {
+			fmt.Printf("Warning: Skipping nil contract address at index %d\n", i)
+			continue
+		}
+
+		// Copy the contract address to avoid issues with shared memory
+		contractAddr := make([]byte, len(originalContractAddr))
+		copy(contractAddr, originalContractAddr)
+
+		// Remove length prefix from contract address if needed
+		unprefixedAddr := removeLengthPrefixIfNeeded(contractAddr)
+
+		// Construct the old and new prefixes for this specific contract
+		oldContractPrefix := append([]byte{0x05}, contractAddr...)   // Original key with potential length prefix
+		newContractPrefix := append([]byte{0x03}, unprefixedAddr...) // New key without length prefix
+
+		// Create iterator for this contract's storage
+		oldContractStore := prefix.NewStore(store, oldContractPrefix)
+		oldContractIter := oldContractStore.Iterator(nil, nil)
+
+		var contractKeyCount int
+		for ; oldContractIter.Valid(); oldContractIter.Next() {
+			// Copy the key and value to avoid issues with shared memory
+			originalKey := make([]byte, len(oldContractIter.Key()))
+			copy(originalKey, oldContractIter.Key())
+
+			originalValue := make([]byte, len(oldContractIter.Value()))
+			copy(originalValue, oldContractIter.Value())
+
+			// Skip nil keys or values
+			if originalKey == nil || originalValue == nil {
+				continue
+			}
+
+			// Construct full keys - create new slices to avoid modifying the original prefixes
+			oldFullKey := append([]byte{}, oldContractPrefix...)
+			oldFullKey = append(oldFullKey, originalKey...)
+
+			newFullKey := append([]byte{}, newContractPrefix...)
+			newFullKey = append(newFullKey, originalKey...)
+
+			// Set with new prefix and delete old
+			store.Set(newFullKey, originalValue)
+			store.Delete(oldFullKey)
+
+			contractKeyCount++
+			totalMigrated++
+		}
+		oldContractIter.Close()
+
+		fmt.Printf("Migrated %d keys for contract %X\n", contractKeyCount, unprefixedAddr)
+	}
+
+	// Also handle any direct contract store keys that might not be associated with a contract
+	// (this is a fallback to ensure we don't miss anything)
+	directOldStore := prefix.NewStore(store, oldPrefix)
+	directOldIter := directOldStore.Iterator(nil, nil)
+
+	var directMigrated int
+	for ; directOldIter.Valid(); directOldIter.Next() {
+		// Copy the key and value to avoid issues with shared memory
+		originalKey := make([]byte, len(directOldIter.Key()))
+		copy(originalKey, directOldIter.Key())
+
+		originalValue := make([]byte, len(directOldIter.Value()))
+		copy(originalValue, directOldIter.Value())
+
+		// Skip nil keys or values
+		if originalKey == nil || originalValue == nil {
+			continue
+		}
+
+		// Check if the key starts with a length prefix and remove it
+		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
+
+		// Construct full keys - create new slices to avoid modifying the original prefixes
+		oldFullKey := append([]byte{}, oldPrefix...)
+		oldFullKey = append(oldFullKey, originalKey...)
+
+		newFullKey := append([]byte{}, newPrefix...)
+		newFullKey = append(newFullKey, unprefixedKey...)
+
+		// Set with new prefix and delete old
+		store.Set(newFullKey, originalValue)
+		store.Delete(oldFullKey)
+
+		directMigrated++
+	}
+	directOldIter.Close()
+
+	fmt.Printf("Additionally migrated %d direct contract store keys\n", directMigrated)
+	fmt.Printf("Total migrated contract store keys: %d\n", totalMigrated+directMigrated)
+
+	return nil
+}
+
 // migratePrefix is a helper function to migrate all keys with a given prefix
-func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte) error {
+func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
 	oldStore := prefix.NewStore(store, oldPrefix)
 	newStore := prefix.NewStore(store, newPrefix)
 
@@ -183,15 +342,46 @@ func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte) error {
 	var migratedCount int
 
 	for ; iterator.Valid(); iterator.Next() {
-		key := iterator.Key()
-		value := iterator.Value()
+		// Copy the key and value to avoid issues with shared memory
+		originalKey := make([]byte, len(iterator.Key()))
+		copy(originalKey, iterator.Key())
 
-		newStore.Set(key, value)
-		oldStore.Delete(key)
+		originalValue := make([]byte, len(iterator.Value()))
+		copy(originalValue, iterator.Value())
+
+		newStore.Set(originalKey, originalValue)
+		oldStore.Delete(originalKey)
 		migratedCount++
 	}
 
-	fmt.Println("migrated", migratedCount)
+	fmt.Printf("migrated name %s, migratedCount %d\n", name, migratedCount)
 
 	return nil
+}
+
+// collectContractAddresses gets all contract addresses before any migration
+func collectContractAddresses(store sdk.KVStore) [][]byte {
+	// Contract addresses are stored with prefix 0x04 before migration
+	contractInfoPrefix := []byte{0x04}
+	contractInfoStore := prefix.NewStore(store, contractInfoPrefix)
+	contractInfoIter := contractInfoStore.Iterator(nil, nil)
+	defer contractInfoIter.Close()
+
+	var contractAddresses [][]byte
+	for ; contractInfoIter.Valid(); contractInfoIter.Next() {
+		// The key is the contract address (potentially with length prefix)
+		addr := contractInfoIter.Key()
+		contractAddresses = append(contractAddresses, addr)
+
+		// Log each contract address for debugging
+		fmt.Printf("Found contract address: %X (length: %d)\n", addr, len(addr))
+
+		// Also log what it would look like unprefixed
+		unprefixedAddr := removeLengthPrefixIfNeeded(addr)
+		if len(addr) != len(unprefixedAddr) {
+			fmt.Printf("  - Would be unprefixed to: %X (length: %d)\n", unprefixedAddr, len(unprefixedAddr))
+		}
+	}
+
+	return contractAddresses
 }

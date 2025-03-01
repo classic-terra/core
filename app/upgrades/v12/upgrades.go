@@ -46,37 +46,48 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	// Log the migration start
 	ctx.Logger().Info("Starting WASM key migration from forked to original format")
 
-	// 1. Migrate sequence keys
-	if err := migrateSequenceKeys(store); err != nil {
-		return err
-	}
+	// We need to be careful about the order of migrations to avoid overwriting data
+	// First, migrate keys that don't conflict with any destination keys
 
-	// 2. Migrate code keys
-	if err := migrateCodeKeys(store); err != nil {
-		return err
-	}
-
-	// 3. Migrate contract keys
+	// 1. Migrate contract keys (0x04 -> 0x02)
+	// This needs to happen before sequence keys migration to free up 0x04
 	if err := migrateContractKeys(store); err != nil {
 		return err
 	}
 
-	// 4. Migrate contract store keys
+	// 2. Migrate sequence keys (0x01 -> 0x04 with appended strings)
+	// This can only be done after contract keys are migrated away from 0x04
+	// This frees up 0x01 for code keys
+	if err := migrateSequenceKeys(store); err != nil {
+		return err
+	}
+
+	// 3. Migrate code keys (0x03 -> 0x01)
+	// This can only be done after sequence keys are migrated away from 0x01
+	if err := migrateCodeKeys(store); err != nil {
+		return err
+	}
+
+	// 4. Migrate contract store keys (0x05 -> 0x03)
+	// This needs to happen before contract history keys migration
 	if err := migrateContractStoreKeys(store); err != nil {
 		return err
 	}
 
-	// 5. Migrate contract history keys
+	// 5. Migrate contract history keys (0x06 -> 0x05)
+	// This can only be done after contract store keys are migrated away from 0x05
 	if err := migrateContractHistoryKeys(store); err != nil {
 		return err
 	}
 
-	// 6. Migrate secondary index keys
+	// 6. Migrate secondary index keys (0x10 -> 0x06)
+	// This needs to happen before params key migration to free up 0x10
 	if err := migrateSecondaryIndexKeys(store); err != nil {
 		return err
 	}
 
-	// 7. Migrate params key
+	// 7. Migrate params key (0x11 -> 0x10)
+	// Now that 0x10 is free, we can safely migrate params
 	if err := migrateParamsKey(store); err != nil {
 		return err
 	}

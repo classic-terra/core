@@ -32,12 +32,6 @@ func CreateV12UpgradeHandler(
 	}
 }
 
-// MigrateWasmKeys handles the migration of wasm keys from forked to original format
-// Exported for testing
-func MigrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
-	return migrateWasmKeys(ctx, wasmKeeper, wasmStoreKey)
-}
-
 func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
 	store := ctx.KVStore(wasmStoreKey)
 
@@ -139,32 +133,6 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	}
 
 	ctx.Logger().Info("WASM key migration completed successfully")
-
-	return nil
-}
-
-// migrateSequenceKeys migrates from direct bytes to SequenceKeyPrefix based keys
-func migrateSequenceKeys(store sdk.KVStore) error {
-	// Migrate KeySequenceCodeID: 0x01 -> append(0x04, "lastCodeId"...)
-	oldCodeIDKey := []byte{0x01}
-	oldCodeIDValue := store.Get(oldCodeIDKey)
-
-	if oldCodeIDValue != nil {
-		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
-		// Set the new key with the old value
-		store.Set(newCodeIDKey, oldCodeIDValue)
-		// Delete the old key
-		store.Delete(oldCodeIDKey)
-	}
-
-	// Migrate KeySequenceInstanceID: 0x02 -> append(0x04, "lastContractId"...)
-	oldInstanceIDKey := []byte{0x02}
-	oldInstanceIDValue := store.Get(oldInstanceIDKey)
-	if oldInstanceIDValue != nil {
-		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...)
-		store.Set(newInstanceIDKey, oldInstanceIDValue)
-		store.Delete(oldInstanceIDKey)
-	}
 
 	return nil
 }
@@ -443,4 +411,34 @@ func collectContractAddresses(store sdk.KVStore) [][]byte {
 	}
 
 	return contractAddresses
+}
+
+// MigrateWasmKeys handles the migration of wasm keys from forked to original format
+// Exported for testing
+func MigrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
+	return migrateWasmKeys(ctx, wasmKeeper, wasmStoreKey)
+}
+
+// RemoveLengthPrefixIfNeeded checks if a key has a length prefix and removes it if present
+// Exported for testing
+func RemoveLengthPrefixIfNeeded(bz []byte) []byte {
+	return removeLengthPrefixIfNeeded(bz)
+}
+
+// CollectContractAddresses gets all contract addresses before any migration
+// Exported for testing
+func CollectContractAddresses(store sdk.KVStore) [][]byte {
+	return collectContractAddresses(store)
+}
+
+// MigrateContractStoreKeys migrates contract store keys from 0x05 to 0x03
+// Exported for testing
+func MigrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) error {
+	return migrateContractStoreKeys(store, contractAddresses)
+}
+
+// MigrateContractKeys migrates contract keys from 0x04 to 0x02
+// Exported for testing
+func MigrateContractKeys(store sdk.KVStore) error {
+	return migrateContractKeys(store)
 }

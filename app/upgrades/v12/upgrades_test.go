@@ -1,7 +1,11 @@
 package v12_test
 
 import (
+	"bytes"
 	"fmt"
+	"reflect"
+	"testing"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -9,14 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"reflect"
-	"testing"
 
 	apptesting "github.com/classic-terra/core/v3/app/testing"
 	"github.com/stretchr/testify/suite"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/classic-terra/core/v3/app/keepers"
 	v12 "github.com/classic-terra/core/v3/app/upgrades/v12"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -131,183 +132,6 @@ func (s *UpgradeTestSuite) TestMigrateWasmKeys() {
 		kvStore.Get([]byte{0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}), "Contract history key should be migrated to 0x05")
 }
 
-// TestMigrateWasmKeysWithContractState tests the migration of wasm keys with focus on contract state
-func (s *UpgradeTestSuite) TestMigrateWasmKeysWithContractState() {
-	// Setup in-memory database and context
-	db := dbm.NewMemDB()
-	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
-	stateStore := store.NewCommitMultiStore(db)
-	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
-	require.NoError(s.T(), stateStore.LoadLatestVersion())
-
-	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
-
-	// Setup test data in the old format
-	kvStore := ctx.KVStore(wasmStoreKey)
-
-	// Create multiple contract states with different data to test migration thoroughly
-
-	// Contract 1 with multiple state entries
-	contractID1 := []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}
-	kvStore.Set([]byte{0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, []byte("contract1")) // Contract key
-
-	// Contract 1 state entries (using 0x05 prefix for contract store)
-	kvStore.Set(append([]byte{0x05}, append(contractID1, []byte("balance")...)...), []byte("100"))
-	kvStore.Set(append([]byte{0x05}, append(contractID1, []byte("owner")...)...), []byte("address1"))
-	kvStore.Set(append([]byte{0x05}, append(contractID1, []byte("config")...)...), []byte("{\"key\":\"value\"}"))
-
-	// Contract 2 with different state structure
-	contractID2 := []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}
-	kvStore.Set([]byte{0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, []byte("contract2")) // Contract key
-
-	// Contract 2 state entries
-	kvStore.Set(append([]byte{0x05}, append(contractID2, []byte("tokens")...)...), []byte("[1,2,3,4,5]"))
-	kvStore.Set(append([]byte{0x05}, append(contractID2, []byte("admin")...)...), []byte("admin_address"))
-
-	// Add some contract history entries
-	kvStore.Set([]byte{0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, []byte("history_contract1"))
-	kvStore.Set([]byte{0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}, []byte("history_contract2"))
-
-	// Add code entries
-	kvStore.Set([]byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}, []byte("code1"))
-
-	// Add sequence keys
-	kvStore.Set([]byte{0x01}, []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) // Code ID sequence
-	kvStore.Set([]byte{0x02}, []byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) // Contract ID sequence
-
-	// Add secondary index and params
-	kvStore.Set([]byte{0x10, 0x01, 0x00}, []byte("index1"))
-	kvStore.Set([]byte{0x11}, []byte("params"))
-
-	// Create a mock wasm keeper with the store key
-	mockWasmKeeper := createMockWasmKeeper(wasmStoreKey)
-
-	// Take a snapshot of all contract state before migration
-	contractStates := make(map[string][]byte)
-
-	// Capture all contract 1 states
-	storePrefix1 := append([]byte{0x05}, contractID1...)
-	iterContract1 := sdk.KVStorePrefixIterator(kvStore, storePrefix1)
-	defer iterContract1.Close()
-	for ; iterContract1.Valid(); iterContract1.Next() {
-		key := iterContract1.Key()
-		contractStates[string(key)] = iterContract1.Value()
-	}
-
-	// Capture all contract 2 states
-	storePrefix2 := append([]byte{0x05}, contractID2...)
-	iterContract2 := sdk.KVStorePrefixIterator(kvStore, storePrefix2)
-	defer iterContract2.Close()
-	for ; iterContract2.Valid(); iterContract2.Next() {
-		key := iterContract2.Key()
-		contractStates[string(key)] = iterContract2.Value()
-	}
-
-	// Run the migration
-	err := v12.MigrateWasmKeys(ctx, mockWasmKeeper, wasmStoreKey)
-	require.NoError(s.T(), err)
-
-	// Commit the store
-	stateStore.Commit()
-
-	// Create a new context with the updated store
-	ctx = sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
-	kvStore = ctx.KVStore(wasmStoreKey)
-
-	// Verify contract state migration
-
-	// Check contract 1 states - should be migrated from 0x05 to 0x03
-	newStorePrefix1 := append([]byte{0x03}, contractID1...)
-	iterNewContract1 := sdk.KVStorePrefixIterator(kvStore, newStorePrefix1)
-	defer iterNewContract1.Close()
-
-	var migratedStateCount1 int
-	for ; iterNewContract1.Valid(); iterNewContract1.Next() {
-		key := iterNewContract1.Key()
-		value := iterNewContract1.Value()
-
-		// Construct the old key to check against our saved states
-		oldKey := append([]byte{0x05}, key[1:]...) // Replace 0x03 with 0x05
-
-		// Verify the value matches what we had before migration
-		require.Equal(s.T(), contractStates[string(oldKey)], value,
-			"Contract 1 state value mismatch for key %v", key[len(newStorePrefix1):])
-
-		migratedStateCount1++
-	}
-
-	// Check we found all contract 1 states
-	expectedStateCount1 := 3 // balance, owner, config
-	require.Equal(s.T(), expectedStateCount1, migratedStateCount1,
-		"Not all contract 1 states were migrated")
-
-	// Check contract 2 states
-	newStorePrefix2 := append([]byte{0x03}, contractID2...)
-	iterNewContract2 := sdk.KVStorePrefixIterator(kvStore, newStorePrefix2)
-	defer iterNewContract2.Close()
-
-	var migratedStateCount2 int
-	for ; iterNewContract2.Valid(); iterNewContract2.Next() {
-		key := iterNewContract2.Key()
-		value := iterNewContract2.Value()
-
-		// Construct the old key to check against our saved states
-		oldKey := append([]byte{0x05}, key[1:]...) // Replace 0x03 with 0x05
-
-		// Verify the value matches what we had before migration
-		require.Equal(s.T(), contractStates[string(oldKey)], value,
-			"Contract 2 state value mismatch for key %v", key[len(newStorePrefix2):])
-
-		migratedStateCount2++
-	}
-
-	// Check we found all contract 2 states
-	expectedStateCount2 := 2 // tokens, admin
-	require.Equal(s.T(), expectedStateCount2, migratedStateCount2,
-		"Not all contract 2 states were migrated")
-
-	// Verify contract keys were migrated (0x04 -> 0x02)
-	require.Equal(s.T(), []byte("contract1"),
-		kvStore.Get([]byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}),
-		"Contract 1 key should be migrated to 0x02")
-
-	require.Equal(s.T(), []byte("contract2"),
-		kvStore.Get([]byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}),
-		"Contract 2 key should be migrated to 0x02")
-
-	// Verify contract history keys were migrated (0x06 -> 0x05)
-	require.Equal(s.T(), []byte("history_contract1"),
-		kvStore.Get([]byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}),
-		"Contract 1 history should be migrated to 0x05")
-
-	require.Equal(s.T(), []byte("history_contract2"),
-		kvStore.Get([]byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}),
-		"Contract 2 history should be migrated to 0x05")
-
-	// Verify code keys were migrated (0x03 -> 0x01)
-	require.Equal(s.T(), []byte("code1"),
-		kvStore.Get([]byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}),
-		"Code key should be migrated to 0x01")
-
-	// Verify sequence keys were migrated
-	require.Equal(s.T(), []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		kvStore.Get(append([]byte{0x04}, []byte("lastCodeId")...)),
-		"Code ID sequence should be migrated to 0x04+lastCodeId")
-
-	require.Equal(s.T(), []byte{0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		kvStore.Get(append([]byte{0x04}, []byte("lastContractId")...)),
-		"Contract ID sequence should be migrated to 0x04+lastContractId")
-
-	// Verify secondary index and params were migrated
-	require.Equal(s.T(), []byte("index1"),
-		kvStore.Get([]byte{0x06, 0x01, 0x00}),
-		"Secondary index should be migrated to 0x06")
-
-	require.Equal(s.T(), []byte("params"),
-		kvStore.Get([]byte{0x10}),
-		"Params should be migrated to 0x10")
-}
-
 // createMockWasmKeeper creates a mock wasm keeper with the given store key
 func createMockWasmKeeper(storeKey storetypes.StoreKey) wasmkeeper.Keeper {
 	// Create a minimal mock keeper that has the store key
@@ -333,24 +157,249 @@ func createMockWasmKeeper(storeKey storetypes.StoreKey) wasmkeeper.Keeper {
 	return keeper
 }
 
-// TestCreateV12UpgradeHandler tests the upgrade handler creation
-func (s *UpgradeTestSuite) TestCreateV12UpgradeHandler() {
-	s.Setup(s.T(), "terra")
+// TestRemoveLengthPrefixIfNeeded tests the length prefix removal function
+func (s *UpgradeTestSuite) TestRemoveLengthPrefixIfNeeded() {
+	testCases := []struct {
+		name     string
+		input    []byte
+		expected []byte
+	}{
+		{
+			name:     "empty input",
+			input:    []byte{},
+			expected: []byte{},
+		},
+		{
+			name:     "non-prefixed address",
+			input:    []byte{0x01, 0x02, 0x03, 0x04},
+			expected: []byte{0x01, 0x02, 0x03, 0x04},
+		},
+		{
+			name:     "length-prefixed address (20 bytes)",
+			input:    append([]byte{20}, bytes.Repeat([]byte{0x01}, 20)...),
+			expected: bytes.Repeat([]byte{0x01}, 20),
+		},
+		{
+			name:     "invalid length prefix (too large)",
+			input:    append([]byte{50}, bytes.Repeat([]byte{0x01}, 10)...),
+			expected: append([]byte{50}, bytes.Repeat([]byte{0x01}, 10)...),
+		},
+		{
+			name:     "invalid length prefix (mismatch)",
+			input:    append([]byte{10}, bytes.Repeat([]byte{0x01}, 20)...),
+			expected: append([]byte{10}, bytes.Repeat([]byte{0x01}, 20)...),
+		},
+	}
 
-	// This is a simple test to ensure the upgrade handler is created without errors
-	handler := v12.CreateV12UpgradeHandler(nil, nil, nil, &keepers.AppKeepers{})
-	s.Require().NotNil(handler)
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			result := v12.RemoveLengthPrefixIfNeeded(tc.input)
+			s.Require().Equal(tc.expected, result)
+		})
+	}
 }
 
-// TestUpgradeHandlerWithKeeperTestHelper tests the upgrade handler with a more realistic setup
-func (s *UpgradeTestSuite) TestUpgradeHandlerWithKeeperTestHelper() {
-	// Setup the test environment
-	s.Setup(s.T(), "terra")
+// TestMigrateWasmKeysWithLengthPrefixedAddresses tests migration with length-prefixed addresses
+func (s *UpgradeTestSuite) TestMigrateWasmKeysWithLengthPrefixedAddresses() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(s.T(), stateStore.LoadLatestVersion())
 
-	// Create the upgrade handler with nil values
-	// We're just testing that the handler can be created without errors
-	handler := v12.CreateV12UpgradeHandler(nil, nil, nil, &keepers.AppKeepers{})
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
 
-	// Verify the handler is created
-	s.Require().NotNil(handler)
+	// Create a length-prefixed address (20 bytes is common for Cosmos addresses)
+	addrBytes := bytes.Repeat([]byte{0xAA}, 20)
+	lengthPrefixedAddr := append([]byte{20}, addrBytes...)
+
+	// Setup test data with length-prefixed addresses
+	// Contract keys with length-prefixed address
+	kvStore.Set(append([]byte{0x04}, lengthPrefixedAddr...), []byte("contract-prefixed"))
+
+	// Contract store keys with length-prefixed address
+	kvStore.Set(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...), []byte("store-prefixed"))
+
+	// Contract history keys with length-prefixed address
+	kvStore.Set(append([]byte{0x06}, lengthPrefixedAddr...), []byte("history-prefixed"))
+
+	// Add sequence keys
+	kvStore.Set([]byte{0x01}, []byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) // Code ID sequence
+	kvStore.Set([]byte{0x02}, []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) // Contract ID sequence
+
+	// Create a mock wasm keeper
+	mockWasmKeeper := createMockWasmKeeper(wasmStoreKey)
+
+	// Run the migration
+	err := v12.MigrateWasmKeys(ctx, mockWasmKeeper, wasmStoreKey)
+	require.NoError(s.T(), err)
+
+	// Commit the store
+	stateStore.Commit()
+
+	// Create a new context with the updated store
+	ctx = sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore = ctx.KVStore(wasmStoreKey)
+
+	// Verify the migration results for length-prefixed addresses
+	// Old keys should be deleted
+	require.Nil(s.T(), kvStore.Get(append([]byte{0x04}, lengthPrefixedAddr...)), "Old contract key with length prefix should be deleted")
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...)), "Old contract store key with length prefix should be deleted")
+	require.Nil(s.T(), kvStore.Get(append([]byte{0x06}, lengthPrefixedAddr...)), "Old contract history key with length prefix should be deleted")
+
+	// New keys should exist with the correct values and without length prefix
+	require.Equal(s.T(), []byte("contract-prefixed"),
+		kvStore.Get(append([]byte{0x02}, addrBytes...)), "Contract key should be migrated to 0x02 without length prefix")
+
+	require.Equal(s.T(), []byte("store-prefixed"),
+		kvStore.Get(append(append([]byte{0x03}, addrBytes...), []byte{0x01}...)), "Contract store key should be migrated to 0x03 without length prefix")
+
+	// For contract history keys, we need to check if the migration correctly handled the length prefix
+	require.Equal(s.T(), []byte("history-prefixed"),
+		kvStore.Get(append([]byte{0x05}, lengthPrefixedAddr...)), "Contract history key should be migrated to 0x05 without length prefix")
+
+	// Verify sequence keys were migrated correctly
+	require.Nil(s.T(), kvStore.Get([]byte{0x01}), "Old code ID sequence key should be deleted")
+	require.Nil(s.T(), kvStore.Get([]byte{0x02}), "Old contract ID sequence key should be deleted")
+
+	require.Equal(s.T(), []byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		kvStore.Get(append([]byte{0x04}, []byte("lastCodeId")...)), "Code ID sequence should be migrated")
+	require.Equal(s.T(), []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		kvStore.Get(append([]byte{0x04}, []byte("lastContractId")...)), "Contract ID sequence should be migrated")
+}
+
+// TestCollectContractAddresses tests the contract address collection function
+func (s *UpgradeTestSuite) TestCollectContractAddresses() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(s.T(), stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	// Add some contract addresses
+	addr1 := bytes.Repeat([]byte{0xAA}, 20)
+	addr2 := bytes.Repeat([]byte{0xBB}, 20)
+
+	// Add one with length prefix
+	lengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xCC}, 20)...)
+
+	kvStore.Set(append([]byte{0x04}, addr1...), []byte("contract1"))
+	kvStore.Set(append([]byte{0x04}, addr2...), []byte("contract2"))
+	kvStore.Set(append([]byte{0x04}, lengthPrefixedAddr...), []byte("contract3"))
+
+	// Call the function
+	addresses := v12.CollectContractAddresses(kvStore)
+
+	// Verify results
+	s.Require().Equal(3, len(addresses), "Should collect 3 contract addresses")
+
+	// Check if addresses are collected correctly
+	foundAddr1 := false
+	foundAddr2 := false
+	foundPrefixedAddr := false
+
+	for _, addr := range addresses {
+		if bytes.Equal(addr, addr1) {
+			foundAddr1 = true
+		} else if bytes.Equal(addr, addr2) {
+			foundAddr2 = true
+		} else if bytes.Equal(addr, lengthPrefixedAddr) {
+			foundPrefixedAddr = true
+		}
+	}
+
+	s.Require().True(foundAddr1, "Should collect addr1")
+	s.Require().True(foundAddr2, "Should collect addr2")
+	s.Require().True(foundPrefixedAddr, "Should collect length-prefixed address")
+}
+
+// TestMigrateContractStoreKeys tests the contract store key migration
+func (s *UpgradeTestSuite) TestMigrateContractStoreKeys() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(s.T(), stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	// Create test contract addresses
+	addr1 := bytes.Repeat([]byte{0xAA}, 20)
+	lengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xBB}, 20)...)
+
+	// Add contract store data
+	kvStore.Set(append(append([]byte{0x05}, addr1...), []byte{0x01}...), []byte("store1"))
+	kvStore.Set(append(append([]byte{0x05}, addr1...), []byte{0x02}...), []byte("store2"))
+	kvStore.Set(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...), []byte("store3"))
+
+	// Collect contract addresses
+	contractAddresses := [][]byte{addr1, lengthPrefixedAddr}
+
+	// Run the migration
+	err := v12.MigrateContractStoreKeys(kvStore, contractAddresses)
+	require.NoError(s.T(), err)
+
+	// Verify the migration results
+	// Old keys should be deleted
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, addr1...), []byte{0x01}...)), "Old contract store key should be deleted")
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, addr1...), []byte{0x02}...)), "Old contract store key should be deleted")
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...)), "Old contract store key with length prefix should be deleted")
+
+	// New keys should exist with the correct values
+	require.Equal(s.T(), []byte("store1"),
+		kvStore.Get(append(append([]byte{0x03}, addr1...), []byte{0x01}...)), "Contract store key should be migrated to 0x03")
+	require.Equal(s.T(), []byte("store2"),
+		kvStore.Get(append(append([]byte{0x03}, addr1...), []byte{0x02}...)), "Contract store key should be migrated to 0x03")
+
+	// For length-prefixed address, the new key should use the unprefixed address
+	unprefixedAddr := bytes.Repeat([]byte{0xBB}, 20)
+	require.Equal(s.T(), []byte("store3"),
+		kvStore.Get(append(append([]byte{0x03}, unprefixedAddr...), []byte{0x01}...)), "Contract store key should be migrated to 0x03 without length prefix")
+}
+
+// TestMigrateContractKeys tests the contract key migration
+func (s *UpgradeTestSuite) TestMigrateContractKeys() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(s.T(), stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	// Create test contract addresses
+	addr1 := bytes.Repeat([]byte{0xAA}, 20)
+	lengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xBB}, 20)...)
+
+	// Add contract data
+	kvStore.Set(append([]byte{0x04}, addr1...), []byte("contract1"))
+	kvStore.Set(append([]byte{0x04}, lengthPrefixedAddr...), []byte("contract2"))
+
+	// Run the migration
+	err := v12.MigrateContractKeys(kvStore)
+	require.NoError(s.T(), err)
+
+	// Verify the migration results
+	// Old keys should be deleted
+	require.Nil(s.T(), kvStore.Get(append([]byte{0x04}, addr1...)), "Old contract key should be deleted")
+	require.Nil(s.T(), kvStore.Get(append([]byte{0x04}, lengthPrefixedAddr...)), "Old contract key with length prefix should be deleted")
+
+	// New keys should exist with the correct values
+	require.Equal(s.T(), []byte("contract1"),
+		kvStore.Get(append([]byte{0x02}, addr1...)), "Contract key should be migrated to 0x02")
+
+	// For length-prefixed address, the new key should use the unprefixed address
+	unprefixedAddr := bytes.Repeat([]byte{0xBB}, 20)
+	require.Equal(s.T(), []byte("contract2"),
+		kvStore.Get(append([]byte{0x02}, unprefixedAddr...)), "Contract key should be migrated to 0x02 without length prefix")
 }

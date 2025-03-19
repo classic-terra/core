@@ -27,7 +27,6 @@ import (
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxmodule "github.com/classic-terra/core/v3/x/tax/module"
 	"github.com/classic-terra/core/v3/x/taxexemption"
-	taxexemptionclient "github.com/classic-terra/core/v3/x/taxexemption/client"
 	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
 	"github.com/classic-terra/core/v3/x/treasury"
 	treasuryclient "github.com/classic-terra/core/v3/x/treasury/client"
@@ -111,11 +110,6 @@ var (
 				ibcclientclient.UpgradeProposalHandler,
 				treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
 				treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
-				taxexemptionclient.ProposalAddTaxExemptionZoneHandler,
-				taxexemptionclient.ProposalRemoveTaxExemptionZoneHandler,
-				taxexemptionclient.ProposalModifyTaxExemptionZoneHandler,
-				taxexemptionclient.ProposalAddTaxExemptionAddressHandler,
-				taxexemptionclient.ProposalRemoveTaxExemptionAddressHandler,
 			},
 		),
 		customparams.AppModuleBasic{},

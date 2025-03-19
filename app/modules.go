@@ -26,6 +26,8 @@ import (
 	"github.com/classic-terra/core/v3/x/oracle"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxmodule "github.com/classic-terra/core/v3/x/tax/module"
+	"github.com/classic-terra/core/v3/x/taxexemption"
+	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
 	"github.com/classic-terra/core/v3/x/treasury"
 	treasuryclient "github.com/classic-terra/core/v3/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
@@ -124,6 +126,7 @@ var (
 		oracle.AppModuleBasic{},
 		market.AppModuleBasic{},
 		treasury.AppModuleBasic{},
+		taxexemption.AppModuleBasic{},
 		customwasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
@@ -168,7 +171,7 @@ func appModules(
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
-		taxbank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.TreasuryKeeper, app.GetSubspace(banktypes.ModuleName), app.TaxKeeper),
+		taxbank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.TaxExemptionKeeper, app.TreasuryKeeper, app.GetSubspace(banktypes.ModuleName), app.TaxKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
@@ -187,6 +190,7 @@ func appModules(
 		taxmarket.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.TreasuryKeeper, app.BankKeeper, app.OracleKeeper, app.TaxKeeper),
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
@@ -222,6 +226,7 @@ func simulationModules(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		market.NewAppModule(appCodec, app.MarketKeeper, app.AccountKeeper, app.BankKeeper, app.OracleKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
+		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		taxmodule.NewAppModule(appCodec, app.TaxKeeper),
@@ -254,6 +259,7 @@ func orderBeginBlockers() []string {
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
+		taxexemptiontypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
@@ -289,6 +295,7 @@ func orderEndBlockers() []string {
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
+		taxexemptiontypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
@@ -325,6 +332,7 @@ func orderInitGenesis() []string {
 		markettypes.ModuleName,
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
+		taxexemptiontypes.ModuleName,
 		wasmtypes.ModuleName,
 		dyncommtypes.ModuleName,
 		taxtypes.ModuleName,

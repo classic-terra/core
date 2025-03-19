@@ -13,8 +13,8 @@ type TreasuryKeeper interface {
 	GetTaxRate(ctx sdk.Context) (taxRate sdk.Dec)
 	GetTaxCap(ctx sdk.Context, denom string) (taxCap math.Int)
 	GetBurnSplitRate(ctx sdk.Context) sdk.Dec
-	HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
-	HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
+	// HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool
+	// HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool
 	GetMinInitialDepositRatio(ctx sdk.Context) sdk.Dec
 	GetOracleSplitRate(ctx sdk.Context) sdk.Dec
 }

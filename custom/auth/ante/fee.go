@@ -5,10 +5,10 @@ import (
 	"math"
 
 	errorsmod "cosmossdk.io/errors"
-
 	"github.com/classic-terra/core/v3/app/helper"
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -21,22 +21,24 @@ import (
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type FeeDecorator struct {
-	accountKeeper  ante.AccountKeeper
-	bankKeeper     BankKeeper
-	feegrantKeeper ante.FeegrantKeeper
-	treasuryKeeper TreasuryKeeper
-	distrKeeper    DistrKeeper
-	taxKeeper      taxkeeper.Keeper
+	accountKeeper      ante.AccountKeeper
+	bankKeeper         BankKeeper
+	feegrantKeeper     ante.FeegrantKeeper
+	treasuryKeeper     TreasuryKeeper
+	taxexemptionKeeper taxexemptionkeeper.Keeper
+	distrKeeper        DistrKeeper
+	taxKeeper          taxkeeper.Keeper
 }
 
-func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, tk TreasuryKeeper, dk DistrKeeper, th taxkeeper.Keeper) FeeDecorator {
+func NewFeeDecorator(ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, te taxexemptionkeeper.Keeper, tk TreasuryKeeper, dk DistrKeeper, th taxkeeper.Keeper) FeeDecorator {
 	return FeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		treasuryKeeper: tk,
-		distrKeeper:    dk,
-		taxKeeper:      th,
+		accountKeeper:      ak,
+		bankKeeper:         bk,
+		feegrantKeeper:     fk,
+		taxexemptionKeeper: te,
+		treasuryKeeper:     tk,
+		distrKeeper:        dk,
+		taxKeeper:          th,
 	}
 }
 
@@ -57,7 +59,7 @@ func (fd FeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, nex
 
 	msgs := feeTx.GetMsgs()
 	// Compute taxes
-	taxes, nonTaxableTaxes := FilterMsgAndComputeTax(ctx, fd.treasuryKeeper, fd.taxKeeper, simulate, msgs...)
+	taxes, nonTaxableTaxes := FilterMsgAndComputeTax(ctx, fd.taxexemptionKeeper, fd.treasuryKeeper, fd.taxKeeper, simulate, msgs...)
 
 	// check if the tx has paid fees for both(!) fee and tax
 	// if not, then set the tax to zero at this point as it then is handled in the message route

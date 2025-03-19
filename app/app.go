@@ -64,6 +64,7 @@ import (
 	v10_1 "github.com/classic-terra/core/v3/app/upgrades/v10_1"
 	v11 "github.com/classic-terra/core/v3/app/upgrades/v11"
 	v11_1 "github.com/classic-terra/core/v3/app/upgrades/v11_1"
+	v12 "github.com/classic-terra/core/v3/app/upgrades/v12"
 
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"
@@ -100,6 +101,7 @@ var (
 		v10_1.Upgrade,
 		v11.Upgrade,
 		v11_1.Upgrade,
+		v12.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -262,6 +264,7 @@ func NewTerraApp(
 			FeegrantKeeper:     app.FeeGrantKeeper,
 			OracleKeeper:       app.OracleKeeper,
 			TreasuryKeeper:     app.TreasuryKeeper,
+			TaxExemptionKeeper: app.TaxExemptionKeeper,
 			SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler:    encodingConfig.TxConfig.SignModeHandler(),
 			IBCKeeper:          *app.IBCKeeper,

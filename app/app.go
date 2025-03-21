@@ -47,7 +47,7 @@ import (
 
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
-	"github.com/classic-terra/core/v3/app/upgrades/v11_2"
+	v11_2 "github.com/classic-terra/core/v3/app/upgrades/v11_2"
 	v2 "github.com/classic-terra/core/v3/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v3/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v3/app/upgrades/v4"

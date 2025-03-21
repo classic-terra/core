@@ -310,6 +310,8 @@ func NewAppKeepers(
 		bApp.MsgServiceRouter(),
 	)
 
+	appKeepers.ICAHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
+
 	appKeepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[icacontrollertypes.StoreKey],

@@ -228,7 +228,7 @@ replace (
 
 replace (
 	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v1.0.0
-	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.46.0-classic.2
+	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.46.0-classic.3
 	// use cometbft
 	github.com/cometbft/cometbft-db => github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2

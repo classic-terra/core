@@ -386,7 +386,7 @@ func NewAppKeepers(
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
 	}
-	supportedFeatures := "iterator,staking,stargate,terra,cosmwasm_1_1"
+	supportedFeatures := "iterator,staking,stargate,terra,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3"
 
 	wasmMsgHandler := customwasmkeeper.NewMessageHandler(
 		bApp.MsgServiceRouter(),

@@ -304,6 +304,7 @@ func (s *UpgradeTestSuite) TestCollectContractAddresses() {
 	foundAddr2 := false
 	foundPrefixedAddr := false
 
+	//nolint
 	for _, addr := range addresses {
 		if bytes.Equal(addr, addr1) {
 			foundAddr1 = true

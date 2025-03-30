@@ -964,10 +964,10 @@ github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fr
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
 github.com/cosmos/iavl v0.20.1 h1:rM1kqeG3/HBT85vsZdoSNsehciqUQPWrR4BYmqE2+zg=
 github.com/cosmos/iavl v0.20.1/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
-github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99 h1:AC05pevT3jIVTxJ0mABlN3hxyHESPpELhVQjwQVT6Pw=
-github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99/go.mod h1:JwHFbo1oX/ht4fPpnPvmhZr+dCkYK1Vihw+vZE9umR4=
-github.com/cosmos/ibc-go/v7 v7.4.1 h1:95hR5Mdgk2/Z6Ynsq537BOU8LJAOsHR5g0N0ffhFLYg=
-github.com/cosmos/ibc-go/v7 v7.4.1/go.mod h1:L/KaEhzV5TGUCTfGysVgMBQtl5Dm7hHitfpk+GIeoAo=
+github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20250227205721-8a222c546f4f h1:JcN68sbxPCl6w4yMSoaM+tqZ4yFNj5tpwEAw1K1bGGk=
+github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20250227205721-8a222c546f4f/go.mod h1:md+Y3uUV5K7B3ddGYULcuU9excvr9mCXZjP8S0m7hTE=
+github.com/cosmos/ibc-go/v7 v7.10.0 h1:/IUJ6wilNnGcpP5XMb7p74JnctKDrFSv30i7aoJRnVI=
+github.com/cosmos/ibc-go/v7 v7.10.0/go.mod h1:PiVSJhIPBq/rI+6UOfKPy4RKDCvQ2vR+Vdb6SaowETQ=
 github.com/cosmos/ics23/go v0.10.0 h1:iXqLLgp2Lp+EdpIuwXTYIQU+AiHj9mOC2X9ab++bZDM=
 github.com/cosmos/ics23/go v0.10.0/go.mod h1:ZfJSmng/TBNTBkFemHHHj5YY7VAU/MBU980F4VU1NG0=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=

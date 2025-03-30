@@ -7,13 +7,13 @@ require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/simapp v0.0.0-20230602123434-616841b9704d
 	github.com/CosmWasm/wasmd v0.46.0
-	github.com/CosmWasm/wasmvm v1.5.8
+	github.com/CosmWasm/wasmvm v1.5.9
 	github.com/cometbft/cometbft v0.37.15
 	github.com/cometbft/cometbft-db v0.11.0
-	github.com/cosmos/cosmos-sdk v0.47.16
+	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240321032823-2733d24a1b99
-	github.com/cosmos/ibc-go/v7 v7.4.1
+	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20250227205721-8a222c546f4f
+	github.com/cosmos/ibc-go/v7 v7.10.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
 	github.com/google/gofuzz v1.2.0

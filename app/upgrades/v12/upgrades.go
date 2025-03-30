@@ -161,10 +161,17 @@ func removeLengthPrefixIfNeeded(bz []byte) []byte {
 	// 3. For Cosmos addresses, it's typically 20 bytes
 	if prefixLen > 0 && prefixLen <= len(bz)-1 && prefixLen == len(bz)-1 {
 		// This is likely a length-prefixed address
-		fmt.Printf("Removing length prefix: original %X, unprefixed %X\n", bz, bz[1:])
+		fmt.Printf("Found length prefix: original %X, unprefixed %X\n", bz, bz[1:])
 		return bz[1:] // Remove the first byte (length prefix)
 	}
 
+	// If the key is longer than 20 bytes and starts with a length prefix, try to remove it
+	if len(bz) > 20 && prefixLen == 20 {
+		fmt.Printf("Found potential length prefix in long key: original %X, unprefixed %X\n", bz, bz[1:])
+		return bz[1:] // Remove the first byte (length prefix)
+	}
+
+	fmt.Printf("No length prefix found, returning original: %X\n", bz)
 	return bz // Return as is if not length-prefixed
 }
 

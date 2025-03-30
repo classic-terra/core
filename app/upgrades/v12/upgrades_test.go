@@ -332,38 +332,97 @@ func (s *UpgradeTestSuite) TestMigrateContractStoreKeys() {
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 	kvStore := ctx.KVStore(wasmStoreKey)
 
-	// Create test contract addresses
+	// Create test contract addresses for pre-collected addresses path
 	addr1 := bytes.Repeat([]byte{0xAA}, 20)
 	lengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xBB}, 20)...)
 
-	// Add contract store data
+	// Add contract store data for pre-collected addresses
 	kvStore.Set(append(append([]byte{0x05}, addr1...), []byte{0x01}...), []byte("store1"))
 	kvStore.Set(append(append([]byte{0x05}, addr1...), []byte{0x02}...), []byte("store2"))
 	kvStore.Set(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...), []byte("store3"))
 
-	// Collect contract addresses
+	// Add direct contract store data (not in pre-collected addresses)
+	directAddr := bytes.Repeat([]byte{0xCC}, 20)
+	directLengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xDD}, 20)...)
+
+	// Create the full keys for direct store data
+	directKey1 := append(append([]byte{0x05}, directAddr...), []byte{0x01}...)
+	directKey2 := append(append([]byte{0x05}, directAddr...), []byte{0x02}...)
+	directPrefixedKey := append(append([]byte{0x05}, directLengthPrefixedAddr...), []byte{0x01}...)
+
+	kvStore.Set(directKey1, []byte("direct-store1"))
+	kvStore.Set(directKey2, []byte("direct-store2"))
+	kvStore.Set(directPrefixedKey, []byte("direct-store3"))
+
+	// Collect contract addresses (deliberately excluding directAddr and directLengthPrefixedAddr)
 	contractAddresses := [][]byte{addr1, lengthPrefixedAddr}
 
 	// Run the migration
 	err := v12.MigrateContractStoreKeys(kvStore, contractAddresses)
 	require.NoError(s.T(), err)
 
-	// Verify the migration results
+	// Verify the migration results for pre-collected addresses
 	// Old keys should be deleted
-	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, addr1...), []byte{0x01}...)), "Old contract store key should be deleted")
-	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, addr1...), []byte{0x02}...)), "Old contract store key should be deleted")
-	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...)), "Old contract store key with length prefix should be deleted")
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, addr1...), []byte{0x01}...)),
+		"Old contract store key should be deleted")
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, addr1...), []byte{0x02}...)),
+		"Old contract store key should be deleted")
+	require.Nil(s.T(), kvStore.Get(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x01}...)),
+		"Old contract store key with length prefix should be deleted")
 
-	// New keys should exist with the correct values
+	// New keys should exist with the correct values for pre-collected addresses
 	require.Equal(s.T(), []byte("store1"),
-		kvStore.Get(append(append([]byte{0x03}, addr1...), []byte{0x01}...)), "Contract store key should be migrated to 0x03")
+		kvStore.Get(append(append([]byte{0x03}, addr1...), []byte{0x01}...)),
+		"Contract store key should be migrated to 0x03")
 	require.Equal(s.T(), []byte("store2"),
-		kvStore.Get(append(append([]byte{0x03}, addr1...), []byte{0x02}...)), "Contract store key should be migrated to 0x03")
+		kvStore.Get(append(append([]byte{0x03}, addr1...), []byte{0x02}...)),
+		"Contract store key should be migrated to 0x03")
 
 	// For length-prefixed address, the new key should use the unprefixed address
 	unprefixedAddr := bytes.Repeat([]byte{0xBB}, 20)
 	require.Equal(s.T(), []byte("store3"),
-		kvStore.Get(append(append([]byte{0x03}, unprefixedAddr...), []byte{0x01}...)), "Contract store key should be migrated to 0x03 without length prefix")
+		kvStore.Get(append(append([]byte{0x03}, unprefixedAddr...), []byte{0x01}...)),
+		"Contract store key should be migrated to 0x03 without length prefix")
+
+	// Verify direct migration results
+	// Old direct keys should be deleted
+	require.Nil(s.T(), kvStore.Get(directKey1),
+		"Old direct contract store key should be deleted")
+	require.Nil(s.T(), kvStore.Get(directKey2),
+		"Old direct contract store key should be deleted")
+	require.Nil(s.T(), kvStore.Get(directPrefixedKey),
+		"Old direct contract store key with length prefix should be deleted")
+
+	// New direct keys should exist with correct values
+	require.Equal(s.T(), []byte("direct-store1"),
+		kvStore.Get(append(append([]byte{0x03}, directAddr...), []byte{0x01}...)),
+		"Direct contract store key should be migrated to 0x03")
+	require.Equal(s.T(), []byte("direct-store2"),
+		kvStore.Get(append(append([]byte{0x03}, directAddr...), []byte{0x02}...)),
+		"Direct contract store key should be migrated to 0x03")
+
+	// For length-prefixed direct address, verify with unprefixed address
+	unprefixedDirectAddr := bytes.Repeat([]byte{0xDD}, 20)
+	newDirectPrefixedKey := append(append([]byte{0x03}, unprefixedDirectAddr...), []byte{0x01}...)
+
+	// Print debug information before the failing check
+	fmt.Printf("Original key: %X\n", directPrefixedKey)
+	fmt.Printf("Expected new key: %X\n", newDirectPrefixedKey)
+	fmt.Printf("All store keys:\n")
+	iter := kvStore.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		fmt.Printf("Key: %X, Value: %X\n", iter.Key(), iter.Value())
+	}
+	// Check if the key exists with the unprefixed address
+	// The key should be migrated with the length prefix removed
+	require.Equal(s.T(), []byte("direct-store3"),
+		kvStore.Get(newDirectPrefixedKey),
+		"Direct contract store key should be migrated to 0x03 without length prefix")
+
+	// Also verify that the old key with length prefix is deleted
+	require.Nil(s.T(), kvStore.Get(directPrefixedKey),
+		"Old direct contract store key with length prefix should be deleted")
 }
 
 // TestMigrateContractKeys tests the contract key migration

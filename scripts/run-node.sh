@@ -6,6 +6,7 @@ HOME_DIR=mytestnet
 ENV=${ENV:-""}
 
 if [ "$CONTINUE" == "true" ]; then
+    echo "Running node in continue mode ..."
     $BINARY start --home $HOME_DIR --log_level debug
     exit 0
 fi

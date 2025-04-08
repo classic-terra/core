@@ -3,8 +3,22 @@
 ARG source=./
 ARG GO_VERSION="1.22.12"
 ARG BUILDPLATFORM=linux/amd64
-ARG BASE_IMAGE="golang:${GO_VERSION}-alpine3.20"
-FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} AS base
+
+# Get Go installation from the official image
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION} AS go-source
+
+# Use Alpine 3.18 as base for muslc compatibility
+FROM --platform=${BUILDPLATFORM} alpine:3.18 AS base
+
+# Copy Go from the official image
+COPY --from=go-source /usr/local/go /usr/local/go
+# Setup Go environment properly
+ENV GOPATH="/go" \
+    PATH="/usr/local/go/bin:/go/bin:${PATH}"
+# Create necessary directories
+RUN mkdir -p "$GOPATH/bin" "$GOPATH/src" && \
+    # Verify Go installation
+    go version
 
 ###############################################################################
 # Builder

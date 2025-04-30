@@ -52,6 +52,9 @@ var burnTaxExcemptionAddressList = []string{
 	"terra1ncjg4a59x2pgvqy9qjyqprlj8lrwshm0wleht5",
 	"terra19l7hzwazq5j0dykfldcwrk2927xwcjd0kt0vt9",
 	"terra1frh79vmtur5fmrghz6gfjvfhpa3u2c0uemv4af",
+	"terra1sepf0spaj969m59cgj3w3ch5udgf25qsx9cl2h",
+	"terra15qvs2dzzydqt4ygfn0k0ertjnv8ctytggnx4ez",
+	"terra1zphegzz94l3mr9w56yq6845wfcfllmrdn8xzyc",
 }
 
 // Migrator is a struct for handling in-place store migrations.

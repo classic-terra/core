@@ -78,7 +78,10 @@ import (
 	_ "github.com/classic-terra/core/v3/client/docs/statik"
 )
 
-const appName = "TerraApp"
+const (
+	UpgradeHeight = int64(24)
+	appName       = "TerraApp"
+)
 
 var (
 	// DefaultNodeHome defines default home directories for terrad

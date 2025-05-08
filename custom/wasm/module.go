@@ -42,7 +42,6 @@ type AppModule struct {
 	wasm.AppModule
 	keeper         *keeper.Keeper
 	legacySubspace paramtypes.Subspace
-	upgradeHeight  int64
 }
 
 // NewAppModule creates a new AppModule object
@@ -54,13 +53,11 @@ func NewAppModule(
 	bk simulation.BankKeeper,
 	router *baseapp.MsgServiceRouter,
 	ss paramtypes.Subspace,
-	upgradeHeight int64,
 ) AppModule {
 	return AppModule{
 		AppModule:      wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
 		keeper:         keeper,
 		legacySubspace: ss.WithKeyTable(ParamKeyTable()),
-		upgradeHeight:  upgradeHeight,
 	}
 }
 
@@ -76,7 +73,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 			originalQueryServer,
 			am.legacySubspace,
 			am.keeper,
-			am.upgradeHeight,
 		),
 	)
 

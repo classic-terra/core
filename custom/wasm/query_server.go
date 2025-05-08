@@ -6,6 +6,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -39,7 +40,6 @@ type LegacyQueryServer struct {
 	wasmtypes.QueryServer
 	keeper         *wasmkeeper.Keeper
 	legacySubspace paramtypes.Subspace
-	upgradeHeight  int64
 }
 
 // NewLegacyQueryServer creates a new LegacyQueryServer instance
@@ -47,13 +47,11 @@ func NewLegacyQueryServer(
 	originalServer wasmtypes.QueryServer,
 	legacySubspace paramtypes.Subspace,
 	keeper *wasmkeeper.Keeper,
-	upgradeHeight int64,
 ) wasmtypes.QueryServer {
 	return &LegacyQueryServer{
 		QueryServer:    originalServer,
 		keeper:         keeper,
 		legacySubspace: legacySubspace,
-		upgradeHeight:  upgradeHeight,
 	}
 }
 
@@ -62,7 +60,8 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Only set legacy params for pre-upgrade heights
-	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < q.upgradeHeight && q.keeper != nil {
+	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
+	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight && q.keeper != nil {
 		// Try to get params from legacy subspace
 		var legacyParams LegacyWasmParams
 		q.legacySubspace.GetParamSet(sdkCtx, &legacyParams)
@@ -106,7 +105,8 @@ func (q *LegacyQueryServer) RawContractState(ctx context.Context, req *wasmtypes
 func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtypes.QuerySmartContractStateRequest) (*wasmtypes.QuerySmartContractStateResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if sdkCtx.BlockHeight() == 0 || sdkCtx.BlockHeight() >= q.upgradeHeight {
+	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
+	if sdkCtx.BlockHeight() == 0 || sdkCtx.BlockHeight() >= upgradeHeight {
 		return q.QueryServer.SmartContractState(ctx, req)
 	}
 

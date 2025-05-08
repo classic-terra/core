@@ -3,6 +3,7 @@ package staking
 import (
 	"context"
 
+	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -15,7 +16,6 @@ type LegacyQueryServer struct {
 	stakingtypes.QueryServer
 	keeper         *keeper.Keeper
 	legacySubspace paramtypes.Subspace
-	upgradeHeight  int64
 }
 
 // NewLegacyQueryServer creates a new LegacyQueryServer instance
@@ -23,13 +23,11 @@ func NewLegacyQueryServer(
 	originalServer stakingtypes.QueryServer,
 	legacySubspace paramtypes.Subspace,
 	keeper *keeper.Keeper,
-	upgradeHeight int64,
 ) stakingtypes.QueryServer {
 	return &LegacyQueryServer{
 		QueryServer:    originalServer,
 		keeper:         keeper,
 		legacySubspace: legacySubspace,
-		upgradeHeight:  upgradeHeight,
 	}
 }
 
@@ -38,7 +36,8 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Only set legacy params for pre-upgrade heights
-	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < q.upgradeHeight {
+	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
+	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight {
 		var params stakingtypes.Params
 		q.legacySubspace.GetParamSet(sdkCtx, &params)
 

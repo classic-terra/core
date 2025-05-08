@@ -47,7 +47,6 @@ type AppModule struct {
 
 	keeper         *keeper.Keeper
 	legacySubspace paramtypes.Subspace
-	upgradeHeight  int64
 }
 
 // NewAppModule creates a new AppModule object
@@ -55,12 +54,11 @@ func NewAppModule(cdc codec.Codec,
 	keeper *keeper.Keeper,
 	ak stakingtypes.AccountKeeper,
 	bk stakingtypes.BankKeeper,
-	ss paramtypes.Subspace, upgradeHeight int64) AppModule {
+	ss paramtypes.Subspace) AppModule {
 	return AppModule{
 		AppModule:      staking.NewAppModule(cdc, keeper, ak, bk, ss),
 		keeper:         keeper,
 		legacySubspace: ss,
-		upgradeHeight:  upgradeHeight,
 	}
 }
 
@@ -71,7 +69,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	querier := keeper.Querier{Keeper: am.keeper}
 	stakingtypes.RegisterQueryServer(
 		cfg.QueryServer(),
-		NewLegacyQueryServer(querier, am.legacySubspace, am.keeper, am.upgradeHeight),
+		NewLegacyQueryServer(querier, am.legacySubspace, am.keeper),
 	)
 
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)

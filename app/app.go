@@ -79,8 +79,7 @@ import (
 )
 
 const (
-	UpgradeHeight = int64(24)
-	appName       = "TerraApp"
+	appName = "TerraApp"
 )
 
 var (

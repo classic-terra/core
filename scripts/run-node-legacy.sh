@@ -6,13 +6,14 @@ HOME_DIR=mytestnet
 ENV=${ENV:-""}
 
 if [ "$CONTINUE" == "true" ]; then
-    $BINARY start --home $HOME_DIR --log_level debug
+    $BINARY start --home $HOME_DIR --log_level debug & echo $! > terrad.pid
     exit 0
 fi
 
 rm -rf mytestnet
-pkill terrad
-
+if [ -f "terrad.pid" ]; then
+    kill "$(cat terrad.pid)" && rm -f terrad.pid
+fi
 # check DENOM is set. If not, set to uluna
 DENOM=${2:-uluna}
 

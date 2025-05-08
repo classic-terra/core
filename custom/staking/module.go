@@ -54,7 +54,8 @@ func NewAppModule(cdc codec.Codec,
 	keeper *keeper.Keeper,
 	ak stakingtypes.AccountKeeper,
 	bk stakingtypes.BankKeeper,
-	ss paramtypes.Subspace) AppModule {
+	ss paramtypes.Subspace,
+) AppModule {
 	return AppModule{
 		AppModule:      staking.NewAppModule(cdc, keeper, ak, bk, ss),
 		keeper:         keeper,

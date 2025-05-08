@@ -39,7 +39,7 @@ if [ -z "$BINARY" ]; then
     BINARY=build/terrad
 fi
 
-CHAIN_ID="localterra"
+CHAIN_ID="localterra-legacy"
 KEYRING="test"
 KEY="test0"
 KEY1="test1"

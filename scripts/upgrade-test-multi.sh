@@ -29,7 +29,7 @@ CHAIN_ID=localterra
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
-CW20_TOKEN_WASM=${CW20_TOKEN_WASM:-"../../scripts/cw20_token.wasm"}
+CW20_TOKEN_WASM=${CW20_TOKEN_WASM:-"./scripts/cw20_token.wasm"}
 
 if [[ "$FORK" == "true" ]]; then
     export TERRAD_HALT_HEIGHT=20

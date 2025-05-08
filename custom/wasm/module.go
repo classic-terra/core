@@ -12,8 +12,8 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	types "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/CosmWasm/wasmd/x/wasm/simulation"
+	types "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	customcli "github.com/classic-terra/core/v3/custom/wasm/client/cli"
 	customtypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
@@ -57,9 +57,10 @@ func NewAppModule(
 	upgradeHeight int64,
 ) AppModule {
 	return AppModule{
-		AppModule:     wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
-		keeper:        keeper,
-		upgradeHeight: upgradeHeight,
+		AppModule:      wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
+		keeper:         keeper,
+		legacySubspace: ss.WithKeyTable(ParamKeyTable()),
+		upgradeHeight:  upgradeHeight,
 	}
 }
 

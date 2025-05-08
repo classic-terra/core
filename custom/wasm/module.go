@@ -1,8 +1,6 @@
 package wasm
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -77,9 +75,17 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	)
 
 	// For wasm module, we need to dereference the keeper pointer
-	k := *am.keeper
-	m := keeper.NewMigrator(k, am.legacySubspace)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/wasm from version 1 to 2: %v", err))
+	m := keeper.NewMigrator(*am.keeper, am.legacySubspace)
+	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	if err != nil {
+		panic(err)
+	}
+	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	if err != nil {
+		panic(err)
+	}
+	err = cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
+	if err != nil {
+		panic(err)
 	}
 }

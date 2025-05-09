@@ -55,71 +55,11 @@ func NewLegacyQueryServer(
 	}
 }
 
-// ensureLegacyParams ensures that legacy parameters are set for pre-upgrade height queries
-func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Context {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	// Only set legacy params for pre-upgrade heights
-	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
-	sdkCtx.Logger().Info("Setting legacy params for pre-upgrade height queries",
-		"block_height", sdkCtx.BlockHeight(),
-		"upgrade_height", upgradeHeight,
-		"chain_id", sdkCtx.ChainID(),
-		"ctx", sdkCtx,
-	)
-	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight && q.keeper != nil {
-		// Try to get params from legacy subspace
-		var legacyParams LegacyWasmParams
-		q.legacySubspace.GetParamSet(sdkCtx, &legacyParams)
-
-		// Set the params in the keeper
-		sdkCtx.Logger().Debug("Using params for historic block",
-			"upload_access", legacyParams.Params.CodeUploadAccess.Permission,
-			"instantiate_permission", legacyParams.Params.InstantiateDefaultPermission)
-		q.keeper.SetParams(sdkCtx, legacyParams.Params)
-
-		// Return updated context
-		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
-			"block_height", sdkCtx.BlockHeight(),
-			"upgrade_height", upgradeHeight,
-			"chain_id", sdkCtx.ChainID(),
-			"params", legacyParams.Params,
-			"ctx", sdkCtx,
-		)
-		return sdk.WrapSDKContext(sdkCtx)
-	}
-
-	return ctx
-}
-
-// Implement the gRPC query service methods by forwarding to the original server
-// after ensuring legacy parameters are set
-
-func (q *LegacyQueryServer) ContractInfo(ctx context.Context, req *wasmtypes.QueryContractInfoRequest) (*wasmtypes.QueryContractInfoResponse, error) {
-	return q.QueryServer.ContractInfo(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) ContractHistory(ctx context.Context, req *wasmtypes.QueryContractHistoryRequest) (*wasmtypes.QueryContractHistoryResponse, error) {
-	return q.QueryServer.ContractHistory(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) ContractsByCode(ctx context.Context, req *wasmtypes.QueryContractsByCodeRequest) (*wasmtypes.QueryContractsByCodeResponse, error) {
-	return q.QueryServer.ContractsByCode(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) AllContractState(ctx context.Context, req *wasmtypes.QueryAllContractStateRequest) (*wasmtypes.QueryAllContractStateResponse, error) {
-	return q.QueryServer.AllContractState(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) RawContractState(ctx context.Context, req *wasmtypes.QueryRawContractStateRequest) (*wasmtypes.QueryRawContractStateResponse, error) {
-	return q.QueryServer.RawContractState(q.ensureLegacyParams(ctx), req)
-}
-
 func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtypes.QuerySmartContractStateRequest) (*wasmtypes.QuerySmartContractStateResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
-	if sdkCtx.BlockHeight() == 0 || sdkCtx.BlockHeight() >= upgradeHeight {
+	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
+	if legacyMode == legacyupgrade.LegacyHandlingNone {
 		return q.QueryServer.SmartContractState(ctx, req)
 	}
 
@@ -128,14 +68,12 @@ func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtyp
 
 	hasTimeIssue := sdkCtx.BlockTime().IsZero() || sdkCtx.BlockTime().Unix() <= 0
 
-	// Set legacy parameters
-	ctx = q.ensureLegacyParams(ctx)
 	// Update the modified context with the legacy params
 	modifiedCtx := sdk.UnwrapSDKContext(ctx)
 
 	sdkCtx.Logger().Info("Smart query for pre-upgrade height",
 		"block_height", sdkCtx.BlockHeight(),
-		"upgrade_height", upgradeHeight,
+		"legacy_mode", legacyMode,
 		"chain_id", sdkCtx.ChainID(),
 		"has_time_issue", hasTimeIssue,
 		"req", req,
@@ -156,20 +94,4 @@ func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtyp
 	}
 
 	return nil, queryErr
-}
-
-func (q *LegacyQueryServer) Code(ctx context.Context, req *wasmtypes.QueryCodeRequest) (*wasmtypes.QueryCodeResponse, error) {
-	return q.QueryServer.Code(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) Codes(ctx context.Context, req *wasmtypes.QueryCodesRequest) (*wasmtypes.QueryCodesResponse, error) {
-	return q.QueryServer.Codes(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) PinnedCodes(ctx context.Context, req *wasmtypes.QueryPinnedCodesRequest) (*wasmtypes.QueryPinnedCodesResponse, error) {
-	return q.QueryServer.PinnedCodes(q.ensureLegacyParams(ctx), req)
-}
-
-func (q *LegacyQueryServer) Params(ctx context.Context, req *wasmtypes.QueryParamsRequest) (*wasmtypes.QueryParamsResponse, error) {
-	return q.QueryServer.Params(q.ensureLegacyParams(ctx), req)
 }

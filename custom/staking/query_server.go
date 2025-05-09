@@ -2,6 +2,7 @@ package staking
 
 import (
 	"context"
+	"time"
 
 	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +10,35 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+type LegacyParams struct {
+	// unbonding_time is the time duration of unbonding.
+	UnbondingTime time.Duration `protobuf:"bytes,1,opt,name=unbonding_time,json=unbondingTime,proto3,stdduration" json:"unbonding_time"`
+	// max_validators is the maximum number of validators.
+	MaxValidators uint32 `protobuf:"varint,2,opt,name=max_validators,json=maxValidators,proto3" json:"max_validators,omitempty"`
+	// max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
+	MaxEntries uint32 `protobuf:"varint,3,opt,name=max_entries,json=maxEntries,proto3" json:"max_entries,omitempty"`
+	// historical_entries is the number of historical entries to persist.
+	HistoricalEntries uint32 `protobuf:"varint,4,opt,name=historical_entries,json=historicalEntries,proto3" json:"historical_entries,omitempty"`
+	// bond_denom defines the bondable coin denomination.
+	BondDenom string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty"`
+}
+
+// ParamKeyTable returns the parameter key table for wasm module
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&LegacyParams{})
+}
+
+// ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
+func (p *LegacyParams) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair([]byte("unbonding_time"), &p.UnbondingTime, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("max_validators"), &p.MaxValidators, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("max_entries"), &p.MaxEntries, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("historical_entries"), &p.HistoricalEntries, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("bond_denom"), &p.BondDenom, func(i interface{}) error { return nil }),
+	}
+}
 
 // LegacyQueryServer wraps the staking QueryServer and sets legacy parameters for pre-upgrade height queries
 type LegacyQueryServer struct {
@@ -36,14 +66,40 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Only set legacy params for pre-upgrade heights
-	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
+	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
 	sdkCtx.Logger().Info("Setting legacy params for pre-upgrade height queries",
 		"block_height", sdkCtx.BlockHeight(),
-		"upgrade_height", upgradeHeight,
+		"legacy_mode", legacyMode,
 		"chain_id", sdkCtx.ChainID(),
 		"ctx", sdkCtx,
 	)
-	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight {
+
+	if legacyMode == legacyupgrade.LegacyHandlingV1 {
+		var params LegacyParams
+		q.legacySubspace.GetParamSet(sdkCtx, &params)
+
+		// Set the params directly in the keeper
+		q.keeper.SetParams(sdkCtx, stakingtypes.Params{
+			UnbondingTime:     params.UnbondingTime,
+			MaxValidators:     params.MaxValidators,
+			MaxEntries:        params.MaxEntries,
+			HistoricalEntries: params.HistoricalEntries,
+			BondDenom:         params.BondDenom,
+			MinCommissionRate: sdk.ZeroDec(),
+		})
+
+		// Return updated context
+		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
+			"block_height", sdkCtx.BlockHeight(),
+			"chain_id", sdkCtx.ChainID(),
+			"params", params,
+			"legacy_mode", legacyMode,
+			"ctx", sdkCtx,
+		)
+		return sdk.WrapSDKContext(sdkCtx)
+	}
+
+	if legacyMode == legacyupgrade.LegacyHandlingV2 {
 		var params stakingtypes.Params
 		q.legacySubspace.GetParamSet(sdkCtx, &params)
 
@@ -53,9 +109,9 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		// Return updated context
 		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
 			"block_height", sdkCtx.BlockHeight(),
-			"upgrade_height", upgradeHeight,
 			"chain_id", sdkCtx.ChainID(),
 			"params", params,
+			"legacy_mode", legacyMode,
 			"ctx", sdkCtx,
 		)
 		return sdk.WrapSDKContext(sdkCtx)

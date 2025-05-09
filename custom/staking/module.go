@@ -74,7 +74,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	querier := keeper.Querier{Keeper: am.keeper}
 	stakingtypes.RegisterQueryServer(
 		cfg.QueryServer(),
-		NewLegacyQueryServer(querier, am.paramsKeeper.Subspace(stakingtypes.ModuleName), am.keeper),
+		NewLegacyQueryServer(querier, am.ss, am.keeper),
 	)
 
 	m := keeper.NewMigrator(am.keeper, am.ss)

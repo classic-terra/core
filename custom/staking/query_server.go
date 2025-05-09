@@ -76,7 +76,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 
 	if legacyMode == legacyupgrade.LegacyHandlingV1 {
 		var params LegacyParams
-		q.legacySubspace.GetParamSet(sdkCtx, &params)
+		q.legacySubspace.WithKeyTable(ParamKeyTable()).GetParamSet(sdkCtx, &params)
 
 		// Set the params directly in the keeper
 		q.keeper.SetParams(sdkCtx, stakingtypes.Params{
@@ -101,7 +101,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 
 	if legacyMode == legacyupgrade.LegacyHandlingV2 {
 		var params stakingtypes.Params
-		q.legacySubspace.GetParamSet(sdkCtx, &params)
+		q.legacySubspace.WithKeyTable(stakingtypes.ParamKeyTable()).GetParamSet(sdkCtx, &params)
 
 		// Set the params directly in the keeper
 		q.keeper.SetParams(sdkCtx, params)

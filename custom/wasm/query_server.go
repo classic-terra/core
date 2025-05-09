@@ -8,7 +8,6 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
@@ -21,37 +20,21 @@ type LegacyWasmParams struct {
 	wasmtypes.Params
 }
 
-// ParamKeyTable returns the parameter key table for wasm module
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&LegacyWasmParams{})
-}
-
-// ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
-func (p *LegacyWasmParams) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(LegacyParamStoreKeyUploadAccess, &p.Params.CodeUploadAccess, func(i interface{}) error { return nil }),
-		paramtypes.NewParamSetPair(LegacyParamStoreKeyInstantiateAccess, &p.Params.InstantiateDefaultPermission, func(i interface{}) error { return nil }),
-	}
-}
-
 // LegacyQueryServer wraps the wasm QueryServer and sets legacy parameters for pre-upgrade height queries
 type LegacyQueryServer struct {
 	// Embed the original query server to inherit all methods
 	wasmtypes.QueryServer
-	keeper         *wasmkeeper.Keeper
-	legacySubspace paramtypes.Subspace
+	keeper *wasmkeeper.Keeper
 }
 
 // NewLegacyQueryServer creates a new LegacyQueryServer instance
 func NewLegacyQueryServer(
 	originalServer wasmtypes.QueryServer,
-	legacySubspace paramtypes.Subspace,
 	keeper *wasmkeeper.Keeper,
 ) wasmtypes.QueryServer {
 	return &LegacyQueryServer{
-		QueryServer:    originalServer,
-		keeper:         keeper,
-		legacySubspace: legacySubspace,
+		QueryServer: originalServer,
+		keeper:      keeper,
 	}
 }
 
@@ -67,17 +50,7 @@ func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtyp
 	var queryErr error
 
 	hasTimeIssue := sdkCtx.BlockTime().IsZero() || sdkCtx.BlockTime().Unix() <= 0
-
-	// Update the modified context with the legacy params
 	modifiedCtx := sdk.UnwrapSDKContext(ctx)
-
-	sdkCtx.Logger().Info("Smart query for pre-upgrade height",
-		"block_height", sdkCtx.BlockHeight(),
-		"legacy_mode", legacyMode,
-		"chain_id", sdkCtx.ChainID(),
-		"has_time_issue", hasTimeIssue,
-		"req", req,
-	)
 
 	// If we fixed the block time, apply it to the new context, it is not the correct historic time
 	if hasTimeIssue {

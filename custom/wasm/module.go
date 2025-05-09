@@ -55,7 +55,7 @@ func NewAppModule(
 	return AppModule{
 		AppModule:      wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
 		keeper:         keeper,
-		legacySubspace: ss.WithKeyTable(ParamKeyTable()),
+		legacySubspace: ss,
 	}
 }
 
@@ -69,7 +69,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		cfg.QueryServer(),
 		NewLegacyQueryServer(
 			originalQueryServer,
-			am.legacySubspace,
 			am.keeper,
 		),
 	)

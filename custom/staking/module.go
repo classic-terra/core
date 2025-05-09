@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -45,8 +46,9 @@ func (am AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 type AppModule struct {
 	staking.AppModule
 
-	keeper         *keeper.Keeper
-	legacySubspace paramtypes.Subspace
+	keeper       *keeper.Keeper
+	paramsKeeper paramskeeper.Keeper
+	ss           paramtypes.Subspace
 }
 
 // NewAppModule creates a new AppModule object
@@ -54,12 +56,14 @@ func NewAppModule(cdc codec.Codec,
 	keeper *keeper.Keeper,
 	ak stakingtypes.AccountKeeper,
 	bk stakingtypes.BankKeeper,
+	pk paramskeeper.Keeper,
 	ss paramtypes.Subspace,
 ) AppModule {
 	return AppModule{
-		AppModule:      staking.NewAppModule(cdc, keeper, ak, bk, ss),
-		keeper:         keeper,
-		legacySubspace: ss,
+		AppModule:    staking.NewAppModule(cdc, keeper, ak, bk, ss),
+		keeper:       keeper,
+		paramsKeeper: pk,
+		ss:           ss,
 	}
 }
 
@@ -70,10 +74,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	querier := keeper.Querier{Keeper: am.keeper}
 	stakingtypes.RegisterQueryServer(
 		cfg.QueryServer(),
-		NewLegacyQueryServer(querier, am.legacySubspace, am.keeper),
+		NewLegacyQueryServer(querier, am.paramsKeeper.Subspace(stakingtypes.ModuleName), am.keeper),
 	)
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper, am.ss)
 	if err := cfg.RegisterMigration(stakingtypes.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", stakingtypes.ModuleName, err))
 	}

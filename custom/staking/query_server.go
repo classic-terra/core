@@ -32,11 +32,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 func (p *LegacyParams) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair([]byte("unbonding_time"), &p.UnbondingTime, func(i interface{}) error { return nil }),
-		paramtypes.NewParamSetPair([]byte("max_validators"), &p.MaxValidators, func(i interface{}) error { return nil }),
-		paramtypes.NewParamSetPair([]byte("max_entries"), &p.MaxEntries, func(i interface{}) error { return nil }),
-		paramtypes.NewParamSetPair([]byte("historical_entries"), &p.HistoricalEntries, func(i interface{}) error { return nil }),
-		paramtypes.NewParamSetPair([]byte("bond_denom"), &p.BondDenom, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("UnbondingTime"), &p.UnbondingTime, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("MaxValidators"), &p.MaxValidators, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("MaxEntries"), &p.MaxEntries, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("HistoricalEntries"), &p.HistoricalEntries, func(i interface{}) error { return nil }),
+		paramtypes.NewParamSetPair([]byte("BondDenom"), &p.BondDenom, func(i interface{}) error { return nil }),
 	}
 }
 

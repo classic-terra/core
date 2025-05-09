@@ -37,6 +37,11 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 
 	// Only set legacy params for pre-upgrade heights
 	upgradeHeight := legacyupgrade.GetUpgradeHeight(sdkCtx.ChainID())
+	sdkCtx.Logger().Info("Setting legacy params for pre-upgrade height queries",
+		"block_height", sdkCtx.BlockHeight(),
+		"upgrade_height", upgradeHeight,
+		"chain_id", sdkCtx.ChainID(),
+	)
 	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight {
 		var params stakingtypes.Params
 		q.legacySubspace.GetParamSet(sdkCtx, &params)

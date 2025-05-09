@@ -3,14 +3,12 @@ package legacy
 import core "github.com/classic-terra/core/v3/types"
 
 const (
-	MainnetUpgradeHeightV1  = int64(13215800) // columbus-5 mainnet upgrade height to v8
-	MainnetUpgradeHeightV2  = int64(18303000) // columbus-5 mainnet upgrade height to v8
-	TestnetUpgradeHeightV1  = int64(14584970) // rebel-2 testnet upgrade height to v8
-	TestnetUpgradeHeightV2  = int64(19354000) // rebel-2 testnet upgrade height to v8
-	LegacyUpgradeHeightV1   = int64(0)        // This is not included in the local testing as it would need v3 as a basis
-	LegacyUpgradeHeightV2   = int64(25)       // Local testing upgrade height to v8 (using update-test-multi.sh script)
-	LocalnetUpgradeHeightV1 = int64(0)        // Local testing or automated workflows without pre-v8 data
-	LocalnetUpgradeHeightV2 = int64(0)        // Local testing or automated workflows without pre-v8 data
+	MainnetUpgradeHeightV1 = int64(13215800) // columbus-5 mainnet upgrade height to v4
+	MainnetUpgradeHeightV2 = int64(18303000) // columbus-5 mainnet upgrade height to v8
+	TestnetUpgradeHeightV1 = int64(14584970) // rebel-2 testnet upgrade height to v4
+	TestnetUpgradeHeightV2 = int64(19354000) // rebel-2 testnet upgrade height to v8
+	LegacyUpgradeHeightV1  = int64(0)        // This is not included in the local testing as it would need v3 as a basis
+	LegacyUpgradeHeightV2  = int64(25)       // Local testing upgrade height to v8 (using update-test-multi.sh script)
 )
 
 // LegacyHandlingVersion represents different versions of legacy handling

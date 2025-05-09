@@ -65,6 +65,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		"block_height", sdkCtx.BlockHeight(),
 		"upgrade_height", upgradeHeight,
 		"chain_id", sdkCtx.ChainID(),
+		"ctx", sdkCtx,
 	)
 	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight && q.keeper != nil {
 		// Try to get params from legacy subspace
@@ -78,6 +79,13 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		q.keeper.SetParams(sdkCtx, legacyParams.Params)
 
 		// Return updated context
+		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
+			"block_height", sdkCtx.BlockHeight(),
+			"upgrade_height", upgradeHeight,
+			"chain_id", sdkCtx.ChainID(),
+			"params", legacyParams.Params,
+			"ctx", sdkCtx,
+		)
 		return sdk.WrapSDKContext(sdkCtx)
 	}
 
@@ -124,6 +132,14 @@ func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtyp
 	ctx = q.ensureLegacyParams(ctx)
 	// Update the modified context with the legacy params
 	modifiedCtx := sdk.UnwrapSDKContext(ctx)
+
+	sdkCtx.Logger().Info("Smart query for pre-upgrade height",
+		"block_height", sdkCtx.BlockHeight(),
+		"upgrade_height", upgradeHeight,
+		"chain_id", sdkCtx.ChainID(),
+		"has_time_issue", hasTimeIssue,
+		"req", req,
+	)
 
 	// If we fixed the block time, apply it to the new context, it is not the correct historic time
 	if hasTimeIssue {

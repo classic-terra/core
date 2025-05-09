@@ -41,6 +41,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		"block_height", sdkCtx.BlockHeight(),
 		"upgrade_height", upgradeHeight,
 		"chain_id", sdkCtx.ChainID(),
+		"ctx", sdkCtx,
 	)
 	if sdkCtx.BlockHeight() > 0 && sdkCtx.BlockHeight() < upgradeHeight {
 		var params stakingtypes.Params
@@ -50,6 +51,13 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		q.keeper.SetParams(sdkCtx, params)
 
 		// Return updated context
+		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
+			"block_height", sdkCtx.BlockHeight(),
+			"upgrade_height", upgradeHeight,
+			"chain_id", sdkCtx.ChainID(),
+			"params", params,
+			"ctx", sdkCtx,
+		)
 		return sdk.WrapSDKContext(sdkCtx)
 	}
 

@@ -54,4 +54,6 @@ func GetLegacyHandling(chainID string, blockHeight int64) LegacyHandlingVersion 
 		// For local testing or other networks do not use legacy handling
 		return LegacyHandlingNone
 	}
+
+	return LegacyHandlingNone
 }

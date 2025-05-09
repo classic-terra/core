@@ -51,13 +51,7 @@ func GetLegacyHandling(chainID string, blockHeight int64) LegacyHandlingVersion 
 			return LegacyHandlingV2
 		}
 	default:
-		// For local testing or other networks
-		if blockHeight < LocalnetUpgradeHeightV1 {
-			return LegacyHandlingV1
-		} else if blockHeight < LocalnetUpgradeHeightV2 {
-			return LegacyHandlingV2
-		}
+		// For local testing or other networks do not use legacy handling
+		return LegacyHandlingNone
 	}
-
-	return LegacyHandlingNone
 }

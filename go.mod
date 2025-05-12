@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20250227205721-8a222c546f4f
+	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0
 	github.com/cosmos/ibc-go/v7 v7.10.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
@@ -237,5 +237,4 @@ replace (
 	go.etcd.io/bbolt => go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	google.golang.org/grpc => google.golang.org/grpc v1.58.3
-
 )

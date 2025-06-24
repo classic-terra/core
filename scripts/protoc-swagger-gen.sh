@@ -3,7 +3,7 @@
 set -eo pipefail
 
 mkdir -p ./tmp-swagger-gen
-cd proto
+pushd proto
 
 cosmos_sdk_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/cosmos-sdk)
 ibc_go_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/ibc-go/v7)

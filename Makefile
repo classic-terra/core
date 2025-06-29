@@ -189,7 +189,7 @@ gen-swagger-docs:
 	bash scripts/protoc-swagger-gen.sh
 
 update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m -p terrad
+	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m -ns=terrad
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "Swagger docs are out of sync!";\
         exit 1;\

@@ -10,6 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 )
 
 var IBCRegexp = regexp.MustCompile("^ibc/[a-fA-F0-9]{64}$")
@@ -19,33 +20,33 @@ func isIBCDenom(denom string) bool {
 }
 
 // FilterMsgAndComputeTax computes the stability tax on messages.
-func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, simulate bool, msgs ...sdk.Msg) (sdk.Coins, sdk.Coins) {
+func FilterMsgAndComputeTax(ctx sdk.Context, te taxexemptionkeeper.Keeper, tk TreasuryKeeper, th TaxKeeper, simulate bool, msgs ...sdk.Msg) (sdk.Coins, sdk.Coins) {
 	taxes := sdk.Coins{}
 	nonTaxableTaxes := sdk.Coins{}
 
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			if !tk.HasBurnTaxExemptionAddress(ctx, msg.FromAddress, msg.ToAddress) {
+			if !te.IsExemptedFromTax(ctx, msg.FromAddress, msg.ToAddress) {
 				taxes = taxes.Add(computeTax(ctx, tk, th, msg.Amount, simulate)...)
 			}
 
 		case *banktypes.MsgMultiSend:
 			tainted := 0
 
+			// make list of output addresses
+			outputAddresses := make([]string, len(msg.Outputs))
+			for i, output := range msg.Outputs {
+				outputAddresses[i] = output.Address
+			}
+
 			for _, input := range msg.Inputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, input.Address) {
+				if te.IsExemptedFromTax(ctx, input.Address, outputAddresses...) {
 					tainted++
 				}
 			}
 
-			for _, output := range msg.Outputs {
-				if tk.HasBurnTaxExemptionAddress(ctx, output.Address) {
-					tainted++
-				}
-			}
-
-			if tainted != len(msg.Inputs)+len(msg.Outputs) {
+			if tainted != len(msg.Inputs) {
 				for _, input := range msg.Inputs {
 					taxes = taxes.Add(computeTax(ctx, tk, th, input.Coins, simulate)...)
 				}
@@ -63,13 +64,13 @@ func FilterMsgAndComputeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, si
 			nonTaxableTaxes = nonTaxableTaxes.Add(computeTax(ctx, tk, th, msg.Funds, simulate)...)
 
 		case *wasmtypes.MsgExecuteContract:
-			if !tk.HasBurnTaxExemptionContract(ctx, msg.Contract) {
+			if !te.IsExemptedFromTax(ctx, msg.Sender, msg.Contract) {
 				nonTaxableTaxes = nonTaxableTaxes.Add(computeTax(ctx, tk, th, msg.Funds, simulate)...)
 			}
 		case *authz.MsgExec:
 			messages, err := msg.GetMessages()
 			if err == nil {
-				execTaxes, execNonTaxable := FilterMsgAndComputeTax(ctx, tk, th, simulate, messages...)
+				execTaxes, execNonTaxable := FilterMsgAndComputeTax(ctx, te, tk, th, simulate, messages...)
 				taxes = taxes.Add(execTaxes...)
 				nonTaxableTaxes = nonTaxableTaxes.Add(execNonTaxable...)
 			}

@@ -58,7 +58,6 @@ func (s *StakingTestSuite) TestValidatorVPLimit() {
 	s.App.DistrKeeper.SetValidatorHistoricalRewards(s.Ctx, valAddrs[0], 1, disttypes.NewValidatorHistoricalRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", sdk.NewInt(1))), 2))
 	s.App.DistrKeeper.SetValidatorCurrentRewards(s.Ctx, valAddrs[0], disttypes.NewValidatorCurrentRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", sdk.NewInt(1))), 2))
 	s.App.DistrKeeper.SetDelegatorStartingInfo(s.Ctx, valAddrs[0], s.TestAccs[0], disttypes.NewDelegatorStartingInfo(1, sdk.OneDec(), 1))
-
 	// first delegation should be normal
 	// raise voting power of validator 0 by 1 (1+1)/(10+1) = 0.181818 < 0.2
 	s.App.StakingKeeper.SetDelegation(s.Ctx, stakingtypes.NewDelegation(s.TestAccs[0], valAddrs[0], sdk.NewDec(1000000)))

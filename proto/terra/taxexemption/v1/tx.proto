@@ -1,0 +1,84 @@
+syntax = "proto3";
+package terra.taxexemption.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
+
+// Msg defines the taxexemption Msg service.
+service Msg {
+  rpc AddTaxExemptionZone(MsgAddTaxExemptionZone) returns (MsgAddTaxExemptionZoneResponse);
+	rpc RemoveTaxExemptionZone(MsgRemoveTaxExemptionZone) returns (MsgRemoveTaxExemptionZoneResponse);
+	rpc ModifyTaxExemptionZone(MsgModifyTaxExemptionZone) returns (MsgModifyTaxExemptionZoneResponse);
+	rpc AddTaxExemptionAddress(MsgAddTaxExemptionAddress) returns (MsgAddTaxExemptionAddressResponse);
+	rpc RemoveTaxExemptionAddress(MsgRemoveTaxExemptionAddress) returns (MsgRemoveTaxExemptionAddressResponse);
+}
+
+// MsgAddTaxExemptionZone defines a message for adding a tax exemption zone.
+message MsgAddTaxExemptionZone {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string zone = 1 [(gogoproto.moretags) = "yaml:\"zone\""];
+  bool outgoing = 2 [(gogoproto.moretags) = "yaml:\"outgoing\""];
+  bool incoming = 3 [(gogoproto.moretags) = "yaml:\"incoming\""];
+  bool cross_zone = 4 [(gogoproto.moretags) = "yaml:\"cross_zone\""];
+  repeated string addresses = 5 [(gogoproto.moretags) = "yaml:\"addresses\""];
+  string authority = 6 [(gogoproto.moretags) = "yaml:\"authority\""];
+}
+
+message MsgAddTaxExemptionZoneResponse {}
+
+// MsgRemoveTaxExemptionZone defines a message for removing a tax exemption zone.
+message MsgRemoveTaxExemptionZone {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string zone = 1 [(gogoproto.moretags) = "yaml:\"zone\""];
+  string authority = 2 [(gogoproto.moretags) = "yaml:\"authority\""];
+}
+
+message MsgRemoveTaxExemptionZoneResponse {}
+
+// MsgModifyTaxExemptionZone defines a message for modifying a tax exemption zone.
+message MsgModifyTaxExemptionZone {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string zone = 1 [(gogoproto.moretags) = "yaml:\"zone\""];
+  bool outgoing = 2 [(gogoproto.moretags) = "yaml:\"outgoing\""];
+  bool incoming = 3 [(gogoproto.moretags) = "yaml:\"incoming\""];
+  bool cross_zone = 4 [(gogoproto.moretags) = "yaml:\"cross_zone\""];
+  string authority = 5 [(gogoproto.moretags) = "yaml:\"authority\""];
+}
+
+message MsgModifyTaxExemptionZoneResponse {}
+
+// MsgAddTaxExemptionAddress defines a message for adding tax exemption addresses.
+message MsgAddTaxExemptionAddress {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string zone = 1 [(gogoproto.moretags) = "yaml:\"zone\""];
+  repeated string addresses = 2 [(gogoproto.moretags) = "yaml:\"addresses\""];
+  string authority = 3 [(gogoproto.moretags) = "yaml:\"authority\""];
+}
+
+message MsgAddTaxExemptionAddressResponse {}
+
+// MsgRemoveTaxExemptionAddress defines a message for removing tax exemption addresses.
+message MsgRemoveTaxExemptionAddress {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string zone = 1 [(gogoproto.moretags) = "yaml:\"zone\""];
+  repeated string addresses = 2 [(gogoproto.moretags) = "yaml:\"addresses\""];
+  string authority = 3 [(gogoproto.moretags) = "yaml:\"authority\""];
+}
+
+message MsgRemoveTaxExemptionAddressResponse {}

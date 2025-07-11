@@ -215,8 +215,8 @@ func isOraclePrioritized(tx []Tx) bool {
 		}
 	}
 	return lastOracleIdx == -1 || lastOracleIdx < firstNonOracleIdx
-
 }
+
 func isOracleTx(tx Tx) bool {
 	for _, event := range tx.Events {
 		for _, attr := range event.Attributes {

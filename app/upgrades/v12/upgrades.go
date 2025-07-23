@@ -45,9 +45,9 @@ func CreateV12UpgradeHandler(
 		// add tax exemption address to new tax exemption keeper
 		err = k.TaxExemptionKeeper.AddTaxExemptionZone(c, taxexemptiontypes.Zone{
 			Name:      intoZone,
-			Outgoing:  true,
-			Incoming:  true,
-			CrossZone: true,
+			Outgoing:  false,
+			Incoming:  false,
+			CrossZone: false,
 		})
 		if err != nil {
 			return nil, err

@@ -46,7 +46,7 @@ install_version() {
     local reinstall_flag=$3
     
     # Download and extract if not exist
-    if [ ! -f "_build/$version.zip" ] &> /dev/null; then
+    if [ ! -f "_build/$version.zip" ]; then
         mkdir -p _build/$target_dir
         wget -c "https://github.com/classic-terra/core/archive/refs/tags/${version}.zip" -O _build/${version}.zip
         unzip _build/${version}.zip -d _build

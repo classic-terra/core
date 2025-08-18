@@ -42,7 +42,6 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		"block_height", sdkCtx.BlockHeight(),
 		"legacy_mode", legacyMode,
 		"chain_id", sdkCtx.ChainID(),
-		"ctx", sdkCtx,
 	)
 
 	if legacyMode == legacyupgrade.LegacyHandlingV1 {

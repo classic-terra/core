@@ -4,7 +4,10 @@
 FORK=${FORK:-"false"}
 
 # Support for multiple versions and upgrades
-# Default to a single version if not provided
+# OLD_VERSIONS and UPGRADE_NAMES must have the same length.
+# Each element in OLD_VERSIONS represents a version to upgrade from,
+# and the corresponding element in UPGRADE_NAMES is the upgrade name applied to that version.
+# For example, OLD_VERSIONS[0] is upgraded using UPGRADE_NAMES[0], and so on.
 OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v2.4.2,v3.0.4,v3.1.3,v3.1.5,v3.1.6,v3.3.0,v3.4.0"}
 UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v8,v8_1,v8_2,v8_3,v10_1,v11_1,v11_2"}
 

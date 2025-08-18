@@ -1,0 +1,52 @@
+syntax = "proto3";
+package terra.taxexemption.v1;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "terra/taxexemption/v1/taxexemption.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
+
+service Query {
+    rpc Taxable(QueryTaxableRequest) returns (QueryTaxableResponse) {
+    option (google.api.http).get = "/terra/taxexemption/v1/taxable/{from_address}/{to_address}";
+    }
+
+    rpc TaxExemptionZonesList(QueryTaxExemptionZonesRequest) returns (QueryTaxExemptionZonesResponse) {
+    option (google.api.http).get = "/terra/taxexemption/v1/zones";
+    }
+
+    rpc TaxExemptionAddressList(QueryTaxExemptionAddressRequest) returns (QueryTaxExemptionAddressResponse) {
+    option (google.api.http).get = "/terra/taxexemption/v1/{zone_name}/addresses";
+    }
+}
+
+message QueryTaxableRequest {
+string from_address = 1;
+string to_address = 2;
+}
+
+message QueryTaxableResponse {
+bool taxable = 1;
+}
+
+message QueryTaxExemptionZonesRequest {
+cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryTaxExemptionZonesResponse {
+repeated Zone zones = 1;
+
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTaxExemptionAddressRequest {
+string zone_name = 1;
+cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryTaxExemptionAddressResponse {
+repeated string addresses = 1;
+
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

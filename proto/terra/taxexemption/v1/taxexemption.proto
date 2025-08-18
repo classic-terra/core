@@ -1,0 +1,95 @@
+syntax = "proto3";
+package terra.taxexemption.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
+
+message Zone {
+    string name        = 1 [(gogoproto.moretags) = "yaml:\"name\""];
+    bool   outgoing    = 2 [(gogoproto.moretags) = "yaml:\"outgoing\""];
+    bool   incoming    = 3 [(gogoproto.moretags) = "yaml:\"incoming\""];
+    bool   cross_zone  = 4 [(gogoproto.moretags) = "yaml:\"cross_zone\""];
+}
+
+message ZoneList {
+    repeated string zones = 1 [(gogoproto.moretags) = "yaml:\"zones\""];
+}
+
+message ProposalMetadata {
+    string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+    string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+    string forum  = 3 [(gogoproto.moretags) = "yaml:\"forum\""];
+    string other  = 4 [(gogoproto.moretags) = "yaml:\"other\""];
+}
+
+message AddTaxExemptionZoneProposal {
+    option (gogoproto.equal)                   = false;
+    option (gogoproto.goproto_getters)         = false;
+    option (gogoproto.goproto_stringer)        = false;
+    option (cosmos_proto.implements_interface) = "cosmos.gov.v1.Content";
+
+    string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+    string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+    string zone        = 3 [(gogoproto.moretags) = "yaml:\"zone\""];
+    bool outgoing      = 4 [(gogoproto.moretags) = "yaml:\"outgoing\""];
+    bool incoming      = 5 [(gogoproto.moretags) = "yaml:\"incoming\""];
+    bool cross_zone    = 6 [(gogoproto.moretags) = "yaml:\"cross_zone\""];
+    repeated string addresses = 7 [(gogoproto.moretags) = "yaml:\"addresses\""];
+    string authority   = 8 [(gogoproto.moretags) = "yaml:\"authority\""];
+  
+}
+
+message RemoveTaxExemptionZoneProposal {
+    option (gogoproto.equal)                   = false;
+    option (gogoproto.goproto_getters)         = false;
+    option (gogoproto.goproto_stringer)        = false;
+    option (cosmos_proto.implements_interface) = "cosmos.gov.v1.Content";
+
+    string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+    string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+    string zone = 3 [(gogoproto.moretags) = "yaml:\"zone\""];
+    string authority = 4 [(gogoproto.moretags) = "yaml:\"authority\""];
+  }
+
+message ModifyTaxExemptionZoneProposal {
+    option (gogoproto.equal)                   = false;
+    option (gogoproto.goproto_getters)         = false;
+    option (gogoproto.goproto_stringer)        = false;
+    option (cosmos_proto.implements_interface) = "cosmos.gov.v1.Content";
+
+    string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+    string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+    string zone = 3 [(gogoproto.moretags) = "yaml:\"zone\""];
+    bool outgoing = 4 [(gogoproto.moretags) = "yaml:\"outgoing\""];
+    bool incoming = 5 [(gogoproto.moretags) = "yaml:\"incoming\""];
+    bool cross_zone = 6 [(gogoproto.moretags) = "yaml:\"cross_zone\""];
+    string authority = 7 [(gogoproto.moretags) = "yaml:\"authority\""];
+  }
+
+  message AddTaxExemptionAddressProposal {
+    option (gogoproto.equal)                   = false;
+    option (gogoproto.goproto_getters)         = false;
+    option (gogoproto.goproto_stringer)        = false;
+    option (cosmos_proto.implements_interface) = "cosmos.gov.v1.Content";
+
+    string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+    string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+    string zone        = 3 [(gogoproto.moretags) = "yaml:\"zone\""];
+    repeated string addresses = 4 [(gogoproto.moretags) = "yaml:\"addresses\""];
+    string authority   = 5 [(gogoproto.moretags) = "yaml:\"authority\""];
+  }
+
+  message RemoveTaxExemptionAddressProposal {
+    option (gogoproto.equal)                   = false;
+    option (gogoproto.goproto_getters)         = false;
+    option (gogoproto.goproto_stringer)        = false;
+    option (cosmos_proto.implements_interface) = "cosmos.gov.v1.Content";
+
+    string title       = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+    string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+    string zone        = 3 [(gogoproto.moretags) = "yaml:\"zone\""];
+    repeated string addresses = 4 [(gogoproto.moretags) = "yaml:\"addresses\""];
+    string authority   = 5 [(gogoproto.moretags) = "yaml:\"authority\""];
+  }

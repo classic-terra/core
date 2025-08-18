@@ -1,0 +1,24 @@
+syntax = "proto3";
+package terra.taxexemption.v1;
+
+import "gogoproto/gogo.proto";
+import "terra/taxexemption/v1/taxexemption.proto";
+
+option go_package = "github.com/classic-terra/core/v3/x/taxexemption/types";
+
+// GenesisState defines the taxexemption module's genesis state.
+message GenesisState {
+    repeated Zone zone_list = 1 [
+        (gogoproto.moretags) = "yaml:\"zone_list\"",
+        (gogoproto.nullable)   = false
+    ];
+    repeated AddressesByZone addresses_by_zone = 2 [
+        (gogoproto.moretags) = "yaml:\"addresses_by_zone\"",
+        (gogoproto.nullable)   = false
+    ];
+}
+
+message AddressesByZone {
+   string zone = 1 [(gogoproto.moretags) = "yaml:\"zone\""];
+   repeated string addresses = 2 [(gogoproto.moretags) = "yaml:\"addresses\""];
+}

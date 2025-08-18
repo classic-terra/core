@@ -68,6 +68,8 @@ import (
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
@@ -101,6 +103,7 @@ type AppKeepers struct {
 	OracleKeeper          oraclekeeper.Keeper
 	MarketKeeper          marketkeeper.Keeper
 	TreasuryKeeper        treasurykeeper.Keeper
+	TaxExemptionKeeper    taxexemptionkeeper.Keeper
 	WasmKeeper            wasmkeeper.Keeper
 	DyncommKeeper         dyncommkeeper.Keeper
 	IBCHooksKeeper        *ibchookskeeper.Keeper
@@ -157,6 +160,7 @@ func NewAppKeepers(
 		oracletypes.StoreKey,
 		markettypes.StoreKey,
 		treasurytypes.StoreKey,
+		taxexemptiontypes.StoreKey,
 		wasmtypes.StoreKey,
 		dyncommtypes.StoreKey,
 		taxtypes.StoreKey,
@@ -349,6 +353,13 @@ func NewAppKeepers(
 		&appKeepers.WasmKeeper, distrtypes.ModuleName,
 	)
 
+	appKeepers.TaxExemptionKeeper = taxexemptionkeeper.NewKeeper(
+		appCodec, appKeepers.keys[taxexemptiontypes.StoreKey],
+		appKeepers.GetSubspace(taxexemptiontypes.ModuleName),
+		appKeepers.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	hooksKeeper := ibchookskeeper.NewKeeper(
 		appKeepers.keys[ibchookstypes.StoreKey],
 	)
@@ -394,6 +405,7 @@ func NewAppKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		scopedWasmKeeper,
 		appKeepers.BankKeeper,
+		appKeepers.TaxExemptionKeeper,
 		appKeepers.TreasuryKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.TaxKeeper,
@@ -517,6 +529,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
+	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)

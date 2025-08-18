@@ -4,6 +4,7 @@ import (
 	"context"
 
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -12,18 +13,20 @@ import (
 
 type BankMsgServer struct {
 	banktypes.UnimplementedMsgServer
-	taxKeeper      taxkeeper.Keeper
-	bankKeeper     bankkeeper.Keeper
-	treasuryKeeper treasurykeeper.Keeper
-	messageServer  banktypes.MsgServer
+	taxKeeper          taxkeeper.Keeper
+	bankKeeper         bankkeeper.Keeper
+	treasuryKeeper     treasurykeeper.Keeper
+	messageServer      banktypes.MsgServer
+	taxexemptionKeeper taxexemptionkeeper.Keeper
 }
 
-func NewBankMsgServer(bankKeeper bankkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, taxKeeper taxkeeper.Keeper, messageServer banktypes.MsgServer) banktypes.MsgServer {
+func NewBankMsgServer(bankKeeper bankkeeper.Keeper, taxexemptionKeeper taxexemptionkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, taxKeeper taxkeeper.Keeper, messageServer banktypes.MsgServer) banktypes.MsgServer {
 	return &BankMsgServer{
-		bankKeeper:     bankKeeper,
-		treasuryKeeper: treasuryKeeper,
-		taxKeeper:      taxKeeper,
-		messageServer:  messageServer,
+		bankKeeper:         bankKeeper,
+		treasuryKeeper:     treasuryKeeper,
+		taxKeeper:          taxKeeper,
+		messageServer:      messageServer,
+		taxexemptionKeeper: taxexemptionKeeper,
 	}
 }
 
@@ -37,7 +40,7 @@ func (s *BankMsgServer) Send(ctx context.Context, msg *banktypes.MsgSend) (*bank
 
 	fromAddr := sdk.MustAccAddressFromBech32(msg.FromAddress)
 
-	if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, msg.FromAddress, msg.ToAddress) {
+	if !s.taxexemptionKeeper.IsExemptedFromTax(sdkCtx, msg.FromAddress, msg.ToAddress) {
 		netAmount, err := s.taxKeeper.DeductTax(sdkCtx, fromAddr, msg.Amount, false)
 		if err != nil {
 			return nil, err
@@ -59,15 +62,13 @@ func (s *BankMsgServer) MultiSend(ctx context.Context, msg *banktypes.MsgMultiSe
 	}
 
 	tainted := false
-	for _, input := range msg.Inputs {
-		if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, input.Address) {
-			tainted = true
-			break
-		}
+	// make list of output addresses
+	outputAddresses := make([]string, len(msg.Outputs))
+	for i, output := range msg.Outputs {
+		outputAddresses[i] = output.Address
 	}
-
-	for _, output := range msg.Outputs {
-		if !s.treasuryKeeper.HasBurnTaxExemptionAddress(sdkCtx, output.Address) {
+	for _, input := range msg.Inputs {
+		if !s.taxexemptionKeeper.IsExemptedFromTax(sdkCtx, input.Address, outputAddresses...) {
 			tainted = true
 			break
 		}

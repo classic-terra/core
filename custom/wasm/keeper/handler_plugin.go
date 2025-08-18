@@ -4,6 +4,7 @@ import (
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,12 +31,13 @@ type MessageRouter interface {
 
 // SDKMessageHandler can handles messages that can be encoded into sdk.Message types and routed.
 type SDKMessageHandler struct {
-	router         MessageRouter
-	encoders       msgEncoder
-	treasuryKeeper treasurykeeper.Keeper
-	accountKeeper  authkeeper.AccountKeeper
-	bankKeeper     bankKeeper.Keeper
-	taxKeeper      taxkeeper.Keeper
+	router             MessageRouter
+	encoders           msgEncoder
+	treasuryKeeper     treasurykeeper.Keeper
+	accountKeeper      authkeeper.AccountKeeper
+	bankKeeper         bankKeeper.Keeper
+	taxexemptionKeeper taxexemptionkeeper.Keeper
+	taxKeeper          taxkeeper.Keeper
 }
 
 func NewMessageHandler(
@@ -44,6 +46,7 @@ func NewMessageHandler(
 	channelKeeper wasmtypes.ChannelKeeper,
 	capabilityKeeper wasmtypes.CapabilityKeeper,
 	bankKeeper bankKeeper.Keeper,
+	taxexemptionKeeper taxexemptionkeeper.Keeper,
 	treasuryKeeper treasurykeeper.Keeper,
 	accountKeeper authkeeper.AccountKeeper,
 	taxKeeper taxkeeper.Keeper,
@@ -56,20 +59,21 @@ func NewMessageHandler(
 		encoders = encoders.Merge(e)
 	}
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, treasuryKeeper, accountKeeper, bankKeeper, taxKeeper),
+		NewSDKMessageHandler(router, encoders, taxexemptionKeeper, treasuryKeeper, accountKeeper, bankKeeper, taxKeeper),
 		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, channelKeeper, capabilityKeeper),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
 
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper, taxKeeper taxkeeper.Keeper) SDKMessageHandler {
+func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, taxexemptionKeeper taxexemptionkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper, taxKeeper taxkeeper.Keeper) SDKMessageHandler {
 	return SDKMessageHandler{
-		router:         router,
-		encoders:       encoders,
-		treasuryKeeper: treasuryKeeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
-		taxKeeper:      taxKeeper,
+		router:             router,
+		encoders:           encoders,
+		treasuryKeeper:     treasuryKeeper,
+		taxexemptionKeeper: taxexemptionKeeper,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
+		taxKeeper:          taxKeeper,
 	}
 }
 

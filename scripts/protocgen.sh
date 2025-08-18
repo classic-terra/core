@@ -2,8 +2,8 @@
 
 set -eo pipefail
 
-# get protoc executions
-go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
+# get protoc executions - not needed, creating issues with proto generation
+# go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
 
 echo "Generating gogo proto code"
 cd proto

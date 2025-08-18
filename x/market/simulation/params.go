@@ -31,5 +31,10 @@ func ParamChanges(*rand.Rand) []simtypes.LegacyParamChange {
 				return fmt.Sprintf("\"%s\"", GenMinSpread(r))
 			},
 		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeyEpochLengthBlocks),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%d\"", GenEpochLengthBlocks(r))
+			},
+		),
 	}
 }

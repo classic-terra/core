@@ -19,6 +19,8 @@ var (
 	KeyPoolRecoveryPeriod = []byte("PoolRecoveryPeriod")
 	// Min spread
 	KeyMinStabilitySpread = []byte("MinStabilitySpread")
+	// EpochLengthBlocks governs how many blocks constitute a market epoch
+	KeyEpochLengthBlocks = []byte("EpochLengthBlocks")
 )
 
 // Default parameter values
@@ -26,6 +28,7 @@ var (
 	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
 	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
+	DefaultEpochLengthBlocks  = uint64(30 * core.BlocksPerDay)       // 30 days worth of blocks
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -36,6 +39,7 @@ func DefaultParams() Params {
 		BasePool:           DefaultBasePool,
 		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
 		MinStabilitySpread: DefaultMinStabilitySpread,
+		EpochLengthBlocks:  DefaultEpochLengthBlocks,
 	}
 }
 
@@ -57,6 +61,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyBasePool, &p.BasePool, validateBasePool),
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
+		paramstypes.NewParamSetPair(KeyEpochLengthBlocks, &p.EpochLengthBlocks, validateEpochLengthBlocks),
 	}
 }
 
@@ -70,6 +75,9 @@ func (p Params) Validate() error {
 	}
 	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
 		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
+	}
+	if p.EpochLengthBlocks == 0 {
+		return fmt.Errorf("epoch length blocks should be positive, is %d", p.EpochLengthBlocks)
 	}
 
 	return nil
@@ -115,5 +123,17 @@ func validateMinStabilitySpread(i interface{}) error {
 		return fmt.Errorf("min spread is too large: %s", v)
 	}
 
+	return nil
+}
+
+func validateEpochLengthBlocks(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("epoch length blocks must be positive: %d", v)
+	}
 	return nil
 }

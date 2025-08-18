@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
@@ -222,4 +221,35 @@ func (q querier) AggregateVotes(c context.Context, _ *types.QueryAggregateVotesR
 	return &types.QueryAggregateVotesResponse{
 		AggregateVotes: votes,
 	}, nil
+}
+
+// USDPrice queries the USD price of a denom using meta-denom 'usd' as Luna/USD reference
+func (q querier) USDPrice(c context.Context, req *types.QueryUSDPriceRequest) (*types.QueryUSDPriceResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	if len(req.Denom) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	price, err := q.GetUSDPrice(ctx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryUSDPriceResponse{UsdPrice: price}, nil
+}
+
+// USDPrices queries USD prices of all denoms
+func (q querier) USDPrices(c context.Context, _ *types.QueryUSDPricesRequest) (*types.QueryUSDPricesResponse, error) {
+    ctx := sdk.UnwrapSDKContext(c)
+    var prices sdk.DecCoins
+    if err := q.IterateUSDPrices(ctx, func(denom string, usdPrice sdk.Dec) (stop bool) {
+        prices = append(prices, sdk.NewDecCoinFromDec(denom, usdPrice))
+        return false
+    }); err != nil {
+        return nil, err
+    }
+    // Sort for deterministic order and reliable AmountOf
+    prices = prices.Sort()
+    return &types.QueryUSDPricesResponse{UsdPrices: prices}, nil
 }

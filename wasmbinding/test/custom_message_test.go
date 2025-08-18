@@ -10,6 +10,7 @@ import (
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // go test -v -run ^TestSwap$ github.com/classic-terra/core/v3/wasmbinding/test
@@ -31,6 +32,27 @@ func (s *WasmTestSuite) Swap(contractPath string, executeFunc func(contract sdk.
 	// Set Oracle Price
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
+	// Ensure meta UST anchor exists for swap guard
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, oracletypes.MetaUSDDenom, sdk.OneDec())
+	// Provide a basic Luna->USTC rate as well
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroUSDDenom, sdk.OneDec())
+	// Allow SDR swaps for tests (production default allows only USD)
+	s.App.MarketKeeper.SetAllowedSwapDenoms([]string{core.MicroUSDDenom, core.MicroSDRDenom})
+	// Prefund accumulator with usdr liquidity and process epoch to move to market pool
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000)))
+	s.Require().NoError(
+		s.App.BankKeeper.SendCoinsFromAccountToModule(
+			s.Ctx,
+			actor,
+			markettypes.AccumulatorModuleName,
+			sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000)),
+		),
+	)
+	// Trigger refill from accumulator to market to ensure liquidity is present pre-swap
+	s.App.MarketKeeper.ProcessEpochIfDue(s.Ctx)
+	// Sanity: market module should now hold the liquidity
+	marketBal := s.App.BankKeeper.GetBalance(s.Ctx, s.App.AccountKeeper.GetModuleAddress(markettypes.ModuleName), core.MicroSDRDenom)
+	s.Require().True(marketBal.Amount.GTE(sdk.NewInt(1_000_000)))
 
 	actorBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, actor)
 	contractBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, contractAddr)
@@ -79,6 +101,27 @@ func (s *WasmTestSuite) SwapSend(contractPath string, executeFunc func(contract 
 	// Set Oracle Price
 	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
+	// Ensure meta UST anchor exists for swap guard
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, oracletypes.MetaUSDDenom, sdk.OneDec())
+	// Provide a basic Luna->USTC rate as well
+	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroUSDDenom, sdk.OneDec())
+	// Allow SDR swaps for tests (production default allows only USD)
+	s.App.MarketKeeper.SetAllowedSwapDenoms([]string{core.MicroUSDDenom, core.MicroSDRDenom})
+	// Prefund accumulator with usdr liquidity and process epoch to move to market pool
+	s.FundAcc(actor, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000)))
+	s.Require().NoError(
+		s.App.BankKeeper.SendCoinsFromAccountToModule(
+			s.Ctx,
+			actor,
+			markettypes.AccumulatorModuleName,
+			sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000)),
+		),
+	)
+	// Trigger refill from accumulator to market to ensure liquidity is present pre-swap
+	s.App.MarketKeeper.ProcessEpochIfDue(s.Ctx)
+	// Sanity: market module should now hold the liquidity
+	marketBal := s.App.BankKeeper.GetBalance(s.Ctx, s.App.AccountKeeper.GetModuleAddress(markettypes.ModuleName), core.MicroSDRDenom)
+	s.Require().True(marketBal.Amount.GTE(sdk.NewInt(1_000_000)))
 
 	actorBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, actor)
 

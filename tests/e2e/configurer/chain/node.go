@@ -115,13 +115,18 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 
 	cmd := []string{"terrad", "debug", "addr", n.PublicKey}
 	n.t.Logf("extracting validator operator addresses for validator: %s", n.Name)
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	if err != nil {
 		return err
 	}
-	re := regexp.MustCompile("terravaloper(.{39})")
-	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
-	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+	// Match full bech32 validator operator address robustly (avoid truncation)
+	re := regexp.MustCompile(`terravaloper1[0-9a-z]{38,}`)
+	match := re.FindString(outBuf.String())
+	if match == "" {
+		n.t.Logf("failed to extract operator address from debug output for %s: %q", n.Name, outBuf.String())
+		return fmt.Errorf("could not parse operator address from terrad debug addr output")
+	}
+	n.OperatorAddress = strings.TrimSpace(match)
 	return nil
 }
 

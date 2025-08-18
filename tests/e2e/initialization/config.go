@@ -22,6 +22,9 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/classic-terra/core/v3/tests/e2e/util"
+	core "github.com/classic-terra/core/v3/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
@@ -51,11 +54,13 @@ const (
 	// chainA
 	ChainAID      = "terra-test-a"
 	TerraBalanceA = 20000000000000
+	USDBalanceA   = 1000000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
 	// chainB
 	ChainBID          = "terra-test-b"
 	TerraBalanceB     = 500000000000
+	USDBalanceB       = 1000000000000
 	StakeBalanceB     = 440000000000
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
@@ -73,8 +78,8 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", TerraBalanceA, TerraDenom, USDBalanceA, core.MicroUSDDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", TerraBalanceB, TerraDenom, USDBalanceB, core.MicroUSDDenom)
 	// InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
 	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
@@ -238,6 +243,16 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, markettypes.ModuleName, &markettypes.GenesisState{}, updateMarketGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, oracletypes.ModuleName, &oracletypes.GenesisState{}, updateOracleGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, crisistypes.ModuleName, &crisistypes.GenesisState{}, updateCrisisGenesis)
 	if err != nil {
 		return err
@@ -289,10 +304,39 @@ func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	denomsToRegister := []string{TerraDenom, AtomDenom}
+	// Register denoms used in tests
+	denomsToRegister := []string{TerraDenom, AtomDenom, core.MicroUSDDenom, core.MicroKRWDenom}
 	for _, denom := range denomsToRegister {
 		setDenomMetadata(bankGenState, denom)
 	}
+
+	// Seed both market and accumulator modules with USTC (uusd) so swaps have liquidity
+	// even across epoch burns/refills.
+	marketAddr := authtypes.NewModuleAddress(markettypes.ModuleName)
+	accumAddr := authtypes.NewModuleAddress(markettypes.AccumulatorModuleName)
+	seedCoins := sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(1_000_000_000_000)))       // 1,000,000 USTC
+	seedCoinsUluna := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000_000))) // 1,000,000 LUNC
+
+	bankGenState.Balances = append(bankGenState.Balances,
+		banktypes.Balance{Address: marketAddr.String(), Coins: seedCoins},
+		banktypes.Balance{Address: accumAddr.String(), Coins: seedCoins},
+		banktypes.Balance{Address: marketAddr.String(), Coins: seedCoinsUluna},
+		banktypes.Balance{Address: accumAddr.String(), Coins: seedCoinsUluna},
+	)
+
+	// Sanitize balances to merge and ensure invariants
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+}
+
+func updateMarketGenesis(marketGenState *markettypes.GenesisState) {
+	// Use a longer epoch in tests to avoid churn during swap assertions.
+	// This reduces interference from burn/refill while TestMarketSwap runs.
+	marketGenState.Params.EpochLengthBlocks = 50
+}
+
+func updateOracleGenesis(oracleGenState *oracletypes.GenesisState) {
+	// Align oracle vote period with the test logic and market epoch length
+	oracleGenState.Params.VotePeriod = 10 // increase for better testing options
 }
 
 func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {

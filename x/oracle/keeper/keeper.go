@@ -90,6 +90,91 @@ func (k Keeper) GetLunaExchangeRate(ctx sdk.Context, denom string) (sdk.Dec, err
 	return dp.Dec, nil
 }
 
+// GetUSDPrice returns the USD price of a given denom using oracle exchange rates.
+// Convention:
+// - Oracle rates are stored as (denom per 1 LUNA, e.g. the exchange rate for uusd is stored as 1 uusd per 1 uluna).
+// - Meta-denom types.MetaUSDDenom ("UST") stores (USD per 1 USTC).
+// Derivation:
+//
+//	U = GetLunaExchangeRate(ctx, types.MetaUSDDenom)  // USD per 1 USTC (meta-denom), used only when denom == uusd
+//	R = GetLunaExchangeRate(ctx, core.MicroUSDDenom)  // USD per 1 LUNA (feeder reports uusd per 1 LUNA numerically as USD/Luna)
+//
+// Then for any denom d with E_d = (d per 1 LUNA):
+//
+//	Price(d in USD) = R / E_d
+func (k Keeper) GetUSDPrice(ctx sdk.Context, denom string) (sdk.Dec, error) {
+	// Fast-path: uusd uses meta anchor U directly
+	if denom == core.MicroUSDDenom {
+		usdPerUSTC, err := k.GetLunaExchangeRate(ctx, types.MetaUSDDenom)
+		if err != nil || !usdPerUSTC.IsPositive() {
+			return sdk.ZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, core.MicroUSDDenom)
+		}
+		return usdPerUSTC, nil
+	}
+
+	// USD per 1 LUNA (reported by feeder as uusd per 1 LUNA assuming USTC≈USD numerically)
+	usdPerLuna, err := k.GetLunaExchangeRate(ctx, core.MicroUSDDenom)
+	if err != nil || !usdPerLuna.IsPositive() {
+		return sdk.ZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, core.MicroUSDDenom)
+	}
+
+	switch denom {
+	case core.MicroLunaDenom:
+		return usdPerLuna, nil
+	case core.MicroUSDDenom:
+		// handled by fast-path above
+		return sdk.ZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, core.MicroUSDDenom)
+	default:
+		// denom per 1 LUNA
+		denomPerLuna, err := k.GetLunaExchangeRate(ctx, denom)
+		if err != nil {
+			return sdk.ZeroDec(), err
+		}
+		if !denomPerLuna.IsPositive() {
+			return sdk.ZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, denom)
+		}
+		return usdPerLuna.Quo(denomPerLuna), nil
+	}
+}
+
+// GetUSTCUSDPrice returns the USD price for USTC derived from the USD/Luna anchor and Luna/USTC rate.
+func (k Keeper) GetUSTCUSDPrice(ctx sdk.Context) (sdk.Dec, error) {
+	return k.GetUSDPrice(ctx, core.MicroUSDDenom)
+}
+
+// IterateUSDPrices iterates over all stored exchange rates and yields their USD prices
+// The handler receives (denom, usdPrice). Returning true stops iteration.
+func (k Keeper) IterateUSDPrices(ctx sdk.Context, handler func(denom string, usdPrice sdk.Dec) (stop bool)) error {
+	// Always include uluna using canonical price computation
+	if price, err := k.GetUSDPrice(ctx, core.MicroLunaDenom); err == nil {
+		if handler(core.MicroLunaDenom, price) {
+			return nil
+		}
+	} else {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.ExchangeRateKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		denom := string(iter.Key()[len(types.ExchangeRateKey):])
+		// Skip duplicate entry if denom is uluna (already pushed)
+		if denom == core.MicroLunaDenom || denom == types.MetaUSDDenom || len(denom) == 0 || denom[0] != 'u' {
+			continue
+		}
+
+		usd, err := k.GetUSDPrice(ctx, denom)
+		if err != nil {
+			return err
+		}
+		if handler(denom, usd) {
+			break
+		}
+	}
+	return nil
+}
+
 // SetLunaExchangeRate sets the consensus exchange rate of Luna denominated in the denom asset to the store.
 func (k Keeper) SetLunaExchangeRate(ctx sdk.Context, denom string, exchangeRate sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)

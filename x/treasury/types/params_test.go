@@ -55,3 +55,29 @@ func TestParams(t *testing.T) {
 	require.NotNil(t, params.ParamSetPairs())
 	require.NotNil(t, params.String())
 }
+
+func TestParams_TaxRedirectRateValidation(t *testing.T) {
+    // default should be valid
+    params := DefaultParams()
+    require.NoError(t, params.Validate())
+
+    // negative invalid
+    params = DefaultParams()
+    params.TaxRedirectRate = sdk.NewDec(-1)
+    require.Error(t, params.Validate())
+
+    // greater than 1 invalid
+    params = DefaultParams()
+    params.TaxRedirectRate = sdk.MustNewDecFromStr("1.000000000000000001")
+    require.Error(t, params.Validate())
+
+    // exactly 0 valid
+    params = DefaultParams()
+    params.TaxRedirectRate = sdk.ZeroDec()
+    require.NoError(t, params.Validate())
+
+    // exactly 1 valid
+    params = DefaultParams()
+    params.TaxRedirectRate = sdk.OneDec()
+    require.NoError(t, params.Validate())
+}

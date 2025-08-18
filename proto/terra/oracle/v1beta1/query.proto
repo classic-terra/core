@@ -76,6 +76,16 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/oracle/v1beta1/params";
   }
+
+  // USDPrice returns USD price of a denom using the special meta-denom 'usd' as Luna/USD reference.
+  rpc USDPrice(QueryUSDPriceRequest) returns (QueryUSDPriceResponse) {
+    option (google.api.http).get = "/terra/oracle/v1beta1/denoms/{denom}/usd_price";
+  }
+
+  // USDPrices returns USD prices of all denoms
+  rpc USDPrices(QueryUSDPricesRequest) returns (QueryUSDPricesResponse) {
+    option (google.api.http).get = "/terra/oracle/v1beta1/denoms/usd_prices";
+  }
 }
 
 // QueryExchangeRateRequest is the request type for the Query/ExchangeRate RPC method.
@@ -256,4 +266,35 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryUSDPriceRequest is the request type for the Query/USDPrice RPC method.
+message QueryUSDPriceRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // denom defines the denomination to query for.
+  string denom = 1;
+}
+
+// QueryUSDPriceResponse is response type for the Query/USDPrice RPC method.
+message QueryUSDPriceResponse {
+  // usd_price defines the USD price of the denom
+  string usd_price = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// QueryUSDPricesRequest is the request type for the Query/USDPrices RPC method.
+message QueryUSDPricesRequest {}
+
+// QueryUSDPricesResponse is response type for the Query/USDPrices RPC method.
+message QueryUSDPricesResponse {
+  // usd_prices defines a list of USD prices for all denoms.
+  repeated cosmos.base.v1beta1.DecCoin usd_prices = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false
+  ];
 }

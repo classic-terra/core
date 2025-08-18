@@ -87,6 +87,10 @@ func ModifyGenesis() func(ibc.ChainConfig, []byte) ([]byte, error) {
 		if err := dyno.Set(g, signedBlocksWindow, "app_state", "slashing", "params", "signed_blocks_window"); err != nil {
 			return nil, fmt.Errorf("failed to set signed blocks window in genesis json: %w", err)
 		}
+		// Ensure treasury TaxRedirectRate is zero in ICTest environment to preserve legacy fee/tax expectations
+		if err := dyno.Set(g, "0.0", "app_state", "treasury", "params", "tax_redirect_rate"); err != nil {
+			return nil, fmt.Errorf("failed to set treasury TaxRedirectRate to 0.0: %w", err)
+		}
 		out, err := json.Marshal(g)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal genesis bytes to json: %w", err)

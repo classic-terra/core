@@ -47,6 +47,13 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  // tax_redirect_rate defines the fraction of post-oracle-split distribution redirected to the market accumulator
+  string tax_redirect_rate = 11 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.moretags)   = "yaml:\"tax_redirect_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // PolicyConstraints - defines policy constraints can be applied in tax & reward policies

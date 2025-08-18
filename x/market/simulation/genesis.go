@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/types"
 )
 
@@ -32,14 +33,21 @@ func GenPoolRecoveryPeriod(r *rand.Rand) uint64 {
 
 // GenMinSpread randomized MinSpread
 func GenMinSpread(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(100)), 3))
+	return sdk.NewDecWithPrec(int64(r.Intn(3)), 2)
+}
+
+// GenEpochLengthBlocks randomized EpochLengthBlocks
+func GenEpochLengthBlocks(r *rand.Rand) uint64 {
+	// between 7 and 60 days worth of blocks
+	days := 7 + r.Intn(54)
+	return uint64(days) * uint64(core.BlocksPerDay)
 }
 
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
 	var basePool sdk.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, basePoolKey, &basePool, simState.Rand,
+		simState.Cdc, string(types.KeyBasePool), &basePool, nil,
 		func(r *rand.Rand) { basePool = GenBasePool(r) },
 	)
 
@@ -51,17 +59,26 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var minStabilitySpread sdk.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, minStabilitySpreadKey, &minStabilitySpread, simState.Rand,
+		simState.Cdc, string(types.KeyMinStabilitySpread), &minStabilitySpread, nil,
 		func(r *rand.Rand) { minStabilitySpread = GenMinSpread(r) },
 	)
 
+	var epochLengthBlocks uint64
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, string(types.KeyEpochLengthBlocks), &epochLengthBlocks, nil,
+		func(r *rand.Rand) { epochLengthBlocks = GenEpochLengthBlocks(r) },
+	)
+
+	params := types.Params{
+		BasePool:           basePool,
+		PoolRecoveryPeriod: poolRecoveryPeriod,
+		MinStabilitySpread: minStabilitySpread,
+		EpochLengthBlocks:  epochLengthBlocks,
+	}
+
 	marketGenesis := types.NewGenesisState(
 		sdk.ZeroDec(),
-		types.Params{
-			BasePool:           basePool,
-			PoolRecoveryPeriod: poolRecoveryPeriod,
-			MinStabilitySpread: minStabilitySpread,
-		},
+		params,
 	)
 
 	bz, err := json.MarshalIndent(&marketGenesis.Params, "", " ")

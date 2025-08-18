@@ -45,3 +45,21 @@ func (s *MarketMsgServer) SwapSend(ctx context.Context, msg *markettypes.MsgSwap
 
 	return s.messageServer.SwapSend(ctx, msg)
 }
+
+// Swap handles MsgSwap with tax deduction
+func (s *MarketMsgServer) Swap(ctx context.Context, msg *markettypes.MsgSwap) (*markettypes.MsgSwapResponse, error) {
+    sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+    if !s.taxKeeper.IsReverseCharge(sdkCtx, true) {
+        return s.messageServer.Swap(ctx, msg)
+    }
+
+    sender := sdk.MustAccAddressFromBech32(msg.Trader)
+    netOfferCoin, err := s.taxKeeper.DeductTax(sdkCtx, sender, sdk.NewCoins(msg.OfferCoin), false)
+    if err != nil {
+        return nil, err
+    }
+    msg.OfferCoin = netOfferCoin[0]
+
+    return s.messageServer.Swap(ctx, msg)
+}

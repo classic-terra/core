@@ -75,6 +75,17 @@ func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdk.Dec) {
 	k.paramSpace.Set(ctx, types.KeyOracleSplit, oracleSplit)
 }
 
+// GetTaxRedirectRate returns the fraction of post-oracle-split distribution redirected to market accumulator
+func (k Keeper) GetTaxRedirectRate(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeyTaxRedirectRate, &res)
+	return
+}
+
+// SetTaxRedirectRate sets the tax redirect rate
+func (k Keeper) SetTaxRedirectRate(ctx sdk.Context, redirect sdk.Dec) {
+	k.paramSpace.Set(ctx, types.KeyTaxRedirectRate, redirect)
+}
+
 // GetParams returns the total set of treasury parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSetIfExists(ctx, &params)

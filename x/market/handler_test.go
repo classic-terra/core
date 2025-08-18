@@ -76,13 +76,13 @@ func TestSwapMsg(t *testing.T) {
 	_, err = h(input.Ctx, swapMsg)
 	require.Error(t, err)
 
-	// valid zero tobin tax test
+	// stable-to-stable swaps are disallowed by new guard, even with zero tobin tax
 	input.OracleKeeper.SetTobinTax(input.Ctx, core.MicroKRWDenom, sdk.ZeroDec())
 	input.OracleKeeper.SetTobinTax(input.Ctx, core.MicroSDRDenom, sdk.ZeroDec())
 	offerCoin = sdk.NewCoin(core.MicroSDRDenom, amt)
 	swapMsg = types.NewMsgSwap(keeper.Addrs[0], offerCoin, core.MicroKRWDenom)
 	_, err = h(input.Ctx, swapMsg)
-	require.NoError(t, err)
+	require.Error(t, err)
 }
 
 func TestSwapSendMsg(t *testing.T) {

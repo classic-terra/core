@@ -11,6 +11,15 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+// Meta denom for oracle-only reporting (not bank coin)
+const (
+	// MetaUSDDenom is a special denom used only by the oracle to represent the price of 1 USTC in USD (USD per USTC).
+	// If supplied by the feeder, it can be used as an anchor for alternative USTC price computations.
+	// Note: GetUSDPrice currently uses the legacy `uusd` rate (LUNA/USD) and does not rely on this meta denom.
+	// Renamed to uppercase "UST" for clarity and to distinguish from bank denoms.
+	MetaUSDDenom = "UST"
+)
+
 // Parameter keys
 var (
 	KeyVotePeriod               = []byte("VotePeriod")
@@ -40,6 +49,8 @@ var (
 		{Name: core.MicroSDRDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroUSDDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroMNTDenom, TobinTax: DefaultTobinTax.MulInt64(8)},
+		// Meta USD denom to carry USTC/USD directly; set TobinTax to 0
+		{Name: MetaUSDDenom, TobinTax: sdk.ZeroDec()},
 	}
 	DefaultSlashFraction     = sdk.NewDecWithPrec(1, 4) // 0.01%
 	DefaultMinValidPerWindow = sdk.NewDecWithPrec(5, 2) // 5%

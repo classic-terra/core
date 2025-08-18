@@ -25,6 +25,12 @@ func (k Keeper) PoolRecoveryPeriod(ctx sdk.Context) (res uint64) {
 	return
 }
 
+// EpochLengthBlocks is the number of blocks per market epoch (burn/refill cadence)
+func (k Keeper) EpochLengthBlocks(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, types.KeyEpochLengthBlocks, &res)
+	return
+}
+
 // GetParams returns the total set of market parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSetIfExists(ctx, &params)

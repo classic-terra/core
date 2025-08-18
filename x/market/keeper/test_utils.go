@@ -163,6 +163,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		distrtypes.ModuleName:          nil,
 		oracletypes.ModuleName:         nil,
 		types.ModuleName:               {authtypes.Burner, authtypes.Minter},
+		types.AccumulatorModuleName:    nil,
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
@@ -206,6 +207,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 	oracleAcc := authtypes.NewEmptyModuleAccount(oracletypes.ModuleName)
 	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner, authtypes.Minter)
+	marketAccumAcc := authtypes.NewEmptyModuleAccount(types.AccumulatorModuleName)
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs))))))
 	require.NoError(t, err)
@@ -216,6 +218,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, distrAcc)
 	accountKeeper.SetModuleAccount(ctx, oracleAcc)
 	accountKeeper.SetModuleAccount(ctx, marketAcc)
+	accountKeeper.SetModuleAccount(ctx, marketAccumAcc)
 
 	for _, addr := range Addrs {
 		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
@@ -249,6 +252,8 @@ func CreateTestInput(t *testing.T) TestInput {
 		oracleKeeper,
 	)
 	keeper.SetParams(ctx, types.DefaultParams())
+	// For tests, allow both USD and SDR to keep legacy tests working
+	keeper.SetAllowedSwapDenoms([]string{core.MicroUSDDenom, core.MicroSDRDenom})
 
 	return TestInput{ctx, legacyAmino, accountKeeper, bankKeeper, oracleKeeper, keeper}
 }

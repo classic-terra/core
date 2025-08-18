@@ -319,6 +319,8 @@ func TestTobinTaxGetSet(t *testing.T) {
 		core.MicroUSDDenom: sdk.NewDecWithPrec(1, 3),
 		core.MicroKRWDenom: sdk.NewDecWithPrec(123, 3),
 		core.MicroMNTDenom: sdk.NewDecWithPrec(1423, 4),
+		// Meta-denom anchor should be present with zero tobin tax
+		types.MetaUSDDenom: sdk.ZeroDec(),
 	}
 
 	for denom, tobinTax := range tobinTaxes {

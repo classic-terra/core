@@ -7,6 +7,7 @@ import (
 
 	"github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	core "github.com/classic-terra/core/v3/types"
 )
 
 type msgServer struct {
@@ -61,6 +62,17 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	trader sdk.AccAddress, receiver sdk.AccAddress,
 	offerCoin sdk.Coin, askDenom string,
 ) (*types.MsgSwapResponse, error) {
+	// Only allow swaps between uluna and denoms in the allowed set (spread-fee path only)
+	if !((offerCoin.Denom == core.MicroLunaDenom && k.isAllowedSwapDenom(askDenom)) ||
+		(askDenom == core.MicroLunaDenom && k.isAllowedSwapDenom(offerCoin.Denom))) {
+		return nil, types.ErrInvalidSwapPair
+	}
+
+	// Oracle guard: require Luna/USD meta rate to be present
+	if _, err := k.OracleKeeper.GetLunaExchangeRate(ctx, oracletypes.MetaUSDDenom); err != nil {
+		return nil, types.ErrNoEffectivePrice
+	}
+
 	// Compute exchange rates between the ask and offer
 	swapDecCoin, spread, err := k.ComputeSwap(ctx, offerCoin, askDenom)
 	if err != nil {
@@ -78,26 +90,19 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	// Subtract fee from the swap coin
 	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
 
-	// Update pool delta
-	err = k.ApplySwapToPool(ctx, offerCoin, swapDecCoin)
-	if err != nil {
+	// Update pool delta (virtual pool mechanics maintained)
+	if err := k.ApplySwapToPool(ctx, offerCoin, swapDecCoin); err != nil {
 		return nil, err
 	}
 
-	// Send offer coins to module account
+	// Bring offer coins into the market pool (module account)
 	offerCoins := sdk.NewCoins(offerCoin)
 	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, trader, types.ModuleName, offerCoins)
 	if err != nil {
 		return nil, err
 	}
 
-	// Burn offered coins and subtract from the trader's account
-	err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, offerCoins)
-	if err != nil {
-		return nil, err
-	}
-
-	// Mint asked coins and credit Trader's account
+	// Determine amounts to transfer out of the pool
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
 
 	// Ensure to fail the swap tx when zero swap coin
@@ -108,25 +113,33 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	feeDecCoin = feeDecCoin.Add(decimalCoin) // add truncated decimalCoin to swapFee
 	feeCoin, _ := feeDecCoin.TruncateDecimal()
 
-	mintCoins := sdk.NewCoins(swapCoin.Add(feeCoin))
-	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, mintCoins)
-	if err != nil {
+	// Check pool liquidity for ask denom: must cover swapCoin + feeCoin (fee will be split out)
+	poolBal := k.BankKeeper.GetBalance(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), swapCoin.Denom)
+	requiredOut := swapCoin.Amount.Add(feeCoin.Amount)
+	if poolBal.Amount.LT(requiredOut) {
+		return nil, types.ErrInsufficientLiquidity
+	}
+
+	// Transfer swap coin to receiver
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(sdk.NewCoin(swapCoin.Denom, swapCoin.Amount))); err != nil {
 		return nil, err
 	}
 
-	// Send swap coin to the trader
-	swapCoins := sdk.NewCoins(swapCoin)
-	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, swapCoins)
-	if err != nil {
-		return nil, err
-	}
-
-	// Send swap fee to oracle account
+	// Split fee: 50% burn, 50% to oracle
 	if feeCoin.IsPositive() {
-		feeCoins := sdk.NewCoins(feeCoin)
-		err = k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, oracletypes.ModuleName, feeCoins)
-		if err != nil {
-			return nil, err
+		half := feeCoin.Amount.QuoRaw(2)
+		burnAmt := half
+		oracleAmt := feeCoin.Amount.Sub(half) // remainder to oracle to avoid dust issues
+
+		if burnAmt.IsPositive() {
+			if err := k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(feeCoin.Denom, burnAmt))); err != nil {
+				return nil, err
+			}
+		}
+		if oracleAmt.IsPositive() {
+			if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, oracletypes.ModuleName, sdk.NewCoins(sdk.NewCoin(feeCoin.Denom, oracleAmt))); err != nil {
+				return nil, err
+			}
 		}
 	}
 

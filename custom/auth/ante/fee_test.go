@@ -973,6 +973,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			// Set burn split rate to 50%
 			// oracle split to 0% (oracle split is covered in another test)
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+			// Ensure no redirect for this focused test
+			tk.SetTaxRedirectRate(s.ctx, sdk.ZeroDec())
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1171,6 +1173,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 
 			// Set burn split rate to 50%
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+			// Disable market redirect in this test suite to keep legacy expectations
+			tk.SetTaxRedirectRate(s.ctx, sdk.ZeroDec())
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1347,6 +1351,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 
 			// Set burn split rate to 50%
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
+			// Disable market redirect so fees/taxes remain at FeeCollector per legacy expectations
+			tk.SetTaxRedirectRate(s.ctx, sdk.ZeroDec())
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1416,32 +1422,30 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 	}
 }
 
-// go test -v -run ^TestAnteTestSuite/TestBurnSplitTax$ github.com/classic-terra/core/v3/custom/auth/ante
 func (s *AnteTestSuite) TestBurnSplitTax() {
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 100% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 10% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0.1% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 100% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 10% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 0.1% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 0% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 100% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 10% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0.1% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 100% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 10% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 0.1% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 0% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.OneDec(), sdk.NewDecWithPrec(5, 2))             // 0.1% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 2))             // 0% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.OneDec(), sdk.NewDecWithPrec(1, 1))             // 0.1% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.OneDec(), sdk.NewDecWithPrec(1, 2))             // 0% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))           // -10% distribute - invalid rate
+	// No market redirect
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec())            // 100% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec())            // 10% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec())            // 0.1% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec())            // 0% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec()) // 100% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec()) // 10% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec()) // 0.1% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec()) // 0% distribute, 50% to oracle
+	// With market redirect at 50%
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 100% distribute, 50% redirect
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 10% distribute, 50% redirect
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 0.1% distribute, 50% redirect
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 0% distribute, 50% redirect
+	// With oracle 100% and market 50% (redirect applies to remainder after oracle)
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 100% distribute, 100% to oracle, 50% market of remainder (0)
+	// Extreme: market 100%
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.OneDec()) // 100% distribute, 100% redirect
+	// Validation: invalid burn split
+	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1), sdk.ZeroDec()) // -10% distribute - invalid rate
 }
 
-func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRate sdk.Dec, communityTax sdk.Dec) {
+func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRate sdk.Dec, communityTax sdk.Dec, marketRedirectRate sdk.Dec) {
 	s.SetupTest(true) // setup
 	require := s.Require()
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1457,9 +1461,10 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	postHandler := sdk.ChainPostDecorators(pd)
 
-	// Set burn split tax
+	// Set burn split tax and redirect
 	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
+	tk.SetTaxRedirectRate(s.ctx, marketRedirectRate)
 
 	// Set community tax
 	dkParams := dk.GetParams(s.ctx)
@@ -1497,17 +1502,8 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	// Set IsCheckTx to true
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	// feeCollector := ak.GetModuleAccount(s.ctx, authtypes.FeeCollectorName)
-
-	// amountFeeBefore := bk.GetAllBalances(s.ctx, feeCollector.GetAddress())
-
 	totalSupplyBefore, _, err := bk.GetPaginatedTotalSupply(s.ctx, &query.PageRequest{})
 	require.NoError(err)
-	/*fmt.Printf(
-		"Before: TotalSupply %v, FeeCollector %v\n",
-		totalSupplyBefore,
-		amountFeeBefore,
-	)*/
 
 	// send tx to BurnTaxFeeDecorator antehandler
 	newCtx, err := antehandler(s.ctx, tx, false)
@@ -1520,21 +1516,36 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 
 	feeCollectorAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))
 	oracleAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(oracletypes.ModuleName))
+	marketAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(markettypes.AccumulatorModuleName))
 	taxes, _ := ante.FilterMsgAndComputeTax(s.ctx, te, tk, th, false, msg)
 	communityPoolAfter, _ := dk.GetFeePoolCommunityCoins(s.ctx).TruncateDecimal()
 	if communityPoolAfter.IsZero() {
 		communityPoolAfter = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.ZeroInt()))
 	}
 
-	// burnTax := sdk.NewDecCoinsFromCoins(taxes...)
-	// in the burn tax split function, coins and not deccoins are used, which leads to rounding differences
-	// when comparing to the test with very small numbers, accordingly all deccoin calculations are changed to coins
 	burnTax := taxes
+	// Always remove market redirect from burn amount if applicable
+	if marketRedirectRate.IsPositive() {
+		fullTaxForBurn := taxes.AmountOf(core.MicroSDRDenom)
+		redirected := marketRedirectRate.MulInt(fullTaxForBurn).RoundInt()
+		if redirected.IsPositive() {
+			burnTax = burnTax.Sub(sdk.NewCoin(core.MicroSDRDenom, redirected))
+		}
+	}
 
 	if burnSplitRate.IsPositive() {
-		distributionDeltaCoins := burnSplitRate.MulInt(burnTax.AmountOf(core.MicroSDRDenom)).RoundInt()
-		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Sub(communityTax).Add(sdk.OneDec())))
+		// Market redirect is applied FIRST from the full tax
+		fullTax := taxes.AmountOf(core.MicroSDRDenom)
+		expectedMarketCoins := marketRedirectRate.MulInt(fullTax).RoundInt()
+		postMarketTax := fullTax.Sub(expectedMarketCoins)
 
+		// Distribution portion is taken from post-market base
+		distributionDeltaCoins := burnSplitRate.MulInt(postMarketTax).RoundInt()
+
+		// Community tax adjustment (same formula as keeper)
+		applyCommunityTax := communityTax.Mul(
+			oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Add(sdk.OneDec()).Sub(communityTax)),
+		)
 		expectedCommunityCoins := applyCommunityTax.MulInt(distributionDeltaCoins).RoundInt()
 		distributionDeltaCoins = distributionDeltaCoins.Sub(expectedCommunityCoins)
 
@@ -1545,8 +1556,11 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 		// fmt.Printf("-- sendCoins %+v, BurnTax %+v, BurnSplitRate %+v, OracleSplitRate %+v, CommunityTax %+v, CTaxApplied %+v, OracleCoins %+v, DistrCoins %+v\n", sendCoins.AmountOf(core.MicroSDRDenom), taxRate, burnSplitRate, oracleSplitRate, communityTax, applyCommunityTax, expectedOracleCoins, expectedDistrCoins)
 		require.Equal(feeCollectorAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedDistrCoins)))
 		require.Equal(oracleAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedOracleCoins)))
+		require.Equal(marketAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedMarketCoins)))
 		require.Equal(communityPoolAfter, sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, expectedCommunityCoins)))
-		burnTax = burnTax.Sub(sdk.NewCoin(core.MicroSDRDenom, distributionDeltaCoins)).Sub(sdk.NewCoin(core.MicroSDRDenom, expectedCommunityCoins))
+		burnTax = burnTax.
+			Sub(sdk.NewCoin(core.MicroSDRDenom, distributionDeltaCoins)).
+			Sub(sdk.NewCoin(core.MicroSDRDenom, expectedCommunityCoins))
 	}
 
 	// check tax proceeds
@@ -1576,12 +1590,6 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 			burnTax,
 		)
 	}
-
-	/*fmt.Printf(
-		"After: TotalSupply %v, FeeCollector %v\n",
-		totalSupplyAfter,
-		feeCollectorAfter,
-	)*/
 }
 
 // go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v3/custom/auth/ante

@@ -23,6 +23,7 @@ type Keeper struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	OracleKeeper  types.OracleKeeper
+	DistrKeeper   types.DistributionKeeper
 
 	// allowedSwapDenoms contains denoms that are allowed to be swapped with uluna
 	// This is kept in-memory (not a chain param) so tests can differ from live defaults.
@@ -37,6 +38,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	oracleKeeper types.OracleKeeper,
+	distrKeeper types.DistributionKeeper,
 ) Keeper {
 	// ensure market module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -60,6 +62,7 @@ func NewKeeper(
 		AccountKeeper:     accountKeeper,
 		BankKeeper:        bankKeeper,
 		OracleKeeper:      oracleKeeper,
+		DistrKeeper:       distrKeeper,
 		allowedSwapDenoms: allowed,
 	}
 }

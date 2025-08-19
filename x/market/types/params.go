@@ -21,6 +21,10 @@ var (
 	KeyMinStabilitySpread = []byte("MinStabilitySpread")
 	// EpochLengthBlocks governs how many blocks constitute a market epoch
 	KeyEpochLengthBlocks = []byte("EpochLengthBlocks")
+	// Fraction of swap fee to burn
+	KeySwapFeeBurnRate = []byte("SwapFeeBurnRate")
+	// Fraction of swap fee to send to Community Pool
+	KeySwapFeeCommunityRate = []byte("SwapFeeCommunityRate")
 )
 
 // Default parameter values
@@ -29,6 +33,9 @@ var (
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
 	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
 	DefaultEpochLengthBlocks  = uint64(30 * core.BlocksPerDay)       // 30 days worth of blocks
+	// Default fee distribution: 0% burn, 0% community pool, 100% to oracle (remainder)
+	DefaultSwapFeeBurnRate      = sdk.ZeroDec()
+	DefaultSwapFeeCommunityRate = sdk.ZeroDec()
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -36,10 +43,12 @@ var _ paramstypes.ParamSet = &Params{}
 // DefaultParams creates default market module parameters
 func DefaultParams() Params {
 	return Params{
-		BasePool:           DefaultBasePool,
-		PoolRecoveryPeriod: DefaultPoolRecoveryPeriod,
-		MinStabilitySpread: DefaultMinStabilitySpread,
-		EpochLengthBlocks:  DefaultEpochLengthBlocks,
+		BasePool:             DefaultBasePool,
+		PoolRecoveryPeriod:   DefaultPoolRecoveryPeriod,
+		MinStabilitySpread:   DefaultMinStabilitySpread,
+		EpochLengthBlocks:    DefaultEpochLengthBlocks,
+		SwapFeeBurnRate:      DefaultSwapFeeBurnRate,
+		SwapFeeCommunityRate: DefaultSwapFeeCommunityRate,
 	}
 }
 
@@ -62,6 +71,8 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyPoolRecoveryPeriod, &p.PoolRecoveryPeriod, validatePoolRecoveryPeriod),
 		paramstypes.NewParamSetPair(KeyMinStabilitySpread, &p.MinStabilitySpread, validateMinStabilitySpread),
 		paramstypes.NewParamSetPair(KeyEpochLengthBlocks, &p.EpochLengthBlocks, validateEpochLengthBlocks),
+		paramstypes.NewParamSetPair(KeySwapFeeBurnRate, &p.SwapFeeBurnRate, validateFraction),
+		paramstypes.NewParamSetPair(KeySwapFeeCommunityRate, &p.SwapFeeCommunityRate, validateFraction),
 	}
 }
 
@@ -78,6 +89,17 @@ func (p Params) Validate() error {
 	}
 	if p.EpochLengthBlocks == 0 {
 		return fmt.Errorf("epoch length blocks should be positive, is %d", p.EpochLengthBlocks)
+	}
+
+	// Fee distribution fractions must be within [0,1] and sum <= 1
+	if err := validateFraction(p.SwapFeeBurnRate); err != nil {
+		return fmt.Errorf("swap fee burn rate invalid: %w", err)
+	}
+	if err := validateFraction(p.SwapFeeCommunityRate); err != nil {
+		return fmt.Errorf("swap fee community rate invalid: %w", err)
+	}
+	if p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate).GT(sdk.OneDec()) {
+		return fmt.Errorf("sum of burn and community rates must be <= 1: %s", p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate))
 	}
 
 	return nil
@@ -134,6 +156,21 @@ func validateEpochLengthBlocks(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("epoch length blocks must be positive: %d", v)
+	}
+	return nil
+}
+
+// validateFraction ensures a decimal is in [0, 1]
+func validateFraction(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("fraction must be >= 0: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("fraction must be <= 1: %s", v)
 	}
 	return nil
 }

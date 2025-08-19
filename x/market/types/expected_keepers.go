@@ -27,6 +27,11 @@ type BankKeeper interface {
 	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
 }
 
+// DistributionKeeper defines expected methods from the distribution module
+type DistributionKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
 // OracleKeeper defines expected oracle keeper
 type OracleKeeper interface {
 	GetLunaExchangeRate(ctx sdk.Context, denom string) (price sdk.Dec, err error)

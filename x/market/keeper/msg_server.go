@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	core "github.com/classic-terra/core/v3/types"
 )
 
 type msgServer struct {
@@ -125,15 +125,24 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
-	// Split fee: 50% burn, 50% to oracle
-	// TODO: this should be a governance parameter, maybe also including community pool
+	// Split fee according to governance parameters: burn, community pool, remainder to oracle
 	if feeCoin.IsPositive() {
-		half := feeCoin.Amount.QuoRaw(2)
-		burnAmt := half
-		oracleAmt := feeCoin.Amount.Sub(half) // remainder to oracle to avoid dust issues
+		burnRate := k.SwapFeeBurnRate(ctx)
+		cpRate := k.SwapFeeCommunityRate(ctx)
+		// compute amounts: floor for burn and CP; remainder to oracle
+		feeAmtDec := sdk.NewDecFromInt(feeCoin.Amount)
+		burnAmt := burnRate.Mul(feeAmtDec).TruncateInt()
+		cpAmt := cpRate.Mul(feeAmtDec).TruncateInt()
+		oracleAmt := feeCoin.Amount.Sub(burnAmt).Sub(cpAmt)
 
 		if burnAmt.IsPositive() {
 			if err := k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(feeCoin.Denom, burnAmt))); err != nil {
+				return nil, err
+			}
+		}
+		if cpAmt.IsPositive() {
+			// Fund community pool from market module account
+			if err := k.DistrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeCoin.Denom, cpAmt)), k.AccountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
 				return nil, err
 			}
 		}

@@ -342,7 +342,7 @@ func NewAppKeepers(
 	appKeepers.MarketKeeper = marketkeeper.NewKeeper(
 		appCodec, appKeepers.keys[markettypes.StoreKey],
 		appKeepers.GetSubspace(markettypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.OracleKeeper,
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.OracleKeeper, appKeepers.DistrKeeper,
 	)
 	appKeepers.TreasuryKeeper = treasurykeeper.NewKeeper(
 		appCodec, appKeepers.keys[treasurytypes.StoreKey],

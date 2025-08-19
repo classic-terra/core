@@ -26,4 +26,20 @@ message Params {
   ];
   // Number of blocks per epoch for market burn/refill. Default: 30 days worth of blocks.
   uint64 epoch_length_blocks = 4 [(gogoproto.moretags) = "yaml:\"epoch_length_blocks\""];
+  
+  // Fraction of swap fee to burn [0,1]
+  bytes swap_fee_burn_rate = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.moretags)   = "yaml:\"swap_fee_burn_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Fraction of swap fee to send to Community Pool [0,1]
+  bytes swap_fee_community_rate = 6 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.moretags)   = "yaml:\"swap_fee_community_rate\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

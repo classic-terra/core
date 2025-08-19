@@ -250,6 +250,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		accountKeeper,
 		bankKeeper,
 		oracleKeeper,
+		distrKeeper,
 	)
 	keeper.SetParams(ctx, types.DefaultParams())
 	// For tests, allow both USD and SDR to keep legacy tests working

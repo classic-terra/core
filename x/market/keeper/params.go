@@ -31,6 +31,18 @@ func (k Keeper) EpochLengthBlocks(ctx sdk.Context) (res uint64) {
 	return
 }
 
+// SwapFeeBurnRate returns the fraction [0,1] of the swap fee that should be burned
+func (k Keeper) SwapFeeBurnRate(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeySwapFeeBurnRate, &res)
+	return
+}
+
+// SwapFeeCommunityRate returns the fraction [0,1] of the swap fee that should be sent to the Community Pool
+func (k Keeper) SwapFeeCommunityRate(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeySwapFeeCommunityRate, &res)
+	return
+}
+
 // GetParams returns the total set of market parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSetIfExists(ctx, &params)

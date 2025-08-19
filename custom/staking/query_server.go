@@ -38,7 +38,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 
 	// Only set legacy params for pre-upgrade heights
 	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	sdkCtx.Logger().Info("Setting legacy params for pre-upgrade height queries",
+	sdkCtx.Logger().Debug("Setting legacy params for pre-upgrade height queries",
 		"block_height", sdkCtx.BlockHeight(),
 		"legacy_mode", legacyMode,
 		"chain_id", sdkCtx.ChainID(),
@@ -63,7 +63,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		})
 
 		// Return updated context
-		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
+		sdkCtx.Logger().Debug("Legacy params set for pre-upgrade height queries",
 			"block_height", sdkCtx.BlockHeight(),
 			"chain_id", sdkCtx.ChainID(),
 			"params", params,
@@ -85,7 +85,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 		q.keeper.SetParams(sdkCtx, params)
 
 		// Return updated context
-		sdkCtx.Logger().Info("Legacy params set for pre-upgrade height queries",
+		sdkCtx.Logger().Debug("Legacy params set for pre-upgrade height queries",
 			"block_height", sdkCtx.BlockHeight(),
 			"chain_id", sdkCtx.ChainID(),
 			"params", params,

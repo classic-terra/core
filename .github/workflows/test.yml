@@ -61,6 +61,7 @@ jobs:
       - name: test liveness
         run: |
           ./contrib/localnet/localnet_liveness.sh 100 3 30 localhost
+          ./contrib/localnet/api-regression-test.sh 10 3 localhost
         if: env.GIT_DIFF
   upgrade-test:
     runs-on: ubuntu-latest

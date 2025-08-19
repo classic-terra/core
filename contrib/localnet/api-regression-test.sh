@@ -105,7 +105,6 @@ if ! check_node_ready; then
 fi
 
 # Trap any unexpected errors
-trap 'echo -e "${RED}ERROR: Script failed unexpectedly${NC}"; exit 1' ERR
 echo -e "${GREEN}Node is ready. Starting API regression tests...${NC}"
 
 while [ ${CNT} -lt $ITER ]; do

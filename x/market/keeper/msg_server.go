@@ -90,12 +90,12 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	// Subtract fee from the swap coin
 	swapDecCoin.Amount = swapDecCoin.Amount.Sub(feeDecCoin.Amount)
 
-	// Update pool delta (virtual pool mechanics maintained)
+	// Update pool delta
 	if err := k.ApplySwapToPool(ctx, offerCoin, swapDecCoin); err != nil {
 		return nil, err
 	}
 
-	// Bring offer coins into the market pool (module account)
+	// Send offer coins to module account
 	offerCoins := sdk.NewCoins(offerCoin)
 	err = k.BankKeeper.SendCoinsFromAccountToModule(ctx, trader, types.ModuleName, offerCoins)
 	if err != nil {
@@ -126,6 +126,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	}
 
 	// Split fee: 50% burn, 50% to oracle
+	// TODO: this should be a governance parameter, maybe also including community pool
 	if feeCoin.IsPositive() {
 		half := feeCoin.Amount.QuoRaw(2)
 		burnAmt := half

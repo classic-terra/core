@@ -91,11 +91,9 @@ func (k Keeper) GetLunaExchangeRate(ctx sdk.Context, denom string) (sdk.Dec, err
 }
 
 // GetUSDPrice returns the USD price of a given denom using oracle exchange rates.
-// Convention:
 // - Oracle rates are stored as (denom per 1 LUNA, e.g. the exchange rate for uusd is stored as 1 uusd per 1 uluna).
 // - Meta-denom types.MetaUSDDenom ("UST") stores (USD per 1 USTC).
 // Derivation:
-//
 //	U = GetLunaExchangeRate(ctx, types.MetaUSDDenom)  // USD per 1 USTC (meta-denom), used only when denom == uusd
 //	R = GetLunaExchangeRate(ctx, core.MicroUSDDenom)  // USD per 1 LUNA (feeder reports uusd per 1 LUNA numerically as USD/Luna)
 //

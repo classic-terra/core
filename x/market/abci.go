@@ -11,6 +11,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// Epoch processing: burn leftover and refill market pool if epoch elapsed
 	k.ProcessEpochIfDue(ctx)
 
-	// Replenishes virtual pools towards equilibrium
+	// Replenishes each pools towards equilibrium
 	k.ReplenishPools(ctx)
 }

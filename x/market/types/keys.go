@@ -22,8 +22,8 @@ const (
 //
 // - 0x01: sdk.Dec
 var (
-	// TerraPoolDeltaKey represents terra seigniorage pool.
-	TerraPoolDeltaKey = []byte{0x01}
+	// Keys for store prefixed
+	TerraPoolDeltaKey = []byte{0x01} // key for terra pool delta which gap between MintPool from BasePool
 
 	// EpochLastHeightKey stores the last block height when an epoch processing occurred
 	EpochLastHeightKey = []byte{0x20}

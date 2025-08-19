@@ -27,11 +27,17 @@ type txServer struct {
 }
 
 // NewTxServer creates a new Tx service server.
-func NewTxServer(clientCtx client.Context, treasuryKeeper customante.TreasuryKeeper, taxKeeper customante.TaxKeeper) ServiceServer {
+func NewTxServer(
+	clientCtx client.Context,
+	treasuryKeeper customante.TreasuryKeeper,
+	taxExemptionKeeper taxexemptionkeeper.Keeper,
+	taxKeeper customante.TaxKeeper,
+) ServiceServer {
 	return txServer{
-		clientCtx:      clientCtx,
-		treasuryKeeper: treasuryKeeper,
-		taxKeeper:      taxKeeper,
+		clientCtx:          clientCtx,
+		treasuryKeeper:     treasuryKeeper,
+		taxexemptionKeeper: taxExemptionKeeper,
+		taxKeeper:          taxKeeper,
 	}
 }
 
@@ -67,11 +73,12 @@ func RegisterTxService(
 	qrt gogogrpc.Server,
 	clientCtx client.Context,
 	treasuryKeeper customante.TreasuryKeeper,
+	taxExemptionKeeper taxexemptionkeeper.Keeper,
 	taxKeeper customante.TaxKeeper,
 ) {
 	RegisterServiceServer(
 		qrt,
-		NewTxServer(clientCtx, treasuryKeeper, taxKeeper),
+		NewTxServer(clientCtx, treasuryKeeper, taxExemptionKeeper, taxKeeper),
 	)
 }
 

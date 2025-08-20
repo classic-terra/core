@@ -50,6 +50,7 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            .github/workflows/*.yml
       # Enable BuildKit
       - name: Set BuildKit environment variable
         run: |

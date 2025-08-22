@@ -59,22 +59,37 @@ func TestComputeTaxes_SkipBondDenom(t *testing.T) {
 	require.True(t, taxes.Empty(), "bond denom must be skipped")
 }
 
+// computeTaxOldBrokenWay simulates the old keeper.ComputeTax logic that had the regression
+func computeTaxOldBrokenWay(amount sdk.Coins, burnTaxRate sdk.Dec) sdk.Coins {
+	taxes := sdk.Coins{}
+	for _, coin := range amount {
+		taxAmount := sdk.NewDecFromInt(coin.Amount).Mul(burnTaxRate).TruncateInt()
+		if taxAmount.IsPositive() {
+			taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxAmount))
+		}
+	}
+	return taxes
+}
+
 // TestComputeTaxes_ContractRegressionFix verifies that IBC tokens are not taxed
 // in contract reverse charge scenarios (the original regression case)
 func TestComputeTaxes_ContractRegressionFix(t *testing.T) {
 	ctx := sdk.Context{}
 	ibcDenom := "ibc/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	taxRate := sdk.NewDecWithPrec(1, 2) // 1%
 	
 	// Test the scenario that was broken: contract interaction with IBC tokens
 	contractFunds := sdk.NewCoins(sdk.NewInt64Coin(ibcDenom, 1_000_000))
-	taxRate := sdk.NewDecWithPrec(1, 2) // 1%
 	
-	// This is what keeper.ComputeTax() now calls (unified logic)
-	taxes := ComputeTaxes(ctx, contractFunds, taxRate, false, mockCaps{})
+	// Demonstrate the old broken behavior would have taxed IBC tokens
+	oldBrokenTaxes := computeTaxOldBrokenWay(contractFunds, taxRate)
+	require.False(t, oldBrokenTaxes.Empty(), "old logic incorrectly taxed IBC tokens - this confirms the regression existed")
 	
-	require.True(t, taxes.Empty(), "IBC tokens must not be taxed in contract interactions")
+	// Verify the fix: new unified logic excludes IBC tokens
+	newFixedTaxes := ComputeTaxes(ctx, contractFunds, taxRate, false, mockCaps{})
+	require.True(t, newFixedTaxes.Empty(), "IBC tokens must not be taxed in contract interactions")
 	
-	// Verify regular tokens are still taxed
+	// Verify regular tokens are still taxed correctly
 	regularFunds := sdk.NewCoins(sdk.NewInt64Coin("uluna", 1_000_000))
 	caps := mockCaps{caps: map[string]cosmosmath.Int{"uluna": cosmosmath.NewInt(1_000_000)}}
 	regularTaxes := ComputeTaxes(ctx, regularFunds, taxRate, false, caps)

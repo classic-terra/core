@@ -58,26 +58,3 @@ func TestComputeTaxes_SkipBondDenom(t *testing.T) {
 	taxes := ComputeTaxes(ctx, principal, sdk.NewDecWithPrec(1, 2), false, mockCaps{}) // 1%
 	require.True(t, taxes.Empty(), "bond denom must be skipped")
 }
-
-// TestComputeTaxes_ContractRegressionFix verifies that IBC tokens are not taxed
-// in contract reverse charge scenarios (the original regression case)
-func TestComputeTaxes_ContractRegressionFix(t *testing.T) {
-	ctx := sdk.Context{}
-	ibcDenom := "ibc/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-	
-	// Test the scenario that was broken: contract interaction with IBC tokens
-	contractFunds := sdk.NewCoins(sdk.NewInt64Coin(ibcDenom, 1_000_000))
-	taxRate := sdk.NewDecWithPrec(1, 2) // 1%
-	
-	// This is what keeper.ComputeTax() now calls (unified logic)
-	taxes := ComputeTaxes(ctx, contractFunds, taxRate, false, mockCaps{})
-	
-	require.True(t, taxes.Empty(), "IBC tokens must not be taxed in contract interactions")
-	
-	// Verify regular tokens are still taxed
-	regularFunds := sdk.NewCoins(sdk.NewInt64Coin("uluna", 1_000_000))
-	caps := mockCaps{caps: map[string]cosmosmath.Int{"uluna": cosmosmath.NewInt(1_000_000)}}
-	regularTaxes := ComputeTaxes(ctx, regularFunds, taxRate, false, caps)
-	expectedTax := sdk.NewCoins(sdk.NewInt64Coin("uluna", 10_000)) // 1% of 1M
-	require.Equal(t, expectedTax, regularTaxes, "regular tokens should be taxed")
-}

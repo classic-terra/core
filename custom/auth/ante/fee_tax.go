@@ -74,5 +74,5 @@ func FilterMsgAndComputeTax(ctx sdk.Context, te taxexemptionkeeper.Keeper, tk Tr
 
 // computes the stability tax according to tax-rate and tax-cap
 func computeTax(ctx sdk.Context, tk TreasuryKeeper, th TaxKeeper, principal sdk.Coins, simulate bool) sdk.Coins {
-    return taxtypes.ComputeTaxes(ctx, principal, th.GetBurnTaxRate(ctx), simulate, tk)
+	return taxtypes.ComputeTaxes(ctx, principal, th.GetBurnTaxRate(ctx), simulate, tk)
 }

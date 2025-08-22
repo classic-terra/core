@@ -79,8 +79,8 @@ func (k Keeper) GetBurnTaxRate(ctx sdk.Context) sdk.Dec {
 }
 
 func (k Keeper) ComputeTax(ctx sdk.Context, amount sdk.Coins) sdk.Coins {
-    // use unified tax computation logic; simulate=false in keeper context
-    return types.ComputeTaxes(ctx, amount, k.GetBurnTaxRate(ctx), false, k.treasuryKeeper)
+	// use unified tax computation logic; simulate=false in keeper context
+	return types.ComputeTaxes(ctx, amount, k.GetBurnTaxRate(ctx), false, k.treasuryKeeper)
 }
 
 // DeductTax deducts tax from the sender and processes tax splits

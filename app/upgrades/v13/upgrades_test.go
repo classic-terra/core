@@ -587,3 +587,121 @@ func (s *UpgradeTestSuite) TestIterateContractHistoryWithFallback() {
 
 	s.Require().Equal(2, count, "Should stop iteration early when callback returns false")
 }
+
+// TestReadContractInfoWithFallback verifies reading contract info across prefixes
+func (s *UpgradeTestSuite) TestReadContractInfoWithFallback() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	s.Require().NoError(stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	addr := bytes.Repeat([]byte{0xAA}, 20)
+	lengthPrefixedAddr := append([]byte{20}, addr...)
+
+	// Encode a minimal ContractInfo
+	info := wasmtypes.ContractInfo{CodeID: 7}
+	bz, err := info.Marshal()
+	s.Require().NoError(err)
+
+	// Case 1: Only new prefix
+	kvStore.Set(append([]byte{0x02}, addr...), bz)
+	v, ok := v13.ReadContractInfoWithFallback(kvStore, addr)
+	s.Require().True(ok)
+	s.Require().Equal(bz, v)
+	kvStore.Delete(append([]byte{0x02}, addr...))
+
+	// Case 2: Only old prefix without length prefix
+	kvStore.Set(append([]byte{0x04}, addr...), bz)
+	v, ok = v13.ReadContractInfoWithFallback(kvStore, addr)
+	s.Require().True(ok)
+	s.Require().Equal(bz, v)
+	kvStore.Delete(append([]byte{0x04}, addr...))
+
+	// Case 3: Old prefix with length-prefixed address
+	kvStore.Set(append([]byte{0x04}, lengthPrefixedAddr...), bz)
+	v, ok = v13.ReadContractInfoWithFallback(kvStore, addr)
+	s.Require().True(ok)
+	s.Require().Equal(bz, v)
+}
+
+// TestReadRawContractStateWithFallback verifies single key reads across prefixes
+func (s *UpgradeTestSuite) TestReadRawContractStateWithFallback() {
+	// Setup
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	s.Require().NoError(stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	addr := bytes.Repeat([]byte{0xAB}, 20)
+	lengthPrefixedAddr := append([]byte{20}, addr...)
+	key := []byte{0x01, 0x02}
+	val := []byte("value")
+
+	// Case 1: New prefix
+	kvStore.Set(append(append([]byte{0x03}, addr...), key...), val)
+	v, ok := v13.ReadRawContractStateWithFallback(kvStore, addr, key)
+	s.Require().True(ok)
+	s.Require().Equal(val, v)
+	kvStore.Delete(append(append([]byte{0x03}, addr...), key...))
+
+	// Case 2: Old prefix without length prefix
+	kvStore.Set(append(append([]byte{0x05}, addr...), key...), val)
+	v, ok = v13.ReadRawContractStateWithFallback(kvStore, addr, key)
+	s.Require().True(ok)
+	s.Require().Equal(val, v)
+	kvStore.Delete(append(append([]byte{0x05}, addr...), key...))
+
+	// Case 3: Old prefix with length-prefixed address
+	kvStore.Set(append(append([]byte{0x05}, lengthPrefixedAddr...), key...), val)
+	v, ok = v13.ReadRawContractStateWithFallback(kvStore, addr, key)
+	s.Require().True(ok)
+	s.Require().Equal(val, v)
+}
+
+// TestIterateAllContractStateWithFallback verifies iteration across prefixes
+func (s *UpgradeTestSuite) TestIterateAllContractStateWithFallback() {
+	// Setup
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	s.Require().NoError(stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	addr := bytes.Repeat([]byte{0xAC}, 20)
+	lengthPrefixedAddr := append([]byte{20}, addr...)
+
+	// Populate new prefix entries
+	kvStore.Set(append(append([]byte{0x03}, addr...), []byte{0x01}...), []byte("v1"))
+	kvStore.Set(append(append([]byte{0x03}, addr...), []byte{0x02}...), []byte("v2"))
+
+	// Populate old prefix entries (should be skipped if duplicate keys)
+	kvStore.Set(append(append([]byte{0x05}, addr...), []byte{0x02}...), []byte("old-v2"))
+
+	// Populate old prefix with length-prefixed address
+	kvStore.Set(append(append([]byte{0x05}, lengthPrefixedAddr...), []byte{0x03}...), []byte("v3"))
+
+	var keys [][]byte
+	var values [][]byte
+	v13.IterateAllContractStateWithFallback(kvStore, addr, func(k, v []byte) bool {
+		keys = append(keys, append([]byte{}, k...))
+		values = append(values, append([]byte{}, v...))
+		return true
+	})
+
+	// We expect keys: 0x01, 0x02, 0x03 with values v1, v2, v3
+	s.Require().Equal(3, len(keys))
+	s.Require().ElementsMatch([][]byte{[]byte{0x01}, []byte{0x02}, []byte{0x03}}, keys)
+	s.Require().ElementsMatch([][]byte{[]byte("v1"), []byte("v2"), []byte("v3")}, values)
+}

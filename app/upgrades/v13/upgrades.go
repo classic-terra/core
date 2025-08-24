@@ -293,8 +293,8 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 			originalValue := make([]byte, len(oldContractIter.Value()))
 			copy(originalValue, oldContractIter.Value())
 
-			// Skip nil keys or values
-			if originalKey == nil || originalValue == nil {
+			// Skip empty keys or values
+			if len(originalKey) == 0 || len(originalValue) == 0 {
 				continue
 			}
 
@@ -331,8 +331,8 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 		originalValue := make([]byte, len(directOldIter.Value()))
 		copy(originalValue, directOldIter.Value())
 
-		// Skip nil keys or values
-		if originalKey == nil || originalValue == nil {
+		// Skip empty keys or values
+		if len(originalKey) == 0 || len(originalValue) == 0 {
 			continue
 		}
 
@@ -438,4 +438,89 @@ func MigrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 // MigrateContractKeys Exported for testing
 func MigrateContractKeys(store sdk.KVStore) error {
 	return migrateContractKeys(store)
+}
+
+// ReadContractHistoryWithFallback reads contract history with fallback to old prefix for backward compatibility
+// This function handles the case where some contract history data might not have been migrated yet
+func ReadContractHistoryWithFallback(store sdk.KVStore, contractAddr sdk.AccAddress) ([]byte, bool) {
+	// First try to read from the new prefix (0x05) - migrated data
+	newPrefix := []byte{0x05}
+	newKey := append(newPrefix, contractAddr...)
+	value := store.Get(newKey)
+
+	if value != nil {
+		return value, true
+	}
+
+	// If not found in new location, try the old prefix (0x06) - unmigrated data
+	oldPrefix := []byte{0x06}
+
+	// Handle potential length-prefixed addresses in old data
+	// Try with original address first
+	oldKey := append(oldPrefix, contractAddr...)
+	value = store.Get(oldKey)
+
+	if value != nil {
+		return value, true
+	}
+
+	// Also try with length-prefixed address for old data
+	lengthPrefixedAddr := append([]byte{byte(len(contractAddr))}, contractAddr...)
+	oldKeyWithPrefix := append(oldPrefix, lengthPrefixedAddr...)
+	value = store.Get(oldKeyWithPrefix)
+
+	if value != nil {
+		return value, true
+	}
+
+	return nil, false
+}
+
+// IterateContractHistoryWithFallback iterates over contract history with fallback support
+// This function handles both migrated (0x05) and unmigrated (0x06) contract history entries
+func IterateContractHistoryWithFallback(store sdk.KVStore, cb func(contractAddr []byte, history []byte) bool) {
+	// First iterate over new prefix (0x05) - migrated data
+	newPrefix := []byte{0x05}
+	newStore := prefix.NewStore(store, newPrefix)
+	newIter := newStore.Iterator(nil, nil)
+	defer newIter.Close()
+
+	processedContracts := make(map[string]bool)
+
+	for ; newIter.Valid(); newIter.Next() {
+		contractAddr := newIter.Key()
+		history := newIter.Value()
+
+		// Mark this contract as processed to avoid duplicates
+		processedContracts[string(contractAddr)] = true
+
+		if !cb(contractAddr, history) {
+			return
+		}
+	}
+
+	// Then iterate over old prefix (0x06) - unmigrated data
+	// Only process contracts that haven't been processed yet
+	oldPrefix := []byte{0x06}
+	oldStore := prefix.NewStore(store, oldPrefix)
+	oldIter := oldStore.Iterator(nil, nil)
+	defer oldIter.Close()
+
+	for ; oldIter.Valid(); oldIter.Next() {
+		contractAddr := oldIter.Key()
+		history := oldIter.Value()
+
+		// Remove length prefix if present for comparison
+		unprefixedAddr := removeLengthPrefixIfNeeded(contractAddr)
+
+		// Skip if we already processed this contract from the new prefix
+		if processedContracts[string(unprefixedAddr)] {
+			continue
+		}
+
+		// Use the unprefixed address for consistency
+		if !cb(unprefixedAddr, history) {
+			return
+		}
+	}
 }

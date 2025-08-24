@@ -452,3 +452,138 @@ func (s *UpgradeTestSuite) TestMigrateContractKeys() {
 	require.Equal(s.T(), []byte("contract2"),
 		kvStore.Get(append([]byte{0x02}, unprefixedAddr...)), "Contract key should be migrated to 0x02 without length prefix")
 }
+
+// TestReadContractHistoryWithFallback tests reading contract history with fallback to old prefix
+func (s *UpgradeTestSuite) TestReadContractHistoryWithFallback() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(s.T(), stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	// Create test contract addresses
+	addr1 := bytes.Repeat([]byte{0xAA}, 20)
+	addr2 := bytes.Repeat([]byte{0xBB}, 20)
+	addr3 := bytes.Repeat([]byte{0xCC}, 20)
+	lengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xDD}, 20)...)
+
+	// Scenario 1: Contract history exists in new prefix (0x05) - migrated data
+	kvStore.Set(append([]byte{0x05}, addr1...), []byte("migrated-history-1"))
+
+	// Scenario 2: Contract history exists in old prefix (0x06) - unmigrated data
+	kvStore.Set(append([]byte{0x06}, addr2...), []byte("unmigrated-history-2"))
+
+	// Scenario 3: Contract history exists in old prefix with length-prefixed address
+	kvStore.Set(append([]byte{0x06}, lengthPrefixedAddr...), []byte("unmigrated-history-3"))
+
+	// Scenario 4: Contract history exists in both prefixes (should prefer new one)
+	kvStore.Set(append([]byte{0x05}, addr3...), []byte("migrated-history-3"))
+	kvStore.Set(append([]byte{0x06}, addr3...), []byte("unmigrated-history-3-old"))
+
+	// Test reading from new prefix (migrated data)
+	value, found := v13.ReadContractHistoryWithFallback(kvStore, addr1)
+	s.Require().True(found, "Should find migrated contract history")
+	s.Require().Equal([]byte("migrated-history-1"), value, "Should return migrated history")
+
+	// Test reading from old prefix (unmigrated data)
+	value, found = v13.ReadContractHistoryWithFallback(kvStore, addr2)
+	s.Require().True(found, "Should find unmigrated contract history")
+	s.Require().Equal([]byte("unmigrated-history-2"), value, "Should return unmigrated history")
+
+	// Test reading from old prefix with length-prefixed address
+	unprefixedAddr3 := bytes.Repeat([]byte{0xDD}, 20)
+	value, found = v13.ReadContractHistoryWithFallback(kvStore, unprefixedAddr3)
+	s.Require().True(found, "Should find unmigrated contract history with length prefix")
+	s.Require().Equal([]byte("unmigrated-history-3"), value, "Should return unmigrated history")
+
+	// Test preference for new prefix when both exist
+	value, found = v13.ReadContractHistoryWithFallback(kvStore, addr3)
+	s.Require().True(found, "Should find contract history when both exist")
+	s.Require().Equal([]byte("migrated-history-3"), value, "Should prefer migrated history over unmigrated")
+
+	// Test non-existent contract
+	nonExistentAddr := bytes.Repeat([]byte{0xFF}, 20)
+	value, found = v13.ReadContractHistoryWithFallback(kvStore, nonExistentAddr)
+	s.Require().False(found, "Should not find non-existent contract history")
+	s.Require().Nil(value, "Should return nil for non-existent contract")
+}
+
+// TestIterateContractHistoryWithFallback tests iteration over contract history with fallback
+func (s *UpgradeTestSuite) TestIterateContractHistoryWithFallback() {
+	// Setup in-memory database and context
+	db := dbm.NewMemDB()
+	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db)
+	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(s.T(), stateStore.LoadLatestVersion())
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	kvStore := ctx.KVStore(wasmStoreKey)
+
+	// Create test contract addresses
+	addr1 := bytes.Repeat([]byte{0xAA}, 20)
+	addr2 := bytes.Repeat([]byte{0xBB}, 20)
+	addr3 := bytes.Repeat([]byte{0xCC}, 20)
+	addr4 := bytes.Repeat([]byte{0xDD}, 20)
+	lengthPrefixedAddr4 := append([]byte{20}, addr4...)
+
+	// Add contract history in new prefix (0x05) - migrated data
+	kvStore.Set(append([]byte{0x05}, addr1...), []byte("migrated-history-1"))
+	kvStore.Set(append([]byte{0x05}, addr2...), []byte("migrated-history-2"))
+
+	// Add contract history in old prefix (0x06) - unmigrated data
+	kvStore.Set(append([]byte{0x06}, addr3...), []byte("unmigrated-history-3"))
+	kvStore.Set(append([]byte{0x06}, lengthPrefixedAddr4...), []byte("unmigrated-history-4"))
+
+	// Add duplicate in both prefixes (should only see migrated version)
+	kvStore.Set(append([]byte{0x05}, addr3...), []byte("migrated-history-3-new"))
+
+	// Collect all contract histories
+	var contractHistories []struct {
+		addr    []byte
+		history []byte
+	}
+
+	v13.IterateContractHistoryWithFallback(kvStore, func(contractAddr []byte, history []byte) bool {
+		contractHistories = append(contractHistories, struct {
+			addr    []byte
+			history []byte
+		}{
+			addr:    contractAddr,
+			history: history,
+		})
+		return true
+	})
+
+	// Verify results
+	s.Require().Equal(4, len(contractHistories), "Should find exactly 4 contract histories")
+
+	// Convert to map for easier verification
+	historyMap := make(map[string]string)
+	for _, ch := range contractHistories {
+		historyMap[string(ch.addr)] = string(ch.history)
+	}
+
+	// Verify migrated data
+	s.Require().Equal("migrated-history-1", historyMap[string(addr1)], "Should have migrated history for addr1")
+	s.Require().Equal("migrated-history-2", historyMap[string(addr2)], "Should have migrated history for addr2")
+
+	// Verify preference for migrated data when both exist
+	s.Require().Equal("migrated-history-3-new", historyMap[string(addr3)], "Should prefer migrated history for addr3")
+
+	// Verify unmigrated data with length prefix removed
+	s.Require().Equal("unmigrated-history-4", historyMap[string(addr4)], "Should have unmigrated history for addr4 with length prefix removed")
+
+	// Test early termination
+	var count int
+	v13.IterateContractHistoryWithFallback(kvStore, func(contractAddr []byte, history []byte) bool {
+		count++
+		return count < 2 // Stop after 2 iterations
+	})
+
+	s.Require().Equal(2, count, "Should stop iteration early when callback returns false")
+}

@@ -494,15 +494,22 @@ func collectContractAddresses(store sdk.KVStore) [][]byte {
 	for ; contractInfoIter.Valid(); contractInfoIter.Next() {
 		// The key is the contract address (potentially with length prefix)
 		addr := contractInfoIter.Key()
-		contractAddresses = append(contractAddresses, addr)
+		
+		// Only collect entries that look like contract addresses
+		// Valid forms:
+		// - 20-byte raw address
+		// - 21-byte length-prefixed with first byte == 20
+		if len(addr) == 20 || (len(addr) == 21 && int(addr[0]) == 20) {
+			contractAddresses = append(contractAddresses, addr)
 
-		// Log each contract address for debugging
-		fmt.Printf("Found contract address: %X (length: %d)\n", addr, len(addr))
+			// Log each contract address for debugging
+			fmt.Printf("Found contract address: %X (length: %d)\n", addr, len(addr))
 
-		// Also log what it would look like unprefixed
-		unprefixedAddr := removeLengthPrefixIfNeeded(addr)
-		if len(addr) != len(unprefixedAddr) {
-			fmt.Printf("  - Would be unprefixed to: %X (length: %d)\n", unprefixedAddr, len(unprefixedAddr))
+			// Also log what it would look like unprefixed
+			unprefixedAddr := removeLengthPrefixIfNeeded(addr)
+			if len(addr) != len(unprefixedAddr) {
+				fmt.Printf("  - Would be unprefixed to: %X (length: %d)\n", unprefixedAddr, len(unprefixedAddr))
+			}
 		}
 	}
 

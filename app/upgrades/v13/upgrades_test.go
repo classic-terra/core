@@ -26,6 +26,17 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
+// Configure address verification for tests so 20-byte payloads are valid addresses.
+func (s *UpgradeTestSuite) SetupSuite() {
+    cfg := sdk.GetConfig()
+    cfg.SetAddressVerifier(func(bz []byte) error {
+        if len(bz) == 20 {
+            return nil
+        }
+        return fmt.Errorf("invalid address length %d", len(bz))
+    })
+}
+
 func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
@@ -182,11 +193,16 @@ func (s *UpgradeTestSuite) TestRemoveLengthPrefixIfNeeded() {
 			input:    append([]byte{10}, bytes.Repeat([]byte{0x01}, 20)...),
 			expected: append([]byte{10}, bytes.Repeat([]byte{0x01}, 20)...),
 		},
+		{
+			name:     "length-prefixed payload not a valid address (len=5)",
+			input:    append([]byte{5}, bytes.Repeat([]byte{0xAA}, 5)...),
+			expected: append([]byte{5}, bytes.Repeat([]byte{0xAA}, 5)...),
+		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			result := v13.RemoveLengthPrefixIfNeeded(tc.input)
+			result, _ := v13.RemoveLengthPrefixIfNeeded(tc.input)
 			s.Require().Equal(tc.expected, result)
 		})
 	}
@@ -342,10 +358,14 @@ func (s *UpgradeTestSuite) TestMigrateContractStoreKeys() {
 	directKey1 := append(append([]byte{0x05}, directAddr...), []byte{0x01}...)
 	directKey2 := append(append([]byte{0x05}, directAddr...), []byte{0x02}...)
 	directPrefixedKey := append(append([]byte{0x05}, directLengthPrefixedAddr...), []byte{0x01}...)
+	// Composite-looking head but not a valid address: len=5 + 5 bytes
+	fakeHead := append([]byte{0x05}, bytes.Repeat([]byte{0xEE}, 5)...)
+	directCompositeKey := append(append([]byte{0x05}, fakeHead...), []byte{0x01}...)
 
 	kvStore.Set(directKey1, []byte("direct-store1"))
 	kvStore.Set(directKey2, []byte("direct-store2"))
 	kvStore.Set(directPrefixedKey, []byte("direct-store3"))
+	kvStore.Set(directCompositeKey, []byte("direct-store4"))
 
 	// Collect contract addresses (deliberately excluding directAddr and directLengthPrefixedAddr)
 	contractAddresses := [][]byte{addr1, lengthPrefixedAddr}
@@ -412,6 +432,14 @@ func (s *UpgradeTestSuite) TestMigrateContractStoreKeys() {
 	// Also verify that the old key with length prefix is deleted
 	require.Nil(s.T(), kvStore.Get(directPrefixedKey),
 		"Old direct contract store key with length prefix should be deleted")
+
+	// Composite-looking head (len=5) must NOT be stripped; should migrate intact
+	expectedCompositeNewKey := append(append([]byte{0x03}, fakeHead...), []byte{0x01}...)
+	require.Equal(s.T(), []byte("direct-store4"),
+		kvStore.Get(expectedCompositeNewKey),
+		"Composite head should remain unchanged in new key")
+	require.Nil(s.T(), kvStore.Get(directCompositeKey),
+		"Old composite key should be deleted after migration")
 }
 
 // TestMigrateContractKeys tests the contract key migration
@@ -429,10 +457,13 @@ func (s *UpgradeTestSuite) TestMigrateContractKeys() {
 	// Create test contract addresses
 	addr1 := bytes.Repeat([]byte{0xAA}, 20)
 	lengthPrefixedAddr := append([]byte{20}, bytes.Repeat([]byte{0xBB}, 20)...)
+	// Not an address: len=5 + 5 bytes
+	fakeHead := append([]byte{0x05}, bytes.Repeat([]byte{0xAB}, 5)...)
 
 	// Add contract data
 	kvStore.Set(append([]byte{0x04}, addr1...), []byte("contract1"))
 	kvStore.Set(append([]byte{0x04}, lengthPrefixedAddr...), []byte("contract2"))
+	kvStore.Set(append([]byte{0x04}, fakeHead...), []byte("contract3"))
 
 	// Run the migration
 	err := v13.MigrateContractKeys(kvStore)
@@ -451,4 +482,9 @@ func (s *UpgradeTestSuite) TestMigrateContractKeys() {
 	unprefixedAddr := bytes.Repeat([]byte{0xBB}, 20)
 	require.Equal(s.T(), []byte("contract2"),
 		kvStore.Get(append([]byte{0x02}, unprefixedAddr...)), "Contract key should be migrated to 0x02 without length prefix")
+
+	// For non-address head (len=5), it must not be stripped and be copied as-is under new prefix
+	require.Equal(s.T(), []byte("contract3"),
+		kvStore.Get(append([]byte{0x02}, fakeHead...)), "Non-address-like head must remain unchanged")
+	require.Nil(s.T(), kvStore.Get(append([]byte{0x04}, fakeHead...)), "Old non-address key must be removed")
 }

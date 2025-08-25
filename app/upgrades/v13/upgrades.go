@@ -2,6 +2,7 @@
 package v13
 
 import (
+	"bytes"
 	"fmt"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -78,7 +79,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	}
 
 	// 2.1 Migrate contract keys (0x04 -> 0x02)
-	// This needs to happen before we write to 0x02 with sequence keys
+	// This needs to happen before we write to 0x04 with sequence keys
 	if err := migrateContractKeys(store); err != nil {
 		return fmt.Errorf("failed to migrate contract keys: %w", err)
 	}
@@ -141,33 +142,22 @@ func migrateCodeKeys(store sdk.KVStore) error {
 }
 
 // removeLengthPrefixIfNeeded checks if a key has a length prefix and removes it if present
-func removeLengthPrefixIfNeeded(bz []byte) []byte {
-	if len(bz) == 0 {
-		return bz
+// Accepts only exact address blobs (or a 1-byte length prefix + address).
+// Never run this on arbitrary composite keys.
+func removeLengthPrefixIfNeeded(b []byte) (out []byte, stripped bool) {
+	// Already a valid address for this chain? Keep as-is.
+	if err := sdk.VerifyAddressFormat(b); err == nil {
+		return bytes.Clone(b), false
 	}
-
-	// Check if this looks like a length-prefixed address
-	// The first byte should indicate the length of the remaining bytes
-	prefixLen := int(bz[0])
-
-	// Validate that the prefix length makes sense:
-	// 1. It should be positive
-	// 2. It should be less than the total length minus 1 (for the prefix byte itself)
-	// 3. For Cosmos addresses, it's typically 20 bytes
-	if prefixLen > 0 && prefixLen <= len(bz)-1 && prefixLen == len(bz)-1 {
-		// This is likely a length-prefixed address
-		fmt.Printf("Found length prefix: original %X, unprefixed %X\n", bz, bz[1:])
-		return bz[1:] // Remove the first byte (length prefix)
+	// Looks like a [len|payload] and payload is a valid address?
+	if len(b) > 1 && int(b[0]) == len(b)-1 {
+		payload := b[1:]
+		if err := sdk.VerifyAddressFormat(payload); err == nil {
+			return bytes.Clone(payload), true
+		}
 	}
-
-	// If the key is longer than 20 bytes and starts with a length prefix, try to remove it
-	if len(bz) > 20 && prefixLen == 20 {
-		fmt.Printf("Found potential length prefix in long key: original %X, unprefixed %X\n", bz, bz[1:])
-		return bz[1:] // Remove the first byte (length prefix)
-	}
-
-	fmt.Printf("No length prefix found, returning original: %X\n", bz)
-	return bz // Return as is if not length-prefixed
+	// Not an address (or composite) -> don't touch
+	return bytes.Clone(b), false
 }
 
 // migrateContractHistoryKeys migrates contract history keys from 0x06 to 0x05
@@ -223,10 +213,10 @@ func migrateContractKeys(store sdk.KVStore) error {
 
 		// The key is the contract address with potential length prefix
 		// We need to check if it has a length prefix and remove it
-		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
+		unprefixedKey, stripped := removeLengthPrefixIfNeeded(originalKey)
 
 		// Track if we removed a length prefix
-		if len(unprefixedKey) != len(originalKey) {
+		if stripped {
 			lengthPrefixRemovedCount++
 			fmt.Printf("Removed length prefix from contract key: %X -> %X\n",
 				originalKey, unprefixedKey)
@@ -274,7 +264,7 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 		copy(contractAddr, originalContractAddr)
 
 		// Remove length prefix from contract address if needed
-		unprefixedAddr := removeLengthPrefixIfNeeded(contractAddr)
+		unprefixedAddr, _ := removeLengthPrefixIfNeeded(contractAddr)
 
 		// Construct the old and new prefixes for this specific contract
 		oldContractPrefix := append([]byte{0x05}, contractAddr...)   // Original key with potential length prefix
@@ -336,15 +326,36 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 			continue
 		}
 
-		// Check if the key starts with a length prefix and remove it
-		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
+		// The structure here is [address_or_len_prefixed_address | subkey...]
+		// We must ONLY attempt to strip a 1-byte length prefix from the address portion,
+		// not from the entire composite key. Determine the address prefix to transform.
+		var rebuiltKey []byte
+		if len(originalKey) > 1 {
+			// Try interpret the first segment as a potential [len|payload]
+			// candidateLen covers the length-prefix byte plus payload
+			candidateLen := int(originalKey[0]) + 1
+			if candidateLen <= len(originalKey) {
+				// Evaluate only the candidate head
+				head := originalKey[:candidateLen]
+				tail := originalKey[candidateLen:]
+				if unprefHead, stripped := removeLengthPrefixIfNeeded(head); stripped {
+					// Rebuild as [unprefixed_address | tail]
+					rebuiltKey = append([]byte{}, unprefHead...)
+					rebuiltKey = append(rebuiltKey, tail...)
+				}
+			}
+		}
+		if rebuiltKey == nil {
+			// Either not length-prefixed or not a valid address head; keep as-is
+			rebuiltKey = originalKey
+		}
 
 		// Construct full keys - create new slices to avoid modifying the original prefixes
 		oldFullKey := append([]byte{}, oldPrefix...)
 		oldFullKey = append(oldFullKey, originalKey...)
 
 		newFullKey := append([]byte{}, newPrefix...)
-		newFullKey = append(newFullKey, unprefixedKey...)
+		newFullKey = append(newFullKey, rebuiltKey...)
 
 		// Set with new prefix and delete old
 		store.Set(newFullKey, originalValue)
@@ -406,8 +417,8 @@ func collectContractAddresses(store sdk.KVStore) [][]byte {
 		fmt.Printf("Found contract address: %X (length: %d)\n", addr, len(addr))
 
 		// Also log what it would look like unprefixed
-		unprefixedAddr := removeLengthPrefixIfNeeded(addr)
-		if len(addr) != len(unprefixedAddr) {
+		unprefixedAddr, stripped := removeLengthPrefixIfNeeded(addr)
+		if stripped {
 			fmt.Printf("  - Would be unprefixed to: %X (length: %d)\n", unprefixedAddr, len(unprefixedAddr))
 		}
 	}
@@ -421,7 +432,7 @@ func MigrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 }
 
 // RemoveLengthPrefixIfNeeded Exported for testing
-func RemoveLengthPrefixIfNeeded(bz []byte) []byte {
+func RemoveLengthPrefixIfNeeded(bz []byte) ([]byte, bool) {
 	return removeLengthPrefixIfNeeded(bz)
 }
 

@@ -2,10 +2,12 @@
 package v13
 
 import (
+	"bytes"
 	"fmt"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cometbft/cometbft/libs/log"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/classic-terra/core/v3/app/keepers"
@@ -37,6 +39,18 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 	ctx.Logger().Info("Starting WASM key migration from forked to original format")
 
+	// Check if migration was already completed
+	migrationMarker := []byte("v13_wasm_migrated")
+	if store.Has(migrationMarker) {
+		ctx.Logger().Info("WASM migration already completed, skipping")
+		return nil
+	}
+
+	// Validate that destination prefixes are safe to migrate to
+	if err := validateDestinationPrefixes(store, ctx.Logger()); err != nil {
+		return fmt.Errorf("migration validation failed: %w", err)
+	}
+
 	// First, collect all contract addresses before any migration
 	contractAddresses := collectContractAddresses(store)
 	ctx.Logger().Info(fmt.Sprintf("Found %d contracts for migration", len(contractAddresses)))
@@ -46,35 +60,9 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 		ctx.Logger().Info("No contracts found for migration, this might indicate an issue")
 	}
 
-	// 1. Save sequence keys (0x01, 0x02) to temporary variables
-	oldCodeIDKey := []byte{0x01}
-	oldCodeIDValue := store.Get(oldCodeIDKey)
-
-	oldInstanceIDKey := []byte{0x02}
-	oldInstanceIDValue := store.Get(oldInstanceIDKey)
-
-	if oldCodeIDValue != nil {
-		ctx.Logger().Info(fmt.Sprintf("Found code ID sequence: %v", oldCodeIDValue))
-	} else {
-		ctx.Logger().Info("No code ID sequence found at key 0x01")
-	}
-
-	if oldInstanceIDValue != nil {
-		ctx.Logger().Info(fmt.Sprintf("Found instance ID sequence: %v", oldInstanceIDValue))
-	} else {
-		ctx.Logger().Info("No instance ID sequence found at key 0x02")
-	}
-
-	// Make copies to avoid any issues with shared memory
-	var codeIDValue, instanceIDValue []byte
-	if oldCodeIDValue != nil {
-		codeIDValue = make([]byte, len(oldCodeIDValue))
-		copy(codeIDValue, oldCodeIDValue)
-	}
-
-	if oldInstanceIDValue != nil {
-		instanceIDValue = make([]byte, len(oldInstanceIDValue))
-		copy(instanceIDValue, oldInstanceIDValue)
+	// 1. Safely migrate sequence keys with validation
+	if err := migrateSequenceKeysAtomically(store, ctx.Logger()); err != nil {
+		return fmt.Errorf("failed to migrate sequence keys: %w", err)
 	}
 
 	// 2.1 Migrate contract keys (0x04 -> 0x02)
@@ -83,20 +71,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 		return fmt.Errorf("failed to migrate contract keys: %w", err)
 	}
 
-	// 2.2. Now that 0x04 is free, manually migrate sequence keys from our saved copies
-	if codeIDValue != nil {
-		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
-		store.Set(newCodeIDKey, codeIDValue)
-		ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence from 0x01 to %X", newCodeIDKey))
-		store.Delete(oldCodeIDKey)
-	}
-
-	if instanceIDValue != nil {
-		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...)
-		store.Set(newInstanceIDKey, instanceIDValue)
-		ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence from 0x02 to %X", newInstanceIDKey))
-		store.Delete(oldInstanceIDKey)
-	}
+	// Sequence keys are now migrated atomically by migrateSequenceKeysAtomically
 
 	// 3. Migrate code keys (0x03 -> 0x01)
 	// This can only be done after sequence keys are migrated away from 0x01
@@ -128,7 +103,102 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 		return err
 	}
 
-	ctx.Logger().Info("WASM key migration completed successfully")
+	// Set migration marker to indicate completion
+	store.Set(migrationMarker, []byte("true"))
+	ctx.Logger().Info("WASM key migration completed successfully and marked as done")
+
+	return nil
+}
+
+// migrateSequenceKeysAtomically safely migrates sequence keys with proper validation
+func migrateSequenceKeysAtomically(store sdk.KVStore, logger log.Logger) error {
+	// Source keys
+	oldCodeIDKey := []byte{0x01}
+	oldInstanceIDKey := []byte{0x02}
+
+	// Destination keys
+	newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
+	newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...)
+
+	// Check if destination keys already exist (retry scenario)
+	if store.Has(newCodeIDKey) && store.Has(newInstanceIDKey) {
+		logger.Info("Sequence keys already migrated, validating existing values")
+
+		// Validate that existing migrated values make sense
+		newCodeIDValue := store.Get(newCodeIDKey)
+		newInstanceIDValue := store.Get(newInstanceIDKey)
+
+		if len(newCodeIDValue) == 8 && len(newInstanceIDValue) == 8 {
+			logger.Info("Existing sequence key values are valid, migration already complete")
+
+			// Clean up old keys if they still exist
+			if store.Has(oldCodeIDKey) {
+				store.Delete(oldCodeIDKey)
+				logger.Info("Cleaned up old code ID sequence key")
+			}
+			if store.Has(oldInstanceIDKey) {
+				store.Delete(oldInstanceIDKey)
+				logger.Info("Cleaned up old instance ID sequence key")
+			}
+
+			return nil
+		} else {
+			return fmt.Errorf("existing sequence values are invalid: codeID=%X, instanceID=%X",
+				newCodeIDValue, newInstanceIDValue)
+		}
+	}
+
+	// Get old values
+	oldCodeIDValue := store.Get(oldCodeIDKey)
+	oldInstanceIDValue := store.Get(oldInstanceIDKey)
+
+	// Validate old values exist and are properly formatted
+	if oldCodeIDValue == nil {
+		logger.Info("No code ID sequence found at old location")
+		oldCodeIDValue = []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} // Default to 0
+	} else if len(oldCodeIDValue) != 8 {
+		return fmt.Errorf("invalid code ID sequence format: %X", oldCodeIDValue)
+	}
+
+	if oldInstanceIDValue == nil {
+		logger.Info("No instance ID sequence found at old location")
+		oldInstanceIDValue = []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} // Default to 0
+	} else if len(oldInstanceIDValue) != 8 {
+		return fmt.Errorf("invalid instance ID sequence format: %X", oldInstanceIDValue)
+	}
+
+	logger.Info(fmt.Sprintf("Migrating code ID sequence: %X", oldCodeIDValue))
+	logger.Info(fmt.Sprintf("Migrating instance ID sequence: %X", oldInstanceIDValue))
+
+	// Copy values to avoid memory aliasing
+	codeIDValue := make([]byte, len(oldCodeIDValue))
+	copy(codeIDValue, oldCodeIDValue)
+
+	instanceIDValue := make([]byte, len(oldInstanceIDValue))
+	copy(instanceIDValue, oldInstanceIDValue)
+
+	// Write new values first (fail-safe)
+	store.Set(newCodeIDKey, codeIDValue)
+	store.Set(newInstanceIDKey, instanceIDValue)
+
+	// Verify the write was successful
+	verifyCodeID := store.Get(newCodeIDKey)
+	verifyInstanceID := store.Get(newInstanceIDKey)
+
+	if !bytes.Equal(verifyCodeID, codeIDValue) {
+		return fmt.Errorf("failed to write code ID sequence: expected %X, got %X", codeIDValue, verifyCodeID)
+	}
+
+	if !bytes.Equal(verifyInstanceID, instanceIDValue) {
+		return fmt.Errorf("failed to write instance ID sequence: expected %X, got %X", instanceIDValue, verifyInstanceID)
+	}
+
+	// Only delete old keys after verifying new ones are written correctly
+	store.Delete(oldCodeIDKey)
+	store.Delete(oldInstanceIDKey)
+
+	logger.Info(fmt.Sprintf("Successfully migrated code ID sequence from %X to %X", oldCodeIDKey, newCodeIDKey))
+	logger.Info(fmt.Sprintf("Successfully migrated instance ID sequence from %X to %X", oldInstanceIDKey, newInstanceIDKey))
 
 	return nil
 }
@@ -140,34 +210,25 @@ func migrateCodeKeys(store sdk.KVStore) error {
 	return migratePrefix(store, oldPrefix, newPrefix, "codeKey")
 }
 
-// removeLengthPrefixIfNeeded checks if a key has a length prefix and removes it if present
+// stripLenPrefixAddrOnly safely strips length prefix only for known address keys
+// Returns the stripped address and whether stripping occurred
+func stripLenPrefixAddrOnly(b []byte) (out []byte, stripped bool) {
+	if len(b) == 21 && int(b[0]) == 20 {
+		out = make([]byte, 20)
+		copy(out, b[1:21])
+		return out, true
+	}
+	out = make([]byte, len(b))
+	copy(out, b)
+	return out, false
+}
+
+// removeLengthPrefixIfNeeded is deprecated and unsafe - use stripLenPrefixAddrOnly instead
+// This function is kept for backward compatibility in migration code
 func removeLengthPrefixIfNeeded(bz []byte) []byte {
-	if len(bz) == 0 {
-		return bz
-	}
-
-	// Check if this looks like a length-prefixed address
-	// The first byte should indicate the length of the remaining bytes
-	prefixLen := int(bz[0])
-
-	// Validate that the prefix length makes sense:
-	// 1. It should be positive
-	// 2. It should be less than the total length minus 1 (for the prefix byte itself)
-	// 3. For Cosmos addresses, it's typically 20 bytes
-	if prefixLen > 0 && prefixLen <= len(bz)-1 && prefixLen == len(bz)-1 {
-		// This is likely a length-prefixed address
-		fmt.Printf("Found length prefix: original %X, unprefixed %X\n", bz, bz[1:])
-		return bz[1:] // Remove the first byte (length prefix)
-	}
-
-	// If the key is longer than 20 bytes and starts with a length prefix, try to remove it
-	if len(bz) > 20 && prefixLen == 20 {
-		fmt.Printf("Found potential length prefix in long key: original %X, unprefixed %X\n", bz, bz[1:])
-		return bz[1:] // Remove the first byte (length prefix)
-	}
-
-	fmt.Printf("No length prefix found, returning original: %X\n", bz)
-	return bz // Return as is if not length-prefixed
+	// Only strip if this is exactly a 21-byte length-prefixed address
+	stripped, _ := stripLenPrefixAddrOnly(bz)
+	return stripped
 }
 
 // migrateContractHistoryKeys migrates contract history keys from 0x06 to 0x05
@@ -221,15 +282,24 @@ func migrateContractKeys(store sdk.KVStore) error {
 		originalValue := make([]byte, len(iterator.Value()))
 		copy(originalValue, iterator.Value())
 
-		// The key is the contract address with potential length prefix
-		// We need to check if it has a length prefix and remove it
-		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
+		// Only migrate entries that look like contract addresses
+		// Valid forms:
+		// - 20-byte raw address
+		// - 21-byte length-prefixed with first byte == 20
+		if !(len(originalKey) == 20 || (len(originalKey) == 21 && int(originalKey[0]) == 20)) {
+			// Skip non-address keys such as sequence keys (e.g. "lastCodeId")
+			continue
+		}
+
+		// The key is the contract address with potential length prefix; remove if present
+		unprefixedKey, wasStripped := stripLenPrefixAddrOnly(originalKey)
+		if wasStripped {
+			fmt.Printf("Stripped length prefix from contract key: %X -> %X\n", originalKey, unprefixedKey)
+		}
 
 		// Track if we removed a length prefix
-		if len(unprefixedKey) != len(originalKey) {
+		if wasStripped {
 			lengthPrefixRemovedCount++
-			fmt.Printf("Removed length prefix from contract key: %X -> %X\n",
-				originalKey, unprefixedKey)
 		}
 
 		// Construct full keys
@@ -238,6 +308,14 @@ func migrateContractKeys(store sdk.KVStore) error {
 
 		newFullKey := append([]byte{}, newPrefix...)
 		newFullKey = append(newFullKey, unprefixedKey...)
+
+		// Add collision guard before setting: preserve existing value if different
+		if store.Has(newFullKey) && !bytes.Equal(store.Get(newFullKey), originalValue) {
+			// Keep existing entry, just delete old to avoid duplicates
+			store.Delete(oldFullKey)
+			migratedCount++
+			continue
+		}
 
 		// Set with new prefix and delete old
 		store.Set(newFullKey, originalValue)
@@ -274,7 +352,7 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 		copy(contractAddr, originalContractAddr)
 
 		// Remove length prefix from contract address if needed
-		unprefixedAddr := removeLengthPrefixIfNeeded(contractAddr)
+		unprefixedAddr, _ := stripLenPrefixAddrOnly(contractAddr)
 
 		// Construct the old and new prefixes for this specific contract
 		oldContractPrefix := append([]byte{0x05}, contractAddr...)   // Original key with potential length prefix
@@ -293,21 +371,25 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 			originalValue := make([]byte, len(oldContractIter.Value()))
 			copy(originalValue, oldContractIter.Value())
 
-			// Skip empty keys or values
-			if len(originalKey) == 0 || len(originalValue) == 0 {
-				continue
-			}
-
 			// Construct full keys - create new slices to avoid modifying the original prefixes
 			oldFullKey := append([]byte{}, oldContractPrefix...)
 			oldFullKey = append(oldFullKey, originalKey...)
 
-			newFullKey := append([]byte{}, newContractPrefix...)
-			newFullKey = append(newFullKey, originalKey...)
-
-			// Set with new prefix and delete old
-			store.Set(newFullKey, originalValue)
+			// Always delete the old key to avoid stray entries
 			store.Delete(oldFullKey)
+
+			// Only create new entry if we have non-empty key and value
+			if len(originalKey) > 0 && len(originalValue) > 0 {
+				newFullKey := append([]byte{}, newContractPrefix...)
+				newFullKey = append(newFullKey, originalKey...)
+
+				// Add collision guard before setting
+				if store.Has(newFullKey) && !bytes.Equal(store.Get(newFullKey), originalValue) {
+					return fmt.Errorf("refusing to overwrite existing key %X during contract store migration", newFullKey)
+				}
+
+				store.Set(newFullKey, originalValue)
+			}
 
 			contractKeyCount++
 			totalMigrated++
@@ -331,24 +413,27 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 		originalValue := make([]byte, len(directOldIter.Value()))
 		copy(originalValue, directOldIter.Value())
 
-		// Skip empty keys or values
-		if len(originalKey) == 0 || len(originalValue) == 0 {
-			continue
-		}
-
-		// Check if the key starts with a length prefix and remove it
-		unprefixedKey := removeLengthPrefixIfNeeded(originalKey)
-
 		// Construct full keys - create new slices to avoid modifying the original prefixes
 		oldFullKey := append([]byte{}, oldPrefix...)
 		oldFullKey = append(oldFullKey, originalKey...)
 
-		newFullKey := append([]byte{}, newPrefix...)
-		newFullKey = append(newFullKey, unprefixedKey...)
-
-		// Set with new prefix and delete old
-		store.Set(newFullKey, originalValue)
+		// Always delete the old key to avoid stray entries
 		store.Delete(oldFullKey)
+
+		// Only create new entry if we have non-empty key and value
+		if len(originalKey) > 0 && len(originalValue) > 0 {
+			// For direct contract store keys, we should NOT strip length prefixes
+			// as these are composite keys [contractAddr + storageKey], not pure addresses
+			newFullKey := append([]byte{}, newPrefix...)
+			newFullKey = append(newFullKey, originalKey...)
+
+			// Add collision guard before setting
+			if store.Has(newFullKey) && !bytes.Equal(store.Get(newFullKey), originalValue) {
+				return fmt.Errorf("refusing to overwrite existing key %X during direct contract store migration", newFullKey)
+			}
+
+			store.Set(newFullKey, originalValue)
+		}
 
 		directMigrated++
 	}
@@ -377,6 +462,15 @@ func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) 
 
 		originalValue := make([]byte, len(iterator.Value()))
 		copy(originalValue, iterator.Value())
+
+		// Collision guard: if destination already has a different value, preserve it
+		if newStore.Has(originalKey) {
+			existing := newStore.Get(originalKey)
+			if !bytes.Equal(existing, originalValue) {
+				// Preserve destination, skip migrating this key (do not delete old)
+				continue
+			}
+		}
 
 		newStore.Set(originalKey, originalValue)
 		oldStore.Delete(originalKey)
@@ -413,6 +507,69 @@ func collectContractAddresses(store sdk.KVStore) [][]byte {
 	}
 
 	return contractAddresses
+}
+
+// validateDestinationPrefixes ensures destination prefixes are safe for migration
+func validateDestinationPrefixes(store sdk.KVStore, logger log.Logger) error {
+	destinationPrefixes := map[string][]byte{
+		"sequence_keys":    {0x04}, // lastCodeId, lastContractId will go here
+		"code_keys":        {0x01}, // code data migrates here
+		"contract_keys":    {0x02}, // contract info migrates here
+		"contract_store":   {0x03}, // contract storage migrates here
+		"contract_history": {0x05}, // contract history migrates here
+		"secondary_index":  {0x06}, // secondary index migrates here
+		"params":           {0x10}, // params migrate here
+	}
+
+	for name, prefixBytes := range destinationPrefixes {
+		// For sequence keys (0x04), we expect it to be empty or contain only sequence data
+		if bytes.Equal(prefixBytes, []byte{0x04}) {
+			if err := validateSequenceKeyDestination(store, prefixBytes, logger); err != nil {
+				return fmt.Errorf("sequence key destination validation failed: %w", err)
+			}
+			continue
+		}
+
+		// For other prefixes, check if they contain unexpected data
+		prefixStore := prefix.NewStore(store, prefixBytes)
+		iter := prefixStore.Iterator(nil, nil)
+		count := 0
+		for ; iter.Valid(); iter.Next() {
+			count++
+			if count > 10 { // Don't log too many, just sample
+				break
+			}
+			logger.Info(fmt.Sprintf("Found existing data in destination prefix %s: key %X", name, iter.Key()))
+		}
+		iter.Close()
+
+		if count > 0 {
+			logger.Info(fmt.Sprintf("Destination prefix %s contains %d+ existing entries - migration will proceed with collision guards", name, count))
+		}
+	}
+
+	return nil
+}
+
+// validateSequenceKeyDestination checks if the sequence key destination is safe
+func validateSequenceKeyDestination(store sdk.KVStore, prefixBytes []byte, logger log.Logger) error {
+	prefixStore := prefix.NewStore(store, prefixBytes)
+
+	// Check for existing sequence keys
+	lastCodeIdKey := []byte("lastCodeId")
+	lastContractIdKey := []byte("lastContractId")
+
+	if prefixStore.Has(lastCodeIdKey) {
+		existingValue := prefixStore.Get(lastCodeIdKey)
+		logger.Info(fmt.Sprintf("Found existing lastCodeId in destination: %X", existingValue))
+	}
+
+	if prefixStore.Has(lastContractIdKey) {
+		existingValue := prefixStore.Get(lastContractIdKey)
+		logger.Info(fmt.Sprintf("Found existing lastContractId in destination: %X", existingValue))
+	}
+
+	return nil
 }
 
 // MigrateWasmKeys Exported for testing
@@ -511,7 +668,7 @@ func IterateContractHistoryWithFallback(store sdk.KVStore, cb func(contractAddr 
 		history := oldIter.Value()
 
 		// Remove length prefix if present for comparison
-		unprefixedAddr := removeLengthPrefixIfNeeded(contractAddr)
+		unprefixedAddr, _ := stripLenPrefixAddrOnly(contractAddr)
 
 		// Skip if we already processed this contract from the new prefix
 		if processedContracts[string(unprefixedAddr)] {

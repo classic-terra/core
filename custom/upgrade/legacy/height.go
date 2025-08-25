@@ -11,8 +11,8 @@ const (
 	LegacyUpgradeHeightV2  = int64(25)       // Local testing upgrade height to v8 (using upgrade-test-multi.sh script)
 	LegacyUpgradeHeightV3  = int64(50)
 
-	TestnetUpgradeHeightV3 = int64(14584970) // rebel-2 testnet upgrade height to v4
-	MainnetUpgradeHeightV3 = int64(18303000) // columbus-5 mainnet upgrade height to v8
+	TestnetUpgradeHeightV3 = int64(19354001) // rebel-2 testnet upgrade height to next version (must be > V2)
+	MainnetUpgradeHeightV3 = int64(18303001) // columbus-5 mainnet upgrade height to next version (must be > V2)
 
 )
 

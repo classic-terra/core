@@ -7,8 +7,8 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	v13 "github.com/classic-terra/core/v3/app/upgrades/v13"
-	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
+	"github.com/classic-terra/core/v3/custom/upgrade/legacy"
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,8 +45,8 @@ func NewLegacyQueryServer(
 func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtypes.QuerySmartContractStateRequest) (*wasmtypes.QuerySmartContractStateResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	if legacyMode == legacyupgrade.LegacyHandlingNone {
+	legacyMode := legacy.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
+	if legacyMode == legacy.LegacyHandlingNone {
 		return q.QueryServer.SmartContractState(ctx, req)
 	}
 
@@ -75,8 +75,6 @@ func (q *LegacyQueryServer) SmartContractState(ctx context.Context, req *wasmtyp
 
 // ContractHistory gets the contract code history with legacy fallback support
 func (q *LegacyQueryServer) ContractHistory(ctx context.Context, req *wasmtypes.QueryContractHistoryRequest) (*wasmtypes.QueryContractHistoryResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	// Try normal path first
 	resp, err := q.QueryServer.ContractHistory(ctx, req)
 	if err == nil && resp != nil && len(resp.Entries) > 0 {
@@ -84,34 +82,20 @@ func (q *LegacyQueryServer) ContractHistory(ctx context.Context, req *wasmtypes.
 	}
 
 	// Legacy handling: fall back for archived pre-upgrade data
-	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	if legacyMode == legacyupgrade.LegacyHandlingNone {
+	if !q.shouldUseLegacyFallback(ctx) {
 		return resp, err
 	}
 
-	// Reflect storeKey and codec from keeper (private fields)
-	keVal := reflect.ValueOf(q.keeper).Elem()
-	storeKeyField := keVal.FieldByName("storeKey")
-	cdcField := keVal.FieldByName("cdc")
-	if !storeKeyField.IsValid() || !cdcField.IsValid() {
-		// Cannot access internals; return original result
-		return resp, err
-	}
-
-	storeKey, ok := storeKeyField.Interface().(storetypes.StoreKey)
-	if !ok {
-		return resp, err
-	}
-	cdc, ok := cdcField.Interface().(codecMarshaler)
+	storeKey, cdc, ok := q.getStoreKeyAndCodec()
 	if !ok {
 		return resp, err
 	}
 
-	kv := sdkCtx.KVStore(storeKey)
+	kv := sdk.UnwrapSDKContext(ctx).KVStore(storeKey)
 	contractAddr := sdk.MustAccAddressFromBech32(req.Address)
 
 	var entries []wasmtypes.ContractCodeHistoryEntry
-	v13.IterateContractHistoryWithFallback(kv, func(addr []byte, history []byte) bool {
+	core.IterateContractHistoryWithFallback(kv, func(addr []byte, history []byte) bool {
 		if !sdk.AccAddress(addr).Equals(contractAddr) {
 			return true
 		}
@@ -138,9 +122,7 @@ func (q *LegacyQueryServer) ContractInfo(ctx context.Context, req *wasmtypes.Que
 		return resp, nil
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	if legacyMode == legacyupgrade.LegacyHandlingNone {
+	if !q.shouldUseLegacyFallback(ctx) {
 		return resp, err
 	}
 
@@ -148,10 +130,10 @@ func (q *LegacyQueryServer) ContractInfo(ctx context.Context, req *wasmtypes.Que
 	if !ok {
 		return resp, err
 	}
-	kv := sdkCtx.KVStore(storeKey)
+	kv := sdk.UnwrapSDKContext(ctx).KVStore(storeKey)
 	addr := sdk.MustAccAddressFromBech32(req.Address)
 
-	bz, found := v13.ReadContractInfoWithFallback(kv, addr)
+	bz, found := core.ReadContractInfoWithFallback(kv, addr)
 	if !found {
 		return resp, err
 	}
@@ -170,9 +152,7 @@ func (q *LegacyQueryServer) RawContractState(ctx context.Context, req *wasmtypes
 		return resp, nil
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	if legacyMode == legacyupgrade.LegacyHandlingNone {
+	if !q.shouldUseLegacyFallback(ctx) {
 		return resp, err
 	}
 
@@ -180,10 +160,10 @@ func (q *LegacyQueryServer) RawContractState(ctx context.Context, req *wasmtypes
 	if !ok {
 		return resp, err
 	}
-	kv := sdkCtx.KVStore(storeKey)
+	kv := sdk.UnwrapSDKContext(ctx).KVStore(storeKey)
 	addr := sdk.MustAccAddressFromBech32(req.Address)
 
-	bz, found := v13.ReadRawContractStateWithFallback(kv, addr, req.QueryData)
+	bz, found := core.ReadRawContractStateWithFallback(kv, addr, req.QueryData)
 	if !found {
 		return resp, err
 	}
@@ -197,9 +177,7 @@ func (q *LegacyQueryServer) AllContractState(ctx context.Context, req *wasmtypes
 		return resp, nil
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	if legacyMode == legacyupgrade.LegacyHandlingNone {
+	if !q.shouldUseLegacyFallback(ctx) {
 		return resp, err
 	}
 
@@ -207,11 +185,11 @@ func (q *LegacyQueryServer) AllContractState(ctx context.Context, req *wasmtypes
 	if !ok {
 		return resp, err
 	}
-	kv := sdkCtx.KVStore(storeKey)
+	kv := sdk.UnwrapSDKContext(ctx).KVStore(storeKey)
 	addr := sdk.MustAccAddressFromBech32(req.Address)
 
 	var models []wasmtypes.Model
-	v13.IterateAllContractStateWithFallback(kv, addr, func(k, v []byte) bool {
+	core.IterateAllContractStateWithFallback(kv, addr, func(k, v []byte) bool {
 		models = append(models, wasmtypes.Model{Key: append([]byte{}, k...), Value: append([]byte{}, v...)})
 		return true
 	})
@@ -228,9 +206,7 @@ func (q *LegacyQueryServer) ContractsByCode(ctx context.Context, req *wasmtypes.
 		return resp, nil
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	legacyMode := legacyupgrade.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
-	if legacyMode == legacyupgrade.LegacyHandlingNone {
+	if !q.shouldUseLegacyFallback(ctx) {
 		return resp, err
 	}
 
@@ -238,7 +214,7 @@ func (q *LegacyQueryServer) ContractsByCode(ctx context.Context, req *wasmtypes.
 	if !ok {
 		return resp, err
 	}
-	kv := sdkCtx.KVStore(storeKey)
+	kv := sdk.UnwrapSDKContext(ctx).KVStore(storeKey)
 
 	// New secondary index after migration: 0x06 | codeID(8) | addr
 	// Old secondary index: 0x10 | codeID(8) | addr
@@ -277,6 +253,13 @@ func (q *LegacyQueryServer) ContractsByCode(ctx context.Context, req *wasmtypes.
 // codecMarshaler defines just the Unmarshal API we need from the keeper codec
 type codecMarshaler interface {
 	Unmarshal(bz []byte, ptr interface{}) error
+}
+
+// shouldUseLegacyFallback checks if legacy fallback should be used for the current context
+func (q *LegacyQueryServer) shouldUseLegacyFallback(ctx context.Context) bool {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	legacyMode := legacy.GetLegacyHandling(sdkCtx.ChainID(), sdkCtx.BlockHeight())
+	return legacyMode != legacy.LegacyHandlingNone
 }
 
 // helper to reflect store key and codec

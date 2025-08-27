@@ -28,13 +28,13 @@ type UpgradeTestSuite struct {
 
 // Configure address verification for tests so 20-byte payloads are valid addresses.
 func (s *UpgradeTestSuite) SetupSuite() {
-    cfg := sdk.GetConfig()
-    cfg.SetAddressVerifier(func(bz []byte) error {
-        if len(bz) == 20 {
-            return nil
-        }
-        return fmt.Errorf("invalid address length %d", len(bz))
-    })
+	cfg := sdk.GetConfig()
+	cfg.SetAddressVerifier(func(bz []byte) error {
+		if len(bz) == 20 {
+			return nil
+		}
+		return fmt.Errorf("invalid address length %d", len(bz))
+	})
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

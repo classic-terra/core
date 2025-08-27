@@ -411,7 +411,8 @@ func (s *ComprehensiveMigrationTestSuite) TestDirectContractStoreFallbackMigrate
 
 	// length-prefixed 20-byte head, but NOT present in 0x04 (unknown contract)
 	head := append([]byte{20}, bytes.Repeat([]byte{0xCC}, 20)...)
-	oldComposite := append(head, 0x02) // subkey
+	oldComposite := append(head, 0x02) // nolint:gocritic
+
 	oldKey := append([]byte{0x05}, oldComposite...)
 	oldVal := []byte("unknown-contract-store")
 	kv.Set(oldKey, oldVal)
@@ -428,7 +429,7 @@ func (s *ComprehensiveMigrationTestSuite) TestDirectContractStoreFallbackMigrate
 
 	// The migration will strip the length prefix from the composite key
 	strippedHead := bytes.Repeat([]byte{0xCC}, 20)  // stripped from [20][CC*20]
-	expectedComposite := append(strippedHead, 0x02) // [CC*20][0x02]
+	expectedComposite := append(strippedHead, 0x02) //nolint:gocritic
 	newKey := append([]byte{0x03}, expectedComposite...)
 
 	s.Require().Equal(oldVal, kv.Get(newKey))

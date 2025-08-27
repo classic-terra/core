@@ -4,6 +4,7 @@ package v13
 import (
 	"bytes"
 	"fmt"
+	"sort"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -337,7 +338,7 @@ func migrateContractStoreKeysWithProtection(store sdk.KVStore, contractAddresses
 			originalValue := make([]byte, len(oldContractIter.Value()))
 			copy(originalValue, oldContractIter.Value())
 
-			if originalKey == nil || originalValue == nil {
+			if len(originalKey) == 0 || len(originalValue) == 0 {
 				continue
 			}
 
@@ -471,15 +472,21 @@ func removeLengthPrefixIfNeeded(b []byte) (out []byte, stripped bool) {
 	return bytes.Clone(b), false
 }
 
-// buildKnownLegitimateAddresses creates a map of addresses that we know are legitimate
+// buildKnownLegitimateAddresses creates a slice of addresses that we know are legitimate
 // This should be populated based on historical chain data or other reliable sources
-func buildKnownLegitimateAddresses(contractAddresses [][]byte) map[string]bool {
-	knownLegitimate := make(map[string]bool)
+func buildKnownLegitimateAddresses(contractAddresses [][]byte) []string {
+	// Use a map temporarily for deduplication and collision detection
+	tempMap := make(map[string]bool)
+	var result []string
 
 	// First pass: identify addresses that don't need stripping (already valid format)
 	for _, addr := range contractAddresses {
 		if err := sdk.VerifyAddressFormat(addr); err == nil {
-			knownLegitimate[string(addr)] = true
+			addrStr := string(addr)
+			if !tempMap[addrStr] {
+				tempMap[addrStr] = true
+				result = append(result, addrStr)
+			}
 		}
 	}
 
@@ -489,10 +496,11 @@ func buildKnownLegitimateAddresses(contractAddresses [][]byte) map[string]bool {
 		if err := sdk.VerifyAddressFormat(addr); err != nil {
 			// This might be length-prefixed
 			if stripped, wasStripped := removeLengthPrefixIfNeeded(addr); wasStripped {
-				strippedKey := string(stripped)
+				strippedStr := string(stripped)
 				// Only mark as legitimate if it doesn't conflict with existing entries
-				if !knownLegitimate[strippedKey] {
-					knownLegitimate[strippedKey] = true
+				if !tempMap[strippedStr] {
+					tempMap[strippedStr] = true
+					result = append(result, strippedStr)
 				} else {
 					// Collision detected - log it but don't add to legitimate set
 					fmt.Printf("WARNING: Collision detected for address %X, will preserve original format\n", addr)
@@ -501,7 +509,9 @@ func buildKnownLegitimateAddresses(contractAddresses [][]byte) map[string]bool {
 		}
 	}
 
-	return knownLegitimate
+	// Sort for deterministic order
+	sort.Strings(result)
+	return result
 }
 
 // collectContractAddresses gets all contract addresses before any migration
@@ -538,10 +548,6 @@ func MigrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 func RemoveLengthPrefixIfNeeded(bz []byte) ([]byte, bool) {
 	return removeLengthPrefixIfNeeded(bz)
-}
-
-func BuildKnownLegitimateAddresses(contractAddresses [][]byte) map[string]bool {
-	return buildKnownLegitimateAddresses(contractAddresses)
 }
 
 func CollectContractAddresses(store sdk.KVStore) [][]byte {

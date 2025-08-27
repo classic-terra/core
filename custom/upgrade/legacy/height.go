@@ -9,11 +9,6 @@ const (
 	TestnetUpgradeHeightV2 = int64(19354000) // rebel-2 testnet upgrade height to v8
 	LegacyUpgradeHeightV1  = int64(0)        // This is not included in the local testing as it would need v3 as a basis
 	LegacyUpgradeHeightV2  = int64(25)       // Local testing upgrade height to v8 (using upgrade-test-multi.sh script)
-	LegacyUpgradeHeightV3  = int64(50)
-
-	TestnetUpgradeHeightV3 = int64(19354001) // rebel-2 testnet upgrade height to next version (must be > V2)
-	MainnetUpgradeHeightV3 = int64(18303001) // columbus-5 mainnet upgrade height to next version (must be > V2)
-
 )
 
 // LegacyHandlingVersion represents different versions of legacy handling
@@ -26,7 +21,6 @@ const (
 	LegacyHandlingNone LegacyHandlingVersion = iota
 	LegacyHandlingV1
 	LegacyHandlingV2
-	LegacyHandlingV3
 )
 
 // GetLegacyHandling returns the appropriate legacy handling version based on the chain ID and block height
@@ -41,24 +35,18 @@ func GetLegacyHandling(chainID string, blockHeight int64) LegacyHandlingVersion 
 			return LegacyHandlingV1
 		} else if blockHeight < MainnetUpgradeHeightV2 {
 			return LegacyHandlingV2
-		} else if blockHeight < MainnetUpgradeHeightV3 {
-			return LegacyHandlingV3
 		}
 	case core.RebelChainID:
 		if blockHeight < TestnetUpgradeHeightV1 {
 			return LegacyHandlingV1
 		} else if blockHeight < TestnetUpgradeHeightV2 {
 			return LegacyHandlingV2
-		} else if blockHeight < TestnetUpgradeHeightV3 {
-			return LegacyHandlingV3
 		}
 	case "localterra-legacy":
 		if blockHeight < LegacyUpgradeHeightV1 {
 			return LegacyHandlingV1
 		} else if blockHeight < LegacyUpgradeHeightV2 {
 			return LegacyHandlingV2
-		} else if blockHeight < LegacyUpgradeHeightV3 {
-			return LegacyHandlingV3
 		}
 	default:
 		// For local testing or other networks do not use legacy handling

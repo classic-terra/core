@@ -556,22 +556,25 @@ func MigrateContractKeys(store sdk.KVStore) error {
 	return migrateContractKeysWithProtection(store)
 }
 
-// looksLikeContractStoreKey returns true if k starts with a known contract address
-// (optionally 1-byte length-prefixed) and has trailing subkey bytes.
-func looksLikeContractStoreKey(k []byte, known map[string]bool) bool {
+func looksLikeContractStoreKey(k []byte, knownAddrs []string) bool {
 	// Case A: 1-byte length-prefixed address + subkey
 	if len(k) > 1 {
 		ln := int(k[0])
 		if ln > 0 && 1+ln <= len(k) {
-			addr := k[1 : 1+ln]
-			if known[string(addr)] && 1+ln < len(k) {
-				return true
+			addr := string(k[1 : 1+ln])
+			// Deterministic search through slice
+			for _, known := range knownAddrs {
+				if known == addr && 1+ln < len(k) {
+					return true
+				}
 			}
 		}
 	}
+
 	// Case B: unprefixed address at the front + subkey
-	for a := range known {
-		ab := []byte(a)
+	// This loop will always process addresses in the same order
+	for _, addr := range knownAddrs {
+		ab := []byte(addr)
 		if len(k) > len(ab) && bytes.Equal(k[:len(ab)], ab) {
 			return true
 		}

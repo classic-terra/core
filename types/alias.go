@@ -42,6 +42,11 @@ const (
 
 // functions aliases
 var (
-	IsPeriodLastBlock = util.IsPeriodLastBlock
-	AddressVerifier   = util.AddressVerifier
+	IsPeriodLastBlock                   = util.IsPeriodLastBlock
+	AddressVerifier                     = util.AddressVerifier
+	ReadContractHistoryWithFallback     = util.ReadContractHistoryWithFallback
+	IterateContractHistoryWithFallback  = util.IterateContractHistoryWithFallback
+	ReadContractInfoWithFallback        = util.ReadContractInfoWithFallback
+	ReadRawContractStateWithFallback    = util.ReadRawContractStateWithFallback
+	IterateAllContractStateWithFallback = util.IterateAllContractStateWithFallback
 )

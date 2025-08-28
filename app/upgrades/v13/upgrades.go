@@ -18,6 +18,12 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+// Helper for saving sequence keys
+type sequenceKeys struct {
+	codeIDValue     []byte
+	instanceIDValue []byte
+}
+
 func CreateV13UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
@@ -55,11 +61,11 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	// Save sequence keys for later migration
 	sequenceKeys := saveSequenceKeys(store)
 
+	// Perform migrations in order
 	if err := migrateContractKeys(store); err != nil {
 		return fmt.Errorf("failed to migrate contract keys: %w", err)
 	}
 
-	// Perform migrations in order
 	if err := migrateSequenceKeys(store, sequenceKeys, ctx); err != nil {
 		return fmt.Errorf("failed to migrate sequence keys: %w", err)
 	}
@@ -101,12 +107,45 @@ func markMigrationCompleted(store sdk.KVStore) {
 	store.Set(migrationMarker, []byte("true"))
 }
 
-// Helper for saving sequence keys
-type sequenceKeys struct {
-	codeIDValue     []byte
-	instanceIDValue []byte
+// migrateContractKeys move contracts key from 0x04 -> 0x02
+func migrateContractKeys(store sdk.KVStore) error {
+	oldPrefix := []byte{0x04}
+	newPrefix := []byte{0x02}
+
+	oldStore := prefix.NewStore(store, oldPrefix)
+	iterator := oldStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	var migratedCount int
+	var lengthPrefixRemovedCount int
+
+	for ; iterator.Valid(); iterator.Next() {
+		originalKey := copyBytes(iterator.Key())
+		originalValue := copyBytes(iterator.Value())
+
+		unprefixedKey, stripped := removeLengthPrefixIfNeeded(originalKey)
+		fmt.Printf("Processing contract key: %X\n", originalKey)
+		fmt.Printf("  - Unprefixed key: %X (length: %d), stripped: %v\n", unprefixedKey, len(unprefixedKey), stripped)
+		if stripped {
+			lengthPrefixRemovedCount++
+			fmt.Printf("Removed length prefix from contract key: %X -> %X\n", originalKey, unprefixedKey)
+		}
+
+		oldFullKey := buildFullKey(oldPrefix, originalKey)
+		newFullKey := buildFullKey(newPrefix, unprefixedKey)
+
+		store.Set(newFullKey, originalValue)
+		store.Delete(oldFullKey)
+		migratedCount++
+	}
+
+	fmt.Printf("migrated contractKey, migratedCount %d, lengthPrefixRemovedCount %d\n",
+		migratedCount, lengthPrefixRemovedCount)
+
+	return nil
 }
 
+// Save sequence keys to a variable for later migration
 func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 	oldCodeIDKey := []byte{0x01}
 	oldInstanceIDKey := []byte{0x02}
@@ -121,6 +160,9 @@ func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 	return seq
 }
 
+// migrateSequenceKeys migrates the saved sequence keys from old to new prefix
+// 0x01 → 0x04/"lastCodeId"
+// 0x02 → 0x04/"lastContractId"
 func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) error {
 	if seq.codeIDValue != nil {
 		newKey := append([]byte{0x04}, []byte("lastCodeId")...)
@@ -140,30 +182,6 @@ func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) e
 		store.Delete([]byte{0x02})
 	}
 
-	return nil
-}
-
-// Generic prefix migration
-func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
-	oldStore := prefix.NewStore(store, oldPrefix)
-	iterator := oldStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	var migratedCount int
-
-	for ; iterator.Valid(); iterator.Next() {
-		originalKey := copyBytes(iterator.Key())
-		originalValue := copyBytes(iterator.Value())
-
-		oldFullKey := buildFullKey(oldPrefix, originalKey)
-		newFullKey := buildFullKey(newPrefix, originalKey)
-
-		store.Set(newFullKey, originalValue)
-		store.Delete(oldFullKey)
-		migratedCount++
-	}
-
-	fmt.Printf("migrated %s, migratedCount %d\n", name, migratedCount)
 	return nil
 }
 
@@ -202,43 +220,7 @@ func migrateSecondaryIndexKeys(store sdk.KVStore) error {
 	return nil
 }
 
-func migrateContractKeys(store sdk.KVStore) error {
-	oldPrefix := []byte{0x04}
-	newPrefix := []byte{0x02}
-
-	oldStore := prefix.NewStore(store, oldPrefix)
-	iterator := oldStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	var migratedCount int
-	var lengthPrefixRemovedCount int
-
-	for ; iterator.Valid(); iterator.Next() {
-		originalKey := copyBytes(iterator.Key())
-		originalValue := copyBytes(iterator.Value())
-
-		unprefixedKey, stripped := removeLengthPrefixIfNeeded(originalKey)
-		fmt.Printf("Processing contract key: %X\n", originalKey)
-		fmt.Printf("  - Unprefixed key: %X (length: %d), stripped: %v\n", unprefixedKey, len(unprefixedKey), stripped)
-		if stripped {
-			lengthPrefixRemovedCount++
-			fmt.Printf("Removed length prefix from contract key: %X -> %X\n", originalKey, unprefixedKey)
-		}
-
-		oldFullKey := buildFullKey(oldPrefix, originalKey)
-		newFullKey := buildFullKey(newPrefix, unprefixedKey)
-
-		store.Set(newFullKey, originalValue)
-		store.Delete(oldFullKey)
-		migratedCount++
-	}
-
-	fmt.Printf("migrated contractKey, migratedCount %d, lengthPrefixRemovedCount %d\n",
-		migratedCount, lengthPrefixRemovedCount)
-
-	return nil
-}
-
+// migrateContractStoreKeys migrates contract store keys from old to new prefix
 func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) error {
 	oldPrefix := []byte{0x05}
 	newPrefix := []byte{0x03}
@@ -252,6 +234,7 @@ func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) err
 	return nil
 }
 
+// migrateContractSpecificKeys migrates contract-specific keys from old to new prefix
 func migrateContractSpecificKeys(store sdk.KVStore, oldPrefix, newPrefix []byte, contractAddresses [][]byte) int {
 	var totalMigrated int
 
@@ -505,6 +488,30 @@ func looksLikeContractStoreKey(k []byte, knownAddrs []string) bool {
 		}
 	}
 	return false
+}
+
+// Generic prefix migration from an old prefix to a new prefix
+func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
+	oldStore := prefix.NewStore(store, oldPrefix)
+	iterator := oldStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	var migratedCount int
+
+	for ; iterator.Valid(); iterator.Next() {
+		originalKey := copyBytes(iterator.Key())
+		originalValue := copyBytes(iterator.Value())
+
+		oldFullKey := buildFullKey(oldPrefix, originalKey)
+		newFullKey := buildFullKey(newPrefix, originalKey)
+
+		store.Set(newFullKey, originalValue)
+		store.Delete(oldFullKey)
+		migratedCount++
+	}
+
+	fmt.Printf("migrated %s, migratedCount %d\n", name, migratedCount)
+	return nil
 }
 
 // Exported functions for testing

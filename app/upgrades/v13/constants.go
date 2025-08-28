@@ -11,3 +11,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateV13UpgradeHandler,
 }
+
+const (
+	WasmMigrationMarker = "v13_wasm_migrated"
+)

@@ -92,12 +92,12 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 // Helper functions for migration state
 func isMigrationCompleted(store sdk.KVStore) bool {
-	migrationMarker := []byte("v13_wasm_migrated")
+	migrationMarker := []byte(WasmMigrationMarker)
 	return store.Has(migrationMarker)
 }
 
 func markMigrationCompleted(store sdk.KVStore) {
-	migrationMarker := []byte("v13_wasm_migrated")
+	migrationMarker := []byte(WasmMigrationMarker)
 	store.Set(migrationMarker, []byte("true"))
 }
 
@@ -149,14 +149,14 @@ func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) e
 	oldInstanceIDKey := []byte{0x02}
 
 	if seq.codeIDValue != nil {
-		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...)
+		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...) // nolint:gocritic
 		store.Set(newCodeIDKey, seq.codeIDValue)
 		ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence from 0x01 to %X", newCodeIDKey))
 		store.Delete(oldCodeIDKey)
 	}
 
 	if seq.instanceIDValue != nil {
-		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...)
+		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...) // nolint:gocritic
 		store.Set(newInstanceIDKey, seq.instanceIDValue)
 		ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence from 0x02 to %X", newInstanceIDKey))
 		store.Delete(oldInstanceIDKey)
@@ -287,8 +287,8 @@ func migrateContractSpecificKeys(store sdk.KVStore, oldPrefix, newPrefix []byte,
 			fmt.Printf("Stripped contract address: %X -> %X\n", contractAddr, unprefixedAddr)
 		}
 
-		oldContractPrefix := append(oldPrefix, contractAddr...)
-		newContractPrefix := append(newPrefix, unprefixedAddr...)
+		oldContractPrefix := append(oldPrefix, contractAddr...)   // nolint:gocritic
+		newContractPrefix := append(newPrefix, unprefixedAddr...) // nolint:gocritic
 
 		contractKeyCount := migrateContractStorage(store, oldContractPrefix, newContractPrefix)
 		totalMigrated += contractKeyCount
@@ -437,18 +437,18 @@ func buildFullKey(prefix, key []byte) []byte {
 }
 
 func removeLengthPrefixIfNeeded(b []byte) (out []byte, stripped bool) {
-	// Check for length prefix pattern first: [len|payload]
+	// If not length-prefixed, check if already a valid address
+	if err := sdk.VerifyAddressFormat(b); err == nil {
+		return bytes.Clone(b), false
+	}
+
+	// Check for length prefix pattern
 	if len(b) > 1 && int(b[0]) == len(b)-1 {
 		payload := b[1:]
 		// Verify the payload is a valid address
 		if err := sdk.VerifyAddressFormat(payload); err == nil {
 			return bytes.Clone(payload), true
 		}
-	}
-
-	// If not length-prefixed, check if already a valid address
-	if err := sdk.VerifyAddressFormat(b); err == nil {
-		return bytes.Clone(b), false
 	}
 
 	// Not an address format we recognize -> don't touch

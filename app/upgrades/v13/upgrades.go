@@ -308,7 +308,7 @@ func migrateContractStorage(store sdk.KVStore, oldContractPrefix, newContractPre
 		originalKey := copyBytes(oldContractIter.Key())
 		originalValue := copyBytes(oldContractIter.Value())
 
-		if len(originalKey) == 0 || len(originalValue) == 0 {
+		if len(originalKey) == 0 {
 			continue
 		}
 

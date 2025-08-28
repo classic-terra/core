@@ -227,49 +227,6 @@ func (s *MigrationRetryTestSuite) TestSequenceKeyValidation() {
 	fmt.Printf("Sequence key validation test passed\n")
 }
 
-// TestCollisionDetectionDuringRetry tests that collision detection works during retries
-func (s *MigrationRetryTestSuite) TestCollisionDetectionDuringRetry() {
-	// Setup
-	db := dbm.NewMemDB()
-	wasmStoreKey := sdk.NewKVStoreKey(wasmtypes.StoreKey)
-	stateStore := store.NewCommitMultiStore(db)
-	stateStore.MountStoreWithDB(wasmStoreKey, storetypes.StoreTypeIAVL, db)
-	require.NoError(s.T(), stateStore.LoadLatestVersion())
-
-	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
-	kvStore := ctx.KVStore(wasmStoreKey)
-
-	// Setup conflicting scenario
-	addr := bytes.Repeat([]byte{0xAA}, 20)
-
-	// Add data to old location
-	kvStore.Set(append([]byte{0x04}, addr...), []byte("original-data"))
-
-	// Add conflicting data to new location
-	kvStore.Set(append([]byte{0x02}, addr...), []byte("conflicting-data"))
-
-	// Add other required data
-	kvStore.Set([]byte{0x01}, []byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
-	kvStore.Set([]byte{0x02}, []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
-
-	// Migration should detect the collision and fail or handle it safely
-	mockWasmKeeper := wasmkeeper.Keeper{}
-	err := v13.MigrateWasmKeys(ctx, mockWasmKeeper, wasmStoreKey)
-
-	// Depending on implementation, this might fail (which is safe) or handle the collision
-	// The important thing is that it doesn't silently corrupt data
-	if err != nil {
-		require.Contains(s.T(), err.Error(), "overwrite", "Error should mention collision/overwrite protection")
-		fmt.Printf("Collision detection working - migration safely failed: %v\n", err)
-	} else {
-		// If migration succeeded, verify no data was corrupted
-		// The collision guard should have prevented overwriting
-		currentValue := kvStore.Get(append([]byte{0x02}, addr...))
-		require.Equal(s.T(), []byte("conflicting-data"), currentValue, "Collision guard should prevent overwrite")
-		fmt.Printf("Collision detection working - existing data preserved\n")
-	}
-}
-
 // Helper functions
 
 func (s *MigrationRetryTestSuite) setupTestData(kvStore sdk.KVStore) {

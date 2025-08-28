@@ -53,7 +53,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	}
 
 	// Save sequence keys for later migration
-	sequenceKeys := saveSequenceKeys(store, ctx)
+	sequenceKeys := saveSequenceKeys(store)
 
 	if err := migrateContractKeys(store); err != nil {
 		return fmt.Errorf("failed to migrate contract keys: %w", err)
@@ -107,41 +107,37 @@ type sequenceKeys struct {
 	instanceIDValue []byte
 }
 
-func saveSequenceKeys(store sdk.KVStore, ctx sdk.Context) sequenceKeys {
+func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 	oldCodeIDKey := []byte{0x01}
 	oldInstanceIDKey := []byte{0x02}
 
-	oldCodeIDValue := store.Get(oldCodeIDKey)
-	oldInstanceIDValue := store.Get(oldInstanceIDKey)
-
-	var seq sequenceKeys
-	if oldCodeIDValue != nil {
-		seq.codeIDValue = make([]byte, len(oldCodeIDValue))
-		copy(seq.codeIDValue, oldCodeIDValue)
-		store.Delete(oldCodeIDKey)
+	seq := sequenceKeys{}
+	if v := store.Get(oldCodeIDKey); v != nil {
+		seq.codeIDValue = append([]byte{}, v...) // copy
 	}
-
-	if oldInstanceIDValue != nil {
-		seq.instanceIDValue = make([]byte, len(oldInstanceIDValue))
-		copy(seq.instanceIDValue, oldInstanceIDValue)
-		store.Delete(oldInstanceIDKey)
+	if v := store.Get(oldInstanceIDKey); v != nil {
+		seq.instanceIDValue = append([]byte{}, v...) // copy
 	}
-
 	return seq
 }
 
-// migrateSequenceKeys migrates the sequence keys from the old store to the new store.
 func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) error {
 	if seq.codeIDValue != nil {
-		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...) // nolint:gocritic
-		store.Set(newCodeIDKey, seq.codeIDValue)
-		ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence from 0x01 to %X", newCodeIDKey))
+		newKey := append([]byte{0x04}, []byte("lastCodeId")...)
+		if !store.Has(newKey) {
+			store.Set(newKey, seq.codeIDValue)
+			ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence to %X", newKey))
+		}
+		store.Delete([]byte{0x01}) // delete old only after new exists
 	}
 
 	if seq.instanceIDValue != nil {
-		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...) // nolint:gocritic
-		store.Set(newInstanceIDKey, seq.instanceIDValue)
-		ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence from 0x02 to %X", newInstanceIDKey))
+		newKey := append([]byte{0x04}, []byte("lastContractId")...)
+		if !store.Has(newKey) {
+			store.Set(newKey, seq.instanceIDValue)
+			ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence to %X", newKey))
+		}
+		store.Delete([]byte{0x02})
 	}
 
 	return nil

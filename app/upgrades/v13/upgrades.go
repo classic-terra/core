@@ -55,11 +55,11 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	// Save sequence keys for later migration
 	sequenceKeys := saveSequenceKeys(store, ctx)
 
-	// Perform migrations in order
 	if err := migrateContractKeys(store); err != nil {
 		return fmt.Errorf("failed to migrate contract keys: %w", err)
 	}
 
+	// Perform migrations in order
 	if err := migrateSequenceKeys(store, sequenceKeys, ctx); err != nil {
 		return fmt.Errorf("failed to migrate sequence keys: %w", err)
 	}
@@ -114,58 +114,40 @@ func saveSequenceKeys(store sdk.KVStore, ctx sdk.Context) sequenceKeys {
 	oldCodeIDValue := store.Get(oldCodeIDKey)
 	oldInstanceIDValue := store.Get(oldInstanceIDKey)
 
-	logSequenceKeyInfo(ctx, oldCodeIDValue, oldInstanceIDValue)
-
 	var seq sequenceKeys
 	if oldCodeIDValue != nil {
 		seq.codeIDValue = make([]byte, len(oldCodeIDValue))
 		copy(seq.codeIDValue, oldCodeIDValue)
+		store.Delete(oldCodeIDKey)
 	}
 
 	if oldInstanceIDValue != nil {
 		seq.instanceIDValue = make([]byte, len(oldInstanceIDValue))
 		copy(seq.instanceIDValue, oldInstanceIDValue)
+		store.Delete(oldInstanceIDKey)
 	}
 
 	return seq
 }
 
-func logSequenceKeyInfo(ctx sdk.Context, codeIDValue, instanceIDValue []byte) {
-	if codeIDValue != nil {
-		ctx.Logger().Info(fmt.Sprintf("Found code ID sequence: %v", codeIDValue))
-	} else {
-		ctx.Logger().Info("No code ID sequence found at key 0x01")
-	}
-
-	if instanceIDValue != nil {
-		ctx.Logger().Info(fmt.Sprintf("Found instance ID sequence: %v", instanceIDValue))
-	} else {
-		ctx.Logger().Info("No instance ID sequence found at key 0x02")
-	}
-}
-
+// migrateSequenceKeys migrates the sequence keys from the old store to the new store.
 func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) error {
-	oldCodeIDKey := []byte{0x01}
-	oldInstanceIDKey := []byte{0x02}
-
 	if seq.codeIDValue != nil {
 		newCodeIDKey := append([]byte{0x04}, []byte("lastCodeId")...) // nolint:gocritic
 		store.Set(newCodeIDKey, seq.codeIDValue)
 		ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence from 0x01 to %X", newCodeIDKey))
-		store.Delete(oldCodeIDKey)
 	}
 
 	if seq.instanceIDValue != nil {
 		newInstanceIDKey := append([]byte{0x04}, []byte("lastContractId")...) // nolint:gocritic
 		store.Set(newInstanceIDKey, seq.instanceIDValue)
 		ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence from 0x02 to %X", newInstanceIDKey))
-		store.Delete(oldInstanceIDKey)
 	}
 
 	return nil
 }
 
-// Generic prefix migration without collision checking
+// Generic prefix migration
 func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
 	oldStore := prefix.NewStore(store, oldPrefix)
 	iterator := oldStore.Iterator(nil, nil)
@@ -240,6 +222,8 @@ func migrateContractKeys(store sdk.KVStore) error {
 		originalValue := copyBytes(iterator.Value())
 
 		unprefixedKey, stripped := removeLengthPrefixIfNeeded(originalKey)
+		fmt.Printf("Processing contract key: %X\n", originalKey)
+		fmt.Printf("  - Unprefixed key: %X (length: %d), stripped: %v\n", unprefixedKey, len(unprefixedKey), stripped)
 		if stripped {
 			lengthPrefixRemovedCount++
 			fmt.Printf("Removed length prefix from contract key: %X -> %X\n", originalKey, unprefixedKey)
@@ -441,7 +425,6 @@ func removeLengthPrefixIfNeeded(b []byte) (out []byte, stripped bool) {
 	if err := sdk.VerifyAddressFormat(b); err == nil {
 		return bytes.Clone(b), false
 	}
-
 	// Check for length prefix pattern
 	if len(b) > 1 && int(b[0]) == len(b)-1 {
 		payload := b[1:]
@@ -499,13 +482,6 @@ func collectContractAddresses(store sdk.KVStore) [][]byte {
 	for ; contractInfoIter.Valid(); contractInfoIter.Next() {
 		addr := contractInfoIter.Key()
 		contractAddresses = append(contractAddresses, addr)
-
-		fmt.Printf("Found contract address: %X (length: %d)\n", addr, len(addr))
-
-		unprefixedAddr, stripped := removeLengthPrefixIfNeeded(addr)
-		if stripped {
-			fmt.Printf("  - Would be unprefixed to: %X (length: %d)\n", unprefixedAddr, len(unprefixedAddr))
-		}
 	}
 
 	return contractAddresses

@@ -222,3 +222,142 @@ func (s *ComprehensiveMigrationTestSuite) TestContractsByCreatorMigration_Length
 	newKey := wasmtypes.GetContractsByCreatorPrefix(s.testAddr1)
 	s.Require().Equal(oldVal, s.kvStore.Get(newKey))
 }
+
+// TestFullMigrationFlow tests the complete migration flow with all key types
+func (s *ComprehensiveMigrationTestSuite) TestFullMigrationFlow() {
+	// Setup all legacy data before migration
+	s.setupLegacyData()
+
+	// Verify legacy data exists
+	s.verifyLegacyDataExists()
+
+	// Run migration
+	s.runMigration()
+
+	// Verify all data migrated correctly
+	s.verifyMigratedData()
+
+	// Verify old keys are cleaned up
+	s.verifyLegacyDataRemoved()
+}
+
+func (s *ComprehensiveMigrationTestSuite) setupLegacyData() {
+	// Sequence keys
+	s.kvStore.Set(v13.LegacyPrefixes.KeySequenceCodeID, []byte{0x10})
+	s.kvStore.Set(v13.LegacyPrefixes.KeySequenceInstanceID, []byte{0x20})
+
+	// Contract info keys (with length prefix)
+	contractKey1 := v13.GetContractAddressKeyLegacy(s.testAddr1)
+	s.kvStore.Set(contractKey1, []byte("contract-info-1"))
+
+	contractKey2 := v13.GetContractAddressKeyLegacy(s.testAddr2)
+	s.kvStore.Set(contractKey2, []byte("contract-info-2"))
+
+	// Contract store keys (with length prefix)
+	storeKey1 := append(v13.GetContractStorePrefixLegacy(s.testAddr1), []byte("subkey1")...)
+	s.kvStore.Set(storeKey1, []byte("store-value-1"))
+
+	storeKey2 := append(v13.GetContractStorePrefixLegacy(s.testAddr2), []byte("subkey2")...)
+	s.kvStore.Set(storeKey2, []byte("store-value-2"))
+
+	// Contract history key
+	historyKey := v13.GetContractCodeHistoryElementKeyLegacy(s.testAddr1, 1)
+	s.kvStore.Set(historyKey, []byte("history-1"))
+
+	// Secondary index key
+	contractCodeHistoryEntry := wasmtypes.ContractCodeHistoryEntry{
+		CodeID: 42,
+		Updated: &wasmtypes.AbsoluteTxPosition{
+			BlockHeight: 10,
+			TxIndex:     10,
+		},
+	}
+	secIndexKey := v13.GetContractByCreatedSecondaryIndexKeyLegacy(s.testAddr1, contractCodeHistoryEntry)
+	s.kvStore.Set(secIndexKey, []byte("sec-index-1"))
+
+	// Pinned code index
+	pinnedKey := v13.GetPinnedCodeIndexPrefixLegacy(42)
+	s.kvStore.Set(pinnedKey, []byte("pinned-42"))
+
+	// TX counter
+	s.kvStore.Set(v13.LegacyPrefixes.TXCounterPrefix, []byte{0x05})
+
+	// Contracts by creator
+	creatorKey := v13.GetContractsByCreatorPrefixLegacy(s.testAddr1)
+	s.kvStore.Set(creatorKey, []byte("creator-contracts"))
+
+	// Params
+	s.kvStore.Set(v13.LegacyPrefixes.ParamsKey, []byte("params-data"))
+}
+
+func (s *ComprehensiveMigrationTestSuite) verifyLegacyDataExists() {
+	// Verify all legacy keys exist before migration
+	s.Require().NotNil(s.kvStore.Get(v13.LegacyPrefixes.KeySequenceCodeID))
+	s.Require().NotNil(s.kvStore.Get(v13.LegacyPrefixes.KeySequenceInstanceID))
+	s.Require().NotNil(s.kvStore.Get(v13.GetContractAddressKeyLegacy(s.testAddr1)))
+	s.Require().NotNil(s.kvStore.Get(v13.LegacyPrefixes.ParamsKey))
+}
+
+func (s *ComprehensiveMigrationTestSuite) verifyMigratedData() {
+	// Sequence keys migrated
+	s.Require().Equal([]byte{0x10}, s.kvStore.Get(wasmtypes.KeySequenceCodeID))
+	s.Require().Equal([]byte{0x20}, s.kvStore.Get(wasmtypes.KeySequenceInstanceID))
+
+	// Contract info keys migrated (length prefix removed)
+	newContractKey1 := wasmtypes.GetContractAddressKey(s.testAddr1)
+	s.Require().Equal([]byte("contract-info-1"), s.kvStore.Get(newContractKey1))
+
+	newContractKey2 := wasmtypes.GetContractAddressKey(s.testAddr2)
+	s.Require().Equal([]byte("contract-info-2"), s.kvStore.Get(newContractKey2))
+
+	// Contract store keys migrated (length prefix removed)
+	newStoreKey1 := append(wasmtypes.GetContractStorePrefix(s.testAddr1), []byte("subkey1")...)
+	s.Require().Equal([]byte("store-value-1"), s.kvStore.Get(newStoreKey1))
+
+	newStoreKey2 := append(wasmtypes.GetContractStorePrefix(s.testAddr2), []byte("subkey2")...)
+	s.Require().Equal([]byte("store-value-2"), s.kvStore.Get(newStoreKey2))
+
+	// Contract history migrated
+	newHistoryKey := wasmtypes.GetContractCodeHistoryElementKey(s.testAddr1, 1)
+	s.Require().Equal([]byte("history-1"), s.kvStore.Get(newHistoryKey))
+
+	// Secondary index migrated
+	contractCodeHistoryEntry := wasmtypes.ContractCodeHistoryEntry{
+		CodeID: 42,
+		Updated: &wasmtypes.AbsoluteTxPosition{
+			BlockHeight: 10,
+			TxIndex:     10,
+		},
+	}
+	newSecIndexKey := wasmtypes.GetContractByCreatedSecondaryIndexKey(s.testAddr1, contractCodeHistoryEntry)
+	s.Require().Equal([]byte("sec-index-1"), s.kvStore.Get(newSecIndexKey))
+
+	// Pinned code index migrated (stays same)
+	newPinnedKey := wasmtypes.GetPinnedCodeIndexPrefix(42)
+	s.Require().Equal([]byte("pinned-42"), s.kvStore.Get(newPinnedKey))
+
+	// TX counter migrated (stays same)
+	s.Require().Equal([]byte{0x05}, s.kvStore.Get(wasmtypes.TXCounterPrefix))
+
+	// Contracts by creator migrated (stays same)
+	newCreatorKey := wasmtypes.GetContractsByCreatorPrefix(s.testAddr1)
+	s.Require().Equal([]byte("creator-contracts"), s.kvStore.Get(newCreatorKey))
+
+	// Params migrated
+	s.Require().Equal([]byte("params-data"), s.kvStore.Get(wasmtypes.ParamsKey))
+}
+
+func (s *ComprehensiveMigrationTestSuite) verifyLegacyDataRemoved() {
+	// Verify old keys are removed (except those that stay the same)
+	s.Require().Nil(s.kvStore.Get(v13.LegacyPrefixes.KeySequenceCodeID))
+	s.Require().Nil(s.kvStore.Get(v13.GetContractAddressKeyLegacy(s.testAddr1)))
+	s.Require().Nil(s.kvStore.Get(v13.GetContractAddressKeyLegacy(s.testAddr2)))
+
+	oldStoreKey1 := append(v13.GetContractStorePrefixLegacy(s.testAddr1), []byte("subkey1")...)
+	s.Require().Nil(s.kvStore.Get(oldStoreKey1))
+
+	oldHistoryKey := v13.GetContractCodeHistoryElementKeyLegacy(s.testAddr1, 1)
+	s.Require().Nil(s.kvStore.Get(oldHistoryKey))
+
+	s.Require().Nil(s.kvStore.Get(v13.LegacyPrefixes.ParamsKey))
+}

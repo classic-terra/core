@@ -43,11 +43,6 @@ func CreateV13UpgradeHandler(
 func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey storetypes.StoreKey) error {
 	store := ctx.KVStore(wasmStoreKey)
 
-	if isMigrationCompleted(store) {
-		ctx.Logger().Info("WASM key migration already completed, skipping")
-		return nil
-	}
-
 	ctx.Logger().Info("Starting WASM key migration from forked to original format")
 
 	// Collect contract addresses before migration
@@ -78,7 +73,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 		return fmt.Errorf("failed to migrate contract store keys: %w", err)
 	}
 
-	if err := migratePrefix(store, []byte{0x06}, []byte{0x05}, "contractHistoryKey"); err != nil {
+	if err := migratePrefix(store, LegacyPrefixes.ContractCodeHistoryElementPrefix, wasmtypes.ContractCodeHistoryElementPrefix, "contractHistoryKey"); err != nil {
 		return fmt.Errorf("failed to migrate contract history keys: %w", err)
 	}
 
@@ -90,27 +85,15 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 		return fmt.Errorf("failed to migrate params key: %w", err)
 	}
 
-	markMigrationCompleted(store)
 	ctx.Logger().Info("WASM key migration completed successfully")
 
 	return nil
 }
 
-// Helper functions for migration state
-func isMigrationCompleted(store sdk.KVStore) bool {
-	migrationMarker := []byte(WasmMigrationMarker)
-	return store.Has(migrationMarker)
-}
-
-func markMigrationCompleted(store sdk.KVStore) {
-	migrationMarker := []byte(WasmMigrationMarker)
-	store.Set(migrationMarker, []byte("true"))
-}
-
 // migrateContractKeys move contracts key from 0x04 -> 0x02
 func migrateContractKeys(store sdk.KVStore) error {
-	oldPrefix := []byte{0x04}
-	newPrefix := []byte{0x02}
+	oldPrefix := LegacyPrefixes.ContractKeyPrefix
+	newPrefix := wasmtypes.ContractKeyPrefix
 
 	oldStore := prefix.NewStore(store, oldPrefix)
 	iterator := oldStore.Iterator(nil, nil)
@@ -147,8 +130,8 @@ func migrateContractKeys(store sdk.KVStore) error {
 
 // Save sequence keys to a variable for later migration
 func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
-	oldCodeIDKey := []byte{0x01}
-	oldInstanceIDKey := []byte{0x02}
+	oldCodeIDKey := LegacyPrefixes.KeySequenceCodeID
+	oldInstanceIDKey := LegacyPrefixes.KeySequenceInstanceID
 
 	seq := sequenceKeys{}
 	if v := store.Get(oldCodeIDKey); v != nil {
@@ -165,29 +148,29 @@ func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 // 0x02 → 0x04/"lastContractId"
 func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) error {
 	if seq.codeIDValue != nil {
-		newKey := append([]byte{0x04}, []byte("lastCodeId")...)
+		newKey := wasmtypes.KeySequenceCodeID
 		if !store.Has(newKey) {
 			store.Set(newKey, seq.codeIDValue)
 			ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence to %X", newKey))
 		}
-		store.Delete([]byte{0x01}) // delete old only after new exists
+		store.Delete(LegacyPrefixes.KeySequenceCodeID) // delete old only after new exists
 	}
 
 	if seq.instanceIDValue != nil {
-		newKey := append([]byte{0x04}, []byte("lastContractId")...)
+		newKey := wasmtypes.KeySequenceInstanceID
 		if !store.Has(newKey) {
 			store.Set(newKey, seq.instanceIDValue)
 			ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence to %X", newKey))
 		}
-		store.Delete([]byte{0x02})
+		store.Delete(LegacyPrefixes.KeySequenceInstanceID) // delete old only after new exists
 	}
 
 	return nil
 }
 
 func migrateSecondaryIndexKeys(store sdk.KVStore) error {
-	oldPrefix := []byte{0x10}
-	newPrefix := []byte{0x06}
+	oldPrefix := LegacyPrefixes.ContractByCodeIDAndCreatedSecondaryIndexPrefix
+	newPrefix := wasmtypes.ContractByCodeIDAndCreatedSecondaryIndexPrefix
 
 	oldStore := prefix.NewStore(store, oldPrefix)
 	iterator := oldStore.Iterator(nil, nil)
@@ -222,8 +205,8 @@ func migrateSecondaryIndexKeys(store sdk.KVStore) error {
 
 // migrateContractStoreKeys migrates contract store keys from old to new prefix
 func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) error {
-	oldPrefix := []byte{0x05}
-	newPrefix := []byte{0x03}
+	oldPrefix := LegacyPrefixes.ContractStorePrefix
+	newPrefix := wasmtypes.ContractStorePrefix
 
 	fmt.Printf("Using %d pre-collected contracts to migrate storage\n", len(contractAddresses))
 
@@ -332,8 +315,8 @@ func rebuildCompositeKey(originalKey []byte) []byte {
 }
 
 func migrateParamsKey(store sdk.KVStore) error {
-	oldKey := []byte{0x11}
-	newKey := []byte{0x10}
+	oldKey := LegacyPrefixes.ParamsKey
+	newKey := wasmtypes.ParamsKey
 
 	value := store.Get(oldKey)
 	if value == nil {
@@ -347,8 +330,8 @@ func migrateParamsKey(store sdk.KVStore) error {
 }
 
 func migrateCodeKeys(store sdk.KVStore, contractAddresses [][]byte) error {
-	oldPrefix := []byte{0x03}
-	newPrefix := []byte{0x01}
+	oldPrefix := LegacyPrefixes.CodeKeyPrefix
+	newPrefix := wasmtypes.CodeKeyPrefix
 
 	known := buildKnownLegitimateAddresses(contractAddresses)
 
@@ -452,7 +435,7 @@ func buildKnownLegitimateAddresses(contractAddresses [][]byte) []string {
 }
 
 func collectContractAddresses(store sdk.KVStore) [][]byte {
-	contractInfoPrefix := []byte{0x04}
+	contractInfoPrefix := LegacyPrefixes.ContractKeyPrefix
 	contractInfoStore := prefix.NewStore(store, contractInfoPrefix)
 	contractInfoIter := contractInfoStore.Iterator(nil, nil)
 	defer contractInfoIter.Close()

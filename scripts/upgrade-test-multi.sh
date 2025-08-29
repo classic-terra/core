@@ -8,8 +8,8 @@ FORK=${FORK:-"false"}
 # Each element in OLD_VERSIONS represents a version to upgrade from,
 # and the corresponding element in UPGRADE_NAMES is the upgrade name applied to that version.
 # For example, OLD_VERSIONS[0] is upgraded using UPGRADE_NAMES[0], and so on.
-OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v2.4.2,v3.0.4,v3.1.3,v3.1.5,v3.1.6,v3.3.0,v3.4.0"}
-UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v8,v8_1,v8_2,v8_3,v10_1,v11_1,v11_2"}
+OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v2.4.2,v3.0.4,v3.1.3,v3.1.5,v3.1.6,v3.3.0,v3.4.0,v3.4.3,v3.5.0"}
+UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v8,v8_1,v8_2,v8_3,v10_1,v11_1,v11_2,v12,v13"}
 
 # Parse comma-separated lists into arrays
 IFS=',' read -r -a OLD_VERSIONS <<< "$OLD_VERSIONS_STRING"
@@ -295,7 +295,13 @@ run_final_tests() {
     
     echo -e "\n--- Historic height test2 balance (height $historic_height) ---"
     ${binary_path} q wasm contract-state smart $CONTRACT_ADDR "$BALANCE_MSG" --height $historic_height --output json | jq
-    
+
+    echo -e "\n--- Current height contract info ---"
+    ${binary_path} q wasm contract $CONTRACT_ADDR --output json | jq
+
+    echo -e "\n--- Historic height contract info (height $historic_height) ---"
+    ${binary_path} q wasm contract $CONTRACT_ADDR --height $historic_height --output json | jq
+
     echo -e "\n======== TESTS COMPLETED ========\n"
 }
 

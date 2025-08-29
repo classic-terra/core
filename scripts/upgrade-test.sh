@@ -4,20 +4,19 @@
 FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
-OLD_VERSION=v3.5.0
+OLD_VERSION=v3.4.0
 UPGRADE_WAIT=${UPGRADE_WAIT:-20}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
-SOFTWARE_UPGRADE_NAME="v13"
-ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-"scripts/wasm/dex/pre-dex.sh"}
-# ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
-ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-"scripts/wasm/dex/post-dex.sh"}
+SOFTWARE_UPGRADE_NAME="v12"
+ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
+ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 
 if [[ "$FORK" == "true" ]]; then
-    export TERRAD_HALT_HEIGHT=100
+    export TERRAD_HALT_HEIGHT=20
 fi
 
 # underscore so that go tool will not take gocache into account
@@ -54,7 +53,7 @@ else
     screen -L -Logfile $HOME/log-screen.txt -dmS node1 bash scripts/run-node.sh _build/old/terrad $DENOM
 fi
 
-sleep 2
+sleep 20
 
 # execute additional pre scripts
 if [ ! -z "$ADDITIONAL_PRE_SCRIPTS" ]; then
@@ -72,7 +71,6 @@ if [ ! -z "$ADDITIONAL_PRE_SCRIPTS" ]; then
     done
 fi
 
-
 run_fork () {
     echo "forking"
 
@@ -81,7 +79,7 @@ run_fork () {
         # if BLOCK_HEIGHT is not empty
         if [ ! -z "$BLOCK_HEIGHT" ]; then
             echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
-            sleep 2
+            sleep 10
         else
             echo "BLOCK_HEIGHT is empty, forking"
             break
@@ -92,11 +90,8 @@ run_fork () {
 run_upgrade () {
     echo "upgrading"
 
-    STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.SyncInfo.latest_block_height'))
-    echo "status info:" $STATUS_INFO
-    UPGRADE_HEIGHT=$((STATUS_INFO + 20))
-
-    echo "upgrade height:" $UPGRADE_HEIGHT
+    STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
+    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
 
     tar -cf ./_build/new/terrad.tar -C ./_build/new terrad
     SUM=$(shasum -a 256 ./_build/new/terrad.tar | cut -d ' ' -f1)
@@ -111,19 +106,19 @@ run_upgrade () {
 
     ./_build/old/terrad tx gov submit-legacy-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "$UPGRADE_INFO" --title "upgrade" --description "upgrade"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 1
+    sleep 5
 
     ./_build/old/terrad tx gov deposit 1 "20000000${DENOM}" --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 1
+    sleep 5
 
     ./_build/old/terrad tx gov vote 1 yes --from test0 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 1
+    sleep 5
 
     ./_build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 1
+    sleep 5
 
     # determine block_height to halt
     while true; do 
@@ -136,7 +131,7 @@ run_upgrade () {
         else
             ./_build/old/terrad q gov proposal 1 --output=json | jq ".status"
             echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
-            sleep 1
+            sleep 10
         fi
     done
 }
@@ -149,7 +144,7 @@ else
     run_upgrade
 fi
 
-sleep 1
+sleep 5
 
 # run new node
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -158,7 +153,7 @@ else
     CONTINUE="true" screen -L -Logfile $HOME/log-screen.txt -dmS node1 bash scripts/run-node.sh _build/new/terrad $DENOM
 fi
 
-sleep 2
+sleep 20
 
 # execute additional after scripts
 if [ ! -z "$ADDITIONAL_AFTER_SCRIPTS" ]; then
@@ -169,7 +164,7 @@ if [ ! -z "$ADDITIONAL_AFTER_SCRIPTS" ]; then
         if [ -f "$SCRIPT" ]; then
             echo "executing additional after scripts from $SCRIPT"
             source $SCRIPT
-            sleep 1
+            sleep 5
         else
             echo "$SCRIPT is not a file"
         fi

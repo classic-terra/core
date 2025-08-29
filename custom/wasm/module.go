@@ -15,6 +15,7 @@ import (
 
 	customcli "github.com/classic-terra/core/v3/custom/wasm/client/cli"
 	customtypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}
@@ -40,6 +41,7 @@ type AppModule struct {
 	wasm.AppModule
 	keeper         *keeper.Keeper
 	legacySubspace paramtypes.Subspace
+	storeKey       storetypes.StoreKey
 }
 
 // NewAppModule creates a new AppModule object
@@ -51,11 +53,13 @@ func NewAppModule(
 	bk simulation.BankKeeper,
 	router *baseapp.MsgServiceRouter,
 	ss paramtypes.Subspace,
+	storeKey storetypes.StoreKey,
 ) AppModule {
 	return AppModule{
 		AppModule:      wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
 		keeper:         keeper,
 		legacySubspace: ss,
+		storeKey:       storeKey,
 	}
 }
 
@@ -70,6 +74,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 		NewLegacyQueryServer(
 			originalQueryServer,
 			am.keeper,
+			am.storeKey,
 		),
 	)
 

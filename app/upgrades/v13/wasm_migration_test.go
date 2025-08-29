@@ -82,7 +82,7 @@ func (s *ComprehensiveMigrationTestSuite) TestKeySequenceCodeID() {
 }
 
 // TestKeySequenceInstanceID tests the migration of key sequence instance IDs.
-// It changes the prefix from 0x01 to 0x04+"lastContractId"
+// It changes the prefix from 0x02 to 0x04+"lastContractId"
 // https://github.com/classic-terra/wasmd/blob/release/v0.46.x-classic/x/wasm/types/keys.go#L28C2-L28C23
 // https://github.com/CosmWasm/wasmd/blob/v0.46.0/x/wasm/types/keys.go#L38
 func (s *ComprehensiveMigrationTestSuite) TestKeySequenceInstanceID() {
@@ -94,7 +94,9 @@ func (s *ComprehensiveMigrationTestSuite) TestKeySequenceInstanceID() {
 
 	newKey := wasmtypes.KeySequenceInstanceID
 	s.Require().Equal(oldVal, s.kvStore.Get(newKey))
-	s.Require().Nil(s.kvStore.Get(oldKey))
+
+	// Don't delete key at 0x02 because we store the contract keys here
+	// s.Require().Nil(s.kvStore.Get(oldKey))
 }
 
 // TestContractKeyMigration_LengthPrefixed tests the migration of contract info keys.

@@ -162,7 +162,9 @@ func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) e
 			store.Set(newKey, seq.instanceIDValue)
 			ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence to %X", newKey))
 		}
-		store.Delete(LegacyPrefixes.KeySequenceInstanceID) // delete old only after new exists
+
+		// Don't delete here because 0x02 is intended for contract keys
+		// store.Delete(LegacyPrefixes.KeySequenceInstanceID)
 	}
 
 	return nil

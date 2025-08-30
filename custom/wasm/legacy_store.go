@@ -168,6 +168,7 @@ func (s *legacyWasmStore) Get(key []byte) []byte {
 	}
 	return nil
 }
+
 func (s *legacyWasmStore) Has(key []byte) bool {
 	for _, c := range translateNewToOld(key) {
 		if s.parent.Has(c) {
@@ -182,9 +183,11 @@ func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
 	// iterate entire underlying store; filter/map
 	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
 }
+
 func (s *legacyWasmStore) ReverseIterator(start, end []byte) storetypes.Iterator {
 	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
 }
+
 func (s *legacyWasmStore) GetStoreType() storetypes.StoreType {
 	if gt, ok := s.parent.(interface{ GetStoreType() storetypes.StoreType }); ok {
 		return gt.GetStoreType()
@@ -246,6 +249,7 @@ func rangeOK(k, start, end []byte) bool {
 
 // CacheWrap just delegates (historic queries are read-only, but we delegate for compatibility)
 func (s *legacyWasmStore) CacheWrap() storetypes.CacheWrap { return s.parent.CacheWrap() }
+
 func (s *legacyWasmStore) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
 	// pass through to underlying store; translation occurs on outer layer
 	if cw, ok := s.parent.(interface {

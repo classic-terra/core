@@ -231,4 +231,32 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		s.Suite.Require().NoError(err)
 		s.Suite.Require().Equal(200, resp.StatusCode)
 	})
+
+	s.Suite.Run("Current Height Query Test", func() {
+		chain := s.configurer.GetChainConfig(0)
+		node, err := chain.GetDefaultNode()
+		s.Suite.Require().NoError(err)
+
+		hostPort, err := node.GetHostPort("1317/tcp")
+		s.Suite.Require().NoError(err)
+		// Use "current" to query the latest block height
+		currentHeight, err := node.QueryCurrentHeight()
+		headers := map[string]string{
+			"X-Cosmos-Block-Height": fmt.Sprintf("%d", currentHeight),
+		}
+
+		apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
+
+		// Staking params should be retrievable at current heights
+		stakingParamsPath := "/cosmos/staking/v1beta1/params"
+		resp, err := apiClient.GetWithHeaders(stakingParamsPath, headers)
+		s.Suite.Require().NoError(err)
+		s.Suite.Require().Equal(200, resp.StatusCode)
+
+		// Wasm code list should also be retrievable at current heights
+		wasmCodesPath := "/cosmwasm/wasm/v1/code"
+		resp, err = apiClient.GetWithHeaders(wasmCodesPath, headers)
+		s.Suite.Require().NoError(err)
+		s.Suite.Require().Equal(200, resp.StatusCode)
+	})
 }

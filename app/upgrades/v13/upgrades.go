@@ -283,12 +283,7 @@ func migrateCodeKeys(ctx sdk.Context, store sdk.KVStore) error {
 
 // Helper utility functions
 func copyBytes(src []byte) []byte {
-	if src == nil {
-		return nil
-	}
-	dst := make([]byte, len(src))
-	copy(dst, src)
-	return dst
+	return src
 }
 
 func buildFullKey(prefix, key []byte) []byte {

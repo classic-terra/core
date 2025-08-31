@@ -94,9 +94,7 @@ func (s *ComprehensiveMigrationTestSuite) TestKeySequenceInstanceID() {
 
 	newKey := wasmtypes.KeySequenceInstanceID
 	s.Require().Equal(oldVal, s.kvStore.Get(newKey))
-
-	// Don't delete key at 0x02 because we store the contract keys here
-	// s.Require().Nil(s.kvStore.Get(oldKey))
+	s.Require().Nil(s.kvStore.Get(oldKey))
 }
 
 // TestContractKeyMigration_LengthPrefixed tests the migration of contract info keys.

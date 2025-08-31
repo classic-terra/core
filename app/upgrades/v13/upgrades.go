@@ -136,20 +136,22 @@ func saveSequenceKeys(ctx sdk.Context, store sdk.KVStore) sequenceKeys {
 // 0x01 → 0x04/"lastCodeId"
 // 0x02 → 0x04/"lastContractId"
 func migrateSequenceKeys(ctx sdk.Context, store sdk.KVStore, seq sequenceKeys) error {
-	if seq.codeIDValue != nil {
-		newKey := wasmtypes.KeySequenceCodeID
-		if !store.Has(newKey) {
-			store.Set(newKey, seq.codeIDValue)
-			ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence to %X", newKey))
+	newKey := wasmtypes.KeySequenceCodeID
+	if !store.Has(newKey) {
+		if seq.codeIDValue == nil {
+			seq.codeIDValue = []byte{0, 0, 0, 0, 0, 0, 0, 0} // default to zero if not found
 		}
+		store.Set(newKey, seq.codeIDValue)
+		ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence to %X", newKey))
 	}
 
-	if seq.instanceIDValue != nil {
-		newKey := wasmtypes.KeySequenceInstanceID
-		if !store.Has(newKey) {
-			store.Set(newKey, seq.instanceIDValue)
-			ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence to %X", newKey))
+	newKey = wasmtypes.KeySequenceInstanceID
+	if !store.Has(newKey) {
+		if seq.instanceIDValue == nil {
+			seq.instanceIDValue = []byte{0, 0, 0, 0, 0, 0, 0, 0} // default to zero if not found
 		}
+		store.Set(newKey, seq.instanceIDValue)
+		ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence to %X", newKey))
 	}
 
 	return nil

@@ -54,30 +54,30 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 	}
 
 	// Save sequence keys for later migration
-	sequenceKeys := saveSequenceKeys(store)
+	sequenceKeys := saveSequenceKeys(ctx, store)
 
 	// Perform migrations in order
-	if err := migrateContractKeys(store); err != nil {
+	if err := migrateContractKeys(ctx, store); err != nil {
 		return fmt.Errorf("failed to migrate contract keys: %w", err)
 	}
 
-	if err := migrateSequenceKeys(store, sequenceKeys, ctx); err != nil {
+	if err := migrateSequenceKeys(ctx, store, sequenceKeys); err != nil {
 		return fmt.Errorf("failed to migrate sequence keys: %w", err)
 	}
 
-	if err := migrateCodeKeys(store, contractAddresses); err != nil {
+	if err := migrateCodeKeys(ctx, store, contractAddresses); err != nil {
 		return fmt.Errorf("failed to migrate code keys: %w", err)
 	}
 
-	if err := migrateContractStoreKeys(store, contractAddresses); err != nil {
+	if err := migrateContractStoreKeys(ctx, store, contractAddresses); err != nil {
 		return fmt.Errorf("failed to migrate contract store keys: %w", err)
 	}
 
-	if err := migratePrefix(store, LegacyPrefixes.ContractCodeHistoryElementPrefix, wasmtypes.ContractCodeHistoryElementPrefix, "contractHistoryKey"); err != nil {
+	if err := migratePrefix(ctx, store, LegacyPrefixes.ContractCodeHistoryElementPrefix, wasmtypes.ContractCodeHistoryElementPrefix, "contractHistoryKey"); err != nil {
 		return fmt.Errorf("failed to migrate contract history keys: %w", err)
 	}
 
-	if err := migrateSecondaryIndexKeys(store); err != nil {
+	if err := migrateSecondaryIndexKeys(ctx, store); err != nil {
 		return fmt.Errorf("failed to migrate secondary index keys: %w", err)
 	}
 
@@ -91,7 +91,8 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 }
 
 // migrateContractKeys move contracts key from 0x04 -> 0x02
-func migrateContractKeys(store sdk.KVStore) error {
+// 0x04/"length-prefixed-contract-addr" -> 0x02/"raw-contract-addr"
+func migrateContractKeys(ctx sdk.Context, store sdk.KVStore) error {
 	oldPrefix := LegacyPrefixes.ContractKeyPrefix
 	newPrefix := wasmtypes.ContractKeyPrefix
 
@@ -100,19 +101,10 @@ func migrateContractKeys(store sdk.KVStore) error {
 	defer iterator.Close()
 
 	var migratedCount int
-	var lengthPrefixRemovedCount int
-
 	for ; iterator.Valid(); iterator.Next() {
 		originalKey := copyBytes(iterator.Key())
 		originalValue := copyBytes(iterator.Value())
-
-		unprefixedKey, stripped := removeLengthPrefixIfNeeded(originalKey)
-		fmt.Printf("Processing contract key: %X\n", originalKey)
-		fmt.Printf("  - Unprefixed key: %X (length: %d), stripped: %v\n", unprefixedKey, len(unprefixedKey), stripped)
-		if stripped {
-			lengthPrefixRemovedCount++
-			fmt.Printf("Removed length prefix from contract key: %X -> %X\n", originalKey, unprefixedKey)
-		}
+		unprefixedKey, _ := removeLengthPrefixIfNeeded(originalKey)
 
 		oldFullKey := buildFullKey(oldPrefix, originalKey)
 		newFullKey := buildFullKey(newPrefix, unprefixedKey)
@@ -122,25 +114,27 @@ func migrateContractKeys(store sdk.KVStore) error {
 		migratedCount++
 	}
 
-	fmt.Printf("migrated contractKey, migratedCount %d, lengthPrefixRemovedCount %d\n",
-		migratedCount, lengthPrefixRemovedCount)
+	ctx.Logger().Info(fmt.Sprintf("migrated contractKey, migratedCount %d, lengthPrefixRemovedCount %d\n",
+		migratedCount))
 
 	return nil
 }
 
 // saveSequenceKeys save sequence keys temporarily, then delete from store for later migration
-func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
+func saveSequenceKeys(ctx sdk.Context, store sdk.KVStore) sequenceKeys {
 	oldCodeIDKey := LegacyPrefixes.KeySequenceCodeID
 	oldInstanceIDKey := LegacyPrefixes.KeySequenceInstanceID
 
 	seq := sequenceKeys{}
 	if v := store.Get(oldCodeIDKey); v != nil {
 		seq.codeIDValue = append([]byte{}, v...) // copy
+		ctx.Logger().Info(fmt.Sprintf("Saved code ID sequence: %X", oldCodeIDKey))
 		// Delete old key after copying
 		store.Delete(oldCodeIDKey)
 	}
 	if v := store.Get(oldInstanceIDKey); v != nil {
 		seq.instanceIDValue = append([]byte{}, v...) // copy
+		ctx.Logger().Info(fmt.Sprintf("Saved instance ID sequence: %X", oldInstanceIDKey))
 		// Delete old key after copying
 		store.Delete(oldInstanceIDKey)
 	}
@@ -150,7 +144,7 @@ func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 // migrateSequenceKeys migrates the saved sequence keys from old to new prefix
 // 0x01 → 0x04/"lastCodeId"
 // 0x02 → 0x04/"lastContractId"
-func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) error {
+func migrateSequenceKeys(ctx sdk.Context, store sdk.KVStore, seq sequenceKeys) error {
 	if seq.codeIDValue != nil {
 		newKey := wasmtypes.KeySequenceCodeID
 		if !store.Has(newKey) {
@@ -170,7 +164,8 @@ func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) e
 	return nil
 }
 
-func migrateSecondaryIndexKeys(store sdk.KVStore) error {
+// migrateSecondaryIndexKeys migrates secondary index keys from 0x10 -> 0x06
+func migrateSecondaryIndexKeys(ctx sdk.Context, store sdk.KVStore) error {
 	oldPrefix := LegacyPrefixes.ContractByCodeIDAndCreatedSecondaryIndexPrefix
 	newPrefix := wasmtypes.ContractByCodeIDAndCreatedSecondaryIndexPrefix
 
@@ -185,13 +180,6 @@ func migrateSecondaryIndexKeys(store sdk.KVStore) error {
 		originalKey := copyBytes(iterator.Key())
 		originalValue := copyBytes(iterator.Value())
 
-		// Skip the root key (empty key) which could be params data
-		if len(originalKey) == 0 {
-			fmt.Printf("Skipping root key at 0x10 (likely params data): %s\n", string(originalValue))
-			skippedRootKey++
-			continue
-		}
-
 		oldFullKey := buildFullKey(oldPrefix, originalKey)
 		newFullKey := buildFullKey(newPrefix, originalKey)
 
@@ -200,39 +188,39 @@ func migrateSecondaryIndexKeys(store sdk.KVStore) error {
 		migratedCount++
 	}
 
-	fmt.Printf("migrated secondaryIndexKey, migratedCount %d, skippedRootKey %d\n",
-		migratedCount, skippedRootKey)
+	ctx.Logger().Info(fmt.Sprintf("migrated secondaryIndexKey, migratedCount %d\n",
+		migratedCount, skippedRootKey))
 	return nil
 }
 
 // migrateContractStoreKeys migrates contract store keys from old to new prefix
-func migrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) error {
+func migrateContractStoreKeys(ctx sdk.Context, store sdk.KVStore, contractAddresses [][]byte) error {
 	oldPrefix := LegacyPrefixes.ContractStorePrefix
 	newPrefix := wasmtypes.ContractStorePrefix
 
-	fmt.Printf("Using %d pre-collected contracts to migrate storage\n", len(contractAddresses))
+	ctx.Logger().Info(fmt.Sprintf("Using %d pre-collected contracts to migrate storage\n", len(contractAddresses)))
 
-	totalMigrated := migrateContractSpecificKeys(store, oldPrefix, newPrefix, contractAddresses)
-	directMigrated := migrateDirectContractStoreKeys(store, oldPrefix, newPrefix)
+	totalMigrated := migrateContractSpecificKeys(ctx, store, oldPrefix, newPrefix, contractAddresses)
+	directMigrated := migrateDirectContractStoreKeys(ctx, store, oldPrefix, newPrefix)
 
-	fmt.Printf("Total migrated contract store keys: %d\n", totalMigrated+directMigrated)
+	ctx.Logger().Info(fmt.Sprintf("Total migrated contract store keys: %d\n", totalMigrated+directMigrated))
 	return nil
 }
 
 // migrateContractSpecificKeys migrates contract-specific keys from old to new prefix
-func migrateContractSpecificKeys(store sdk.KVStore, oldPrefix, newPrefix []byte, contractAddresses [][]byte) int {
+func migrateContractSpecificKeys(ctx sdk.Context, store sdk.KVStore, oldPrefix, newPrefix []byte, contractAddresses [][]byte) int {
 	var totalMigrated int
 
 	for i, originalContractAddr := range contractAddresses {
 		if originalContractAddr == nil {
-			fmt.Printf("Warning: Skipping nil contract address at index %d\n", i)
+			ctx.Logger().Info(fmt.Sprintf("Warning: Skipping nil contract address at index %d\n", i))
 			continue
 		}
 
 		contractAddr := copyBytes(originalContractAddr)
 		unprefixedAddr, stripped := removeLengthPrefixIfNeeded(contractAddr)
 		if stripped {
-			fmt.Printf("Stripped contract address: %X -> %X\n", contractAddr, unprefixedAddr)
+			ctx.Logger().Info(fmt.Sprintf("Stripped contract address: %X -> %X\n", contractAddr, unprefixedAddr))
 		}
 
 		oldContractPrefix := append(oldPrefix, contractAddr...)   // nolint:gocritic
@@ -240,7 +228,7 @@ func migrateContractSpecificKeys(store sdk.KVStore, oldPrefix, newPrefix []byte,
 
 		contractKeyCount := migrateContractStorage(store, oldContractPrefix, newContractPrefix)
 		totalMigrated += contractKeyCount
-		fmt.Printf("Migrated %d keys for contract %X\n", contractKeyCount, unprefixedAddr)
+		ctx.Logger().Info(fmt.Sprintf("Migrated %d keys for contract %X\n", contractKeyCount, unprefixedAddr))
 	}
 
 	return totalMigrated
@@ -271,7 +259,7 @@ func migrateContractStorage(store sdk.KVStore, oldContractPrefix, newContractPre
 	return contractKeyCount
 }
 
-func migrateDirectContractStoreKeys(store sdk.KVStore, oldPrefix, newPrefix []byte) int {
+func migrateDirectContractStoreKeys(ctx sdk.Context, store sdk.KVStore, oldPrefix, newPrefix []byte) int {
 	directOldStore := prefix.NewStore(store, oldPrefix)
 	directOldIter := directOldStore.Iterator(nil, nil)
 	defer directOldIter.Close()
@@ -285,7 +273,7 @@ func migrateDirectContractStoreKeys(store sdk.KVStore, oldPrefix, newPrefix []by
 			continue
 		}
 
-		rebuiltKey := rebuildCompositeKey(originalKey)
+		rebuiltKey := rebuildCompositeKey(ctx, originalKey)
 		oldFullKey := buildFullKey(oldPrefix, originalKey)
 		newFullKey := buildFullKey(newPrefix, rebuiltKey)
 
@@ -294,11 +282,11 @@ func migrateDirectContractStoreKeys(store sdk.KVStore, oldPrefix, newPrefix []by
 		directMigrated++
 	}
 
-	fmt.Printf("Additionally migrated %d direct contract store keys\n", directMigrated)
+	ctx.Logger().Info(fmt.Sprintf("Additionally migrated %d direct contract store keys\n", directMigrated))
 	return directMigrated
 }
 
-func rebuildCompositeKey(originalKey []byte) []byte {
+func rebuildCompositeKey(ctx sdk.Context, originalKey []byte) []byte {
 	if len(originalKey) > 1 {
 		candidateLen := int(originalKey[0]) + 1
 		if candidateLen <= len(originalKey) {
@@ -331,11 +319,11 @@ func migrateParamsKey(store sdk.KVStore) error {
 	return nil
 }
 
-func migrateCodeKeys(store sdk.KVStore, contractAddresses [][]byte) error {
+func migrateCodeKeys(ctx sdk.Context, store sdk.KVStore, contractAddresses [][]byte) error {
 	oldPrefix := LegacyPrefixes.CodeKeyPrefix
 	newPrefix := wasmtypes.CodeKeyPrefix
 
-	known := buildKnownLegitimateAddresses(contractAddresses)
+	known := buildKnownLegitimateAddresses(ctx, contractAddresses)
 
 	oldStore := prefix.NewStore(store, oldPrefix)
 	iter := oldStore.Iterator(nil, nil)
@@ -362,8 +350,8 @@ func migrateCodeKeys(store sdk.KVStore, contractAddresses [][]byte) error {
 		migratedCount++
 	}
 
-	fmt.Printf("migrated codeKey, migratedCount %d (skipped as contractStore: %d)\n",
-		migratedCount, skippedAsContractStore)
+	ctx.Logger().Info(fmt.Sprintf("migrated codeKey, migratedCount %d (skipped as contractStore: %d)\n",
+		migratedCount, skippedAsContractStore))
 	return nil
 }
 
@@ -402,7 +390,7 @@ func removeLengthPrefixIfNeeded(b []byte) (out []byte, stripped bool) {
 	return bytes.Clone(b), false
 }
 
-func buildKnownLegitimateAddresses(contractAddresses [][]byte) []string {
+func buildKnownLegitimateAddresses(ctx sdk.Context, contractAddresses [][]byte) []string {
 	tempMap := make(map[string]bool)
 	var result []string
 
@@ -426,7 +414,7 @@ func buildKnownLegitimateAddresses(contractAddresses [][]byte) []string {
 					tempMap[strippedStr] = true
 					result = append(result, strippedStr)
 				} else {
-					fmt.Printf("WARNING: Collision detected for address %X, will preserve original format\n", addr)
+					ctx.Logger().Info(fmt.Sprintf("WARNING: Collision detected for address %X, will preserve original format\n", addr))
 				}
 			}
 		}
@@ -476,7 +464,7 @@ func looksLikeContractStoreKey(k []byte, knownAddrs []string) bool {
 }
 
 // Generic prefix migration from an old prefix to a new prefix
-func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
+func migratePrefix(ctx sdk.Context, store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
 	oldStore := prefix.NewStore(store, oldPrefix)
 	iterator := oldStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -495,7 +483,7 @@ func migratePrefix(store sdk.KVStore, oldPrefix, newPrefix []byte, name string) 
 		migratedCount++
 	}
 
-	fmt.Printf("migrated %s, migratedCount %d\n", name, migratedCount)
+	ctx.Logger().Info(fmt.Sprintf("migrated %s, migratedCount %d\n", name, migratedCount))
 	return nil
 }
 
@@ -510,12 +498,4 @@ func RemoveLengthPrefixIfNeeded(bz []byte) ([]byte, bool) {
 
 func CollectContractAddresses(store sdk.KVStore) [][]byte {
 	return collectContractAddresses(store)
-}
-
-func MigrateContractStoreKeys(store sdk.KVStore, contractAddresses [][]byte) error {
-	return migrateContractStoreKeys(store, contractAddresses)
-}
-
-func MigrateContractKeys(store sdk.KVStore) error {
-	return migrateContractKeys(store)
 }

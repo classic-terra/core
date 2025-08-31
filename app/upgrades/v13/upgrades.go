@@ -128,7 +128,7 @@ func migrateContractKeys(store sdk.KVStore) error {
 	return nil
 }
 
-// Save sequence keys to a variable for later migration
+// saveSequenceKeys save sequence keys temporarily, then delete from store for later migration
 func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 	oldCodeIDKey := LegacyPrefixes.KeySequenceCodeID
 	oldInstanceIDKey := LegacyPrefixes.KeySequenceInstanceID
@@ -136,9 +136,13 @@ func saveSequenceKeys(store sdk.KVStore) sequenceKeys {
 	seq := sequenceKeys{}
 	if v := store.Get(oldCodeIDKey); v != nil {
 		seq.codeIDValue = append([]byte{}, v...) // copy
+		// Delete old key after copying
+		store.Delete(oldCodeIDKey)
 	}
 	if v := store.Get(oldInstanceIDKey); v != nil {
 		seq.instanceIDValue = append([]byte{}, v...) // copy
+		// Delete old key after copying
+		store.Delete(oldInstanceIDKey)
 	}
 	return seq
 }
@@ -153,7 +157,6 @@ func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) e
 			store.Set(newKey, seq.codeIDValue)
 			ctx.Logger().Info(fmt.Sprintf("Migrated code ID sequence to %X", newKey))
 		}
-		store.Delete(LegacyPrefixes.KeySequenceCodeID) // delete old only after new exists
 	}
 
 	if seq.instanceIDValue != nil {
@@ -162,9 +165,6 @@ func migrateSequenceKeys(store sdk.KVStore, seq sequenceKeys, ctx sdk.Context) e
 			store.Set(newKey, seq.instanceIDValue)
 			ctx.Logger().Info(fmt.Sprintf("Migrated instance ID sequence to %X", newKey))
 		}
-
-		// Don't delete here because 0x02 is intended for contract keys
-		// store.Delete(LegacyPrefixes.KeySequenceInstanceID)
 	}
 
 	return nil

@@ -64,7 +64,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 		return fmt.Errorf("failed to migrate contract store keys: %w", err)
 	}
 
-	if err := migratePrefix(ctx, store, LegacyPrefixes.ContractCodeHistoryElementPrefix, wasmtypes.ContractCodeHistoryElementPrefix, "contractHistoryKey"); err != nil {
+	if err := migrateContractHistoryKey(ctx, store); err != nil {
 		return fmt.Errorf("failed to migrate contract history keys: %w", err)
 	}
 
@@ -152,6 +152,17 @@ func migrateSequenceKeys(ctx sdk.Context, store sdk.KVStore, seq sequenceKeys) e
 		}
 	}
 
+	return nil
+}
+
+// migrateContractHistoryKey migrates contract history keys from 0x06 -> 0x04
+func migrateContractHistoryKey(ctx sdk.Context, store sdk.KVStore) error {
+	oldPrefix := LegacyPrefixes.ContractCodeHistoryElementPrefix
+	newPrefix := wasmtypes.ContractCodeHistoryElementPrefix
+
+	if err := migratePrefix(ctx, store, oldPrefix, newPrefix, "contractHistoryKey"); err != nil {
+		return fmt.Errorf("failed to migrate contract history keys: %w", err)
+	}
 	return nil
 }
 

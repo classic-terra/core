@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	coretypes "github.com/classic-terra/core/v3/types"
@@ -177,8 +178,17 @@ func (s *legacyWasmStore) Has(key []byte) bool {
 	}
 	return false
 }
-func (s *legacyWasmStore) Set(_, _ []byte) { panic("legacyWasmStore read-only") }
-func (s *legacyWasmStore) Delete(_ []byte) { panic("legacyWasmStore read-only") }
+
+func (s *legacyWasmStore) Set(_, _ []byte) {
+	// Set is a no-op in the legacy store
+	fmt.Println("Set called on legacyWasmStore")
+}
+
+func (s *legacyWasmStore) Delete(_ []byte) {
+	// Delete is a no-op in the legacy store
+	fmt.Println("Delete called on legacyWasmStore")
+}
+
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
 	// iterate entire underlying store; filter/map
 	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)

@@ -241,6 +241,7 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		s.Suite.Require().NoError(err)
 		// Use "current" to query the latest block height
 		currentHeight, err := node.QueryCurrentHeight()
+		s.Suite.Require().NoError(err)
 		headers := map[string]string{
 			"X-Cosmos-Block-Height": fmt.Sprintf("%d", currentHeight),
 		}

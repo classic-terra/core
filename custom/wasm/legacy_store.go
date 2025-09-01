@@ -12,7 +12,7 @@ import (
 
 const (
 	wasmMigrationHeightMainnet int64 = 26900000
-	wasmMigrationHeightTestnet int64 = 27300000
+	wasmMigrationHeightTestnet int64 = 26888496
 	wasmMigrationHeightLocal   int64 = 200
 )
 

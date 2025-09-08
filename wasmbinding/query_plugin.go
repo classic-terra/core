@@ -55,11 +55,52 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 	}
 }
 
+// normalizeLegacyRoutedQueryJSON transforms legacy routed shape
+// {"route":"treasury|oracle","query_data":{...}}
+// into the modern flat TerraQuery JSON understood by bindings.TerraQuery.
+// If the request is not a legacy routed query or cannot be normalized,
+// the original request is returned unchanged.
+func normalizeLegacyRoutedQueryJSON(request json.RawMessage) json.RawMessage {
+	type legacyRouted struct {
+		Route     string                     `json:"route"`
+		QueryData map[string]json.RawMessage `json:"query_data"`
+	}
+	var lr legacyRouted
+	if err := json.Unmarshal(request, &lr); err != nil || lr.Route == "" {
+		return request
+	}
+
+	modern := make(map[string]json.RawMessage)
+	switch lr.Route {
+	case "treasury":
+		if _, ok := lr.QueryData["tax_rate"]; ok {
+			modern["tax_rate"] = json.RawMessage("{}")
+		} else if capRaw, ok := lr.QueryData["tax_cap"]; ok {
+			modern["tax_cap"] = capRaw
+		}
+	case "oracle":
+		if paramsRaw, ok := lr.QueryData["exchange_rates"]; ok {
+			modern["exchange_rates"] = paramsRaw
+		}
+	default:
+		return request
+	}
+
+	if len(modern) == 0 {
+		return request
+	}
+	if bz, err := json.Marshal(modern); err == nil {
+		return bz
+	}
+	return request
+}
+
 // CustomQuerier dispatches custom CosmWasm bindings queries.
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
+		normalized := normalizeLegacyRoutedQueryJSON(request)
 		var contractQuery bindings.TerraQuery
-		if err := json.Unmarshal(request, &contractQuery); err != nil {
+		if err := json.Unmarshal(normalized, &contractQuery); err != nil {
 			return nil, errorsmod.Wrap(err, "terra query")
 		}
 

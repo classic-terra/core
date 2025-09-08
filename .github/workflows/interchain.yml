@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: '1.22'
       - name: Check out repository code
@@ -37,7 +37,7 @@ jobs:
     needs: build-image
     steps:
       - name: Set up Go 1.22
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: "1.22"
           check-latest: true
@@ -52,7 +52,7 @@ jobs:
     needs: build-image
     steps:
       - name: Set up Go 1.22
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: "1.22"
           check-latest: true
@@ -67,7 +67,7 @@ jobs:
     needs: build-image
     steps:
       - name: Set up Go 1.22
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: "1.22"
           check-latest: true
@@ -82,7 +82,7 @@ jobs:
     needs: build-image
     steps:
       - name: Set up Go 1.22
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: "1.22"
           check-latest: true
@@ -97,7 +97,7 @@ jobs:
     needs: build-image
     steps:
       - name: Set up Go 1.22
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: "1.22"
           check-latest: true

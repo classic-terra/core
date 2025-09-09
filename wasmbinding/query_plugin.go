@@ -65,33 +65,49 @@ func normalizeLegacyRoutedQueryJSON(request json.RawMessage) json.RawMessage {
 		Route     string                     `json:"route"`
 		QueryData map[string]json.RawMessage `json:"query_data"`
 	}
+
+	// limit request size to 64kb to check for legacy (DoS)
+	if len(request) > 64<<10 {
+		return request
+	}
+
 	var lr legacyRouted
+	// if it cannot be unmarshaled into legacyRouted, treat as modern TerraQuery
 	if err := json.Unmarshal(request, &lr); err != nil || lr.Route == "" {
 		return request
 	}
 
-	modern := make(map[string]json.RawMessage)
 	switch lr.Route {
 	case "treasury":
 		if _, ok := lr.QueryData["tax_rate"]; ok {
-			modern["tax_rate"] = json.RawMessage("{}")
-		} else if capRaw, ok := lr.QueryData["tax_cap"]; ok {
-			modern["tax_cap"] = capRaw
+			// modern tax_rate has empty object
+			if bz, err := json.Marshal(map[string]any{"tax_rate": struct{}{}}); err == nil {
+				return bz
+			}
+		}
+		if capRaw, ok := lr.QueryData["tax_cap"]; ok {
+			// pass inner as-is (object with denom expected by old callers)
+			if bz, err := json.Marshal(map[string]json.RawMessage{"tax_cap": capRaw}); err == nil {
+				return bz
+			}
 		}
 	case "oracle":
-		if paramsRaw, ok := lr.QueryData["exchange_rates"]; ok {
-			modern["exchange_rates"] = paramsRaw
+		if er, ok := lr.QueryData["exchange_rates"]; ok {
+			// pass inner as-is (expects {base_denom, quote_denoms})
+			if bz, err := json.Marshal(map[string]json.RawMessage{"exchange_rates": er}); err == nil {
+				return bz
+			}
 		}
-	default:
-		return request
+	case "market":
+		if sw, ok := lr.QueryData["swap"]; ok {
+			// pass inner as-is ({offer_coin, ask_denom})
+			if bz, err := json.Marshal(map[string]json.RawMessage{"swap": sw}); err == nil {
+				return bz
+			}
+		}
 	}
 
-	if len(modern) == 0 {
-		return request
-	}
-	if bz, err := json.Marshal(modern); err == nil {
-		return bz
-	}
+	// none of the legacy routes matched, return original request
 	return request
 }
 

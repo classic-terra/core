@@ -255,7 +255,6 @@ replace (
 )
 
 replace (
-	github.com/CosmWasm/wasmd => github.com/classic-terra/wasmd v0.45.0-classic
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.5.8
 	github.com/classic-terra/core/v3 => ../../
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.15

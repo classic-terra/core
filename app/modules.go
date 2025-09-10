@@ -191,7 +191,7 @@ func appModules(
 		oracle.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
-		customwasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
+		customwasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName), app.GetKey(wasmtypes.StoreKey)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),

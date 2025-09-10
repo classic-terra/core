@@ -752,6 +752,8 @@ github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/ChainSafe/go-schnorrkel v1.0.0 h1:3aDA67lAykLaG1y3AOjs88dMxC88PgUuHRrLeDnvGIM=
 github.com/ChainSafe/go-schnorrkel v1.0.0/go.mod h1:dpzHYVxLZcp8pjlV+O+UR8K0Hp/z7vcchBSbMBEhCw4=
+github.com/CosmWasm/wasmd v0.46.0 h1:78kmiobbVE8JWBcM+ssxiFV2cS+4l9lmZQqPAQ0mA04=
+github.com/CosmWasm/wasmd v0.46.0/go.mod h1:BZFz+CFGdLNGomshb3IeccFyD4R+XbnS/mXpytOUyTA=
 github.com/CosmWasm/wasmvm v1.5.8 h1:vrmAvDuXcNqw7XqDiVDIyopo9gNdkcvRLFTC8+wBb/A=
 github.com/CosmWasm/wasmvm v1.5.8/go.mod h1:2qaMB5ISmYXtpkJR2jy8xxx5Ti8sntOEf1cUgolb4QI=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
@@ -878,8 +880,6 @@ github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121 h1:fjpWDB0
 github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
 github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae h1:dPxkxNcORnKN/ZWqzH4zxfi42FK2bes02LgIj5P/f4k=
 github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae/go.mod h1:L/KaEhzV5TGUCTfGysVgMBQtl5Dm7hHitfpk+GIeoAo=
-github.com/classic-terra/wasmd v0.45.0-classic h1:6yZZuYybnzg5nOo6bHHO7/In/XJJDuPwfIewmW3PYuY=
-github.com/classic-terra/wasmd v0.45.0-classic/go.mod h1:h+dgrilC9naGP0NKFWOZ691qpY07BMbWnF4X1FwPVik=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=
 github.com/cmars/basen v0.0.0-20150613233007-fe3947df716e h1:0XBUw73chJ1VYSsfvcPvVT7auykAJce9FpRr10L6Qhw=
 github.com/cmars/basen v0.0.0-20150613233007-fe3947df716e/go.mod h1:P13beTBKr5Q18lJe1rIoLUqjM+CB1zYrRg44ZqGuQSA=

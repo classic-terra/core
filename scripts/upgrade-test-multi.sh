@@ -3,6 +3,58 @@
 # the upgrade is a fork, "true" otherwise
 FORK=${FORK:-"false"}
 
+# Execute deposit and withdrawal on Legacy Deposit contract
+execute_legacy_deposit_ops() {
+    local binary_path=$1
+
+    echo "Executing Legacy Deposit contract ops (deposit + withdraw)"
+
+    # Read the contract address from the file
+    LEGACY_ADDR=$(cat ${HOME}/legacy_deposit_contract_address.txt)
+
+    # Get test1 address
+    TEST1_ADDR=$(${binary_path} keys show test1 -a --keyring-backend test --home ${HOME})
+
+    # Make a deposit of 1,000,000 uluna to the contract (uses ExecuteMsg::Deposit)
+    DEPOSIT_MSG='{"Deposit":{}}'
+    ${binary_path} tx wasm execute $LEGACY_ADDR "$DEPOSIT_MSG" \
+        --from test1 \
+        --amount "1000000${DENOM}" \
+        --chain-id ${CHAIN_ID} \
+        --gas auto \
+        --gas-adjustment 1.3 \
+        --gas-prices ${GAS_PRICE} \
+        --broadcast-mode sync \
+        --keyring-backend test \
+        --home ${HOME} \
+        -y
+
+    sleep 6
+
+    # Query balance after deposit
+    BALANCE_Q='{"Balance":{"address":"'$TEST1_ADDR'","denom":"'${DENOM}'"}}'
+    echo "Balance after deposit:"
+    ${binary_path} q wasm contract-state smart $LEGACY_ADDR "$BALANCE_Q" --output json | jq
+
+    # Withdraw 400,000 uluna (ExecuteMsg::Withdraw). Note: chain tax applies to the sent amount
+    WITHDRAW_MSG='{"Withdraw":{"denom":"'${DENOM}'","amount":"400000"}}'
+    ${binary_path} tx wasm execute $LEGACY_ADDR "$WITHDRAW_MSG" \
+        --from test1 \
+        --chain-id ${CHAIN_ID} \
+        --gas auto \
+        --gas-adjustment 1.3 \
+        --gas-prices ${GAS_PRICE} \
+        --broadcast-mode sync \
+        --keyring-backend test \
+        --home ${HOME} \
+        -y
+
+    sleep 6
+
+    echo "Balance after withdrawal:"
+    ${binary_path} q wasm contract-state smart $LEGACY_ADDR "$BALANCE_Q" --output json | jq
+}
+
 # Support for multiple versions and upgrades
 # OLD_VERSIONS and UPGRADE_NAMES must have the same length.
 # Each element in OLD_VERSIONS represents a version to upgrade from,
@@ -33,6 +85,7 @@ ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 CW20_TOKEN_WASM=${CW20_TOKEN_WASM:-"./scripts/cw20_token.wasm"}
+LEGACY_DEPOSIT_WASM=${LEGACY_DEPOSIT_WASM:-"./scripts/wasm/contracts/legacy-deposit/legacy-deposit.wasm"}
 
 if [[ "$FORK" == "true" ]]; then
     export TERRAD_HALT_HEIGHT=20
@@ -245,6 +298,55 @@ upload_and_instantiate_contract() {
     sleep 5
 }
 
+# Function to upload and instantiate Legacy Deposit contract
+upload_and_instantiate_legacy_deposit() {
+    local binary_path=$1
+    local wasm_file=$2
+
+    echo "Uploading and instantiating Legacy Deposit contract"
+
+    # Upload the contract
+    STORE_OUTPUT=$(${binary_path} tx wasm store "${wasm_file}" \
+        --from test1 \
+        --chain-id ${CHAIN_ID} \
+        --gas auto \
+        --gas-adjustment 1.3 \
+        --gas-prices ${GAS_PRICE} \
+        --broadcast-mode block \
+        --keyring-backend test \
+        --home ${HOME} \
+        -y \
+        --output json)
+
+    # Extract code ID
+    CODE_ID=$(echo $STORE_OUTPUT | jq -r '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value')
+    echo "Legacy Deposit uploaded with code ID: $CODE_ID"
+
+    # Instantiate the contract (empty init msg {})
+    INIT_OUTPUT=$(${binary_path} tx wasm instantiate $CODE_ID '{}' \
+        --from test1 \
+        --label "Legacy Deposit" \
+        --chain-id ${CHAIN_ID} \
+        --gas auto \
+        --gas-adjustment 1.3 \
+        --gas-prices ${GAS_PRICE} \
+        --broadcast-mode block \
+        --keyring-backend test \
+        --home ${HOME} \
+        --admin $(${binary_path} keys show test1 -a --keyring-backend test --home ${HOME}) \
+        -y \
+        --output json)
+
+    # Extract contract address
+    LEGACY_DEPOSIT_ADDR=$(echo $INIT_OUTPUT | jq -r '.logs[0].events[] | select(.type=="instantiate") | .attributes[] | select(.key=="_contract_address") | .value')
+    echo "Legacy Deposit instantiated at address: $LEGACY_DEPOSIT_ADDR"
+
+    # Save address for later
+    echo "$LEGACY_DEPOSIT_ADDR" > ${HOME}/legacy_deposit_contract_address.txt
+
+    sleep 5
+}
+
 # Function to run final tests after all upgrades
 run_final_tests() {
     local binary_path=$1
@@ -361,6 +463,9 @@ execute_scripts "$ADDITIONAL_PRE_SCRIPTS"
 # Upload and instantiate CW20 token contract before the first upgrade
 upload_and_instantiate_contract "_build/old/terrad" "${CW20_TOKEN_WASM}"
 
+# Upload and instantiate Legacy Deposit contract before the first upgrade
+upload_and_instantiate_legacy_deposit "_build/old/terrad" "${LEGACY_DEPOSIT_WASM}"
+
 # Main upgrade sequence
 if [[ "$FORK" == "true" ]]; then
     run_fork
@@ -412,6 +517,10 @@ else
                 echo -e "\n======== RUNNING TESTS AFTER FIRST UPGRADE (EXPECT SOME ERRORS) ========\n"
                 echo "These tests should show errors with historic height queries that will be fixed in the final upgrade"
                 run_final_tests "_build/$NEXT_BINARY/terrad" "10"
+                
+                # Also exercise Legacy Deposit contract (first pass)
+                echo "Executing Legacy Deposit operations after first upgrade..."
+                execute_legacy_deposit_ops "_build/$NEXT_BINARY/terrad"
             fi
         fi
     done
@@ -422,3 +531,7 @@ execute_scripts "$ADDITIONAL_AFTER_SCRIPTS"
 
 # Run final tests after all upgrades
 run_final_tests "_build/new/terrad" "10"
+
+# Also run Legacy Deposit operations after final upgrade (last pass)
+echo "Executing Legacy Deposit operations after final upgrade..."
+execute_legacy_deposit_ops "_build/new/terrad"

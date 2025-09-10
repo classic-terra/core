@@ -1,0 +1,26 @@
+[package]
+name = "terra_vault_016"
+version = "0.1.0"
+edition = "2018"
+license = "Apache-2.0"
+
+[features]
+library = []
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+schemars = "0.8"
+thiserror = "1"
+
+# CosmWasm 0.16.x
+cosmwasm-std = "0.16"
+cosmwasm-storage = "0.16"
+
+# Terra bindings compatible with CW 0.16
+terra-cosmwasm = "2.2"
+
+[dev-dependencies]
+cosmwasm-schema = "0.16"

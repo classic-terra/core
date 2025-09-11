@@ -6,7 +6,7 @@ HOME_DIR=mytestnet
 ENV=${ENV:-""}
 
 if [ "$CONTINUE" == "true" ]; then
-    $BINARY start --home $HOME_DIR --log_level debug
+    $BINARY start --home $HOME_DIR --log_level debug >> /tmp/node_logs 2>&1
     exit 0
 fi
 
@@ -57,19 +57,27 @@ $BINARY keys add $KEY1 --keyring-backend $KEYRING --home $HOME_DIR
 $BINARY keys add $KEY2 --keyring-backend $KEYRING --home $HOME_DIR
 
 # Allocate genesis accounts (cosmos formatted addresses)
-$BINARY add-genesis-account $KEY "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
-$BINARY add-genesis-account $KEY1 "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
-$BINARY add-genesis-account $KEY2 "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
+# Fund each account with both uluna and uusd so native-native pools have sufficient liquidity
+$BINARY add-genesis-account $KEY  "100000000000000000uluna,100000000000000000uusd" --keyring-backend $KEYRING --home $HOME_DIR
+$BINARY add-genesis-account $KEY1 "100000000000000000uluna,100000000000000000uusd" --keyring-backend $KEYRING --home $HOME_DIR
+$BINARY add-genesis-account $KEY2 "100000000000000000uluna,100000000000000000uusd" --keyring-backend $KEYRING --home $HOME_DIR
 
-update_test_genesis '.app_state["gov"]["voting_params"]["voting_period"]="50s"'
+update_test_genesis '.app_state["gov"]["voting_params"]["voting_period"]="10s"'
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
-update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
+#update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "0"}]'
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 
 # enable rest server and swagger
 $SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME_DIR/config/app.toml
 $SED_BINARY -i 's/swagger = false/swagger = true/' $HOME_DIR/config/app.toml
+
+# speed up consensus by reducing timeouts (faster blocks)
+$SED_BINARY -i 's/^timeout_propose = ".*"/timeout_propose = "500ms"/' $HOME_DIR/config/config.toml
+$SED_BINARY -i 's/^timeout_propose_delta = ".*"/timeout_propose_delta = "500ms"/' $HOME_DIR/config/config.toml
+$SED_BINARY -i 's/^timeout_prevote = ".*"/timeout_prevote = "500ms"/' $HOME_DIR/config/config.toml
+$SED_BINARY -i 's/^timeout_precommit = ".*"/timeout_precommit = "500ms"/' $HOME_DIR/config/config.toml
+$SED_BINARY -i 's/^timeout_commit = ".*"/timeout_commit = "1s"/' $HOME_DIR/config/config.toml
 
 # Sign genesis transaction
 $BINARY gentx $KEY "1000000${DENOM}" --commission-rate=$COMMISSION_RATE --commission-max-rate=$COMMISSION_MAX_RATE --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME_DIR
@@ -80,4 +88,4 @@ $BINARY collect-gentxs --home $HOME_DIR
 # Run this to ensure everything worked and that the genesis file is setup correctly
 $BINARY validate-genesis --home $HOME_DIR
 
-$BINARY start --home $HOME_DIR
+$BINARY start --home $HOME_DIR >> /tmp/node_logs 2>&1

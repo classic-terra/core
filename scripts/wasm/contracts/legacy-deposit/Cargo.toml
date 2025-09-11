@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-schemars = "0.8"
+schemars = "0.8.4"
 thiserror = "1"
 
 # CosmWasm 0.16.x

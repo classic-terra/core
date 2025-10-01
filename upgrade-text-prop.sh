@@ -1,0 +1,3 @@
+# terrad tx gov submit-proposal /Users/kien6034/personal/core/proposal.json --from orbit-testnet --keyring-backend os --chain-id "rebel-2" --gas-prices 30uluna --gas 3000000 --node https://rpc.luncblaze.com:443
+
+terrad tx gov submit-proposal /Users/kien6034/personal/core/proposal.json --from orbit-mainnet --keyring-backend os --chain-id "columbus-5" --gas-prices 30uluna --gas 3000000 --node https://terra-classic-rpc.publicnode.com:443

@@ -119,13 +119,13 @@ func saveSequenceKeys(ctx sdk.Context, store sdk.KVStore) sequenceKeys {
 	seq := sequenceKeys{}
 	if v := store.Get(oldCodeIDKey); v != nil {
 		seq.codeIDValue = append([]byte{}, v...) // copy
-		ctx.Logger().Info(fmt.Sprintf("Saved code ID sequence: %X", oldCodeIDKey))
+		ctx.Logger().Debug(fmt.Sprintf("Saved code ID sequence: %X", oldCodeIDKey))
 		// Delete old key after copying
 		store.Delete(oldCodeIDKey)
 	}
 	if v := store.Get(oldInstanceIDKey); v != nil {
 		seq.instanceIDValue = append([]byte{}, v...) // copy
-		ctx.Logger().Info(fmt.Sprintf("Saved instance ID sequence: %X", oldInstanceIDKey))
+		ctx.Logger().Debug(fmt.Sprintf("Saved instance ID sequence: %X", oldInstanceIDKey))
 		// Delete old key after copying
 		store.Delete(oldInstanceIDKey)
 	}
@@ -244,7 +244,7 @@ func rebuildCompositeKey(ctx sdk.Context, originalKey []byte) []byte {
 			if unprefHead, stripped := removeLengthPrefixIfNeeded(head); stripped {
 				rebuiltKey := append([]byte{}, unprefHead...)
 				rebuiltKey = append(rebuiltKey, tail...)
-				ctx.Logger().Info(fmt.Sprintf("Stripped composite key: %X -> %X\n", originalKey, rebuiltKey))
+				ctx.Logger().Debug(fmt.Sprintf("Stripped composite key: %X -> %X\n", originalKey, rebuiltKey))
 				return rebuiltKey
 			}
 		}

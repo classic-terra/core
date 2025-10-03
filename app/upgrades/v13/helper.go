@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-// GetContractByCreatedSecondaryIndexKey returns the key for the contract's created secondary index.
+// GetContractByCreatedSecondaryIndexKeyLegacy returns the key for the contract's created secondary index.
 // It is classic-terra forked version https://github.com/classic-terra/wasmd/blob/release/v0.46.x-classic/x/wasm/types/keys.go#L64
 func GetContractByCreatedSecondaryIndexKeyLegacy(contractAddr sdk.AccAddress, c wasmtypes.ContractCodeHistoryEntry) []byte {
 	prefix := GetContractByCodeIDSecondaryIndexPrefixLegacy(c.CodeID)
@@ -19,7 +19,7 @@ func GetContractByCreatedSecondaryIndexKeyLegacy(contractAddr sdk.AccAddress, c 
 	return r
 }
 
-// GetContractByCodeIDSecondaryIndexPrefix returns the prefix for the second index: `<prefix><codeID>`
+// GetContractByCodeIDSecondaryIndexPrefixLegacy returns the prefix for the second index: `<prefix><codeID>`
 // https://github.com/classic-terra/wasmd/blob/release/v0.46.x-classic/x/wasm/types/keys.go#L75C1-L83C2
 func GetContractByCodeIDSecondaryIndexPrefixLegacy(codeID uint64) []byte {
 	prefixLen := len(LegacyPrefixes.ContractByCodeIDAndCreatedSecondaryIndexPrefix)
@@ -30,13 +30,13 @@ func GetContractByCodeIDSecondaryIndexPrefixLegacy(codeID uint64) []byte {
 	return r
 }
 
-// GetContractsByCreatorPrefix returns the contracts by creator prefix for the WASM contract instance
+// GetContractsByCreatorPrefixLegacy returns the contracts by creator prefix for the WASM contract instance
 func GetContractsByCreatorPrefixLegacy(addr sdk.AccAddress) []byte {
 	bz := address.MustLengthPrefix(addr)
 	return append(LegacyPrefixes.ContractsByCreatorPrefix, bz...)
 }
 
-// GetPinnedCodeIndexPrefix returns the key prefix for a code id pinned into the wasmvm cache
+// GetPinnedCodeIndexPrefixLegacy returns the key prefix for a code id pinned into the wasmvm cache
 func GetPinnedCodeIndexPrefixLegacy(codeID uint64) []byte {
 	prefixLen := len(LegacyPrefixes.PinnedCodeIndexPrefix)
 	r := make([]byte, prefixLen+8)
@@ -60,7 +60,7 @@ func GetContractStorePrefixLegacy(addr sdk.AccAddress) []byte {
 	return append(LegacyPrefixes.ContractStorePrefix, address.MustLengthPrefix(addr)...)
 }
 
-// GetContractCodeHistoryElementKey returns the key a contract code history entry: `<prefix><contractAddr><position>`
+// GetContractCodeHistoryElementKeyLegacy returns the key a contract code history entry: `<prefix><contractAddr><position>`
 func GetContractCodeHistoryElementKeyLegacy(contractAddr sdk.AccAddress, pos uint64) []byte {
 	prefix := GetContractCodeHistoryElementPrefixLegacy(contractAddr)
 	prefixLen := len(prefix)
@@ -70,7 +70,7 @@ func GetContractCodeHistoryElementKeyLegacy(contractAddr sdk.AccAddress, pos uin
 	return r
 }
 
-// GetContractCodeHistoryElementPrefix returns the key prefix for a contract code history entry: `<prefix><contractAddr>`
+// GetContractCodeHistoryElementPrefixLegacy returns the key prefix for a contract code history entry: `<prefix><contractAddr>`
 func GetContractCodeHistoryElementPrefixLegacy(contractAddr sdk.AccAddress) []byte {
 	prefixLen := len(LegacyPrefixes.ContractCodeHistoryElementPrefix)
 	contractAddrLen := len(contractAddr)

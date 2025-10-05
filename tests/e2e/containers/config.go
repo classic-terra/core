@@ -21,7 +21,7 @@ const (
 	CurrentBranchTerraTag        = "debug"
 	// Hermes repo/version for relayer
 	relayerRepository = "informalsystems/hermes"
-	relayerTag        = "1.5.1"
+	relayerTag        = "1.13.1"
 )
 
 // Returns ImageConfig needed for running e2e test.

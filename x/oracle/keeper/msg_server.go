@@ -143,7 +143,10 @@ func (ms msgServer) DelegateFeedConsent(goCtx context.Context, msg *types.MsgDel
 	}
 
 	// Check the delegator is a validator
-	val := ms.StakingKeeper.Validator(ctx, operatorAddr)
+	val, err := ms.StakingKeeper.Validator(ctx, operatorAddr)
+	if err != nil {
+		return nil, err
+	}
 	if val == nil {
 		return nil, errorsmod.Wrap(stakingtypes.ErrNoValidatorFound, msg.Operator)
 	}

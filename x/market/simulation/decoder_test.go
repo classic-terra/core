@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
@@ -17,7 +18,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 	cdc := keeper.MakeTestCodec(t)
 	dec := NewDecodeStore(cdc)
 
-	terraDelta := sdk.NewDecWithPrec(12, 2)
+	terraDelta := sdkmath.LegacyNewDecWithPrec(12, 2)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

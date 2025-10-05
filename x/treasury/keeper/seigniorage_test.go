@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,7 +16,7 @@ func TestSettle(t *testing.T) {
 	input := CreateTestInput(t)
 
 	faucetBalance := input.BankKeeper.GetBalance(input.Ctx, input.AccountKeeper.GetModuleAddress(faucetAccountName), core.MicroLunaDenom)
-	burnAmt := sdk.NewInt(rand.Int63()%faucetBalance.Amount.Int64() + 1)
+	burnAmt := sdkmath.NewInt(rand.Int63()%faucetBalance.Amount.Int64() + 1)
 	initialLunaSupply := input.BankKeeper.GetSupply(input.Ctx, core.MicroLunaDenom)
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
 
@@ -28,7 +29,7 @@ func TestSettle(t *testing.T) {
 
 	input.TreasuryKeeper.SettleSeigniorage(input.Ctx)
 	lunaSupply := input.BankKeeper.GetSupply(input.Ctx, core.MicroLunaDenom)
-	feePool := input.DistrKeeper.GetFeePool(input.Ctx)
+	feePool, _ := input.DistrKeeper.FeePool.Get(input.Ctx)
 
 	// Reward weight portion of seigniorage burned
 	rewardWeight := input.TreasuryKeeper.GetRewardWeight(input.Ctx)
@@ -42,10 +43,10 @@ func TestOneRewardWeightSettle(t *testing.T) {
 	input := CreateTestInput(t)
 
 	// set zero reward weight
-	input.TreasuryKeeper.SetRewardWeight(input.Ctx, sdk.OneDec())
+	input.TreasuryKeeper.SetRewardWeight(input.Ctx, sdkmath.LegacyOneDec())
 
 	faucetBalance := input.BankKeeper.GetBalance(input.Ctx, input.AccountKeeper.GetModuleAddress(faucetAccountName), core.MicroLunaDenom)
-	burnAmt := sdk.NewInt(rand.Int63()%faucetBalance.Amount.Int64() + 1)
+	burnAmt := sdkmath.NewInt(rand.Int63()%faucetBalance.Amount.Int64() + 1)
 	initialLunaSupply := input.BankKeeper.GetSupply(input.Ctx, core.MicroLunaDenom)
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
 
@@ -58,9 +59,9 @@ func TestOneRewardWeightSettle(t *testing.T) {
 
 	input.TreasuryKeeper.SettleSeigniorage(input.Ctx)
 	lunaSupply := input.BankKeeper.GetSupply(input.Ctx, core.MicroLunaDenom)
-	feePool := input.DistrKeeper.GetFeePool(input.Ctx)
+	feePool, _ := input.DistrKeeper.FeePool.Get(input.Ctx)
 
 	// Reward weight portion of seigniorage burned
 	require.Equal(t, lunaSupply.Amount, initialLunaSupply.Amount.Sub(burnAmt))
-	require.Equal(t, sdk.ZeroInt(), feePool.CommunityPool.AmountOf(core.MicroLunaDenom).TruncateInt())
+	require.Equal(t, sdkmath.ZeroInt(), feePool.CommunityPool.AmountOf(core.MicroLunaDenom).TruncateInt())
 }

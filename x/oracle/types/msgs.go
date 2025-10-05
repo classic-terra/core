@@ -136,7 +136,9 @@ func (msg MsgAggregateExchangeRateVote) ValidateBasic() error {
 
 	for _, exchangeRate := range exchangeRates {
 		// Check overflow bit length
-		if exchangeRate.ExchangeRate.BigInt().BitLen() > 255+sdk.DecimalPrecisionBits {
+		// DecimalPrecisionBits in SDK v0.50+ is now defined as part of LegacyDec
+		const decimalPrecisionBits = 60 // Standard precision for legacy decimal
+		if exchangeRate.ExchangeRate.BigInt().BitLen() > 255+decimalPrecisionBits {
 			return errorsmod.Wrap(ErrInvalidExchangeRate, "overflow")
 		}
 	}

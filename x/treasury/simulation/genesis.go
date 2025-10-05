@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -28,31 +29,31 @@ const (
 // GenTaxPolicy randomized TaxPolicy
 func GenTaxPolicy(r *rand.Rand) types.PolicyConstraints {
 	return types.PolicyConstraints{
-		RateMin:       sdk.NewDecWithPrec(int64(r.Intn(5)+1), 3),
-		RateMax:       sdk.NewDecWithPrec(6, 3).Add(sdk.NewDecWithPrec(int64(r.Intn(5)+1), 3)),
+		RateMin:       math.LegacyNewDecWithPrec(int64(r.Intn(5)+1), 3),
+		RateMax:       math.LegacyNewDecWithPrec(6, 3).Add(math.LegacyNewDecWithPrec(int64(r.Intn(5)+1), 3)),
 		Cap:           sdk.NewInt64Coin(core.MicroSDRDenom, 1000000),
-		ChangeRateMax: sdk.NewDecWithPrec(25, 5).Add(sdk.NewDecWithPrec(int64(r.Intn(75)), 5)),
+		ChangeRateMax: math.LegacyNewDecWithPrec(25, 5).Add(math.LegacyNewDecWithPrec(int64(r.Intn(75)), 5)),
 	}
 }
 
 // GenRewardPolicy randomized RewardPolicy
 func GenRewardPolicy(r *rand.Rand) types.PolicyConstraints {
 	return types.PolicyConstraints{
-		RateMin:       sdk.NewDecWithPrec(int64(r.Intn(5)+1), 3),
-		RateMax:       sdk.NewDecWithPrec(6, 3).Add(sdk.NewDecWithPrec(int64(r.Intn(5)+1), 3)),
-		Cap:           sdk.NewCoin("unused", sdk.ZeroInt()),
-		ChangeRateMax: sdk.NewDecWithPrec(25, 5).Add(sdk.NewDecWithPrec(int64(r.Intn(75)), 5)),
+		RateMin:       math.LegacyNewDecWithPrec(int64(r.Intn(5)+1), 3),
+		RateMax:       math.LegacyNewDecWithPrec(6, 3).Add(math.LegacyNewDecWithPrec(int64(r.Intn(5)+1), 3)),
+		Cap:           sdk.NewCoin("unused", math.ZeroInt()),
+		ChangeRateMax: math.LegacyNewDecWithPrec(25, 5).Add(math.LegacyNewDecWithPrec(int64(r.Intn(75)), 5)),
 	}
 }
 
 // GenSeigniorageBurdenTarget randomized SeigniorageBurdenTarget
-func GenSeigniorageBurdenTarget(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(r.Intn(100)), 2)
+func GenSeigniorageBurdenTarget(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(int64(r.Intn(100)), 2)
 }
 
 // GenMiningIncrement randomized MiningIncrement
-func GenMiningIncrement(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(100+r.Intn(30)), 2)
+func GenMiningIncrement(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(int64(100+r.Intn(30)), 2)
 }
 
 // GenWindowShort randomized WindowShort
@@ -74,43 +75,43 @@ func GenWindowProbation(r *rand.Rand) uint64 {
 func RandomizedGenState(simState *module.SimulationState) {
 	var taxPolicy types.PolicyConstraints
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, taxPolicyKey, &taxPolicy, simState.Rand,
+		taxPolicyKey, &taxPolicy, simState.Rand,
 		func(r *rand.Rand) { taxPolicy = GenTaxPolicy(r) },
 	)
 
 	var rewardPolicy types.PolicyConstraints
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, rewardPolicyKey, &rewardPolicy, simState.Rand,
+		rewardPolicyKey, &rewardPolicy, simState.Rand,
 		func(r *rand.Rand) { rewardPolicy = GenRewardPolicy(r) },
 	)
 
-	var seigniorageBurdenTarget sdk.Dec
+	var seigniorageBurdenTarget math.LegacyDec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, seigniorageBurdenTargetKey, &seigniorageBurdenTarget, simState.Rand,
+		seigniorageBurdenTargetKey, &seigniorageBurdenTarget, simState.Rand,
 		func(r *rand.Rand) { seigniorageBurdenTarget = GenSeigniorageBurdenTarget(r) },
 	)
 
-	var miningIncrement sdk.Dec
+	var miningIncrement math.LegacyDec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, miningIncrementKey, &miningIncrement, simState.Rand,
+		miningIncrementKey, &miningIncrement, simState.Rand,
 		func(r *rand.Rand) { miningIncrement = GenMiningIncrement(r) },
 	)
 
 	var windowShort uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, windowShortKey, &windowShort, simState.Rand,
+		windowShortKey, &windowShort, simState.Rand,
 		func(r *rand.Rand) { windowShort = GenWindowShort(r) },
 	)
 
 	var windowLong uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, windowLongKey, &windowLong, simState.Rand,
+		windowLongKey, &windowLong, simState.Rand,
 		func(r *rand.Rand) { windowLong = GenWindowLong(r) },
 	)
 
 	var windowProbation uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, windowProbationKey, &windowProbation, simState.Rand,
+		windowProbationKey, &windowProbation, simState.Rand,
 		func(r *rand.Rand) { windowProbation = GenWindowProbation(r) },
 	)
 
@@ -127,7 +128,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		taxPolicy.RateMin,
 		rewardPolicy.RateMin,
 		[]types.TaxCap{
-			{Denom: core.MicroLunaDenom, TaxCap: sdk.NewInt(0)},
+			{Denom: core.MicroLunaDenom, TaxCap: math.ZeroInt()},
 		},
 		sdk.Coins{},
 		sdk.Coins{},

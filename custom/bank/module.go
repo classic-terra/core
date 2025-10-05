@@ -30,7 +30,6 @@ type AppModuleBasic struct {
 // RegisterLegacyAminoCodec registers the bank module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
-	*types.ModuleCdc = *customtypes.ModuleCdc
 }
 
 // GetTxCmd returns the root tx command for the bank module.

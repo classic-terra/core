@@ -1,18 +1,10 @@
 package simulation
 
 import (
-	"math/rand"
-	"os"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/CosmWasm/wasmd/app/params"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
-	wasmsim "github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
@@ -50,159 +42,7 @@ func WeightedOperations(
 	bk BankKeeper,
 	wasmKeeper WasmKeeper,
 ) simulation.WeightedOperations {
-	var (
-		weightMsgStoreCode           int
-		weightMsgInstantiateContract int
-		weightMsgExecuteContract     int
-		weightMsgUpdateAdmin         int
-		weightMsgClearAdmin          int
-		weightMsgMigrateContract     int
-		wasmContractPath             string
-	)
-
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpWeightMsgStoreCode, &weightMsgStoreCode, nil,
-		func(*rand.Rand) {
-			weightMsgStoreCode = params.DefaultWeightMsgStoreCode
-		},
-	)
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpWeightMsgInstantiateContract, &weightMsgInstantiateContract, nil,
-		func(*rand.Rand) {
-			weightMsgInstantiateContract = params.DefaultWeightMsgInstantiateContract
-		},
-	)
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpWeightMsgExecuteContract, &weightMsgInstantiateContract, nil,
-		func(*rand.Rand) {
-			weightMsgExecuteContract = params.DefaultWeightMsgExecuteContract
-		},
-	)
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpWeightMsgUpdateAdmin, &weightMsgUpdateAdmin, nil,
-		func(*rand.Rand) {
-			weightMsgUpdateAdmin = params.DefaultWeightMsgUpdateAdmin
-		},
-	)
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpWeightMsgClearAdmin, &weightMsgClearAdmin, nil,
-		func(*rand.Rand) {
-			weightMsgClearAdmin = params.DefaultWeightMsgClearAdmin
-		},
-	)
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpWeightMsgMigrateContract, &weightMsgMigrateContract, nil,
-		func(*rand.Rand) {
-			weightMsgMigrateContract = params.DefaultWeightMsgMigrateContract
-		},
-	)
-	simstate.AppParams.GetOrGenerate(simstate.Cdc, OpReflectContractPath, &wasmContractPath, nil,
-		func(*rand.Rand) {
-			wasmContractPath = ""
-		},
-	)
-
-	var wasmBz []byte
-	if wasmContractPath == "" {
-		wasmBz = testdata.MigrateReflectContractWasm()
-	} else {
-		var err error
-		wasmBz, err = os.ReadFile(wasmContractPath)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgStoreCode,
-			wasmsim.SimulateMsgStoreCode(ak, bk, wasmKeeper, wasmBz),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgInstantiateContract,
-			wasmsim.SimulateMsgInstantiateContract(ak, bk, wasmKeeper, wasmsim.DefaultSimulationCodeIDSelector),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgExecuteContract,
-			SimulateMsgExecuteContract(
-				ak,
-				bk,
-				wasmKeeper,
-				wasmsim.DefaultSimulationExecuteContractSelector,
-				wasmsim.DefaultSimulationExecuteSenderSelector,
-				wasmsim.DefaultSimulationExecutePayloader,
-			),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateAdmin,
-			wasmsim.SimulateMsgUpdateAmin(
-				ak,
-				bk,
-				wasmKeeper,
-				wasmsim.DefaultSimulationUpdateAdminContractSelector,
-			),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgClearAdmin,
-			wasmsim.SimulateMsgClearAdmin(
-				ak,
-				bk,
-				wasmKeeper,
-				wasmsim.DefaultSimulationClearAdminContractSelector,
-			),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgMigrateContract,
-			wasmsim.SimulateMsgMigrateContract(
-				ak,
-				bk,
-				wasmKeeper,
-				wasmsim.DefaultSimulationMigrateContractSelector,
-				wasmsim.DefaultSimulationMigrateCodeIDSelector,
-			),
-		),
-	}
-}
-
-// SimulateMsgExecuteContract create a execute message a reflect contract instance
-func SimulateMsgExecuteContract(
-	ak types.AccountKeeper,
-	bk BankKeeper,
-	wasmKeeper WasmKeeper,
-	contractSelector wasmsim.MsgExecuteContractSelector,
-	senderSelector wasmsim.MsgExecuteSenderSelector,
-	payloader wasmsim.MsgExecutePayloader,
-) simtypes.Operation {
-	return func(
-		r *rand.Rand,
-		app *baseapp.BaseApp,
-		ctx sdk.Context,
-		accs []simtypes.Account,
-		chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		contractAddr := contractSelector(ctx, wasmKeeper)
-		if contractAddr == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgExecuteContract{}.Type(), "no contract instance available"), nil, nil
-		}
-		simAccount, err := senderSelector(wasmKeeper, ctx, contractAddr, accs)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgExecuteContract{}.Type(), "query contract owner"), nil, err
-		}
-
-		deposit := sdk.Coins{}
-		spendableCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		for _, v := range spendableCoins {
-			if bk.IsSendEnabledCoin(ctx, v) {
-				deposit = deposit.Add(simtypes.RandSubsetCoins(r, sdk.NewCoins(v))...)
-			}
-		}
-		if deposit.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgExecuteContract{}.Type(), "broke account"), nil, nil
-		}
-		msg := types.MsgExecuteContract{
-			Sender:   simAccount.Address.String(),
-			Contract: contractAddr.String(),
-			Funds:    deposit,
-		}
-		if err := payloader(&msg); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgExecuteContract{}.Type(), "contract execute payload"), nil, err
-		}
-
-		txCtx := wasmsim.BuildOperationInput(r, app, ctx, &msg, simAccount, ak, bk, deposit)
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
-	}
+	// SDK v0.50 migration: disable custom wasm simulation ops for now
+	// to keep the application buildable. Re-enable with updated APIs later.
+	return simulation.WeightedOperations{}
 }

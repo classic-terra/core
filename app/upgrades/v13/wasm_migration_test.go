@@ -3,13 +3,14 @@ package v13_test
 import (
 	"testing"
 
+	sdklog "cosmossdk.io/log"
+	store "cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -24,7 +25,7 @@ type ComprehensiveMigrationTestSuite struct {
 
 	// Common test data
 	ctx          sdk.Context
-	kvStore      sdk.KVStore
+	kvStore      storetypes.KVStore
 	wasmStoreKey *storetypes.KVStoreKey
 
 	// Common test addresses
@@ -52,12 +53,12 @@ func (s *ComprehensiveMigrationTestSuite) SetupTest() {
 
 func (s *ComprehensiveMigrationTestSuite) setupStore() {
 	db := dbm.NewMemDB()
-	s.wasmStoreKey = sdk.NewKVStoreKey(wasmtypes.StoreKey)
-	stateStore := store.NewCommitMultiStore(db)
+	s.wasmStoreKey = storetypes.NewKVStoreKey(wasmtypes.StoreKey)
+	stateStore := store.NewCommitMultiStore(db, sdklog.NewNopLogger(), storemetrics.NewNoOpMetrics())
 	stateStore.MountStoreWithDB(s.wasmStoreKey, storetypes.StoreTypeIAVL, db)
 	require.NoError(s.T(), stateStore.LoadLatestVersion())
 
-	s.ctx = sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+	s.ctx = sdk.NewContext(stateStore, cmtproto.Header{}, false, sdklog.NewNopLogger())
 	s.kvStore = s.ctx.KVStore(s.wasmStoreKey)
 }
 

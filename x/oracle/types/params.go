@@ -3,11 +3,11 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"gopkg.in/yaml.v2"
 
 	core "github.com/classic-terra/core/v3/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -32,17 +32,17 @@ const (
 
 // Default parameter values
 var (
-	DefaultVoteThreshold = sdk.NewDecWithPrec(50, 2) // 50%
-	DefaultRewardBand    = sdk.NewDecWithPrec(2, 2)  // 2% (-1, 1)
-	DefaultTobinTax      = sdk.NewDecWithPrec(25, 4) // 0.25%
+	DefaultVoteThreshold = math.LegacyNewDecWithPrec(50, 2) // 50%
+	DefaultRewardBand    = math.LegacyNewDecWithPrec(2, 2)  // 2% (-1, 1)
+	DefaultTobinTax      = math.LegacyNewDecWithPrec(25, 4) // 0.25%
 	DefaultWhitelist     = DenomList{
 		{Name: core.MicroKRWDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroSDRDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroUSDDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroMNTDenom, TobinTax: DefaultTobinTax.MulInt64(8)},
 	}
-	DefaultSlashFraction     = sdk.NewDecWithPrec(1, 4) // 0.01%
-	DefaultMinValidPerWindow = sdk.NewDecWithPrec(5, 2) // 5%
+	DefaultSlashFraction     = math.LegacyNewDecWithPrec(1, 4) // 0.01%
+	DefaultMinValidPerWindow = math.LegacyNewDecWithPrec(5, 2) // 5%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -92,11 +92,11 @@ func (p Params) Validate() error {
 	if p.VotePeriod == 0 {
 		return fmt.Errorf("oracle parameter VotePeriod must be > 0, is %d", p.VotePeriod)
 	}
-	if p.VoteThreshold.LTE(sdk.NewDecWithPrec(33, 2)) {
+	if p.VoteThreshold.LTE(math.LegacyNewDecWithPrec(33, 2)) {
 		return fmt.Errorf("oracle parameter VoteThreshold must be greater than 33 percent")
 	}
 
-	if p.RewardBand.GT(sdk.OneDec()) || p.RewardBand.IsNegative() {
+	if p.RewardBand.GT(math.LegacyOneDec()) || p.RewardBand.IsNegative() {
 		return fmt.Errorf("oracle parameter RewardBand must be between [0, 1]")
 	}
 
@@ -104,7 +104,7 @@ func (p Params) Validate() error {
 		return fmt.Errorf("oracle parameter RewardDistributionWindow must be greater than or equal with VotePeriod")
 	}
 
-	if p.SlashFraction.GT(sdk.OneDec()) || p.SlashFraction.IsNegative() {
+	if p.SlashFraction.GT(math.LegacyOneDec()) || p.SlashFraction.IsNegative() {
 		return fmt.Errorf("oracle parameter SlashFraction must be between [0, 1]")
 	}
 
@@ -112,12 +112,12 @@ func (p Params) Validate() error {
 		return fmt.Errorf("oracle parameter SlashWindow must be greater than or equal with VotePeriod")
 	}
 
-	if p.MinValidPerWindow.GT(sdk.OneDec()) || p.MinValidPerWindow.IsNegative() {
+	if p.MinValidPerWindow.GT(math.LegacyOneDec()) || p.MinValidPerWindow.IsNegative() {
 		return fmt.Errorf("oracle parameter MinValidPerWindow must be between [0, 1]")
 	}
 
 	for _, denom := range p.Whitelist {
-		if denom.TobinTax.GT(sdk.OneDec()) || denom.TobinTax.IsNegative() {
+		if denom.TobinTax.GT(math.LegacyOneDec()) || denom.TobinTax.IsNegative() {
 			return fmt.Errorf("oracle parameter Whitelist Denom must have TobinTax between [0, 1]")
 		}
 		if len(denom.Name) == 0 {
@@ -141,16 +141,16 @@ func validateVotePeriod(i interface{}) error {
 }
 
 func validateVoteThreshold(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.LT(sdk.NewDecWithPrec(33, 2)) {
+	if v.LT(math.LegacyNewDecWithPrec(33, 2)) {
 		return fmt.Errorf("vote threshold must be bigger than 33%%: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("vote threshold too large: %s", v)
 	}
 
@@ -158,7 +158,7 @@ func validateVoteThreshold(i interface{}) error {
 }
 
 func validateRewardBand(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -167,7 +167,7 @@ func validateRewardBand(i interface{}) error {
 		return fmt.Errorf("reward band must be positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("reward band is too large: %s", v)
 	}
 
@@ -194,7 +194,7 @@ func validateWhitelist(i interface{}) error {
 	}
 
 	for _, d := range v {
-		if d.TobinTax.GT(sdk.OneDec()) || d.TobinTax.IsNegative() {
+		if d.TobinTax.GT(math.LegacyOneDec()) || d.TobinTax.IsNegative() {
 			return fmt.Errorf("oracle parameter Whitelist Denom must have TobinTax between [0, 1]")
 		}
 		if len(d.Name) == 0 {
@@ -206,7 +206,7 @@ func validateWhitelist(i interface{}) error {
 }
 
 func validateSlashFraction(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -215,7 +215,7 @@ func validateSlashFraction(i interface{}) error {
 		return fmt.Errorf("slash fraction must be positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("slash fraction is too large: %s", v)
 	}
 
@@ -236,7 +236,7 @@ func validateSlashWindow(i interface{}) error {
 }
 
 func validateMinValidPerWindow(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -245,7 +245,7 @@ func validateMinValidPerWindow(i interface{}) error {
 		return fmt.Errorf("min valid per window must be positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min valid per window is too large: %s", v)
 	}
 

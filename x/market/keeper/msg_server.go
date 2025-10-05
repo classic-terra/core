@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/classic-terra/core/v3/x/market/types"
@@ -72,7 +73,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	if spread.IsPositive() {
 		feeDecCoin = sdk.NewDecCoinFromDec(swapDecCoin.Denom, spread.Mul(swapDecCoin.Amount))
 	} else {
-		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, sdk.ZeroInt())
+		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, math.ZeroInt())
 	}
 
 	// Subtract fee from the swap coin

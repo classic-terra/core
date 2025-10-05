@@ -10,6 +10,7 @@ import (
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
@@ -50,4 +51,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), handlers.NewMarketMsgServer(am.keeper, am.treasuryKeeper, am.taxKeeper, origMsgServer))
 	querier := keeper.NewQuerier(am.keeper)
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
+}
+
+func (am AppModule) RegisterStoreDecoder(reg simulation.StoreDecoderRegistry) {
+	/* TODO */
 }

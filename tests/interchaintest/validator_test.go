@@ -11,22 +11,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
-	"github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
+	"github.com/cosmos/interchaintest/v10"
+	"github.com/cosmos/interchaintest/v10/chain/cosmos"
+	"github.com/cosmos/interchaintest/v10/testreporter"
+	"github.com/cosmos/interchaintest/v10/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
 	"github.com/classic-terra/core/v3/test/interchaintest/helpers"
 )
 
-// TestValidator is a basic test to accrue enough token to join active validator set, gets slashed for missing or tombstoned for double signing
+// TestValidator is a basic test to accrue enough token to join active validator set,
+// then ensure a stopped validator gets jailed and has signing info updated.
 func TestValidator(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-
 	t.Parallel()
 
 	// Create chain factory with Terra Classic
@@ -65,8 +65,6 @@ func TestValidator(t *testing.T) {
 		Client:           client,
 		NetworkID:        network,
 		SkipPathCreation: true,
-
-		// This can be used to write to the block database which will index all block data e.g. txs, msgs, events, etc.
 		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 	})
 	require.NoError(t, err)
@@ -74,54 +72,58 @@ func TestValidator(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	err = testutil.WaitForBlocks(ctx, 1, terra)
-	require.NoError(t, err)
 
-	err = testutil.WaitForBlocks(ctx, 1, terra)
-	require.NoError(t, err)
+	// let chain produce some blocks
+	require.NoError(t, testutil.WaitForBlocks(ctx, 1, terra))
 
-	err = terra.Validators[1].StopContainer(ctx)
-	require.NoError(t, err)
+	// stop one validator so it starts missing votes
+	require.NoError(t, terra.Validators[1].StopContainer(ctx))
 
 	stdout, _, err := terra.Validators[1].ExecBin(ctx, "status")
 	require.Error(t, err)
 	require.Empty(t, stdout)
 
-	err = testutil.WaitForBlocks(ctx, 21, terra)
-	require.NoError(t, err)
+	// wait long enough to trip slashing window
+	require.NoError(t, testutil.WaitForBlocks(ctx, 21, terra))
 
-	// Get all Validators
-	stdout, _, err = terra.Validators[0].ExecQuery(ctx, "staking", "validators")
+	// --- Query all validators
+	stdout, _, err = terra.Validators[0].ExecQuery(
+		ctx, "staking", "validators",
+		"--output", "json",
+	)
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
 
 	terraValidators, pubKeys, err := helpers.UnmarshalValidators(*config.EncodingConfig, stdout)
 	require.NoError(t, err)
-	require.Equal(t, len(terraValidators), 5)
+	require.Equal(t, 5, len(terraValidators.Validators))
 
+	// find exactly one jailed validator and capture its consensus pubkey
 	var val1PubKey cryptotypes.PubKey
 	count := 0
-	for i, val := range terraValidators {
-		if val.Jailed == true {
+	for i, val := range terraValidators.Validators {
+		if val.Jailed {
 			count++
 			val1PubKey = pubKeys[i]
 		}
 	}
-	require.Equal(t, count, 1)
-	bech32Addr, err := bech32.ConvertAndEncode("terravalcons", sdk.ConsAddress(val1PubKey.Address()))
-	require.NoError(t, err)
+	require.Equal(t, 1, count)
+	require.NotNil(t, val1PubKey)
 
-	// Get Slashing Params
-	stdout, _, err = terra.Validators[0].ExecQuery(ctx, "slashing", "params")
+	// Derive raw consensus address bytes from the pubkey (HRP-agnostic)
+	consAddrBytes := sdk.ConsAddress(val1PubKey.Address())
+
+	// --- Get Slashing Params ---
+	stdout, _, err = terra.Validators[0].ExecQuery(ctx, "slashing", "params", "--output", "json")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
 
 	signedBlocksWindow, err := helpers.GetSignedBlocksWindow(stdout)
 	require.NoError(t, err)
-	require.Equal(t, signedBlocksWindow, int64(20))
+	require.Equal(t, int64(20), signedBlocksWindow)
 
-	// Get SigningInfos
-	stdout, _, err = terra.Validators[0].ExecQuery(ctx, "slashing", "signing-infos")
+	// --- Get Signing Infos ---
+	stdout, _, err = terra.Validators[0].ExecQuery(ctx, "slashing", "signing-infos", "--output", "json")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
 
@@ -132,13 +134,14 @@ func TestValidator(t *testing.T) {
 	count = 0
 	defaultTime := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	infos := signingInfosResp.Info
-	for _, info := range infos {
+	for _, info := range signingInfosResp.Info {
 		if info.JailedUntil != defaultTime {
 			count++
-			require.Equal(t, info.Address, bech32Addr)
+			// Decode whatever HRP the chain used and compare raw bytes
+			_, addrBytes, err := bech32.DecodeAndConvert(info.Address)
+			require.NoError(t, err)
+			require.Equal(t, consAddrBytes, sdk.ConsAddress(addrBytes))
 		}
 	}
-	require.NoError(t, err)
-	require.Equal(t, count, 1)
+	require.Equal(t, 1, count)
 }

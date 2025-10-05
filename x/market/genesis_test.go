@@ -6,12 +6,12 @@ import (
 	"github.com/classic-terra/core/v3/x/market/keeper"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func TestExportInitGenesis(t *testing.T) {
 	input := keeper.CreateTestInput(t)
-	input.MarketKeeper.SetTerraPoolDelta(input.Ctx, sdk.NewDec(1123))
+	input.MarketKeeper.SetTerraPoolDelta(input.Ctx, sdkmath.LegacyNewDec(1123))
 	genesis := ExportGenesis(input.Ctx, input.MarketKeeper)
 
 	newInput := keeper.CreateTestInput(t)

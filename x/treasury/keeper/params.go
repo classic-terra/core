@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/classic-terra/core/v3/x/treasury/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,13 +20,13 @@ func (k Keeper) RewardPolicy(ctx sdk.Context) (res types.PolicyConstraints) {
 }
 
 // SeigniorageBurdenTarget defines fixed target for the Seigniorage Burden. Between 0 and 1.
-func (k Keeper) SeigniorageBurdenTarget(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SeigniorageBurdenTarget(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySeigniorageBurdenTarget, &res)
 	return
 }
 
 // MiningIncrement is a factor used to determine how fast MRL should grow over time
-func (k Keeper) MiningIncrement(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MiningIncrement(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMiningIncrement, &res)
 	return
 }
@@ -48,30 +49,30 @@ func (k Keeper) WindowProbation(ctx sdk.Context) (res uint64) {
 	return
 }
 
-func (k Keeper) GetBurnSplitRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetBurnSplitRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyBurnTaxSplit, &res)
 	return
 }
 
-func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
+func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyBurnTaxSplit, burnTaxSplit)
 }
 
-func (k Keeper) GetMinInitialDepositRatio(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetMinInitialDepositRatio(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMinInitialDepositRatio, &res)
 	return
 }
 
-func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRatio sdk.Dec) {
+func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRatio sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyMinInitialDepositRatio, minInitialDepositRatio)
 }
 
-func (k Keeper) GetOracleSplitRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetOracleSplitRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyOracleSplit, &res)
 	return
 }
 
-func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdk.Dec) {
+func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyOracleSplit, oracleSplit)
 }
 

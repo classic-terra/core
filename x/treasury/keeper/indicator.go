@@ -3,6 +3,7 @@ package keeper
 import (
 	core "github.com/classic-terra/core/v3/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,8 +23,8 @@ func (k Keeper) GetEpoch(ctx sdk.Context) int64 {
 // - TRL: Computes the Tax Reward per unit Luna (TR/TSL)
 
 // alignCoins align the coins to the given denom through the market swap
-func (k Keeper) alignCoins(ctx sdk.Context, coins sdk.DecCoins, denom string) (alignedAmt sdk.Dec) {
-	alignedAmt = sdk.ZeroDec()
+func (k Keeper) alignCoins(ctx sdk.Context, coins sdk.DecCoins, denom string) (alignedAmt sdkmath.LegacyDec) {
+	alignedAmt = sdkmath.LegacyZeroDec()
 	for _, coinReward := range coins {
 		if coinReward.Denom != denom {
 			swappedReward, err := k.marketKeeper.ComputeInternalSwap(ctx, coinReward, denom)
@@ -44,7 +45,10 @@ func (k Keeper) UpdateIndicators(ctx sdk.Context) {
 	epoch := k.GetEpoch(ctx)
 
 	// Compute Total Staked Luna (TSL)
-	totalStakedLuna := k.stakingKeeper.TotalBondedTokens(ctx)
+	totalStakedLuna, err := k.stakingKeeper.TotalBondedTokens(sdk.WrapSDKContext(ctx))
+	if err != nil {
+		totalStakedLuna = sdkmath.ZeroInt()
+	}
 
 	k.SetTSL(ctx, epoch, totalStakedLuna)
 
@@ -67,34 +71,34 @@ func (k Keeper) UpdateIndicators(ctx sdk.Context) {
 }
 
 // TRL returns Tax Rewards per Luna for the epoch
-func TRL(ctx sdk.Context, epoch int64, k Keeper) sdk.Dec {
+func TRL(ctx sdk.Context, epoch int64, k Keeper) sdkmath.LegacyDec {
 	tr := k.GetTR(ctx, epoch)
 	tsl := k.GetTSL(ctx, epoch)
 
 	// division by zero protection
 	if tr.IsZero() || tsl.IsZero() {
-		return sdk.ZeroDec()
+		return sdkmath.LegacyZeroDec()
 	}
 
 	return tr.QuoInt(tsl)
 }
 
 // SR returns Seigniorage Rewards for the epoch
-func SR(ctx sdk.Context, epoch int64, k Keeper) sdk.Dec {
+func SR(ctx sdk.Context, epoch int64, k Keeper) sdkmath.LegacyDec {
 	return k.GetSR(ctx, epoch)
 }
 
 // MR returns Mining Rewards = Seigniorage Rewards + Tax Rates for the epoch
-func MR(ctx sdk.Context, epoch int64, k Keeper) sdk.Dec {
+func MR(ctx sdk.Context, epoch int64, k Keeper) sdkmath.LegacyDec {
 	return k.GetTR(ctx, epoch).Add(k.GetSR(ctx, epoch))
 }
 
 // sumIndicator returns the sum of the indicator over several epochs.
 // If current epoch < epochs, we return the best we can and return sumIndicator(currentEpoch)
 func (k Keeper) sumIndicator(ctx sdk.Context, epochs int64,
-	indicator func(ctx sdk.Context, epoch int64, k Keeper) sdk.Dec,
-) sdk.Dec {
-	sum := sdk.ZeroDec()
+	indicator func(ctx sdk.Context, epoch int64, k Keeper) sdkmath.LegacyDec,
+) sdkmath.LegacyDec {
+	sum := sdkmath.LegacyZeroDec()
 	curEpoch := k.GetEpoch(ctx)
 
 	for i := curEpoch; i >= 0 && i > (curEpoch-epochs); i-- {
@@ -108,9 +112,9 @@ func (k Keeper) sumIndicator(ctx sdk.Context, epochs int64,
 // rollingAverageIndicator returns the rolling average of the indicator over several epochs.
 // If current epoch < epochs, we return the best we can and return rollingAverageIndicator(currentEpoch)
 func (k Keeper) rollingAverageIndicator(ctx sdk.Context, epochs int64,
-	indicator func(ctx sdk.Context, epoch int64, k Keeper) sdk.Dec,
-) sdk.Dec {
-	sum := sdk.ZeroDec()
+	indicator func(ctx sdk.Context, epoch int64, k Keeper) sdkmath.LegacyDec,
+) sdkmath.LegacyDec {
+	sum := sdkmath.LegacyZeroDec()
 	curEpoch := k.GetEpoch(ctx)
 
 	var i int64

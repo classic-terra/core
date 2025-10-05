@@ -2,6 +2,7 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -49,36 +50,36 @@ func (k Keeper) ApplySwapToPool(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk
 // exchange rate registered with the oracle.
 // Returns an Error if the swap is recursive, or the coins to be traded are unknown by the oracle, or the amount
 // to trade is too small.
-func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (retDecCoin sdk.DecCoin, spread sdk.Dec, err error) {
+func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string) (retDecCoin sdk.DecCoin, spread math.LegacyDec, err error) {
 	// Return invalid recursive swap err
 	if offerCoin.Denom == askDenom {
-		return sdk.DecCoin{}, sdk.ZeroDec(), errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
+		return sdk.DecCoin{}, math.LegacyZeroDec(), errorsmod.Wrap(types.ErrRecursiveSwap, askDenom)
 	}
 
 	// Swap offer coin to base denom for simplicity of swap process
 	baseOfferDecCoin, err := k.ComputeInternalSwap(ctx, sdk.NewDecCoinFromCoin(offerCoin), core.MicroSDRDenom)
 	if err != nil {
-		return sdk.DecCoin{}, sdk.Dec{}, err
+		return sdk.DecCoin{}, math.LegacyDec{}, err
 	}
 
 	// Get swap amount based on the oracle price
 	retDecCoin, err = k.ComputeInternalSwap(ctx, baseOfferDecCoin, askDenom)
 	if err != nil {
-		return sdk.DecCoin{}, sdk.Dec{}, err
+		return sdk.DecCoin{}, math.LegacyDec{}, err
 	}
 
 	// Terra => Terra swap
 	// Apply only tobin tax without constant product spread
 	if offerCoin.Denom != core.MicroLunaDenom && askDenom != core.MicroLunaDenom {
-		var tobinTax sdk.Dec
+		var tobinTax math.LegacyDec
 		offerTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, offerCoin.Denom)
 		if err2 != nil {
-			return sdk.DecCoin{}, sdk.Dec{}, err2
+			return sdk.DecCoin{}, math.LegacyDec{}, err2
 		}
 
 		askTobinTax, err2 := k.OracleKeeper.GetTobinTax(ctx, askDenom)
 		if err2 != nil {
-			return sdk.DecCoin{}, sdk.Dec{}, err2
+			return sdk.DecCoin{}, math.LegacyDec{}, err2
 		}
 
 		// Apply highest tobin tax for the denoms in the swap operation
@@ -101,8 +102,8 @@ func (k Keeper) ComputeSwap(ctx sdk.Context, offerCoin sdk.Coin, askDenom string
 	terraPool := basePool.Add(terraPoolDelta)
 	lunaPool := cp.Quo(terraPool)
 
-	var offerPool sdk.Dec // base denom(usdr) unit
-	var askPool sdk.Dec   // base denom(usdr) unit
+	var offerPool math.LegacyDec // base denom(usdr) unit
+	var askPool math.LegacyDec   // base denom(usdr) unit
 	if offerCoin.Denom != core.MicroLunaDenom {
 		// Terra->Luna swap
 		offerPool = terraPool
@@ -149,7 +150,7 @@ func (k Keeper) ComputeInternalSwap(ctx sdk.Context, offerCoin sdk.DecCoin, askD
 	}
 
 	retAmount := offerCoin.Amount.Mul(askRate).Quo(offerRate)
-	if retAmount.LTE(sdk.ZeroDec()) {
+	if retAmount.LTE(math.LegacyZeroDec()) {
 		return sdk.DecCoin{}, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, offerCoin.String())
 	}
 

@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	tmjson "github.com/cometbft/cometbft/libs/json"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -68,9 +70,9 @@ const (
 )
 
 var (
-	StakeAmountIntA  = sdk.NewInt(StakeAmountA)
+	StakeAmountIntA  = sdkmath.NewInt(StakeAmountA)
 	StakeAmountCoinA = sdk.NewCoin(TerraDenom, StakeAmountIntA)
-	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
+	StakeAmountIntB  = sdkmath.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
@@ -79,11 +81,11 @@ var (
 	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
 
-	OneMin      = time.Minute              // nolint
-	TwoMin      = 2 * time.Minute          // nolint
-	FiveMin     = 5 * time.Minute          // nolint
-	TaxRate     = sdk.ZeroDec()            // 0.02
-	BurnTaxRate = sdk.NewDecWithPrec(2, 2) // 0.02
+	OneMin      = time.Minute                        // nolint
+	TwoMin      = 2 * time.Minute                    // nolint
+	FiveMin     = 5 * time.Minute                    // nolint
+	TaxRate     = sdkmath.LegacyZeroDec()            // 0.02
+	BurnTaxRate = sdkmath.LegacyNewDecWithPrec(2, 2) // 0.02
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -101,7 +103,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 
 	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
-	// TODO: Make the SDK make it far cleaner to add an account to GenesisState
+
 	genFile := config.GenesisFile()
 	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 	if err != nil {
@@ -270,6 +272,29 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 
 	genDoc.AppState = bz
 
+	// Set consensus parameters for SDK 0.50 compatibility
+	if genDoc.Consensus == nil {
+		consensusParams := &tmtypes.ConsensusParams{
+			Block: tmtypes.BlockParams{
+				MaxBytes: 200000,
+				MaxGas:   2000000,
+			},
+			Evidence: tmtypes.EvidenceParams{
+				MaxAgeNumBlocks: 302400,
+				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+				MaxBytes:        10000,
+			},
+			Validator: tmtypes.ValidatorParams{
+				PubKeyTypes: []string{
+					tmtypes.ABCIPubKeyTypeEd25519,
+				},
+			},
+		}
+		genDoc.Consensus = &genutiltypes.ConsensusGenesis{
+			Params: consensusParams,
+		}
+	}
+
 	genesisJSON, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	if err != nil {
 		return err
@@ -302,7 +327,7 @@ func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
 		MaxEntries:        7,
 		HistoricalEntries: 10000,
 		UnbondingTime:     240000000000,
-		MinCommissionRate: sdk.ZeroDec(),
+		MinCommissionRate: sdkmath.LegacyZeroDec(),
 	}
 }
 
@@ -312,7 +337,7 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 
 func updateTaxGenesis(taxGenState *taxtypes.GenesisState) {
 	taxGenState.Params.BurnTaxRate = BurnTaxRate
-	taxGenState.Params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(TerraDenom, sdk.MustNewDecFromStr(MinGasPrice)))
+	taxGenState.Params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(TerraDenom, sdkmath.LegacyMustNewDecFromStr(MinGasPrice)))
 }
 
 func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
@@ -320,13 +345,13 @@ func updateTreasuryGenesis(treasuryGenState *treasurytypes.GenesisState) {
 	treasuryGenState.Params.TaxPolicy = treasurytypes.PolicyConstraints{
 		RateMin: TaxRate, // 0.02 (fixed)
 		RateMax: TaxRate, // 0.02 (fixed)
-		Cap:     sdk.NewCoin(TerraDenom, sdk.NewInt(100000000000000)),
+		Cap:     sdk.NewCoin(TerraDenom, sdkmath.NewInt(100000000000000)),
 	}
 }
 
 func updateGovGenesis(govGenState *govv1.GenesisState) {
 	govGenState.Params.VotingPeriod = &OneMin
-	govGenState.Params.Quorum = sdk.NewDecWithPrec(2, 1).String()
+	govGenState.Params.Quorum = sdkmath.LegacyNewDecWithPrec(2, 1).String()
 	govGenState.Params.MinDeposit = tenTerra
 }
 

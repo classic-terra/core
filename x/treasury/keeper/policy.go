@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,7 +29,7 @@ func (k Keeper) UpdateTaxCap(ctx sdk.Context) sdk.Coins {
 }
 
 // UpdateTaxPolicy updates tax-rate with t(t+1) = t(t) * (TL_year(t) + INC) / TL_month(t)
-func (k Keeper) UpdateTaxPolicy(ctx sdk.Context) (newTaxRate sdk.Dec) {
+func (k Keeper) UpdateTaxPolicy(ctx sdk.Context) (newTaxRate sdkmath.LegacyDec) {
 	params := k.GetParams(ctx)
 
 	oldTaxRate := k.GetTaxRate(ctx)
@@ -37,7 +38,7 @@ func (k Keeper) UpdateTaxPolicy(ctx sdk.Context) (newTaxRate sdk.Dec) {
 	tlMonth := k.rollingAverageIndicator(ctx, int64(params.WindowShort), TRL)
 
 	// No revenues, hike as much as possible.
-	if tlMonth.Equal(sdk.ZeroDec()) {
+	if tlMonth.Equal(sdkmath.LegacyZeroDec()) {
 		newTaxRate = params.TaxPolicy.RateMax
 	} else {
 		newTaxRate = oldTaxRate.Mul(tlYear.Mul(inc)).Quo(tlMonth)
@@ -51,7 +52,7 @@ func (k Keeper) UpdateTaxPolicy(ctx sdk.Context) (newTaxRate sdk.Dec) {
 }
 
 // UpdateRewardPolicy updates reward-weight with w(t+1) = w(t)*SB_target/SB_rolling(t)
-func (k Keeper) UpdateRewardPolicy(ctx sdk.Context) (newRewardWeight sdk.Dec) {
+func (k Keeper) UpdateRewardPolicy(ctx sdk.Context) (newRewardWeight sdkmath.LegacyDec) {
 	params := k.GetParams(ctx)
 
 	oldWeight := k.GetRewardWeight(ctx)
@@ -61,7 +62,7 @@ func (k Keeper) UpdateRewardPolicy(ctx sdk.Context) (newRewardWeight sdk.Dec) {
 	totalSum := k.sumIndicator(ctx, int64(params.WindowShort), MR)
 
 	// No revenues; hike as much as possible
-	if totalSum.Equal(sdk.ZeroDec()) || seigniorageSum.Equal(sdk.ZeroDec()) {
+	if totalSum.Equal(sdkmath.LegacyZeroDec()) || seigniorageSum.Equal(sdkmath.LegacyZeroDec()) {
 		newRewardWeight = params.RewardPolicy.RateMax
 	} else {
 		// Seigniorage burden out of total rewards

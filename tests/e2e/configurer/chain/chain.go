@@ -1,9 +1,7 @@
 package chain
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -14,7 +12,6 @@ import (
 	"github.com/classic-terra/core/v3/tests/e2e/configurer/config"
 	"github.com/classic-terra/core/v3/tests/e2e/containers"
 	"github.com/classic-terra/core/v3/tests/e2e/initialization"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 type Config struct {
@@ -34,6 +31,96 @@ type Config struct {
 
 	t                *testing.T
 	containerManager *containers.Manager
+}
+
+// AddTaxExemptionZoneProposal submits, deposits, votes and waits for PASS on adding a new zone.
+func (c *Config) AddTaxExemptionZoneProposal(chainANode *NodeConfig, zone string, addresses []string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool) {
+    c.t.Logf("Submitting add tax exemption zone proposal: zone=%s addresses=%s incoming=%t outgoing=%t cross=%t", zone, strings.Join(addresses, ","), exemptIncoming, exemptOutgoing, exemptCrossZone)
+    propNumber := chainANode.SubmitAddTaxExemptionZoneProposal(zone, addresses, exemptIncoming, exemptOutgoing, exemptCrossZone, initialization.ValidatorWalletName)
+
+    chainANode.DepositProposal(propNumber)
+    AllValsVoteOnProposal(c, propNumber)
+
+    time.Sleep(initialization.TwoMin)
+    require.Eventually(c.t, func() bool {
+        status, err := chainANode.QueryPropStatus(propNumber)
+        if err != nil {
+            return false
+        }
+        return status == "PROPOSAL_STATUS_PASSED"
+    }, initialization.OneMin, 10*time.Millisecond)
+}
+
+// ModifyTaxExemptionZoneProposal submits, deposits, votes and waits for PASS on modifying zone flags.
+func (c *Config) ModifyTaxExemptionZoneProposal(chainANode *NodeConfig, zone string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool) {
+    c.t.Logf("Submitting modify tax exemption zone proposal: zone=%s incoming=%t outgoing=%t cross=%t", zone, exemptIncoming, exemptOutgoing, exemptCrossZone)
+    propNumber := chainANode.SubmitModifyTaxExemptionZoneProposal(zone, exemptIncoming, exemptOutgoing, exemptCrossZone, initialization.ValidatorWalletName)
+
+    chainANode.DepositProposal(propNumber)
+    AllValsVoteOnProposal(c, propNumber)
+
+    time.Sleep(initialization.TwoMin)
+    require.Eventually(c.t, func() bool {
+        status, err := chainANode.QueryPropStatus(propNumber)
+        if err != nil {
+            return false
+        }
+        return status == "PROPOSAL_STATUS_PASSED"
+    }, initialization.OneMin, 10*time.Millisecond)
+}
+
+// RemoveTaxExemptionZoneProposal submits, deposits, votes and waits for PASS on removing a zone.
+func (c *Config) RemoveTaxExemptionZoneProposal(chainANode *NodeConfig, zone string) {
+    c.t.Logf("Submitting remove tax exemption zone proposal: zone=%s", zone)
+    propNumber := chainANode.SubmitRemoveTaxExemptionZoneProposal(zone, initialization.ValidatorWalletName)
+
+    chainANode.DepositProposal(propNumber)
+    AllValsVoteOnProposal(c, propNumber)
+
+    time.Sleep(initialization.TwoMin)
+    require.Eventually(c.t, func() bool {
+        status, err := chainANode.QueryPropStatus(propNumber)
+        if err != nil {
+            return false
+        }
+        return status == "PROPOSAL_STATUS_PASSED"
+    }, initialization.OneMin, 10*time.Millisecond)
+}
+
+// AddTaxExemptionAddressProposal submits, deposits, votes and waits for PASS on adding addresses to a zone.
+func (c *Config) AddTaxExemptionAddressProposal(chainANode *NodeConfig, zone string, addresses []string) {
+    c.t.Logf("Submitting add tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
+    propNumber := chainANode.SubmitAddTaxExemptionAddressProposal(zone, addresses, initialization.ValidatorWalletName)
+
+    chainANode.DepositProposal(propNumber)
+    AllValsVoteOnProposal(c, propNumber)
+
+    time.Sleep(initialization.TwoMin)
+    require.Eventually(c.t, func() bool {
+        status, err := chainANode.QueryPropStatus(propNumber)
+        if err != nil {
+            return false
+        }
+        return status == "PROPOSAL_STATUS_PASSED"
+    }, initialization.OneMin, 10*time.Millisecond)
+}
+
+// RemoveTaxExemptionAddressProposal submits, deposits, votes and waits for PASS on removing addresses from a zone.
+func (c *Config) RemoveTaxExemptionAddressProposal(chainANode *NodeConfig, zone string, addresses []string) {
+    c.t.Logf("Submitting remove tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
+    propNumber := chainANode.SubmitRemoveTaxExemptionAddressProposal(zone, addresses, initialization.ValidatorWalletName)
+
+    chainANode.DepositProposal(propNumber)
+    AllValsVoteOnProposal(c, propNumber)
+
+    time.Sleep(initialization.TwoMin)
+    require.Eventually(c.t, func() bool {
+        status, err := chainANode.QueryPropStatus(propNumber)
+        if err != nil {
+            return false
+        }
+        return status == "PROPOSAL_STATUS_PASSED"
+    }, initialization.OneMin, 10*time.Millisecond)
 }
 
 const (
@@ -135,25 +222,8 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 }
 
 func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addresses ...string) {
-	proposal := treasurytypes.AddBurnTaxExemptionAddressProposal{
-		Title:       "Add Burn Tax Exemption Address",
-		Description: fmt.Sprintf("Add %s to the burn tax exemption address list", strings.Join(addresses, ",")),
-		Addresses:   addresses,
-	}
-	proposalJSON, err := json.Marshal(proposal)
-	require.NoError(c.t, err)
-
-	wd, err := os.Getwd()
-	require.NoError(c.t, err)
-	localProposalFile := wd + "/scripts/add_burn_tax_exemption_address_proposal.json"
-	f, err := os.Create(localProposalFile)
-	require.NoError(c.t, err)
-	_, err = f.WriteString(string(proposalJSON))
-	require.NoError(c.t, err)
-	err = f.Close()
-	require.NoError(c.t, err)
-
-	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposal(addresses, initialization.ValidatorWalletName)
+	c.t.Logf("Submitting burn tax exemption address proposal for: %s", strings.Join(addresses, ","))
+	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposalV1(addresses, initialization.ValidatorWalletName)
 
 	chainANode.DepositProposal(propNumber)
 	AllValsVoteOnProposal(c, propNumber)

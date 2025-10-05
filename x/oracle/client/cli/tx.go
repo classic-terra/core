@@ -69,11 +69,6 @@ where "terra1..." is the address you want to delegate your voting rights to.
 			}
 
 			msgs := []sdk.Msg{types.NewMsgDelegateFeedConsent(validator, feeder)}
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
 		},
@@ -133,11 +128,6 @@ $ terrad tx oracle aggregate-prevote 1234 8888.0ukrw,1.243uusd,0.99usdr terraval
 
 			hash := types.GetAggregateVoteHash(salt, exchangeRatesStr, validator)
 			msgs := []sdk.Msg{types.NewMsgAggregateExchangeRatePrevote(hash, voter, validator)}
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
 		},
@@ -195,11 +185,6 @@ $ terrad tx oracle aggregate-vote 1234 8888.0ukrw,1.243uusd,0.99usdr terravalope
 			}
 
 			msgs := []sdk.Msg{types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, voter, validator)}
-			for _, msg := range msgs {
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msgs...)
 		},

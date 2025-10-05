@@ -1,6 +1,9 @@
 package v8
 
 import (
+	"context"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmmigration "github.com/CosmWasm/wasmd/x/wasm/migrations/v2"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v3/app/keepers"
@@ -18,8 +21,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	"github.com/cosmos/ibc-go/v10/modules/core/exported"
 )
 
 func CreateV8UpgradeHandler(
@@ -28,7 +30,9 @@ func CreateV8UpgradeHandler(
 	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 		// Set param key table for params module migration
 		for _, subspace := range keepers.ParamsKeeper.GetSubspaces() {
 			subspace := subspace
@@ -61,11 +65,13 @@ func CreateV8UpgradeHandler(
 		}
 
 		legacyBaseAppSubspace := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-		baseapp.MigrateParams(ctx, legacyBaseAppSubspace, &keepers.ConsensusParamsKeeper)
+		if err := baseapp.MigrateParams(sdkCtx, legacyBaseAppSubspace, keepers.ConsensusParamsKeeper.ParamsStore); err != nil {
+			return nil, err
+		}
 
-		params := keepers.IBCKeeper.ClientKeeper.GetParams(ctx)
+		params := keepers.IBCKeeper.ClientKeeper.GetParams(sdkCtx)
 		params.AllowedClients = append(params.AllowedClients, exported.Localhost)
-		keepers.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+		keepers.IBCKeeper.ClientKeeper.SetParams(sdkCtx, params)
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

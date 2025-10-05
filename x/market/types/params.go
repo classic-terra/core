@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -23,9 +23,9 @@ var (
 
 // Default parameter values
 var (
-	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
-	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
-	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
+	DefaultBasePool           = math.LegacyNewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
+	DefaultPoolRecoveryPeriod = core.BlocksPerDay                           // 14,400
+	DefaultMinStabilitySpread = math.LegacyNewDecWithPrec(2, 2)             // 2%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -68,7 +68,7 @@ func (p Params) Validate() error {
 	if p.PoolRecoveryPeriod == 0 {
 		return fmt.Errorf("pool recovery period should be positive, is %d", p.PoolRecoveryPeriod)
 	}
-	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
+	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
 	}
 
@@ -76,7 +76,7 @@ func (p Params) Validate() error {
 }
 
 func validateBasePool(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -102,7 +102,7 @@ func validatePoolRecoveryPeriod(i interface{}) error {
 }
 
 func validateMinStabilitySpread(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -111,7 +111,7 @@ func validateMinStabilitySpread(i interface{}) error {
 		return fmt.Errorf("min spread must be positive or zero: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min spread is too large: %s", v)
 	}
 

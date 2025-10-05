@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -32,10 +33,10 @@ func TestGetVestedCoinsLazyVestingAcc(t *testing.T) {
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	lgva := types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -65,10 +66,10 @@ func TestGetVestingCoinsLazyVestingAcc(t *testing.T) {
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	lgva := types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -94,10 +95,10 @@ func TestLockedCoinsLazyVestingAcc(t *testing.T) {
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	lgva := types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -127,10 +128,10 @@ func TestTrackDelegationLazyVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins
 	lgva := types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -141,10 +142,10 @@ func TestTrackDelegationLazyVestingAcc(t *testing.T) {
 	// require the ability to delegate all vested coins
 	lgva = types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -155,10 +156,10 @@ func TestTrackDelegationLazyVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
 	lgva = types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -173,10 +174,10 @@ func TestTrackDelegationLazyVestingAcc(t *testing.T) {
 	// require no modifications when delegation amount is zero or not enough funds
 	lgva = types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -198,10 +199,10 @@ func TestTrackUndelegationLazyVestingAcc(t *testing.T) {
 	// require the ability to undelegate all vesting coins
 	lgva := types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -213,10 +214,10 @@ func TestTrackUndelegationLazyVestingAcc(t *testing.T) {
 	// require the ability to undelegate all vested coins
 	lgva = types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -228,10 +229,10 @@ func TestTrackUndelegationLazyVestingAcc(t *testing.T) {
 	// require no modifications when the undelegation amount is zero
 	lgva = types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -244,10 +245,10 @@ func TestTrackUndelegationLazyVestingAcc(t *testing.T) {
 	// vest 50% and delegate to two validators
 	lgva = types.NewLazyGradedVestingAccount(bacc, origCoins, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 
@@ -270,7 +271,8 @@ func TestGenesisAccountValidate(t *testing.T) {
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
 	initialVesting := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, 50))
-	baseVestingWithCoins := authvestingtypes.NewBaseVestingAccount(baseAcc, initialVesting, 100)
+	baseVestingWithCoins, err := authvestingtypes.NewBaseVestingAccount(baseAcc, initialVesting, 100)
+	require.Nil(t, err)
 	tests := []struct {
 		name   string
 		acc    authtypes.GenesisAccount
@@ -293,34 +295,34 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"valid continuous vesting account",
-			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdk.OneDec()}}}}),
+			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdkmath.LegacyOneDec()}}}}),
 			nil,
 		},
 		{
 			"invalid vesting times",
-			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1654668078, 1554668078, sdk.OneDec()}}}}),
+			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1654668078, 1554668078, sdkmath.LegacyOneDec()}}}}),
 			errors.New("vesting start-time cannot be before end-time"),
 		},
 		{
 			"invalid vesting times 2",
-			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{-1, 1554668078, sdk.OneDec()}}}}),
+			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{-1, 1554668078, sdkmath.LegacyOneDec()}}}}),
 			errors.New("vesting start-time cannot be negative"),
 		},
 		{
 			"invalid vesting ratio",
-			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdk.ZeroDec()}}}}),
+			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdkmath.LegacyZeroDec()}}}}),
 			errors.New("vesting ratio cannot be smaller than or equal with zero"),
 		},
 		{
 			"invalid vesting sum of ratio",
-			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdk.NewDecWithPrec(1, 1)}}}}),
+			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{types.VestingSchedule{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdkmath.LegacyNewDecWithPrec(1, 1)}}}}),
 			errors.New("vesting total ratio must be one"),
 		},
 		{
 			"multiple vesting schedule for a denom",
 			types.NewLazyGradedVestingAccount(baseAcc, initialVesting, types.VestingSchedules{
-				{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdk.OneDec()}}},
-				{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdk.OneDec()}}},
+				{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdkmath.LegacyOneDec()}}},
+				{core.MicroLunaDenom, types.Schedules{types.Schedule{1554668078, 1654668078, sdkmath.LegacyOneDec()}}},
 			}),
 			errors.New("cannot have multiple vesting schedules for uluna"),
 		},
@@ -340,7 +342,8 @@ func TestBaseVestingAccountMarshal(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)
 
-	acc := authvestingtypes.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
+	acc, err := authvestingtypes.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
+	require.Nil(t, err)
 
 	cdc := MakeTestCodec(t)
 	bz, err := cdc.MarshalInterface(acc)
@@ -363,13 +366,14 @@ func TestLazyGradedVestingAccountMarshal(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 10, 50)
 
-	baseVesting := authvestingtypes.NewBaseVestingAccount(baseAcc, coins, now.Unix())
+	baseVesting, err := authvestingtypes.NewBaseVestingAccount(baseAcc, coins, now.Unix())
+	require.Nil(t, err)
 	acc := types.NewLazyGradedVestingAccountRaw(baseVesting, types.VestingSchedules{
 		types.NewVestingSchedule(feeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 		types.NewVestingSchedule(stakeDenom, []types.Schedule{
-			types.NewSchedule(now.Unix(), endTime.Unix(), sdk.NewDec(1)),
+			types.NewSchedule(now.Unix(), endTime.Unix(), sdkmath.LegacyNewDec(1)),
 		}),
 	})
 

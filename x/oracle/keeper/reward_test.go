@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -28,18 +29,24 @@ func TestRewardBallotWinners(t *testing.T) {
 	require.NoError(t, err)
 	_, err = stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
-	staking.EndBlocker(ctx, input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(ctx)
 
+	stakingParams, err := input.StakingKeeper.GetParams(ctx)
+	require.NoError(t, err)
 	require.Equal(
 		t, input.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(input.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, InitTokens.Sub(amt))),
 	)
-	require.Equal(t, amt, input.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
+	validator, err := input.StakingKeeper.Validator(ctx, addr)
+	require.NoError(t, err)
+	require.Equal(t, amt, validator.GetBondedTokens())
 	require.Equal(
 		t, input.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr1)),
-		sdk.NewCoins(sdk.NewCoin(input.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(stakingParams.BondDenom, InitTokens.Sub(amt))),
 	)
-	require.Equal(t, amt, input.StakingKeeper.Validator(ctx, addr1).GetBondedTokens())
+	validator, err = input.StakingKeeper.Validator(ctx, addr1)
+	require.NoError(t, err)
+	require.Equal(t, amt, validator.GetBondedTokens())
 
 	// Add claim pools
 	claim := types.NewClaim(10, 10, 0, addr)
@@ -55,27 +62,29 @@ func TestRewardBallotWinners(t *testing.T) {
 	err = FundAccount(input, acc.GetAddress(), givingAmt)
 	require.NoError(t, err)
 
-	voteTargets := make(map[string]sdk.Dec)
-	input.OracleKeeper.IterateTobinTaxes(ctx, func(denom string, tobinTax sdk.Dec) bool {
+	voteTargets := make(map[string]sdkmath.LegacyDec)
+	input.OracleKeeper.IterateTobinTaxes(ctx, func(denom string, tobinTax sdkmath.LegacyDec) bool {
 		voteTargets[denom] = tobinTax
 		return false
 	})
 
-	votePeriodsPerWindow := sdk.NewDec((int64)(input.OracleKeeper.RewardDistributionWindow(input.Ctx))).
+	votePeriodsPerWindow := sdkmath.LegacyNewDec((int64)(input.OracleKeeper.RewardDistributionWindow(input.Ctx))).
 		QuoInt64((int64)(input.OracleKeeper.VotePeriod(input.Ctx))).
 		TruncateInt64()
 	input.OracleKeeper.RewardBallotWinners(ctx, (int64)(input.OracleKeeper.VotePeriod(input.Ctx)), (int64)(input.OracleKeeper.RewardDistributionWindow(input.Ctx)), voteTargets, claims)
-	outstandingRewardsDec := input.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, addr)
+	outstandingRewardsDec, err := input.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, addr)
+	require.NoError(t, err)
 	outstandingRewards, _ := outstandingRewardsDec.TruncateDecimal()
-	require.Equal(t, sdk.NewDecFromInt(givingAmt.AmountOf(core.MicroLunaDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).TruncateInt(),
+	require.Equal(t, sdkmath.LegacyNewDecFromInt(givingAmt.AmountOf(core.MicroLunaDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).TruncateInt(),
 		outstandingRewards.AmountOf(core.MicroLunaDenom))
-	require.Equal(t, sdk.NewDecFromInt(givingAmt.AmountOf(core.MicroUSDDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).TruncateInt(),
+	require.Equal(t, sdkmath.LegacyNewDecFromInt(givingAmt.AmountOf(core.MicroUSDDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).TruncateInt(),
 		outstandingRewards.AmountOf(core.MicroUSDDenom))
 
-	outstandingRewardsDec1 := input.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, addr1)
+	outstandingRewardsDec1, err := input.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, addr1)
+	require.NoError(t, err)
 	outstandingRewards1, _ := outstandingRewardsDec1.TruncateDecimal()
-	require.Equal(t, sdk.NewDecFromInt(givingAmt.AmountOf(core.MicroLunaDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).MulInt64(2).TruncateInt(),
+	require.Equal(t, sdkmath.LegacyNewDecFromInt(givingAmt.AmountOf(core.MicroLunaDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).MulInt64(2).TruncateInt(),
 		outstandingRewards1.AmountOf(core.MicroLunaDenom))
-	require.Equal(t, sdk.NewDecFromInt(givingAmt.AmountOf(core.MicroUSDDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).MulInt64(2).TruncateInt(),
+	require.Equal(t, sdkmath.LegacyNewDecFromInt(givingAmt.AmountOf(core.MicroUSDDenom)).QuoInt64(votePeriodsPerWindow).QuoInt64(3).MulInt64(2).TruncateInt(),
 		outstandingRewards1.AmountOf(core.MicroUSDDenom))
 }

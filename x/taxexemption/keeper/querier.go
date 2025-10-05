@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/classic-terra/core/v3/x/taxexemption/types"
 )
@@ -25,7 +26,7 @@ var _ types.QueryServer = querier{}
 // Taxable queries if a tx from one address to another is taxable
 func (q querier) Taxable(c context.Context, req *types.QueryTaxableRequest) (*types.QueryTaxableResponse, error) {
 	if req == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "Request must not nil")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "Request must not nil")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

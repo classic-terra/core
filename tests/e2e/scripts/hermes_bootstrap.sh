@@ -36,7 +36,7 @@ port = 3001
 id = '$TERRA_A_E2E_CHAIN_ID'
 rpc_addr = 'http://$TERRA_A_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$TERRA_A_E2E_VAL_HOST:9090'
-websocket_addr = 'ws://$TERRA_A_E2E_VAL_HOST:26657/websocket'
+event_source = { mode = 'push', url = 'ws://$TERRA_A_E2E_VAL_HOST:26657/websocket' }
 rpc_timeout = '10s'
 account_prefix = 'terra'
 key_name = 'val01-terra-a'
@@ -63,7 +63,7 @@ list = [[
 id = '$TERRA_B_E2E_CHAIN_ID'
 rpc_addr = 'http://$TERRA_B_E2E_VAL_HOST:26657'
 grpc_addr = 'http://$TERRA_B_E2E_VAL_HOST:9090'
-websocket_addr = 'ws://$TERRA_B_E2E_VAL_HOST:26657/websocket'
+event_source = { mode = 'push', url = 'ws://$TERRA_B_E2E_VAL_HOST:26657/websocket' }
 rpc_timeout = '10s'
 account_prefix = 'terra'
 key_name = 'val01-terra-b'

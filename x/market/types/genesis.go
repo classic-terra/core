@@ -3,12 +3,12 @@ package types
 import (
 	"encoding/json"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(terraPoolDelta sdk.Dec, params Params) *GenesisState {
+func NewGenesisState(terraPoolDelta math.LegacyDec, params Params) *GenesisState {
 	return &GenesisState{
 		TerraPoolDelta: terraPoolDelta,
 		Params:         params,
@@ -18,7 +18,7 @@ func NewGenesisState(terraPoolDelta sdk.Dec, params Params) *GenesisState {
 // DefaultGenesisState returns raw genesis raw message for testing
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		TerraPoolDelta: sdk.ZeroDec(),
+		TerraPoolDelta: math.LegacyZeroDec(),
 		Params:         DefaultParams(),
 	}
 }

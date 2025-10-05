@@ -83,21 +83,21 @@ func loadKeydataFromFile(clientCtx client.Context, replacementrJSON string, genD
 			replaceValConsPubKey, _ := cryptocodec.PubKeyFromProto(protoReplaceValConsPubKey)
 
 			for i, signingInfo := range slashingGenesis.SigningInfos {
-				if signingInfo.Address == toReplaceValConsAddress.String() {
-					slashingGenesis.SigningInfos[i].Address = replaceValConsAddress.String()
-					slashingGenesis.SigningInfos[i].ValidatorSigningInfo.Address = replaceValConsAddress.String()
+				if signingInfo.Address == string(toReplaceValConsAddress) {
+					slashingGenesis.SigningInfos[i].Address = string(replaceValConsAddress)
+					slashingGenesis.SigningInfos[i].ValidatorSigningInfo.Address = string(replaceValConsAddress)
 				}
 			}
 
 			for i, missedInfo := range slashingGenesis.MissedBlocks {
-				if missedInfo.Address == toReplaceValConsAddress.String() {
-					slashingGenesis.MissedBlocks[i].Address = replaceValConsAddress.String()
+				if missedInfo.Address == string(toReplaceValConsAddress) {
+					slashingGenesis.MissedBlocks[i].Address = string(replaceValConsAddress)
 				}
 			}
 
 			for tmIdx, tmval := range genDoc.Validators {
-				if bytes.Equal(tmval.Address.Bytes(), toReplaceValConsAddress.Bytes()) {
-					genDoc.Validators[tmIdx].Address = replaceValConsAddress.Bytes()
+				if bytes.Equal(tmval.Address.Bytes(), toReplaceValConsAddress) {
+					genDoc.Validators[tmIdx].Address = replaceValConsAddress
 					genDoc.Validators[tmIdx].PubKey = replaceValConsPubKey
 
 				}

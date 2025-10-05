@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -16,19 +17,19 @@ func TestExportInitGenesis(t *testing.T) {
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek) * 3)
 
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
-	input.TreasuryKeeper.SetRewardWeight(input.Ctx, sdk.NewDec(1123))
-	input.TreasuryKeeper.SetTaxCap(input.Ctx, "foo", sdk.NewInt(1234))
-	input.TreasuryKeeper.SetTaxRate(input.Ctx, sdk.NewDec(5435))
-	input.TreasuryKeeper.SetEpochTaxProceeds(input.Ctx, sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(923))))
-	input.TreasuryKeeper.SetTR(input.Ctx, int64(0), sdk.NewDec(123))
-	input.TreasuryKeeper.SetTR(input.Ctx, int64(1), sdk.NewDec(345))
-	input.TreasuryKeeper.SetTR(input.Ctx, int64(2), sdk.NewDec(567))
-	input.TreasuryKeeper.SetSR(input.Ctx, int64(0), sdk.NewDec(123))
-	input.TreasuryKeeper.SetSR(input.Ctx, int64(1), sdk.NewDec(345))
-	input.TreasuryKeeper.SetSR(input.Ctx, int64(2), sdk.NewDec(567))
-	input.TreasuryKeeper.SetTSL(input.Ctx, int64(0), sdk.NewInt(123))
-	input.TreasuryKeeper.SetTSL(input.Ctx, int64(1), sdk.NewInt(345))
-	input.TreasuryKeeper.SetTSL(input.Ctx, int64(2), sdk.NewInt(567))
+	input.TreasuryKeeper.SetRewardWeight(input.Ctx, sdkmath.LegacyNewDec(1123))
+	input.TreasuryKeeper.SetTaxCap(input.Ctx, "foo", sdkmath.NewInt(1234))
+	input.TreasuryKeeper.SetTaxRate(input.Ctx, sdkmath.LegacyNewDec(5435))
+	input.TreasuryKeeper.SetEpochTaxProceeds(input.Ctx, sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(923))))
+	input.TreasuryKeeper.SetTR(input.Ctx, int64(0), sdkmath.LegacyNewDec(123))
+	input.TreasuryKeeper.SetTR(input.Ctx, int64(1), sdkmath.LegacyNewDec(345))
+	input.TreasuryKeeper.SetTR(input.Ctx, int64(2), sdkmath.LegacyNewDec(567))
+	input.TreasuryKeeper.SetSR(input.Ctx, int64(0), sdkmath.LegacyNewDec(123))
+	input.TreasuryKeeper.SetSR(input.Ctx, int64(1), sdkmath.LegacyNewDec(345))
+	input.TreasuryKeeper.SetSR(input.Ctx, int64(2), sdkmath.LegacyNewDec(567))
+	input.TreasuryKeeper.SetTSL(input.Ctx, int64(0), sdkmath.NewInt(123))
+	input.TreasuryKeeper.SetTSL(input.Ctx, int64(1), sdkmath.NewInt(345))
+	input.TreasuryKeeper.SetTSL(input.Ctx, int64(2), sdkmath.NewInt(567))
 	genesis := ExportGenesis(input.Ctx, input.TreasuryKeeper)
 
 	newInput := keeper.CreateTestInput(t)

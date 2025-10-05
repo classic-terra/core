@@ -22,9 +22,8 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the taxexemption module.
@@ -131,28 +130,29 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
 
-// GenerateGenesisState creates a randomized GenState of the taxexemption module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the taxexemption content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{}
-}
-
-// RegisterStoreDecoder registers a decoder for taxexemption module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the taxexemption module operations with their respective weights.
-func (am AppModule) WeightedOperations(module.SimulationState) []simtypes.WeightedOperation {
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }
 
-// EndBlock returns the end blocker for the taxexemption module.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	// EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+// IsAppModule implements the appmodule.AppModule marker.
+func (AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType marker.
+func (AppModule) IsOnePerModuleType() {}
+
+// Simulation hooks are intentionally omitted in v0.50 upgrade.
+
+// EndBlock implements the SDK v0.50 module end blocker signature.
+func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	// sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// EndBlocker(sdkCtx, am.keeper)
+	return []abci.ValidatorUpdate{}, nil
 }

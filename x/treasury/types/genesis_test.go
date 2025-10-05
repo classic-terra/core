@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func TestGenesisValidation(t *testing.T) {
@@ -13,23 +13,23 @@ func TestGenesisValidation(t *testing.T) {
 	require.NoError(t, ValidateGenesis(genState))
 
 	// Error - tax_rate range error
-	genState.TaxRate = sdk.NewDec(-1)
+	genState.TaxRate = sdkmath.LegacyNewDec(-1)
 	require.Error(t, ValidateGenesis(genState))
 
 	// Valid
-	genState.TaxRate = sdk.NewDecWithPrec(1, 2)
+	genState.TaxRate = sdkmath.LegacyNewDecWithPrec(1, 2)
 	require.NoError(t, ValidateGenesis(genState))
 
 	// Error - reward_weight range error
-	genState.RewardWeight = sdk.NewDec(-1)
+	genState.RewardWeight = sdkmath.LegacyNewDec(-1)
 	require.Error(t, ValidateGenesis(genState))
 
 	// Valid
-	genState.RewardWeight = sdk.NewDecWithPrec(5, 2)
+	genState.RewardWeight = sdkmath.LegacyNewDecWithPrec(5, 2)
 	require.NoError(t, ValidateGenesis(genState))
 
-	dummyDec := sdk.NewDec(10)
-	dummyInt := sdk.NewInt(10)
+	dummyDec := sdkmath.LegacyNewDec(10)
+	dummyInt := sdkmath.NewInt(10)
 
 	genState.EpochStates = []EpochState{
 		{

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -35,19 +36,24 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 func RandomizedGenState(simState *module.SimulationState) {
 	var sendEnabledParams []types.SendEnabled
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeySendEnabled), &sendEnabledParams, simState.Rand,
-		func(r *rand.Rand) { sendEnabledParams = simulation.RandomGenesisSendEnabled(r) },
+		string(types.KeySendEnabled), &sendEnabledParams, simState.Rand,
+		func(r *rand.Rand) {
+			sendEnabledParams = []types.SendEnabled{
+				{Denom: "uluna", Enabled: true},
+				{Denom: "uusd", Enabled: true},
+			}
+		},
 	)
 
 	var defaultSendEnabledParam bool
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,
-		func(r *rand.Rand) { defaultSendEnabledParam = simulation.RandomGenesisDefaultSendEnabledParam(r) },
+		string(types.KeyDefaultSendEnabled), &defaultSendEnabledParam, simState.Rand,
+		func(r *rand.Rand) { defaultSendEnabledParam = r.Intn(2) == 1 },
 	)
 
 	numAccs := int64(len(simState.Accounts))
-	totalSupply := simState.InitialStake.Mul(sdk.NewInt(numAccs + simState.NumBonded))
-	totalLunaSupply := simState.InitialStake.Mul(sdk.NewInt(numAccs))
+	totalSupply := simState.InitialStake.Mul(math.NewInt(numAccs + simState.NumBonded))
+	totalLunaSupply := simState.InitialStake.Mul(math.NewInt(numAccs))
 	supply := sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, totalSupply),
 		sdk.NewCoin(core.MicroLunaDenom, totalLunaSupply),

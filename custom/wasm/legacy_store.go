@@ -6,7 +6,7 @@ import (
 	"io"
 
 	coretypes "github.com/classic-terra/core/v3/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

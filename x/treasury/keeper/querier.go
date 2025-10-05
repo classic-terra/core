@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -94,7 +94,10 @@ func (q querier) Indicators(c context.Context, _ *types.QueryIndicatorsRequest) 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Compute Total Staked Luna (TSL)
-	TSL := q.stakingKeeper.TotalBondedTokens(ctx)
+	TSL, err := q.stakingKeeper.TotalBondedTokens(sdk.WrapSDKContext(ctx))
+	if err != nil {
+		TSL = sdkmath.ZeroInt()
+	}
 
 	// Compute Tax Rewards (TR)
 	taxRewards := sdk.NewDecCoinsFromCoins(q.PeekEpochTaxProceeds(ctx)...)

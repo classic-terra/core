@@ -93,7 +93,7 @@ message QueryExchangeRateResponse {
   // exchange_rate defines the exchange rate of Luna denominated in various Terra
   string exchange_rate = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -124,7 +124,7 @@ message QueryTobinTaxResponse {
   // tobin_taxe defines the tobin tax of a denom
   string tobin_tax = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }

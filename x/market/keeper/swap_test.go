@@ -8,47 +8,48 @@ import (
 
 	core "github.com/classic-terra/core/v3/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestApplySwapToPool(t *testing.T) {
 	input := CreateTestInput(t)
 
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	lunaPriceInSDR := sdkmath.LegacyNewDecWithPrec(17, 1)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
-	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000))
-	askCoin := sdk.NewDecCoin(core.MicroSDRDenom, sdk.NewInt(1700))
+	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1000))
+	askCoin := sdk.NewDecCoin(core.MicroSDRDenom, sdkmath.NewInt(1700))
 	oldSDRPoolDelta := input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
 	input.MarketKeeper.ApplySwapToPool(input.Ctx, offerCoin, askCoin)
 	newSDRPoolDelta := input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
 	sdrDiff := newSDRPoolDelta.Sub(oldSDRPoolDelta)
-	require.Equal(t, sdk.NewDec(-1700), sdrDiff)
+	require.Equal(t, sdkmath.LegacyNewDec(-1700), sdrDiff)
 
 	// reverse swap
-	offerCoin = sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1700))
-	askCoin = sdk.NewDecCoin(core.MicroLunaDenom, sdk.NewInt(1000))
+	offerCoin = sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1700))
+	askCoin = sdk.NewDecCoin(core.MicroLunaDenom, sdkmath.NewInt(1000))
 	oldSDRPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
 	input.MarketKeeper.ApplySwapToPool(input.Ctx, offerCoin, askCoin)
 	newSDRPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
 	sdrDiff = newSDRPoolDelta.Sub(oldSDRPoolDelta)
-	require.Equal(t, sdk.NewDec(1700), sdrDiff)
+	require.Equal(t, sdkmath.LegacyNewDec(1700), sdrDiff)
 
 	// TERRA <> TERRA, no pool changes are expected
-	offerCoin = sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1700))
-	askCoin = sdk.NewDecCoin(core.MicroKRWDenom, sdk.NewInt(3400))
+	offerCoin = sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1700))
+	askCoin = sdk.NewDecCoin(core.MicroKRWDenom, sdkmath.NewInt(3400))
 	oldSDRPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
 	input.MarketKeeper.ApplySwapToPool(input.Ctx, offerCoin, askCoin)
 	newSDRPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
 	sdrDiff = newSDRPoolDelta.Sub(oldSDRPoolDelta)
-	require.Equal(t, sdk.NewDec(0), sdrDiff)
+	require.Equal(t, sdkmath.LegacyNewDec(0), sdrDiff)
 }
 
 func TestComputeSwap(t *testing.T) {
 	input := CreateTestInput(t)
 
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	lunaPriceInSDR := sdkmath.LegacyNewDecWithPrec(17, 1)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
 	for i := 0; i < 100; i++ {
@@ -58,7 +59,7 @@ func TestComputeSwap(t *testing.T) {
 
 		require.NoError(t, err)
 		require.True(t, spread.GTE(input.MarketKeeper.MinStabilitySpread(input.Ctx)))
-		require.Equal(t, sdk.NewDecFromInt(offerCoin.Amount).Quo(lunaPriceInSDR), retCoin.Amount)
+		require.Equal(t, sdkmath.LegacyNewDecFromInt(offerCoin.Amount).Quo(lunaPriceInSDR), retCoin.Amount)
 	}
 
 	offerCoin := sdk.NewCoin(core.MicroSDRDenom, lunaPriceInSDR.QuoInt64(2).TruncateInt())
@@ -70,7 +71,7 @@ func TestComputeInternalSwap(t *testing.T) {
 	input := CreateTestInput(t)
 
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	lunaPriceInSDR := sdkmath.LegacyNewDecWithPrec(17, 1)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
 	for i := 0; i < 100; i++ {
@@ -89,16 +90,16 @@ func TestIlliquidTobinTaxListParams(t *testing.T) {
 	input := CreateTestInput(t)
 
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
-	lunaPriceInMNT := sdk.NewDecWithPrec(7652, 1)
+	lunaPriceInSDR := sdkmath.LegacyNewDecWithPrec(17, 1)
+	lunaPriceInMNT := sdkmath.LegacyNewDecWithPrec(7652, 1)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroMNTDenom, lunaPriceInMNT)
 
-	tobinTax := sdk.NewDecWithPrec(25, 4)
+	tobinTax := sdkmath.LegacyNewDecWithPrec(25, 4)
 	params := input.MarketKeeper.GetParams(input.Ctx)
 	input.MarketKeeper.SetParams(input.Ctx, params)
 
-	illiquidFactor := sdk.NewDec(2)
+	illiquidFactor := sdkmath.LegacyNewDec(2)
 	input.OracleKeeper.SetTobinTax(input.Ctx, core.MicroSDRDenom, tobinTax)
 	input.OracleKeeper.SetTobinTax(input.Ctx, core.MicroMNTDenom, tobinTax.Mul(illiquidFactor))
 

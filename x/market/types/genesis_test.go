@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func TestGenesisValidation(t *testing.T) {
 	genState := DefaultGenesisState()
 	require.NoError(t, ValidateGenesis(genState))
 
-	genState.Params.BasePool = sdk.NewDec(-1)
+	genState.Params.BasePool = sdkmath.LegacyNewDec(-1)
 	require.Error(t, ValidateGenesis(genState))
 
 	genState = DefaultGenesisState()
@@ -20,6 +20,6 @@ func TestGenesisValidation(t *testing.T) {
 	require.Error(t, ValidateGenesis(genState))
 
 	genState = DefaultGenesisState()
-	genState.Params.MinStabilitySpread = sdk.NewDec(-1)
+	genState.Params.MinStabilitySpread = sdkmath.LegacyNewDec(-1)
 	require.Error(t, ValidateGenesis(genState))
 }

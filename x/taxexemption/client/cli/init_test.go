@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	// "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
 type CLITestSuite struct {
@@ -34,7 +33,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(rpcclientmock.Client{}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")

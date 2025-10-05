@@ -83,6 +83,10 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, 
 	return m.ExecTxCmdWithSuccessString(t, chainID, containerName, command, "\"code\":0")
 }
 
+func (m *Manager) GetPool() *dockertest.Pool {
+	return m.pool
+}
+
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json"`,
 // and searching for `successStr`

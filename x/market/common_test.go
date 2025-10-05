@@ -5,20 +5,21 @@ import (
 
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/keeper"
+	"github.com/classic-terra/core/v3/x/market/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
-var randomPrice = sdk.NewDec(1700)
+var randomPrice = sdkmath.LegacyNewDec(1700)
 
-func setup(t *testing.T) (keeper.TestInput, sdk.Handler) {
+func setup(t *testing.T) (keeper.TestInput, types.MsgServer) {
 	input := keeper.CreateTestInput(t)
 
 	params := input.MarketKeeper.GetParams(input.Ctx)
 	input.MarketKeeper.SetParams(input.Ctx, params)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, randomPrice)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, randomPrice)
-	h := NewHandler(input.MarketKeeper)
+	h := keeper.NewMsgServerImpl(input.MarketKeeper)
 
 	return input, h
 }

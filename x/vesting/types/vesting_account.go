@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -82,8 +83,8 @@ func (lgva LazyGradedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coi
 	for _, ovc := range lgva.OriginalVesting {
 		if vestingSchedule, exists := lgva.GetVestingSchedule(ovc.Denom); exists {
 			vestedRatio := vestingSchedule.GetVestedRatio(blockTime.Unix())
-			vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(vestedRatio).RoundInt()
-			if vestedAmt.Equal(sdk.ZeroInt()) {
+			vestedAmt := math.LegacyNewDecFromInt(ovc.Amount).Mul(vestedRatio).RoundInt()
+			if vestedAmt.Equal(math.ZeroInt()) {
 				continue
 			}
 			vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))

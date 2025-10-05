@@ -6,22 +6,22 @@ import (
 	"github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func Test_DenomList(t *testing.T) {
 	denoms := types.DenomList{
 		types.Denom{
 			Name:     "denom1",
-			TobinTax: sdk.NewDec(100),
+			TobinTax: sdkmath.LegacyNewDec(100),
 		},
 		types.Denom{
 			Name:     "denom2",
-			TobinTax: sdk.NewDec(200),
+			TobinTax: sdkmath.LegacyNewDec(200),
 		},
 		types.Denom{
 			Name:     "denom3",
-			TobinTax: sdk.NewDec(300),
+			TobinTax: sdkmath.LegacyNewDec(300),
 		},
 	}
 

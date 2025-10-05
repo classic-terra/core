@@ -8,8 +8,8 @@ FORK=${FORK:-"false"}
 # Each element in OLD_VERSIONS represents a version to upgrade from,
 # and the corresponding element in UPGRADE_NAMES is the upgrade name applied to that version.
 # For example, OLD_VERSIONS[0] is upgraded using UPGRADE_NAMES[0], and so on.
-OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v2.4.2,v3.0.4,v3.1.3,v3.1.5,v3.1.6,v3.3.0,v3.4.0,v3.4.3,v3.5.0"}
-UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v8,v8_1,v8_2,v8_3,v10_1,v11_1,v11_2,v12,v13"}
+OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v2.4.2,v3.0.4,v3.1.3,v3.1.5,v3.1.6,v3.3.0,v3.4.0,v3.4.3,v3.5.0,v3.6.0-rc.0"}
+UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v8,v8_1,v8_2,v8_3,v10_1,v11_1,v11_2,v12,v13,v14"}
 
 # Parse comma-separated lists into arrays
 IFS=',' read -r -a OLD_VERSIONS <<< "$OLD_VERSIONS_STRING"
@@ -93,7 +93,7 @@ run_node() {
         CONTINUE="$continue_flag" screen -L -Logfile $HOME/log-screen.txt -dmS node1 bash scripts/run-node-legacy.sh $binary_path $DENOM
     fi
     
-    sleep 20
+    sleep 10
 }
 
 # Function to execute additional scripts
@@ -108,7 +108,7 @@ execute_scripts() {
             if [ -f "$SCRIPT" ]; then
                 echo "executing scripts from $SCRIPT"
                 source $SCRIPT
-                sleep 5
+                sleep 2
             else
                 echo "$SCRIPT is not a file"
             fi
@@ -124,7 +124,7 @@ run_fork () {
         # if BLOCK_HEIGHT is not empty
         if [ ! -z "$BLOCK_HEIGHT" ]; then
             echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
-            sleep 10
+            sleep 2
         else
             echo "BLOCK_HEIGHT is empty, forking"
             break
@@ -142,6 +142,9 @@ run_upgrade () {
 
     STATUS_INFO=($(./_build/$current_binary/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
     UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
+    if [ $UPGRADE_HEIGHT -lt 35 ]; then
+        UPGRADE_HEIGHT=35
+    fi
 
     # Create the upgrade package for the next binary
     tar -cf ./_build/$next_binary/terrad.tar -C ./_build/$next_binary terrad
@@ -158,21 +161,21 @@ run_upgrade () {
     # Submit the upgrade proposal
     ./_build/$current_binary/terrad tx gov submit-legacy-proposal software-upgrade "$upgrade_name" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "$UPGRADE_INFO" --title "upgrade to $upgrade_name" --description "upgrade to $upgrade_name"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 5
+    sleep 2
 
     # Deposit tokens for the proposal
     ./_build/$current_binary/terrad tx gov deposit $proposal_id "20000000${DENOM}" --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 5
+    sleep 2
 
     # Vote yes on the proposal
     ./_build/$current_binary/terrad tx gov vote $proposal_id yes --from test0 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 5
+    sleep 2
 
     ./_build/$current_binary/terrad tx gov vote $proposal_id yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
-    sleep 5
+    sleep 2
 
     # Wait for the upgrade height
     while true; do 
@@ -181,11 +184,12 @@ run_upgrade () {
             # assuming running only 1 terrad
             echo "BLOCK HEIGHT = $UPGRADE_HEIGHT REACHED, KILLING CURRENT NODE"
             pkill terrad
+            sleep 5
             break
         else
             ./_build/$current_binary/terrad q gov proposal $proposal_id --output=json | jq ".status"
             echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
-            sleep 10
+            sleep 2
         fi
     done
 }
@@ -242,7 +246,7 @@ upload_and_instantiate_contract() {
     # Save contract address to a file for later use
     echo "$CONTRACT_ADDR" > ${HOME}/cw20_contract_address.txt
     
-    sleep 5
+    sleep 2
 }
 
 # Function to run final tests after all upgrades
@@ -344,7 +348,7 @@ execute_cw20_transfer() {
     
     # Wait for transaction to be included in a block
     echo "Waiting for transaction to be included in a block..."
-    sleep 10
+    sleep 2
     
     # Query the balance of test2 to verify the transfer
     BALANCE_MSG='{"balance":{"address":"'$TEST2_ADDR'"}}'
@@ -352,7 +356,7 @@ execute_cw20_transfer() {
     BALANCE=$(echo $BALANCE_QUERY | jq -r '.data.balance')
     
     echo "Test2 account balance after transfer: $BALANCE"
-    sleep 5
+    sleep 2
 }
 
 # Execute pre-upgrade scripts
@@ -371,7 +375,7 @@ else
         # Skip the first version as it's already running
         if [ $i -gt 0 ]; then
             echo "Proceeding to upgrade ${i} of ${#UPGRADE_NAMES[@]}"
-            sleep 5
+            sleep 2
         fi
         
         # Determine current and next binary paths
@@ -411,7 +415,7 @@ else
                 # Run tests after first upgrade to show historic height query issues
                 echo -e "\n======== RUNNING TESTS AFTER FIRST UPGRADE (EXPECT SOME ERRORS) ========\n"
                 echo "These tests should show errors with historic height queries that will be fixed in the final upgrade"
-                run_final_tests "_build/$NEXT_BINARY/terrad" "10"
+                run_final_tests "_build/$NEXT_BINARY/terrad" "35"
             fi
         fi
     done
@@ -421,4 +425,4 @@ fi
 execute_scripts "$ADDITIONAL_AFTER_SCRIPTS"
 
 # Run final tests after all upgrades
-run_final_tests "_build/new/terrad" "10"
+run_final_tests "_build/new/terrad" "35"

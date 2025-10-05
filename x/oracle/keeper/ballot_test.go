@@ -10,8 +10,8 @@ import (
 	"github.com/classic-terra/core/v3/x/oracle/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestOrganizeAggregate(t *testing.T) {
@@ -29,17 +29,17 @@ func TestOrganizeAggregate(t *testing.T) {
 	require.NoError(t, err)
 	_, err = stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], amt))
 	require.NoError(t, err)
-	staking.EndBlocker(ctx, input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(ctx)
 
 	sdrBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(17), core.MicroSDRDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(10), core.MicroSDRDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(6), core.MicroSDRDenom, ValAddrs[2], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(17), core.MicroSDRDenom, ValAddrs[0], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(10), core.MicroSDRDenom, ValAddrs[1], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(6), core.MicroSDRDenom, ValAddrs[2], power),
 	}
 	krwBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(1000), core.MicroKRWDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(1300), core.MicroKRWDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(2000), core.MicroKRWDenom, ValAddrs[2], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(1000), core.MicroKRWDenom, ValAddrs[0], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(1300), core.MicroKRWDenom, ValAddrs[1], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(2000), core.MicroKRWDenom, ValAddrs[2], power),
 	}
 
 	for i := range sdrBallot {
@@ -94,17 +94,17 @@ func TestClearBallots(t *testing.T) {
 	require.NoError(t, err)
 	_, err = stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], amt))
 	require.NoError(t, err)
-	staking.EndBlocker(ctx, input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(ctx)
 
 	sdrBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(17), core.MicroSDRDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(10), core.MicroSDRDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(6), core.MicroSDRDenom, ValAddrs[2], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(17), core.MicroSDRDenom, ValAddrs[0], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(10), core.MicroSDRDenom, ValAddrs[1], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(6), core.MicroSDRDenom, ValAddrs[2], power),
 	}
 	krwBallot := types.ExchangeRateBallot{
-		types.NewVoteForTally(sdk.NewDec(1000), core.MicroKRWDenom, ValAddrs[0], power),
-		types.NewVoteForTally(sdk.NewDec(1300), core.MicroKRWDenom, ValAddrs[1], power),
-		types.NewVoteForTally(sdk.NewDec(2000), core.MicroKRWDenom, ValAddrs[2], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(1000), core.MicroKRWDenom, ValAddrs[0], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(1300), core.MicroKRWDenom, ValAddrs[1], power),
+		types.NewVoteForTally(sdkmath.LegacyNewDec(2000), core.MicroKRWDenom, ValAddrs[2], power),
 	}
 
 	for i := range sdrBallot {
@@ -154,24 +154,24 @@ func TestApplyWhitelist(t *testing.T) {
 	input.OracleKeeper.ApplyWhitelist(input.Ctx, types.DenomList{
 		types.Denom{
 			Name:     "uusd",
-			TobinTax: sdk.OneDec(),
+			TobinTax: sdkmath.LegacyOneDec(),
 		},
 		types.Denom{
 			Name:     "ukrw",
-			TobinTax: sdk.OneDec(),
+			TobinTax: sdkmath.LegacyOneDec(),
 		},
-	}, map[string]sdk.Dec{
-		"uusd": sdk.ZeroDec(),
-		"ukrw": sdk.ZeroDec(),
+	}, map[string]sdkmath.LegacyDec{
+		"uusd": sdkmath.LegacyZeroDec(),
+		"ukrw": sdkmath.LegacyZeroDec(),
 	})
 
 	price, err := input.OracleKeeper.GetTobinTax(input.Ctx, "uusd")
 	require.NoError(t, err)
-	require.Equal(t, price, sdk.OneDec())
+	require.Equal(t, price, sdkmath.LegacyOneDec())
 
 	price, err = input.OracleKeeper.GetTobinTax(input.Ctx, "ukrw")
 	require.NoError(t, err)
-	require.Equal(t, price, sdk.OneDec())
+	require.Equal(t, price, sdkmath.LegacyOneDec())
 
 	metadata, ok := input.BankKeeper.GetDenomMetaData(input.Ctx, "uusd")
 	require.True(t, ok)

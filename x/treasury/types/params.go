@@ -5,6 +5,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -28,27 +29,27 @@ var (
 // Default parameter values
 var (
 	DefaultTaxPolicy = PolicyConstraints{
-		RateMin:       sdk.NewDecWithPrec(5, 4),                                             // 0.05%
-		RateMax:       sdk.NewDecWithPrec(1, 2),                                             // 1%
-		Cap:           sdk.NewCoin(core.MicroSDRDenom, sdk.OneInt().MulRaw(core.MicroUnit)), // 1 SDR Tax cap
-		ChangeRateMax: sdk.NewDecWithPrec(25, 5),                                            // 0.025%
+		RateMin:       sdkmath.LegacyNewDecWithPrec(5, 4),                                       // 0.05%
+		RateMax:       sdkmath.LegacyNewDecWithPrec(1, 2),                                       // 1%
+		Cap:           sdk.NewCoin(core.MicroSDRDenom, sdkmath.OneInt().MulRaw(core.MicroUnit)), // 1 SDR Tax cap
+		ChangeRateMax: sdkmath.LegacyNewDecWithPrec(25, 5),                                      // 0.025%
 	}
 	DefaultRewardPolicy = PolicyConstraints{
-		RateMin:       sdk.NewDecWithPrec(5, 2),             // 5%
-		RateMax:       sdk.NewDecWithPrec(50, 2),            // 50%
-		ChangeRateMax: sdk.NewDecWithPrec(25, 3),            // 2.5%
-		Cap:           sdk.NewCoin("unused", sdk.ZeroInt()), // UNUSED
+		RateMin:       sdkmath.LegacyNewDecWithPrec(5, 2),       // 5%
+		RateMax:       sdkmath.LegacyNewDecWithPrec(50, 2),      // 50%
+		ChangeRateMax: sdkmath.LegacyNewDecWithPrec(25, 3),      // 2.5%
+		Cap:           sdk.NewCoin("unused", sdkmath.ZeroInt()), // UNUSED
 	}
-	DefaultSeigniorageBurdenTarget = sdk.NewDecWithPrec(67, 2)  // 67%
-	DefaultMiningIncrement         = sdk.NewDecWithPrec(107, 2) // 1.07 mining increment; exponential growth
-	DefaultWindowShort             = uint64(4)                  // a month
-	DefaultWindowLong              = uint64(52)                 // a year
-	DefaultWindowProbation         = uint64(12)                 // 3 month
-	DefaultTaxRate                 = sdk.NewDecWithPrec(1, 3)   // 0.1%
-	DefaultRewardWeight            = sdk.NewDecWithPrec(5, 2)   // 5%
-	DefaultBurnTaxSplit            = sdk.NewDecWithPrec(1, 1)   // 10% goes to community pool, 90% burn
-	DefaultMinInitialDepositRatio  = sdk.ZeroDec()              // 0% min initial deposit
-	DefaultOracleSplit             = sdk.OneDec()               // 100% oracle, community tax (CP) is deducted before oracle split
+	DefaultSeigniorageBurdenTarget = sdkmath.LegacyNewDecWithPrec(67, 2)  // 67%
+	DefaultMiningIncrement         = sdkmath.LegacyNewDecWithPrec(107, 2) // 1.07 mining increment; exponential growth
+	DefaultWindowShort             = uint64(4)                            // a month
+	DefaultWindowLong              = uint64(52)                           // a year
+	DefaultWindowProbation         = uint64(12)                           // 3 month
+	DefaultTaxRate                 = sdkmath.LegacyNewDecWithPrec(1, 3)   // 0.1%
+	DefaultRewardWeight            = sdkmath.LegacyNewDecWithPrec(5, 2)   // 5%
+	DefaultBurnTaxSplit            = sdkmath.LegacyNewDecWithPrec(1, 1)   // 10% goes to community pool, 90% burn
+	DefaultMinInitialDepositRatio  = sdkmath.LegacyZeroDec()              // 0% min initial deposit
+	DefaultOracleSplit             = sdkmath.LegacyOneDec()               // 100% oracle, community tax (CP) is deducted before oracle split
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -145,7 +146,7 @@ func (p Params) Validate() error {
 		return fmt.Errorf("treasury parameter OracleSplit must be positive: %s", p.OracleSplit)
 	}
 
-	if p.OracleSplit.GT(sdk.OneDec()) {
+	if p.OracleSplit.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("treasury parameter OracleSplit must be less than or equal to 1.0: %s", p.OracleSplit)
 	}
 
@@ -199,7 +200,7 @@ func validateRewardPolicy(i interface{}) error {
 }
 
 func validateSeigniorageBurdenTarget(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -212,7 +213,7 @@ func validateSeigniorageBurdenTarget(i interface{}) error {
 }
 
 func validateMiningIncrement(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -252,7 +253,7 @@ func validateWindowProbation(i interface{}) error {
 }
 
 func validateBurnTaxSplit(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -265,7 +266,7 @@ func validateBurnTaxSplit(i interface{}) error {
 }
 
 func validateMinInitialDepositRatio(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid paramater type: %T", i)
 	}
@@ -274,7 +275,7 @@ func validateMinInitialDepositRatio(i interface{}) error {
 		return fmt.Errorf("min initial deposit ratio must be positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("min initial deposit ratio must less than or equal 1.0: %s", v)
 	}
 
@@ -282,7 +283,7 @@ func validateMinInitialDepositRatio(i interface{}) error {
 }
 
 func validateOraceSplit(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid paramater type: %T", i)
 	}
@@ -291,7 +292,7 @@ func validateOraceSplit(i interface{}) error {
 		return fmt.Errorf("oracle split must be positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("oracle split must be less than or equal to 1.0: %s", v)
 	}
 

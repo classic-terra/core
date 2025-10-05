@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -29,7 +30,7 @@ func TestQueryExchangeRate(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.OracleKeeper)
 
-	rate := sdk.NewDec(1700)
+	rate := sdkmath.LegacyNewDec(1700)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, rate)
 
 	// empty request
@@ -69,7 +70,7 @@ func TestQueryExchangeRates(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.OracleKeeper)
 
-	rate := sdk.NewDec(1700)
+	rate := sdkmath.LegacyNewDec(1700)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, rate)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, rate)
 
@@ -87,7 +88,7 @@ func TestQueryActives(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.OracleKeeper)
 
-	rate := sdk.NewDec(1700)
+	rate := sdkmath.LegacyNewDec(1700)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, rate)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, rate)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, rate)
@@ -181,9 +182,9 @@ func TestQueryAggregateVote(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.OracleKeeper)
 
-	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdk.OneDec()}}, ValAddrs[0])
+	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdkmath.LegacyOneDec()}}, ValAddrs[0])
 	input.OracleKeeper.SetAggregateExchangeRateVote(input.Ctx, ValAddrs[0], vote1)
-	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdk.OneDec()}}, ValAddrs[1])
+	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdkmath.LegacyOneDec()}}, ValAddrs[1])
 	input.OracleKeeper.SetAggregateExchangeRateVote(input.Ctx, ValAddrs[1], vote2)
 
 	// empty request
@@ -210,11 +211,11 @@ func TestQueryAggregateVotes(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.OracleKeeper)
 
-	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdk.OneDec()}}, ValAddrs[0])
+	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdkmath.LegacyOneDec()}}, ValAddrs[0])
 	input.OracleKeeper.SetAggregateExchangeRateVote(input.Ctx, ValAddrs[0], vote1)
-	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdk.OneDec()}}, ValAddrs[1])
+	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdkmath.LegacyOneDec()}}, ValAddrs[1])
 	input.OracleKeeper.SetAggregateExchangeRateVote(input.Ctx, ValAddrs[1], vote2)
-	vote3 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdk.OneDec()}}, ValAddrs[2])
+	vote3 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Denom: "", ExchangeRate: sdkmath.LegacyOneDec()}}, ValAddrs[2])
 	input.OracleKeeper.SetAggregateExchangeRateVote(input.Ctx, ValAddrs[2], vote3)
 
 	expectedVotes := []types.AggregateExchangeRateVote{vote1, vote2, vote3}
@@ -239,7 +240,7 @@ func TestQueryVoteTargets(t *testing.T) {
 
 	voteTargets := []string{"denom", "denom2", "denom3"}
 	for _, target := range voteTargets {
-		input.OracleKeeper.SetTobinTax(input.Ctx, target, sdk.OneDec())
+		input.OracleKeeper.SetTobinTax(input.Ctx, target, sdkmath.LegacyOneDec())
 	}
 
 	res, err := querier.VoteTargets(ctx, &types.QueryVoteTargetsRequest{})
@@ -257,10 +258,10 @@ func TestQueryTobinTaxes(t *testing.T) {
 
 	tobinTaxes := types.DenomList{{
 		Name:     core.MicroKRWDenom,
-		TobinTax: sdk.OneDec(),
+		TobinTax: sdkmath.LegacyOneDec(),
 	}, {
 		Name:     core.MicroSDRDenom,
-		TobinTax: sdk.NewDecWithPrec(123, 2),
+		TobinTax: sdkmath.LegacyNewDecWithPrec(123, 2),
 	}}
 	for _, item := range tobinTaxes {
 		input.OracleKeeper.SetTobinTax(input.Ctx, item.Name, item.TobinTax)
@@ -276,7 +277,7 @@ func TestQueryTobinTax(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.OracleKeeper)
 
-	denom := types.Denom{Name: core.MicroKRWDenom, TobinTax: sdk.OneDec()}
+	denom := types.Denom{Name: core.MicroKRWDenom, TobinTax: sdkmath.LegacyOneDec()}
 	input.OracleKeeper.SetTobinTax(input.Ctx, denom.Name, denom.TobinTax)
 
 	// empty request

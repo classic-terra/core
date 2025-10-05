@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -49,8 +50,11 @@ func HandleCheckMinInitialDeposit(ctx sdk.Context, msg sdk.Msg, govKeeper govkee
 	default:
 		return fmt.Errorf("could not dereference msg as MsgSubmitProposal")
 	}
-	minDeposit := govKeeper.GetParams(ctx).MinDeposit
-	requiredAmount := sdk.NewDecFromInt(minDeposit[0].Amount).Mul(treasuryKeeper.GetMinInitialDepositRatio(ctx)).TruncateInt()
+	minDeposit, err := govKeeper.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	requiredAmount := sdkmath.LegacyNewDecFromInt(minDeposit.MinDeposit[0].Amount).Mul(treasuryKeeper.GetMinInitialDepositRatio(ctx)).TruncateInt()
 
 	requiredDepositCoins := sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, requiredAmount),
@@ -77,7 +81,7 @@ func (midd MinInitialDepositDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 
 		err := HandleCheckMinInitialDeposit(ctx, msg, midd.govKeeper, midd.treasuryKeeper)
 		if err != nil {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+			return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "MinInitialDepositDecorator: %s", err.Error())
 		}
 	}
 

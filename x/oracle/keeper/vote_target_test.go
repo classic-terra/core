@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func TestKeeper_GetVoteTargets(t *testing.T) {
@@ -15,7 +14,7 @@ func TestKeeper_GetVoteTargets(t *testing.T) {
 
 	expectedTargets := []string{"bar", "foo", "whoowhoo"}
 	for _, target := range expectedTargets {
-		input.OracleKeeper.SetTobinTax(input.Ctx, target, sdk.OneDec())
+		input.OracleKeeper.SetTobinTax(input.Ctx, target, sdkmath.LegacyOneDec())
 	}
 
 	targets := input.OracleKeeper.GetVoteTargets(input.Ctx)
@@ -29,7 +28,7 @@ func TestKeeper_IsVoteTarget(t *testing.T) {
 
 	validTargets := []string{"bar", "foo", "whoowhoo"}
 	for _, target := range validTargets {
-		input.OracleKeeper.SetTobinTax(input.Ctx, target, sdk.OneDec())
+		input.OracleKeeper.SetTobinTax(input.Ctx, target, sdkmath.LegacyOneDec())
 		require.True(t, input.OracleKeeper.IsVoteTarget(input.Ctx, target))
 	}
 }

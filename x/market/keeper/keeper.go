@@ -3,10 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -59,11 +60,11 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetTerraPoolDelta returns the gap between the TerraPool and the TerraBasePool
-func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) math.LegacyDec {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.TerraPoolDeltaKey)
 	if bz == nil {
-		return sdk.ZeroDec()
+		return math.LegacyZeroDec()
 	}
 
 	dp := sdk.DecProto{}
@@ -72,7 +73,7 @@ func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) sdk.Dec {
 }
 
 // SetTerraPoolDelta updates TerraPoolDelta which is gap between the TerraPool and the BasePool
-func (k Keeper) SetTerraPoolDelta(ctx sdk.Context, delta sdk.Dec) {
+func (k Keeper) SetTerraPoolDelta(ctx sdk.Context, delta math.LegacyDec) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: delta})
 	store.Set(types.TerraPoolDeltaKey, bz)

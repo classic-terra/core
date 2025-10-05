@@ -15,7 +15,7 @@ import (
 
 	customcli "github.com/classic-terra/core/v3/custom/wasm/client/cli"
 	customtypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

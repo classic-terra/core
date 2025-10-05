@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -18,8 +19,8 @@ func TestRewardWeight(t *testing.T) {
 
 	// See that we can get and set reward weights
 	for i := int64(0); i < 10; i++ {
-		input.TreasuryKeeper.SetRewardWeight(input.Ctx, sdk.NewDecWithPrec(i, 2))
-		require.Equal(t, sdk.NewDecWithPrec(i, 2), input.TreasuryKeeper.GetRewardWeight(input.Ctx))
+		input.TreasuryKeeper.SetRewardWeight(input.Ctx, sdkmath.LegacyNewDecWithPrec(i, 2))
+		require.Equal(t, sdkmath.LegacyNewDecWithPrec(i, 2), input.TreasuryKeeper.GetRewardWeight(input.Ctx))
 	}
 }
 
@@ -28,8 +29,8 @@ func TestTaxRate(t *testing.T) {
 
 	// See that we can get and set tax rate
 	for i := int64(0); i < 10; i++ {
-		input.TreasuryKeeper.SetTaxRate(input.Ctx, sdk.NewDecWithPrec(i, 2))
-		require.Equal(t, sdk.NewDecWithPrec(i, 2), input.TreasuryKeeper.GetTaxRate(input.Ctx))
+		input.TreasuryKeeper.SetTaxRate(input.Ctx, sdkmath.LegacyNewDecWithPrec(i, 2))
+		require.Equal(t, sdkmath.LegacyNewDecWithPrec(i, 2), input.TreasuryKeeper.GetTaxRate(input.Ctx))
 	}
 }
 
@@ -37,17 +38,17 @@ func TestTaxCap(t *testing.T) {
 	input := CreateTestInput(t)
 
 	for i := int64(0); i < 10; i++ {
-		input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroCNYDenom, sdk.NewInt(i))
-		require.Equal(t, sdk.NewInt(i), input.TreasuryKeeper.GetTaxCap(input.Ctx, core.MicroCNYDenom))
+		input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroCNYDenom, sdkmath.NewInt(i))
+		require.Equal(t, sdkmath.NewInt(i), input.TreasuryKeeper.GetTaxCap(input.Ctx, core.MicroCNYDenom))
 	}
 }
 
 func TestIterateTaxCap(t *testing.T) {
 	input := CreateTestInput(t)
 
-	cnyCap := sdk.NewInt(123)
-	usdCap := sdk.NewInt(13)
-	krwCap := sdk.NewInt(1300)
+	cnyCap := sdkmath.NewInt(123)
+	usdCap := sdkmath.NewInt(13)
+	krwCap := sdkmath.NewInt(1300)
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroCNYDenom, cnyCap)
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroUSDDenom, usdCap)
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroKRWDenom, krwCap)
@@ -70,7 +71,7 @@ func TestTaxProceeds(t *testing.T) {
 	input := CreateTestInput(t)
 
 	for i := int64(0); i < 10; i++ {
-		proceeds := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(100+i)))
+		proceeds := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(100+i)))
 		input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, proceeds)
 		input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, proceeds)
 		input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, proceeds)
@@ -92,9 +93,9 @@ func TestMicroLunaIssuance(t *testing.T) {
 		input.Ctx = input.Ctx.WithBlockHeight(i * int64(blocksPerEpoch))
 
 		input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
-		require.Equal(t, initialSupply.Amount.Add(sdk.NewInt(i)), input.TreasuryKeeper.GetEpochInitialIssuance(input.Ctx).AmountOf(core.MicroLunaDenom))
+		require.Equal(t, initialSupply.Amount.Add(sdkmath.NewInt(i)), input.TreasuryKeeper.GetEpochInitialIssuance(input.Ctx).AmountOf(core.MicroLunaDenom))
 
-		input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.OneInt())))
+		input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.OneInt())))
 	}
 }
 
@@ -107,17 +108,17 @@ func TestPeekEpochSeigniorage(t *testing.T) {
 
 		input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
 
-		issueAmount := sdk.NewInt(rand.Int63()%1000000 + 1)
+		issueAmount := sdkmath.NewInt(rand.Int63()%1000000 + 1)
 		err := input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, issueAmount)))
 		require.NoError(t, err)
 
-		burnAmount := sdk.NewInt(rand.Int63()%(faucetBalance.Amount.Int64()+issueAmount.Int64()) + 1)
+		burnAmount := sdkmath.NewInt(rand.Int63()%(faucetBalance.Amount.Int64()+issueAmount.Int64()) + 1)
 		err = input.BankKeeper.BurnCoins(input.Ctx, faucetAccountName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, burnAmount)))
 		require.NoError(t, err)
 
 		targetSeigniorage := burnAmount.Sub(issueAmount)
 		if targetSeigniorage.IsNegative() {
-			targetSeigniorage = sdk.ZeroInt()
+			targetSeigniorage = sdkmath.ZeroInt()
 		}
 
 		require.Equal(t, targetSeigniorage, input.TreasuryKeeper.PeekEpochSeigniorage(input.Ctx))
@@ -128,7 +129,7 @@ func TestIndicatorGetterSetter(t *testing.T) {
 	input := CreateTestInput(t)
 
 	for e := int64(0); e < 10; e++ {
-		randomVal := sdk.NewDec(rand.Int63() + 1)
+		randomVal := sdkmath.LegacyNewDec(rand.Int63() + 1)
 		input.TreasuryKeeper.SetTR(input.Ctx, e, randomVal)
 		require.Equal(t, randomVal, input.TreasuryKeeper.GetTR(input.Ctx, e))
 		input.TreasuryKeeper.SetSR(input.Ctx, e, randomVal)
@@ -142,9 +143,9 @@ func TestIndicatorGetterSetter(t *testing.T) {
 	input.TreasuryKeeper.ClearTSLs(input.Ctx)
 
 	for e := int64(0); e < 10; e++ {
-		require.Equal(t, sdk.ZeroDec(), input.TreasuryKeeper.GetTR(input.Ctx, e))
-		require.Equal(t, sdk.ZeroDec(), input.TreasuryKeeper.GetSR(input.Ctx, e))
-		require.Equal(t, sdk.ZeroInt(), input.TreasuryKeeper.GetTSL(input.Ctx, e))
+		require.Equal(t, sdkmath.LegacyZeroDec(), input.TreasuryKeeper.GetTR(input.Ctx, e))
+		require.Equal(t, sdkmath.LegacyZeroDec(), input.TreasuryKeeper.GetSR(input.Ctx, e))
+		require.Equal(t, sdkmath.ZeroInt(), input.TreasuryKeeper.GetTSL(input.Ctx, e))
 	}
 }
 

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -60,9 +61,6 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			// Generate transaction factory for gas simulation
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
@@ -125,7 +123,7 @@ Using the '--split' flag, the [amount] is split equally between the addresses.`,
 				return err
 			}
 
-			totalAddrs := sdk.NewInt(int64(len(args) - 2))
+			totalAddrs := math.NewInt(int64(len(args) - 2))
 			// coins to be received by the addresses
 			sendCoins := coins
 			if split {
@@ -152,10 +150,7 @@ Using the '--split' flag, the [amount] is split equally between the addresses.`,
 				amount = coins.MulInt(totalAddrs)
 			}
 
-			msg := types.NewMsgMultiSend([]types.Input{types.NewInput(clientCtx.FromAddress, amount)}, output)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+			msg := types.NewMsgMultiSend(types.NewInput(clientCtx.FromAddress, amount), output)
 
 			// Generate transaction factory for gas simulation
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())

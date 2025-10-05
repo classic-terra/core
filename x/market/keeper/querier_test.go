@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	core "github.com/classic-terra/core/v3/types"
@@ -26,7 +27,7 @@ func TestQuerySwap(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.MarketKeeper)
 
-	price := sdk.NewDecWithPrec(17, 1)
+	price := sdkmath.LegacyNewDecWithPrec(17, 1)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, price)
 
 	var err error
@@ -36,7 +37,7 @@ func TestQuerySwap(t *testing.T) {
 	require.Error(t, err)
 
 	// empty ask denom cause error
-	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: sdk.Coin{Denom: core.MicroSDRDenom, Amount: sdk.NewInt(100)}.String()})
+	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: sdk.Coin{Denom: core.MicroSDRDenom, Amount: sdkmath.NewInt(100)}.String()})
 	require.Error(t, err)
 
 	// empty offer coin cause error
@@ -44,12 +45,12 @@ func TestQuerySwap(t *testing.T) {
 	require.Error(t, err)
 
 	// recursive query
-	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(10)).String()
+	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(10)).String()
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: offerCoin, AskDenom: core.MicroLunaDenom})
 	require.Error(t, err)
 
 	// overflow query
-	overflowAmt, _ := sdk.NewIntFromString("1000000000000000000000000000000000")
+	overflowAmt, _ := sdkmath.NewIntFromString("1000000000000000000000000000000000")
 	overflowOfferCoin := sdk.NewCoin(core.MicroLunaDenom, overflowAmt).String()
 	_, err = querier.Swap(ctx, &types.QuerySwapRequest{OfferCoin: overflowOfferCoin, AskDenom: core.MicroSDRDenom})
 	require.Error(t, err)
@@ -59,7 +60,7 @@ func TestQuerySwap(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, core.MicroSDRDenom, res.ReturnCoin.Denom)
-	require.True(t, sdk.NewInt(17).GTE(res.ReturnCoin.Amount))
+	require.True(t, sdkmath.NewInt(17).GTE(res.ReturnCoin.Amount))
 	require.True(t, res.ReturnCoin.Amount.IsPositive())
 }
 
@@ -68,7 +69,7 @@ func TestQueryMintPoolDelta(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	querier := NewQuerier(input.MarketKeeper)
 
-	poolDelta := sdk.NewDecWithPrec(17, 1)
+	poolDelta := sdkmath.LegacyNewDecWithPrec(17, 1)
 	input.MarketKeeper.SetTerraPoolDelta(input.Ctx, poolDelta)
 
 	res, errRes := querier.TerraPoolDelta(ctx, &types.QueryTerraPoolDeltaRequest{})

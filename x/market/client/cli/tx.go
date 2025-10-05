@@ -75,9 +75,6 @@ $ terrad market swap "1000ukrw" "uusd" "terra1..."
 				}
 
 				msg = types.NewMsgSwapSend(fromAddress, toAddress, offerCoin, askDenom)
-				if err = msg.ValidateBasic(); err != nil {
-					return err
-				}
 
 				if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 					// estimate tax and gas
@@ -95,12 +92,7 @@ $ terrad market swap "1000ukrw" "uusd" "terra1..."
 				}
 			} else {
 				msg = types.NewMsgSwap(fromAddress, offerCoin, askDenom)
-				if err = msg.ValidateBasic(); err != nil {
-					return err
-				}
-			}
-
-			// build and sign the transaction, then broadcast to Tendermint
+			} // build and sign the transaction, then broadcast to Tendermint
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}

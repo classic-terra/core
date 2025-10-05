@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	customtypes "github.com/classic-terra/core/v3/custom/gov/types"
@@ -29,7 +28,6 @@ func NewAppModuleBasic(proposalHandlers []govclient.ProposalHandler) AppModuleBa
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
-	*govcodec.ModuleCdc = *customtypes.ModuleCdc
 	v1.RegisterLegacyAminoCodec(cdc)
 }
 

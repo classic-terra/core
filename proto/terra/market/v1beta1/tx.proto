@@ -2,6 +2,7 @@ syntax = "proto3";
 package terra.market.v1beta1;
 
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
@@ -20,6 +21,7 @@ service Msg {
 
 // MsgSwap represents a message to swap coin to another denom.
 message MsgSwap {
+  option (cosmos.msg.v1.signer)     = "trader";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -36,6 +38,7 @@ message MsgSwapResponse {
 
 // MsgSwapSend represents a message to swap coin and send all result coin to recipient
 message MsgSwapSend {
+  option (cosmos.msg.v1.signer)     = "from_address";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

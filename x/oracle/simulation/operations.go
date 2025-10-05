@@ -6,12 +6,15 @@ import (
 	"math/rand"
 	"strings"
 
-	simappparams "cosmossdk.io/simapp/params"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -48,19 +51,19 @@ func WeightedOperations(
 		weightMsgAggregateExchangeRateVote    int
 		weightMsgDelegateFeedConsent          int
 	)
-	appParams.GetOrGenerate(cdc, OpWeightMsgAggregateExchangeRatePrevote, &weightMsgAggregateExchangeRatePrevote, nil,
+	appParams.GetOrGenerate(OpWeightMsgAggregateExchangeRatePrevote, &weightMsgAggregateExchangeRatePrevote, nil,
 		func(*rand.Rand) {
 			weightMsgAggregateExchangeRatePrevote = banksim.DefaultWeightMsgSend * 2
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAggregateExchangeRateVote, &weightMsgAggregateExchangeRateVote, nil,
+	appParams.GetOrGenerate(OpWeightMsgAggregateExchangeRateVote, &weightMsgAggregateExchangeRateVote, nil,
 		func(*rand.Rand) {
 			weightMsgAggregateExchangeRateVote = banksim.DefaultWeightMsgSend * 2
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDelegateFeedConsent, &weightMsgDelegateFeedConsent, nil,
+	appParams.GetOrGenerate(OpWeightMsgDelegateFeedConsent, &weightMsgDelegateFeedConsent, nil,
 		func(*rand.Rand) {
 			weightMsgDelegateFeedConsent = distrsim.DefaultWeightMsgSetWithdrawAddress
 		},
@@ -92,14 +95,14 @@ func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.Ba
 		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator exists
-		val := k.StakingKeeper.Validator(ctx, address)
-		if val == nil || !val.IsBonded() {
+		val, err := k.StakingKeeper.Validator(ctx, address)
+		if err != nil || val == nil || !val.IsBonded() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAggregateExchangeRatePrevote, "unable to find validator"), nil, nil
 		}
 
 		exchangeRatesStr := ""
 		for _, denom := range whitelist {
-			price := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10000)), int64(1))
+			price := math.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 1, 10000)), int64(1))
 			exchangeRatesStr += price.String() + denom + ","
 		}
 
@@ -119,7 +122,10 @@ func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.Ba
 
 		msg := types.NewMsgAggregateExchangeRatePrevote(voteHash, feederAddr, address)
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		// Build a TxConfig without depending on simapp
+		ir := codectypes.NewInterfaceRegistry()
+		std.RegisterInterfaces(ir)
+		txGen := tx.NewTxConfig(codec.NewProtoCodec(ir), tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
@@ -142,7 +148,7 @@ func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.Ba
 
 		voteHashMap[address.String()] = exchangeRatesStr
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -156,8 +162,8 @@ func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankK
 		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator exists
-		val := k.StakingKeeper.Validator(ctx, address)
-		if val == nil || !val.IsBonded() {
+		val, err := k.StakingKeeper.Validator(ctx, address)
+		if err != nil || val == nil || !val.IsBonded() {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAggregateExchangeRateVote, "unable to find validator"), nil, nil
 		}
 
@@ -190,7 +196,9 @@ func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankK
 
 		msg := types.NewMsgAggregateExchangeRateVote(salt, exchangeRatesStr, feederAddr, address)
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		ir := codectypes.NewInterfaceRegistry()
+		std.RegisterInterfaces(ir)
+		txGen := tx.NewTxConfig(codec.NewProtoCodec(ir), tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
@@ -211,7 +219,7 @@ func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankK
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -228,14 +236,14 @@ func SimulateMsgDelegateFeedConsent(ak types.AccountKeeper, bk types.BankKeeper,
 		account := ak.GetAccount(ctx, simAccount.Address)
 
 		// ensure the validator exists
-		val := k.StakingKeeper.Validator(ctx, valAddress)
-		if val == nil {
+		val, err := k.StakingKeeper.Validator(ctx, valAddress)
+		if err != nil || val == nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegateFeedConsent, "unable to find validator"), nil, nil
 		}
 
 		// ensure the target address is not a validator
-		val2 := k.StakingKeeper.Validator(ctx, delegateValAddress)
-		if val2 != nil {
+		val2, err := k.StakingKeeper.Validator(ctx, delegateValAddress)
+		if err != nil || val2 != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegateFeedConsent, "unable to delegate to validator"), nil, nil
 		}
 
@@ -247,7 +255,9 @@ func SimulateMsgDelegateFeedConsent(ak types.AccountKeeper, bk types.BankKeeper,
 
 		msg := types.NewMsgDelegateFeedConsent(valAddress, delegateAccount.Address)
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		ir := codectypes.NewInterfaceRegistry()
+		std.RegisterInterfaces(ir)
+		txGen := tx.NewTxConfig(codec.NewProtoCodec(ir), tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
@@ -268,6 +278,6 @@ func SimulateMsgDelegateFeedConsent(ak types.AccountKeeper, bk types.BankKeeper,
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

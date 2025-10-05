@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -26,7 +26,7 @@ func TestUpdateTaxRate(t *testing.T) {
 	require.NoError(t, err)
 	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
-	staking.EndBlocker(input.Ctx, input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(input.Ctx)
 
 	windowLong := input.TreasuryKeeper.WindowLong(input.Ctx)
 	taxPolicy := input.TreasuryKeeper.TaxPolicy(input.Ctx)
@@ -35,7 +35,7 @@ func TestUpdateTaxRate(t *testing.T) {
 	for i := uint64(0); i < windowLong; i++ {
 		input.Ctx = input.Ctx.WithBlockHeight(int64(i * core.BlocksPerWeek))
 
-		taxProceeds := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.ZeroInt()))
+		taxProceeds := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.ZeroInt()))
 		input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, taxProceeds)
 		input.TreasuryKeeper.UpdateIndicators(input.Ctx)
 	}
@@ -47,7 +47,7 @@ func TestUpdateTaxRate(t *testing.T) {
 
 func TestUpdateRewardWeight(t *testing.T) {
 	input := CreateTestInput(t)
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.OneDec())
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdkmath.LegacyOneDec())
 	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
 
 	// Create Validators
@@ -58,7 +58,7 @@ func TestUpdateRewardWeight(t *testing.T) {
 	require.NoError(t, err)
 	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
-	staking.EndBlocker(input.Ctx, input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(input.Ctx)
 
 	input.TreasuryKeeper.UpdateIndicators(input.Ctx)
 
@@ -69,7 +69,7 @@ func TestUpdateRewardWeight(t *testing.T) {
 	require.Equal(t, types.DefaultRewardWeight.Add(rewardPolicy.ChangeRateMax), rewardWeight)
 
 	// Case 2: huge seigniorage rewards will decrease reward weight by %types.DefaultSeigniorageBurdenTarget
-	input.TreasuryKeeper.SetEpochInitialIssuance(input.Ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000000000000))))
+	input.TreasuryKeeper.SetEpochInitialIssuance(input.Ctx, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1000000000000))))
 	input.TreasuryKeeper.UpdateIndicators(input.Ctx)
 	input.TreasuryKeeper.UpdateRewardPolicy(input.Ctx)
 	rewardWeight = input.TreasuryKeeper.GetRewardWeight(input.Ctx)
@@ -94,9 +94,9 @@ func TestUpdateTaxCap(t *testing.T) {
 	)
 
 	// Create Validators
-	sdrPrice := sdk.NewDecWithPrec(13, 1)
+	sdrPrice := sdkmath.LegacyNewDecWithPrec(13, 1)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdrPrice)
-	krwPrice := sdk.NewDecWithPrec(153412, 2)
+	krwPrice := sdkmath.LegacyNewDecWithPrec(153412, 2)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, krwPrice)
 	input.TreasuryKeeper.UpdateTaxCap(input.Ctx)
 

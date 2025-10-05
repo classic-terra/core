@@ -1,9 +1,9 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 )
 
 const (
@@ -14,8 +14,8 @@ const (
 const ModuleName = "ibcspamprevention"
 
 var (
-	ErrReceiverTooLong = sdkerrors.Register(ModuleName, 11, "receiver too long")
-	ErrMemoTooLong     = sdkerrors.Register(ModuleName, 12, "memo too long")
+	ErrReceiverTooLong = errorsmod.Register(ModuleName, 11, "receiver too long")
+	ErrMemoTooLong     = errorsmod.Register(ModuleName, 12, "memo too long")
 )
 
 type IBCTransferSpamPreventionDecorator struct{}

@@ -7,16 +7,16 @@ import (
 
 	core "github.com/classic-terra/core/v3/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func TestTerraPoolDeltaUpdate(t *testing.T) {
 	input := CreateTestInput(t)
 
 	terraPoolDelta := input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
-	require.Equal(t, sdk.ZeroDec(), terraPoolDelta)
+	require.Equal(t, sdkmath.LegacyZeroDec(), terraPoolDelta)
 
-	diff := sdk.NewDec(10)
+	diff := sdkmath.LegacyNewDec(10)
 	input.MarketKeeper.SetTerraPoolDelta(input.Ctx, diff)
 
 	terraPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
@@ -27,7 +27,7 @@ func TestTerraPoolDeltaUpdate(t *testing.T) {
 // each pools move towards base pool
 func TestReplenishPools(t *testing.T) {
 	input := CreateTestInput(t)
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.OneDec())
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdkmath.LegacyOneDec())
 
 	basePool := input.MarketKeeper.BasePool(input.Ctx)
 	terraPoolDelta := input.MarketKeeper.GetTerraPoolDelta(input.Ctx)

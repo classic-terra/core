@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -29,9 +31,12 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	// Create an address codec using the SDK configuration
+	addressCodec := codecaddress.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+
 	AuthorizationTxCmd.AddCommand(
-		cli.NewCmdGrantAuthorization(),
-		cli.NewCmdRevokeAuthorization(),
+		cli.NewCmdGrantAuthorization(addressCodec),
+		cli.NewCmdRevokeAuthorization(addressCodec),
 		NewCmdExecAuthorization(),
 	)
 
@@ -73,9 +78,6 @@ Example:
 				return err
 			}
 			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas

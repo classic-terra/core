@@ -12,7 +12,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 
 	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
@@ -38,7 +38,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		res, err := route(ctx, abci.RequestQuery{
+		res, err := route(ctx, &abci.RequestQuery{
 			Data: request.Data,
 			Path: request.Path,
 		})

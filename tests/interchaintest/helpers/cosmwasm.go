@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
+	"github.com/cosmos/interchaintest/v10/chain/cosmos"
+	"github.com/cosmos/interchaintest/v10/ibc"
+	"github.com/cosmos/interchaintest/v10/testutil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,10 +25,11 @@ func SetupContract(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain,
 }
 
 func ExecuteMsgWithAmount(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, contractAddr, amount, message string) {
-	chainNode := chain.FullNodes[0]
+	// Use a validator node for signed transactions; user keys are guaranteed to be recovered there
+	chainNode := chain.Validators[0]
 
 	cmd := []string{
-		"terrad", "tx", "wasm", "execute", contractAddr, message,
+		"wasm", "execute", contractAddr, message,
 		"--amount", amount,
 	}
 	_, err := chainNode.ExecTx(ctx, user.KeyName(), cmd...)
@@ -39,10 +40,11 @@ func ExecuteMsgWithAmount(t *testing.T, ctx context.Context, chain *cosmos.Cosmo
 }
 
 func ExecuteMsgWithFee(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, contractAddr, amount, feeCoin, message string) {
-	chainNode := chain.FullNodes[0]
+	// Use a validator node for signed transactions; user keys are guaranteed to be recovered there
+	chainNode := chain.Validators[0]
 
 	cmd := []string{
-		"terrad", "tx", "wasm", "execute", contractAddr, message,
+		"wasm", "execute", contractAddr, message,
 		"--fees", feeCoin,
 	}
 
@@ -60,7 +62,8 @@ func ExecuteMsgWithFee(t *testing.T, ctx context.Context, chain *cosmos.CosmosCh
 // StoreContract takes a file path to smart contract and stores it on-chain. Returns the contracts code id.
 func StoreContract(ctx context.Context, chain *cosmos.CosmosChain, keyname string, fileName string) (string, error) {
 	_, file := filepath.Split(fileName)
-	chainNode := chain.FullNodes[0]
+	// Use a validator node for signed transactions; user keys are guaranteed to be recovered there
+	chainNode := chain.Validators[0]
 	err := chainNode.CopyFile(ctx, fileName, file)
 	if err != nil {
 		return "", fmt.Errorf("writing contract file to docker volume: %w", err)
@@ -76,7 +79,7 @@ func StoreContract(ctx context.Context, chain *cosmos.CosmosChain, keyname strin
 		return "", fmt.Errorf("wait for blocks: %w", err)
 	}
 
-	stdout, _, err := chainNode.ExecQuery(ctx, "wasm", "list-code", "--reverse")
+	stdout, _, err := chain.FullNodes[0].ExecQuery(ctx, "wasm", "list-code", "--reverse")
 	if err != nil {
 		return "", err
 	}
@@ -91,7 +94,8 @@ func StoreContract(ctx context.Context, chain *cosmos.CosmosChain, keyname strin
 
 // InstantiateContract takes a code id for a smart contract and initialization message and returns the instantiated contract address.
 func InstantiateContract(ctx context.Context, chain *cosmos.CosmosChain, keyName string, codeID string, initMessage string, needsNoAdminFlag bool, extraExecTxArgs ...string) (string, error) {
-	chainNode := chain.FullNodes[0]
+	// Use a validator node for signed transactions; user keys are guaranteed to be recovered there
+	chainNode := chain.Validators[0]
 
 	command := []string{"wasm", "instantiate", codeID, initMessage, "--label", "wasm-contract"}
 	command = append(command, extraExecTxArgs...)

@@ -15,7 +15,7 @@ import (
 	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 
-	"github.com/cometbft/cometbft/libs/log"
+	log "cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 

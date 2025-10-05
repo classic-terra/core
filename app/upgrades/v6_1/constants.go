@@ -2,7 +2,7 @@ package v61
 
 import (
 	"github.com/classic-terra/core/v3/app/upgrades"
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 )
 
 const UpgradeName = "v6_1"

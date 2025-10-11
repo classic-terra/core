@@ -6,7 +6,6 @@ import (
 	slog "cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/classic-terra/core/v3/x/tax/types"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"

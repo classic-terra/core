@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-
 	"github.com/classic-terra/core/v3/x/market/keeper"
 	"github.com/classic-terra/core/v3/x/market/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDecodeDistributionStore(t *testing.T) {

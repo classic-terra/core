@@ -3,9 +3,8 @@ package types
 import (
 	context "context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AccountKeeper is expected keeper for auth module

@@ -7,24 +7,21 @@ import (
 	"strings"
 	"time"
 
+	evtypes "cosmossdk.io/x/evidence/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-
-	ibcxfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
-	ibccoretypes "github.com/cosmos/ibc-go/v10/modules/core/types"
-
-	evtypes "cosmossdk.io/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	ibcxfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibccoretypes "github.com/cosmos/ibc-go/v10/modules/core/types"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 )
 
 const (

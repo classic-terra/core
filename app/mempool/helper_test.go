@@ -7,10 +7,6 @@ import (
 
 	log "cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	proto "google.golang.org/protobuf/proto"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -20,6 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	proto "google.golang.org/protobuf/proto"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.

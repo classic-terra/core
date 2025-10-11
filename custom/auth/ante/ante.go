@@ -4,24 +4,21 @@ import (
 	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-
-	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
-	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	"github.com/cosmos/cosmos-sdk/codec"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibcante "github.com/cosmos/ibc-go/v10/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
-
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.

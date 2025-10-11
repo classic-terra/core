@@ -3,10 +3,9 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/stretchr/testify/require"
-
-	sdkmath "cosmossdk.io/math"
 )
 
 func Test_DenomList(t *testing.T) {

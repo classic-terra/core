@@ -9,14 +9,13 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	apptesting "github.com/classic-terra/core/v3/app/testing"
+	v13 "github.com/classic-terra/core/v3/app/upgrades/v13"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	apptesting "github.com/classic-terra/core/v3/app/testing"
-	v13 "github.com/classic-terra/core/v3/app/upgrades/v13"
 )
 
 type ComprehensiveMigrationTestSuite struct {

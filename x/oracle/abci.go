@@ -7,7 +7,6 @@ import (
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/oracle/keeper"
 	"github.com/classic-terra/core/v3/x/oracle/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

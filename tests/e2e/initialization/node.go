@@ -11,6 +11,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	terraApp "github.com/classic-terra/core/v3/app"
+	"github.com/classic-terra/core/v3/tests/e2e/util"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/p2p"
@@ -33,9 +35,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
-
-	terraApp "github.com/classic-terra/core/v3/app"
-	"github.com/classic-terra/core/v3/tests/e2e/util"
 )
 
 type internalNode struct {
@@ -119,9 +118,9 @@ func (n *internalNode) createAppConfig(nodeConfig *NodeConfig) {
 	appCfgPath := filepath.Join(n.configDir(), "config", "app.toml")
 
 	appConfig := srvconfig.DefaultConfig()
-	appConfig.BaseConfig.Pruning = nodeConfig.Pruning
-	appConfig.BaseConfig.PruningKeepRecent = nodeConfig.PruningKeepRecent
-	appConfig.BaseConfig.PruningInterval = nodeConfig.PruningInterval
+	appConfig.Pruning = nodeConfig.Pruning
+	appConfig.PruningKeepRecent = nodeConfig.PruningKeepRecent
+	appConfig.PruningInterval = nodeConfig.PruningInterval
 	appConfig.API.Enable = true
 	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, TerraDenom)
 	appConfig.StateSync.SnapshotInterval = nodeConfig.SnapshotInterval

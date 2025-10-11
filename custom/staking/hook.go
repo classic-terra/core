@@ -37,17 +37,17 @@ func (h TerraStakingHooks) BeforeDelegationSharesModified(_ context.Context, _ s
 // Other required hook methods with empty implementations
 func (h TerraStakingHooks) AfterDelegationModified(ctx context.Context, _ sdk.AccAddress, valAddr sdk.ValAddress) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	
+
 	// Debug: always print to see if hook is being called
-	fmt.Printf("DEBUG: Hook called! chainID=%s, expectedChainID=%s, blockHeight=%d, valAddr=%s\n", 
+	fmt.Printf("DEBUG: Hook called! chainID=%s, expectedChainID=%s, blockHeight=%d, valAddr=%s\n",
 		sdkCtx.ChainID(), ColumbusChainID, sdkCtx.BlockHeight(), valAddr.String())
-	
+
 	if sdkCtx.ChainID() != ColumbusChainID {
 		fmt.Printf("DEBUG: Chain ID mismatch, skipping\n")
 		return nil
 	}
 
-	// Skip validation during genesis (block height 0)  
+	// Skip validation during genesis (block height 0)
 	if sdkCtx.BlockHeight() == 0 {
 		fmt.Printf("DEBUG: Genesis block, skipping\n")
 		return nil
@@ -65,14 +65,14 @@ func (h TerraStakingHooks) AfterDelegationModified(ctx context.Context, _ sdk.Ac
 	// Calculate total power by summing all bonded validators' current power
 	// This gives us the current total power including any pending changes
 	totalPower := int64(0)
-	
+
 	// Get all validators and sum the power of bonded ones
 	allValidators, err := h.sk.GetAllValidators(ctx)
 	if err != nil {
 		fmt.Printf("DEBUG: Failed to get all validators: %v\n", err)
 		return nil
 	}
-	
+
 	bondedCount := 0
 	for _, val := range allValidators {
 		if val.IsBonded() {
@@ -82,7 +82,7 @@ func (h TerraStakingHooks) AfterDelegationModified(ctx context.Context, _ sdk.Ac
 		}
 	}
 
-	fmt.Printf("DEBUG: valAddr=%s, validatorPower=%d, totalPower=%d, bondedCount=%d, bonded=%v\n", 
+	fmt.Printf("DEBUG: valAddr=%s, validatorPower=%d, totalPower=%d, bondedCount=%d, bonded=%v\n",
 		valAddr.String(), validatorPower, totalPower, bondedCount, validator.IsBonded())
 
 	if totalPower == 0 {
@@ -94,8 +94,8 @@ func (h TerraStakingHooks) AfterDelegationModified(ctx context.Context, _ sdk.Ac
 	validatorDelegationPercent := math.LegacyNewDec(validatorPower).Quo(math.LegacyNewDec(totalPower))
 
 	// Debug: print detailed calculation
-	fmt.Printf("DEBUG: percent=%s, threshold=%s, will_fail=%v\n", 
-		validatorDelegationPercent.String(), 
+	fmt.Printf("DEBUG: percent=%s, threshold=%s, will_fail=%v\n",
+		validatorDelegationPercent.String(),
 		math.LegacyNewDecWithPrec(20, 2).String(),
 		validatorDelegationPercent.GT(math.LegacyNewDecWithPrec(20, 2)))
 

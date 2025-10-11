@@ -4,11 +4,10 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v3/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 type msgServer struct {

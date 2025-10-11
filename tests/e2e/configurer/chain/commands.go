@@ -10,20 +10,17 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
-
+	app "github.com/classic-terra/core/v3/app"
+	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v3/types/assets"
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/p2p"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	app "github.com/classic-terra/core/v3/app"
-	"github.com/classic-terra/core/v3/tests/e2e/initialization"
-	"github.com/classic-terra/core/v3/types/assets"
+	"github.com/stretchr/testify/require"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -128,7 +125,7 @@ func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposalV1(addresses []stri
 			map[string]any{
 				"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
 				"content": map[string]any{
-					"@type":      "/terra.treasury.v1beta1.AddBurnTaxExemptionAddressProposal",
+					"@type":       "/terra.treasury.v1beta1.AddBurnTaxExemptionAddressProposal",
 					"title":       "burn tax exemption address",
 					"description": "burn tax exemption address",
 					"addresses":   addresses,
@@ -528,7 +525,7 @@ type resultStatus struct {
 	ValidatorInfo validatorInfo
 }
 
-func (n *NodeConfig) Status() (resultStatus, error) { //nolint
+func (n *NodeConfig) Status() (resultStatus, error) {
 	cmd := []string{"terrad", "status"}
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	if err != nil {

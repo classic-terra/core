@@ -2,10 +2,9 @@ package keeper
 
 import (
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/treasury/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SettleSeigniorage computes seigniorage and distributes it to oracle and distribution(community-pool) account

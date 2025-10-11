@@ -4,12 +4,10 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v3/x/oracle/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over q

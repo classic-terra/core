@@ -1,9 +1,8 @@
 package types
 
 import (
-	"gopkg.in/yaml.v2"
-
 	"cosmossdk.io/math"
+	"gopkg.in/yaml.v2"
 )
 
 // TobinTax - struct to store tobin tax for the specific denom with high volatility

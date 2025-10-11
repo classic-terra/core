@@ -3,8 +3,8 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
 )
 
 func TestKeeper_GetVoteTargets(t *testing.T) {

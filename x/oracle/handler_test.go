@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/cometbft/cometbft/crypto/secp256k1"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/oracle/keeper"
 	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOracleFilters(t *testing.T) {

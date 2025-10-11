@@ -4,16 +4,14 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/oracle/types"
-
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExchangeRate(t *testing.T) {

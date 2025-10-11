@@ -4,12 +4,10 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	core "github.com/classic-terra/core/v3/types"
-
 	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestApplySwapToPool(t *testing.T) {

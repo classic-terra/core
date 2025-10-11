@@ -26,7 +26,7 @@ func TestStakingTestSuite(t *testing.T) {
 
 // go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v3/custom/staking
 func (s *StakingTestSuite) TestValidatorVPLimit() {
-	s.KeeperTestHelper.Setup(s.T(), types.ColumbusChainID)
+	s.Setup(s.T(), types.ColumbusChainID)
 
 	// construct new validators, to a total of 10 validators, each with 10% of the total voting power
 	num := 9

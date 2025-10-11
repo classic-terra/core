@@ -1,6 +1,15 @@
 package keepers
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v3/x/treasury"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
 	icacontroller "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller"
 	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host"
@@ -8,18 +17,6 @@ import (
 	transfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
-
-	"github.com/classic-terra/core/v3/x/treasury"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
 )
 
 func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
@@ -54,12 +51,10 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
-	var icaHostStack porttypes.IBCModule
-	icaHostStack = icahost.NewIBCModule(appKeepers.ICAHostKeeper)
+	var icaHostStack porttypes.IBCModule = icahost.NewIBCModule(appKeepers.ICAHostKeeper)
 
 	// Create wasm ibc Stack
-	var wasmStack porttypes.IBCModule
-	wasmStack = wasm.NewIBCHandler(
+	var wasmStack porttypes.IBCModule = wasm.NewIBCHandler(
 		appKeepers.WasmKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.TransferKeeper,

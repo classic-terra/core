@@ -3,9 +3,8 @@ package types
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConstraintClamp(t *testing.T) {

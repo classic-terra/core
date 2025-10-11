@@ -1,9 +1,8 @@
 package types
 
 import (
-	"gopkg.in/yaml.v2"
-
 	sdkmath "cosmossdk.io/math"
+	"gopkg.in/yaml.v2"
 )
 
 // String implements fmt.Stringer interface

@@ -4,15 +4,13 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/spf13/cobra"
-
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	"github.com/spf13/cobra"
 )
 
 var FlagSplit = "split"

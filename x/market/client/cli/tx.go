@@ -3,15 +3,13 @@ package cli
 import (
 	"strings"
 
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	"github.com/classic-terra/core/v3/x/market/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/spf13/cobra"
-
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
-	"github.com/classic-terra/core/v3/x/market/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

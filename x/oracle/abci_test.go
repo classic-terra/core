@@ -6,17 +6,15 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/rand"
-	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	sdkmath "cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/oracle"
 	"github.com/classic-terra/core/v3/x/oracle/keeper"
 	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/cometbft/cometbft/libs/rand"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOracleThreshold(t *testing.T) {

@@ -6,13 +6,14 @@ import (
 	"testing"
 	"time"
 
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/classic-terra/core/v3/tests/e2e/configurer/config"
 	"github.com/classic-terra/core/v3/tests/e2e/containers"
 	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/stretchr/testify/require"
 )
+
+const StatusPassed = "PROPOSAL_STATUS_PASSED"
 
 type Config struct {
 	initialization.ChainMeta
@@ -35,92 +36,93 @@ type Config struct {
 
 // AddTaxExemptionZoneProposal submits, deposits, votes and waits for PASS on adding a new zone.
 func (c *Config) AddTaxExemptionZoneProposal(chainANode *NodeConfig, zone string, addresses []string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool) {
-    c.t.Logf("Submitting add tax exemption zone proposal: zone=%s addresses=%s incoming=%t outgoing=%t cross=%t", zone, strings.Join(addresses, ","), exemptIncoming, exemptOutgoing, exemptCrossZone)
-    propNumber := chainANode.SubmitAddTaxExemptionZoneProposal(zone, addresses, exemptIncoming, exemptOutgoing, exemptCrossZone, initialization.ValidatorWalletName)
+	c.t.Logf("Submitting add tax exemption zone proposal: zone=%s addresses=%s incoming=%t outgoing=%t cross=%t", zone, strings.Join(addresses, ","), exemptIncoming, exemptOutgoing, exemptCrossZone)
+	propNumber := chainANode.SubmitAddTaxExemptionZoneProposal(zone, addresses, exemptIncoming, exemptOutgoing, exemptCrossZone, initialization.ValidatorWalletName)
 
-    chainANode.DepositProposal(propNumber)
-    AllValsVoteOnProposal(c, propNumber)
+	chainANode.DepositProposal(propNumber)
+	AllValsVoteOnProposal(c, propNumber)
 
-    time.Sleep(initialization.TwoMin)
-    require.Eventually(c.t, func() bool {
-        status, err := chainANode.QueryPropStatus(propNumber)
-        if err != nil {
-            return false
-        }
-        return status == "PROPOSAL_STATUS_PASSED"
-    }, initialization.OneMin, 10*time.Millisecond)
+	time.Sleep(initialization.TwoMin)
+	require.Eventually(c.t, func() bool {
+		status, err := chainANode.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+
+		return status == StatusPassed
+	}, initialization.OneMin, 10*time.Millisecond)
 }
 
 // ModifyTaxExemptionZoneProposal submits, deposits, votes and waits for PASS on modifying zone flags.
 func (c *Config) ModifyTaxExemptionZoneProposal(chainANode *NodeConfig, zone string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool) {
-    c.t.Logf("Submitting modify tax exemption zone proposal: zone=%s incoming=%t outgoing=%t cross=%t", zone, exemptIncoming, exemptOutgoing, exemptCrossZone)
-    propNumber := chainANode.SubmitModifyTaxExemptionZoneProposal(zone, exemptIncoming, exemptOutgoing, exemptCrossZone, initialization.ValidatorWalletName)
+	c.t.Logf("Submitting modify tax exemption zone proposal: zone=%s incoming=%t outgoing=%t cross=%t", zone, exemptIncoming, exemptOutgoing, exemptCrossZone)
+	propNumber := chainANode.SubmitModifyTaxExemptionZoneProposal(zone, exemptIncoming, exemptOutgoing, exemptCrossZone, initialization.ValidatorWalletName)
 
-    chainANode.DepositProposal(propNumber)
-    AllValsVoteOnProposal(c, propNumber)
+	chainANode.DepositProposal(propNumber)
+	AllValsVoteOnProposal(c, propNumber)
 
-    time.Sleep(initialization.TwoMin)
-    require.Eventually(c.t, func() bool {
-        status, err := chainANode.QueryPropStatus(propNumber)
-        if err != nil {
-            return false
-        }
-        return status == "PROPOSAL_STATUS_PASSED"
-    }, initialization.OneMin, 10*time.Millisecond)
+	time.Sleep(initialization.TwoMin)
+	require.Eventually(c.t, func() bool {
+		status, err := chainANode.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == StatusPassed
+	}, initialization.OneMin, 10*time.Millisecond)
 }
 
 // RemoveTaxExemptionZoneProposal submits, deposits, votes and waits for PASS on removing a zone.
 func (c *Config) RemoveTaxExemptionZoneProposal(chainANode *NodeConfig, zone string) {
-    c.t.Logf("Submitting remove tax exemption zone proposal: zone=%s", zone)
-    propNumber := chainANode.SubmitRemoveTaxExemptionZoneProposal(zone, initialization.ValidatorWalletName)
+	c.t.Logf("Submitting remove tax exemption zone proposal: zone=%s", zone)
+	propNumber := chainANode.SubmitRemoveTaxExemptionZoneProposal(zone, initialization.ValidatorWalletName)
 
-    chainANode.DepositProposal(propNumber)
-    AllValsVoteOnProposal(c, propNumber)
+	chainANode.DepositProposal(propNumber)
+	AllValsVoteOnProposal(c, propNumber)
 
-    time.Sleep(initialization.TwoMin)
-    require.Eventually(c.t, func() bool {
-        status, err := chainANode.QueryPropStatus(propNumber)
-        if err != nil {
-            return false
-        }
-        return status == "PROPOSAL_STATUS_PASSED"
-    }, initialization.OneMin, 10*time.Millisecond)
+	time.Sleep(initialization.TwoMin)
+	require.Eventually(c.t, func() bool {
+		status, err := chainANode.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == StatusPassed
+	}, initialization.OneMin, 10*time.Millisecond)
 }
 
 // AddTaxExemptionAddressProposal submits, deposits, votes and waits for PASS on adding addresses to a zone.
 func (c *Config) AddTaxExemptionAddressProposal(chainANode *NodeConfig, zone string, addresses []string) {
-    c.t.Logf("Submitting add tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
-    propNumber := chainANode.SubmitAddTaxExemptionAddressProposal(zone, addresses, initialization.ValidatorWalletName)
+	c.t.Logf("Submitting add tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
+	propNumber := chainANode.SubmitAddTaxExemptionAddressProposal(zone, addresses, initialization.ValidatorWalletName)
 
-    chainANode.DepositProposal(propNumber)
-    AllValsVoteOnProposal(c, propNumber)
+	chainANode.DepositProposal(propNumber)
+	AllValsVoteOnProposal(c, propNumber)
 
-    time.Sleep(initialization.TwoMin)
-    require.Eventually(c.t, func() bool {
-        status, err := chainANode.QueryPropStatus(propNumber)
-        if err != nil {
-            return false
-        }
-        return status == "PROPOSAL_STATUS_PASSED"
-    }, initialization.OneMin, 10*time.Millisecond)
+	time.Sleep(initialization.TwoMin)
+	require.Eventually(c.t, func() bool {
+		status, err := chainANode.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == StatusPassed
+	}, initialization.OneMin, 10*time.Millisecond)
 }
 
 // RemoveTaxExemptionAddressProposal submits, deposits, votes and waits for PASS on removing addresses from a zone.
 func (c *Config) RemoveTaxExemptionAddressProposal(chainANode *NodeConfig, zone string, addresses []string) {
-    c.t.Logf("Submitting remove tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
-    propNumber := chainANode.SubmitRemoveTaxExemptionAddressProposal(zone, addresses, initialization.ValidatorWalletName)
+	c.t.Logf("Submitting remove tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
+	propNumber := chainANode.SubmitRemoveTaxExemptionAddressProposal(zone, addresses, initialization.ValidatorWalletName)
 
-    chainANode.DepositProposal(propNumber)
-    AllValsVoteOnProposal(c, propNumber)
+	chainANode.DepositProposal(propNumber)
+	AllValsVoteOnProposal(c, propNumber)
 
-    time.Sleep(initialization.TwoMin)
-    require.Eventually(c.t, func() bool {
-        status, err := chainANode.QueryPropStatus(propNumber)
-        if err != nil {
-            return false
-        }
-        return status == "PROPOSAL_STATUS_PASSED"
-    }, initialization.OneMin, 10*time.Millisecond)
+	time.Sleep(initialization.TwoMin)
+	require.Eventually(c.t, func() bool {
+		status, err := chainANode.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == StatusPassed
+	}, initialization.OneMin, 10*time.Millisecond)
 }
 
 const (
@@ -234,6 +236,6 @@ func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addr
 		if err != nil {
 			return false
 		}
-		return status == "PROPOSAL_STATUS_PASSED"
+		return status == StatusPassed
 	}, initialization.OneMin, 10*time.Millisecond)
 }

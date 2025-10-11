@@ -12,13 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // Simulation operation weights constants
@@ -68,7 +67,6 @@ func makeTxConfig() client.TxConfig {
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-// nolint: funlen
 func SimulateMsgSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -101,7 +99,6 @@ func SimulateMsgSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Oper
 }
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
-// nolint: interfacer
 func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak banktypes.AccountKeeper,
 	msg *banktypes.MsgSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
@@ -235,7 +232,6 @@ func SimulateMsgMultiSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes
 
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
-// nolint: interfacer
 func sendMsgMultiSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak banktypes.AccountKeeper,
 	msg *banktypes.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
@@ -301,7 +297,6 @@ func sendMsgMultiSend(
 
 // randomSendFields returns the sender and recipient simulation accounts as well
 // as the transferred amount.
-// nolint: interfacer
 func randomSendFields(
 	r *rand.Rand, ctx sdk.Context, accs []simtypes.Account, bk keeper.Keeper, ak banktypes.AccountKeeper,
 ) (simtypes.Account, simtypes.Account, sdk.Coins, bool) {

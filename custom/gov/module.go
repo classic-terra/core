@@ -3,14 +3,13 @@ package gov
 import (
 	"encoding/json"
 
+	customtypes "github.com/classic-terra/core/v3/custom/gov/types"
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	customtypes "github.com/classic-terra/core/v3/custom/gov/types"
-	core "github.com/classic-terra/core/v3/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

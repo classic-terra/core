@@ -3,13 +3,11 @@ package dyncomm
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	"github.com/classic-terra/core/v3/x/dyncomm/types"
-
-	core "github.com/classic-terra/core/v3/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // EndBlocker is called at the end of every block

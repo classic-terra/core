@@ -1,9 +1,9 @@
 package v12
 
 import (
+	store "cosmossdk.io/store/types"
 	"github.com/classic-terra/core/v3/app/upgrades"
 	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
-	store "cosmossdk.io/store/types"
 )
 
 const UpgradeName = "v12"

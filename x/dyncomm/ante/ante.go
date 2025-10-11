@@ -4,17 +4,15 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-
-	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
 )
 
 // DyncommDecorator checks for EditValidator and rejects

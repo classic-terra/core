@@ -1,22 +1,20 @@
 package keeper
 
 import (
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
-
 	errorsmod "cosmossdk.io/errors"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 )
 
 // msgEncoder is an extension point to customize encodings

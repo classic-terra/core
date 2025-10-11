@@ -2,13 +2,12 @@ package ante
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authz "github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	marketexported "github.com/classic-terra/core/v3/x/market/exported"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // FilterMsgAndComputeTax computes the stability tax on messages.

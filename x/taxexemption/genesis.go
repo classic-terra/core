@@ -6,10 +6,9 @@ import (
 	"sort"
 
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/classic-terra/core/v3/x/taxexemption/keeper"
 	"github.com/classic-terra/core/v3/x/taxexemption/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultGenesisState gets raw genesis raw message for testing

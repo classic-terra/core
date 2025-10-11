@@ -5,8 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
+	sdklog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	store "cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
 	customauth "github.com/classic-terra/core/v3/custom/auth"
 	custombank "github.com/classic-terra/core/v3/custom/bank"
 	customdistr "github.com/classic-terra/core/v3/custom/distribution"
@@ -20,17 +23,10 @@ import (
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/classic-terra/core/v3/x/treasury/types"
-
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-
-	sdklog "cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
-	store "cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -51,57 +47,8 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
-
-// Adapter wrappers to satisfy expected interfaces across modules (SDK v0.50)
-type oracleAccountAdapter struct{ ak authkeeper.AccountKeeper }
-
-func (a oracleAccountAdapter) GetModuleAddress(name string) sdk.AccAddress {
-	return a.ak.GetModuleAddress(name)
-}
-func (a oracleAccountAdapter) GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI {
-	return a.ak.GetModuleAccount(ctx.Context(), moduleName)
-}
-func (a oracleAccountAdapter) GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
-	acc := a.ak.GetAccount(ctx.Context(), addr)
-	if acc == nil {
-		return nil
-	}
-	if aa, ok := acc.(authtypes.AccountI); ok {
-		return aa
-	}
-	return nil
-}
-
-type oracleBankAdapter struct{ bk bankkeeper.BaseKeeper }
-
-func (a oracleBankAdapter) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	return a.bk.GetBalance(ctx.Context(), addr, denom)
-}
-func (a oracleBankAdapter) GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return a.bk.GetAllBalances(ctx.Context(), addr)
-}
-func (a oracleBankAdapter) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
-	return a.bk.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt)
-}
-func (a oracleBankAdapter) GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool) {
-	return a.bk.GetDenomMetaData(ctx.Context(), denom)
-}
-func (a oracleBankAdapter) SetDenomMetaData(ctx sdk.Context, md banktypes.Metadata) {
-	a.bk.SetDenomMetaData(ctx.Context(), md)
-}
-func (a oracleBankAdapter) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return a.bk.SpendableCoins(ctx.Context(), addr)
-}
-
-type oracleDistrAdapter struct{ dk distrkeeper.Keeper }
-
-func (a oracleDistrAdapter) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) {
-	_ = a.dk.AllocateTokensToValidator(ctx.Context(), val, tokens)
-}
-func (a oracleDistrAdapter) GetValidatorOutstandingRewardsCoins(ctx sdk.Context, val sdk.ValAddress) sdk.DecCoins {
-	return sdk.DecCoins{}
-}
 
 type oracleStakingAdapter struct{ sk *stakingkeeper.Keeper }
 
@@ -109,71 +56,31 @@ func (a oracleStakingAdapter) Validator(ctx context.Context, address sdk.ValAddr
 	v, _ := a.sk.Validator(ctx, address)
 	return v, nil
 }
+
 func (a oracleStakingAdapter) TotalBondedTokens(_ context.Context) (sdkmath.Int, error) {
 	p, _ := a.sk.TotalBondedTokens(context.Background())
 	return p, nil
 }
+
 func (a oracleStakingAdapter) Slash(ctx context.Context, cons sdk.ConsAddress, height int64, power int64, frac sdkmath.LegacyDec) (sdkmath.Int, error) {
 	return a.sk.Slash(ctx, cons, height, power, frac)
 }
+
 func (a oracleStakingAdapter) Jail(ctx context.Context, cons sdk.ConsAddress) error {
 	return a.sk.Jail(ctx, cons)
 }
+
 func (a oracleStakingAdapter) ValidatorsPowerStoreIterator(ctx context.Context) (storetypes.Iterator, error) {
 	return nil, nil
 }
+
 func (a oracleStakingAdapter) MaxValidators(ctx context.Context) (uint32, error) {
 	mv, _ := a.sk.MaxValidators(ctx)
 	return mv, nil
 }
+
 func (a oracleStakingAdapter) PowerReduction(ctx context.Context) (res sdkmath.Int) {
 	return a.sk.PowerReduction(ctx)
-}
-
-type marketAccountAdapter struct{ ak authkeeper.AccountKeeper }
-
-func (a marketAccountAdapter) GetModuleAddress(name string) sdk.AccAddress {
-	return a.ak.GetModuleAddress(name)
-}
-func (a marketAccountAdapter) GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI {
-	return a.ak.GetModuleAccount(ctx.Context(), moduleName)
-}
-func (a marketAccountAdapter) GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
-	acc := a.ak.GetAccount(ctx.Context(), addr)
-	if acc == nil {
-		return nil
-	}
-	if aa, ok := acc.(authtypes.AccountI); ok {
-		return aa
-	}
-	return nil
-}
-
-type marketBankAdapter struct{ bk bankkeeper.BaseKeeper }
-
-func (a marketBankAdapter) SendCoinsFromModuleToModule(ctx sdk.Context, s, r string, amt sdk.Coins) error {
-	return a.bk.SendCoinsFromModuleToModule(ctx, s, r, amt)
-}
-func (a marketBankAdapter) SendCoinsFromModuleToAccount(ctx sdk.Context, s string, r sdk.AccAddress, amt sdk.Coins) error {
-	return a.bk.SendCoinsFromModuleToAccount(ctx, s, r, amt)
-}
-func (a marketBankAdapter) SendCoinsFromAccountToModule(ctx sdk.Context, s sdk.AccAddress, r string, amt sdk.Coins) error {
-	return a.bk.SendCoinsFromAccountToModule(ctx, s, r, amt)
-}
-func (a marketBankAdapter) BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
-	return a.bk.BurnCoins(ctx.Context(), name, amt)
-}
-func (a marketBankAdapter) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
-	return a.bk.MintCoins(ctx.Context(), name, amt)
-}
-func (a marketBankAdapter) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return a.bk.SpendableCoins(ctx.Context(), addr)
-}
-func (a marketBankAdapter) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	return a.bk.GetBalance(ctx.Context(), addr, denom)
-}
-func (a marketBankAdapter) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
-	return a.bk.IsSendEnabledCoin(ctx.Context(), coin)
 }
 
 type treasuryAccountAdapter struct{ ak authkeeper.AccountKeeper }
@@ -181,6 +88,7 @@ type treasuryAccountAdapter struct{ ak authkeeper.AccountKeeper }
 func (a treasuryAccountAdapter) GetModuleAddress(name string) sdk.AccAddress {
 	return a.ak.GetModuleAddress(name)
 }
+
 func (a treasuryAccountAdapter) GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI {
 	return a.ak.GetModuleAccount(ctx, moduleName)
 }
@@ -194,36 +102,47 @@ type treasuryBankAdapter struct{ bk bankkeeper.BaseKeeper }
 func (a treasuryBankAdapter) MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
 	return a.bk.MintCoins(ctx, moduleName, amt)
 }
+
 func (a treasuryBankAdapter) BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
 	return a.bk.BurnCoins(ctx, moduleName, amt)
 }
+
 func (a treasuryBankAdapter) SendCoinsFromModuleToAccount(ctx context.Context, s string, r sdk.AccAddress, amt sdk.Coins) error {
 	return a.bk.SendCoinsFromModuleToAccount(ctx, s, r, amt)
 }
+
 func (a treasuryBankAdapter) SendCoinsFromAccountToModule(ctx context.Context, s sdk.AccAddress, r string, amt sdk.Coins) error {
 	return a.bk.SendCoinsFromAccountToModule(ctx, s, r, amt)
 }
+
 func (a treasuryBankAdapter) SendCoinsFromModuleToModule(ctx context.Context, s, r string, amt sdk.Coins) error {
 	return a.bk.SendCoinsFromModuleToModule(ctx, s, r, amt)
 }
+
 func (a treasuryBankAdapter) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
 	return a.bk.GetAllBalances(ctx, addr)
 }
+
 func (a treasuryBankAdapter) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	return a.bk.GetSupply(ctx, denom)
 }
+
 func (a treasuryBankAdapter) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	return a.bk.GetBalance(ctx, addr, denom)
 }
+
 func (a treasuryBankAdapter) GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool) {
 	return a.bk.GetDenomMetaData(ctx, denom)
 }
+
 func (a treasuryBankAdapter) SetDenomMetaData(ctx context.Context, md banktypes.Metadata) {
 	a.bk.SetDenomMetaData(ctx, md)
 }
+
 func (a treasuryBankAdapter) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
 	return a.bk.SpendableCoins(ctx, addr)
 }
+
 func (a treasuryBankAdapter) IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bool {
 	return a.bk.IsSendEnabledCoin(ctx, coin)
 }
@@ -236,6 +155,7 @@ type treasuryDistrAdapter struct {
 func (a *treasuryDistrAdapter) GetFeePool(_ sdk.Context) (feePool distrtypes.FeePool) {
 	return a.pool
 }
+
 func (a *treasuryDistrAdapter) SetFeePool(_ sdk.Context, feePool distrtypes.FeePool) {
 	a.pool = feePool
 }
@@ -243,6 +163,7 @@ func (a *treasuryDistrAdapter) SetFeePool(_ sdk.Context, feePool distrtypes.FeeP
 func (a *treasuryDistrAdapter) AllocateTokensToValidator(ctx context.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) error {
 	return a.dk.AllocateTokensToValidator(ctx, val, tokens)
 }
+
 func (a *treasuryDistrAdapter) GetValidatorOutstandingRewardsCoins(_ context.Context, _ sdk.ValAddress) (sdk.DecCoins, error) {
 	return sdk.DecCoins{}, nil
 }
@@ -517,15 +438,4 @@ func setupValidators(t *testing.T) (TestInput, stakingtypes.MsgServer) {
 	require.NoError(t, err)
 
 	return input, stakingMsgSvr
-}
-
-// FundAccount is a utility function that funds an account by minting and
-// sending the coins to the address. This should be used for testing purposes
-// only!
-func FundAccount(input TestInput, addr sdk.AccAddress, amounts sdk.Coins) error {
-	if err := input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, amounts); err != nil {
-		return err
-	}
-
-	return input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, faucetAccountName, addr, amounts)
 }

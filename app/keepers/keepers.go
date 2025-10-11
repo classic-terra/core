@@ -3,22 +3,6 @@ package keepers
 import (
 	"path/filepath"
 
-	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
-	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/keeper"
-	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
-	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
-	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
-	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
-
 	sdklog "cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -27,8 +11,24 @@ import (
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	customstaking "github.com/classic-terra/core/v3/custom/staking"
+	customwasmkeeper "github.com/classic-terra/core/v3/custom/wasm/keeper"
+	terrawasm "github.com/classic-terra/core/v3/wasmbinding"
+	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
+	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
+	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -57,29 +57,27 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	wasm "github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	customstaking "github.com/classic-terra/core/v3/custom/staking"
-	customwasmkeeper "github.com/classic-terra/core/v3/custom/wasm/keeper"
-	terrawasm "github.com/classic-terra/core/v3/wasmbinding"
-	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
-	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
-	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
+	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/keeper"
+	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
+	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 )
 
 type AppKeepers struct {
 	// appKeepers.keys to access the substores
-	keys  map[string]*storetypes.KVStoreKey
-	tkeys map[string]*storetypes.TransientStoreKey
+	keys    map[string]*storetypes.KVStoreKey
+	tkeys   map[string]*storetypes.TransientStoreKey
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
@@ -161,8 +159,8 @@ func NewAppKeepers(
 	memKeys := map[string]*storetypes.MemoryStoreKey{}
 
 	appKeepers := &AppKeepers{
-		keys:  keys,
-		tkeys: tkeys,
+		keys:    keys,
+		tkeys:   tkeys,
 		memKeys: memKeys,
 	}
 
@@ -180,7 +178,12 @@ func NewAppKeepers(
 	)
 
 	// set the BaseApp's parameter store
-	appKeepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress(govtypes.ModuleName).String(), runtime.EventService{})
+	appKeepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
+	)
 	bApp.SetParamStore(appKeepers.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
@@ -372,9 +375,9 @@ func NewAppKeepers(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[ibctransfertypes.StoreKey]),
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.IBCHooksWrapper, // ICS4Wrapper (hooks)
+		appKeepers.IBCHooksWrapper,         // ICS4Wrapper (hooks)
 		appKeepers.IBCKeeper.ChannelKeeper, // ChannelKeeper
-		bApp.MsgServiceRouter(), // MessageRouter
+		bApp.MsgServiceRouter(),            // MessageRouter
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -424,17 +427,17 @@ func NewAppKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		distrkeeper.NewQuerier(appKeepers.DistrKeeper), // DistributionKeeper
-		appKeepers.IBCHooksWrapper, // ICS4Wrapper (hooks)
-		appKeepers.IBCKeeper.ChannelKeeper, // ChannelKeeper
-		appKeepers.IBCKeeper.ChannelKeeperV2, // ChannelKeeperV2
-		appKeepers.TransferKeeper, // ICS20TransferPortSource
-		bApp.MsgServiceRouter(), // MessageRouter
-		bApp.GRPCQueryRouter(), // GRPCQueryRouter
-		wasmDir, // homeDir
-		wasmNodeConfig, // NodeConfig
-		wasmVMConfig, // VMConfig
-		append(wasmkeeper.BuiltInCapabilities(), "terra"), // availableCapabilities
+		distrkeeper.NewQuerier(appKeepers.DistrKeeper),           // DistributionKeeper
+		appKeepers.IBCHooksWrapper,                               // ICS4Wrapper (hooks)
+		appKeepers.IBCKeeper.ChannelKeeper,                       // ChannelKeeper
+		appKeepers.IBCKeeper.ChannelKeeperV2,                     // ChannelKeeperV2
+		appKeepers.TransferKeeper,                                // ICS20TransferPortSource
+		bApp.MsgServiceRouter(),                                  // MessageRouter
+		bApp.GRPCQueryRouter(),                                   // GRPCQueryRouter
+		wasmDir,                                                  // homeDir
+		wasmNodeConfig,                                           // NodeConfig
+		wasmVMConfig,                                             // VMConfig
+		append(wasmkeeper.BuiltInCapabilities(), "terra"),        // availableCapabilities
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(), // authority
 		wasmOpts..., // Options
 	)
@@ -460,7 +463,7 @@ func NewAppKeepers(
 	govKeeper.SetLegacyRouter(govRouter)
 	appKeepers.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 

@@ -380,8 +380,8 @@ func (m *Manager) RunChainInitResource(chainID string, chainVotingPeriod, chainE
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       chainID,
-			Repository: m.ImageConfig.InitRepository,
-			Tag:        m.ImageConfig.InitTag,
+			Repository: m.InitRepository,
+			Tag:        m.InitTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", mountDir),

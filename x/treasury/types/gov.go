@@ -15,9 +15,7 @@ const (
 	ProposalTypeRemoveBurnTaxExemptionAddress = "RemoveBurnTaxExemptionAddress"
 )
 
-var (
-	amino = codec.NewLegacyAmino()
-)
+var amino = codec.NewLegacyAmino()
 
 func init() {
 	govv1beta1.RegisterProposalType(ProposalTypeAddBurnTaxExemptionAddress)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	customtypes "github.com/classic-terra/core/v3/custom/staking/types"
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -11,9 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	customtypes "github.com/classic-terra/core/v3/custom/staking/types"
-	core "github.com/classic-terra/core/v3/types"
 )
 
 var (

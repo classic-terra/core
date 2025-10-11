@@ -8,13 +8,12 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+	core "github.com/classic-terra/core/v3/types"
+	customvestingtypes "github.com/classic-terra/core/v3/x/vesting/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	customvestingtypes "github.com/classic-terra/core/v3/x/vesting/types"
 )
 
 // Simulation parameter constants
@@ -34,7 +33,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccoun
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
-		if !(int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50) {
+		if int64(i) <= simState.NumBonded || simState.Rand.Intn(100) >= 50 {
 			genesisAccs[i] = bacc
 			continue
 		}

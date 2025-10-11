@@ -4,10 +4,9 @@ import (
 	"sync"
 
 	errorsmod "cosmossdk.io/errors"
+	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 )
 
 // SpammingPreventionDecorator will check if the transaction's gas is smaller than

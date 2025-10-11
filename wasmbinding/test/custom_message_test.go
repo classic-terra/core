@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // go test -v -run ^TestSwap$ github.com/classic-terra/core/v3/wasmbinding/test

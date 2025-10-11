@@ -156,7 +156,7 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 	suite.Ctx = suite.Ctx.WithBlockHeight(nextHeight).WithBlockTime(now)
 
 	// run FinalizeBlock with the tx
-	fb, err := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
+	fb, _ := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: nextHeight,
 		Txs:    [][]byte{txBytes},
 		Time:   now,
@@ -359,7 +359,7 @@ func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1).WithBlockTime(suite.Ctx.BlockTime().Add(25 * time.Hour))
 	_, _ = suite.App.BeginBlocker(suite.Ctx)
 	// refresh deliver ctx for this height
-	suite.Ctx = suite.App.BaseApp.NewUncachedContext(false, suite.Ctx.BlockHeader())
+	suite.Ctx = suite.App.NewUncachedContext(false, suite.Ctx.BlockHeader())
 
 	// Update validator rates after time advancement
 	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
@@ -381,7 +381,7 @@ func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 		suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
 		_, _ = suite.App.BeginBlocker(suite.Ctx)
 		// refresh deliver ctx for this height
-		suite.Ctx = suite.App.BaseApp.NewUncachedContext(false, suite.Ctx.BlockHeader())
+		suite.Ctx = suite.App.NewUncachedContext(false, suite.Ctx.BlockHeader())
 
 		tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}, suite.Ctx.ChainID())
 		suite.Require().NoError(err)
@@ -402,7 +402,7 @@ func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 		suite.Ctx = suite.Ctx.WithBlockHeight(nextHeight).WithBlockTime(now)
 
 		// run FinalizeBlock with the tx
-		fb, err := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
+		fb, _ := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: nextHeight,
 			Txs:    [][]byte{txBytes},
 			Time:   now,

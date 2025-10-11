@@ -1,4 +1,3 @@
-//nolint:revive
 package v8_3
 
 import (

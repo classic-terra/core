@@ -3,16 +3,14 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto/ed25519"
-	"github.com/stretchr/testify/require"
-
 	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesttypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/stretchr/testify/require"
 )
 
 var (

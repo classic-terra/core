@@ -10,21 +10,16 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	tmabcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 	"github.com/classic-terra/core/v3/tests/e2e/util"
-
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	tmabcitypes "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {

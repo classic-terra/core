@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -16,8 +15,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	"github.com/spf13/cobra"
 )
 
 // GetTxCmd returns the transaction commands for this module

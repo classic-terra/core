@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
-	"gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"gopkg.in/yaml.v2"
 )
 
 // NewAggregateExchangeRatePrevote returns AggregateExchangeRatePrevote object

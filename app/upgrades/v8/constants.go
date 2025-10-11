@@ -1,8 +1,8 @@
 package v8
 
 import (
-	"github.com/classic-terra/core/v3/app/upgrades"
 	store "cosmossdk.io/store/types"
+	"github.com/classic-terra/core/v3/app/upgrades"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistpyes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )

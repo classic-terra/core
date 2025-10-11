@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
 	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParamsEqual(t *testing.T) {

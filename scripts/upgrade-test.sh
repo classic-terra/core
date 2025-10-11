@@ -5,7 +5,7 @@ FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
 
-OLD_VERSION=v3.6.0-rc.0
+OLD_VERSION=v3.6.0
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna

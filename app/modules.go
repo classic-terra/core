@@ -9,6 +9,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+	// unnamed import of statik for swagger UI support
+	_ "github.com/classic-terra/core/v3/client/docs/statik"
 	customauth "github.com/classic-terra/core/v3/custom/auth"
 	customauthsim "github.com/classic-terra/core/v3/custom/auth/simulation"
 	customauthz "github.com/classic-terra/core/v3/custom/authz"
@@ -31,6 +33,9 @@ import (
 	"github.com/classic-terra/core/v3/x/oracle"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxmodule "github.com/classic-terra/core/v3/x/tax/module"
+	taxbank "github.com/classic-terra/core/v3/x/tax/modules/bank"
+	taxmarket "github.com/classic-terra/core/v3/x/tax/modules/market"
+	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	"github.com/classic-terra/core/v3/x/taxexemption"
 	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
 	"github.com/classic-terra/core/v3/x/treasury"
@@ -72,13 +77,6 @@ import (
 	ibc "github.com/cosmos/ibc-go/v10/modules/core"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
-
-	taxbank "github.com/classic-terra/core/v3/x/tax/modules/bank"
-	taxmarket "github.com/classic-terra/core/v3/x/tax/modules/market"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/classic-terra/core/v3/client/docs/statik"
 )
 
 var (
@@ -216,7 +214,6 @@ func simulationModules(
 
 func orderBeginBlockers() []string {
 	return []string{
-		upgradetypes.ModuleName,
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,

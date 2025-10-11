@@ -1,11 +1,10 @@
 package distribution
 
 import (
+	customtypes "github.com/classic-terra/core/v3/custom/distribution/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-
-	customtypes "github.com/classic-terra/core/v3/custom/distribution/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

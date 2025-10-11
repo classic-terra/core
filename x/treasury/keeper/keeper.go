@@ -3,21 +3,18 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	core "github.com/classic-terra/core/v3/types"
-
-	"cosmossdk.io/log"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/classic-terra/core/v3/x/treasury/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper of the treasury store

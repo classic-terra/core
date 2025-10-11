@@ -3,11 +3,10 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v3/x/taxexemption/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	errorsmod "cosmossdk.io/errors"
-
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
 )
 
 // querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over q
@@ -30,14 +29,14 @@ func (q querier) Taxable(c context.Context, req *types.QueryTaxableRequest) (*ty
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	taxable := !q.Keeper.IsExemptedFromTax(ctx, req.FromAddress, req.ToAddress)
+	taxable := !q.IsExemptedFromTax(ctx, req.FromAddress, req.ToAddress)
 	return &types.QueryTaxableResponse{Taxable: taxable}, nil
 }
 
 // TaxExemptionZoneList queries tax exemption zone list of taxexemption module
 func (q querier) TaxExemptionZonesList(c context.Context, req *types.QueryTaxExemptionZonesRequest) (*types.QueryTaxExemptionZonesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	zones, pageRes, err := q.Keeper.ListTaxExemptionZones(ctx, req)
+	zones, pageRes, err := q.ListTaxExemptionZones(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +53,7 @@ func (q querier) TaxExemptionZonesList(c context.Context, req *types.QueryTaxExe
 // TaxExemptionAddressList queries tax exemption address list of taxexemption module
 func (q querier) TaxExemptionAddressList(c context.Context, req *types.QueryTaxExemptionAddressRequest) (*types.QueryTaxExemptionAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	addresses, pageRes, err := q.Keeper.ListTaxExemptionAddresses(ctx, req)
+	addresses, pageRes, err := q.ListTaxExemptionAddresses(ctx, req)
 	if err != nil {
 		return nil, err
 	}

@@ -3,20 +3,17 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/log"
-
-	gogotypes "github.com/gogo/protobuf/types"
-
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	gogotypes "github.com/gogo/protobuf/types"
 )
 
 // Keeper of the oracle store

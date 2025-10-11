@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - "release/**"
+      - release/**
   pull_request:
 permissions:
   contents: read
@@ -12,15 +12,21 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
           check-latest: true
-      - uses: actions/checkout@v4
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.60.1
-          args: --timeout 10m
-          github-token: ${{ secrets.github_token }}
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+      - name: run linting
+        if: env.GIT_DIFF
+        run: |
+          make lint

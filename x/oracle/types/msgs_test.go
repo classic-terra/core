@@ -4,13 +4,11 @@ import (
 	"math/rand"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/oracle/types"
-
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMsgFeederDelegation(t *testing.T) {

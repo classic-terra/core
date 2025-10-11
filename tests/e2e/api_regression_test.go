@@ -63,7 +63,7 @@ type TaxComputeResponse struct {
 }
 
 func (s *IntegrationTestSuite) TestAPIRegression() {
-	s.Suite.Run("Tax Computation Test", func() {
+	s.Run("Tax Computation Test", func() {
 		chain := s.configurer.GetChainConfig(0)
 		node, err := chain.GetDefaultNode()
 		s.Suite.Require().NoError(err)
@@ -153,7 +153,7 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 
 		// Execute test with retries
 		var taxResp TaxComputeResponse
-		s.Suite.Eventually(func() bool {
+		s.Eventually(func() bool {
 			// Resolve REST API host:port from container mapping
 			hostPort, err := node.GetHostPort("1317/tcp")
 			if err != nil {
@@ -203,7 +203,7 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		// This proves the endpoint is working and not panicking like in the pre-fix state
 	})
 
-	s.Suite.Run("Historic Query Header Test", func() {
+	s.Run("Historic Query Header Test", func() {
 		chain := s.configurer.GetChainConfig(0)
 		node, err := chain.GetDefaultNode()
 		s.Suite.Require().NoError(err)
@@ -232,7 +232,7 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		s.Suite.Require().Equal(200, resp.StatusCode)
 	})
 
-	s.Suite.Run("Current Height Query Test", func() {
+	s.Run("Current Height Query Test", func() {
 		chain := s.configurer.GetChainConfig(0)
 		node, err := chain.GetDefaultNode()
 		s.Suite.Require().NoError(err)

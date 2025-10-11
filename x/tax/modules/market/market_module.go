@@ -1,11 +1,10 @@
 package market
 
 import (
-	"github.com/classic-terra/core/v3/x/tax/handlers"
-
 	"github.com/classic-terra/core/v3/x/market"
 	"github.com/classic-terra/core/v3/x/market/keeper"
 	"github.com/classic-terra/core/v3/x/market/types"
+	"github.com/classic-terra/core/v3/x/tax/handlers"
 	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"

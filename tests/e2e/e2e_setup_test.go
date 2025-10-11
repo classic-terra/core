@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	configurer "github.com/classic-terra/core/v3/tests/e2e/configurer"
+	"github.com/stretchr/testify/suite"
 )
 
 const (

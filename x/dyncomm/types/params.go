@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"gopkg.in/yaml.v2"
-
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
 // Parameter keys

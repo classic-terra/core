@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
-
+	"github.com/classic-terra/core/v3/x/market/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"github.com/classic-terra/core/v3/x/market/types"
 )
 
 // Simulation operation weights constants
@@ -52,7 +50,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgSwap generates a MsgSwap with random values.
-// nolint: funlen
 func SimulateMsgSwap(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -126,7 +123,6 @@ func SimulateMsgSwap(
 }
 
 // SimulateMsgSwapSend generates a MsgSwapSend with random values.
-// nolint: funlen
 func SimulateMsgSwapSend(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,

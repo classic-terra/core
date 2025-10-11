@@ -20,7 +20,6 @@ func CreateV14UpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		keepers.IBCKeeper.ClientKeeper.SetParams(sdk.UnwrapSDKContext(ctx), clienttypes.DefaultParams())
 
 		return mm.RunMigrations(ctx, cfg, fromVM)

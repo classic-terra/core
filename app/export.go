@@ -6,13 +6,12 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
@@ -45,7 +44,7 @@ func (app *TerraApp) ExportAppStateAndValidators(
 		AppState:        appState,
 		Validators:      validators,
 		Height:          height,
-		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
+		ConsensusParams: app.GetConsensusParams(ctx),
 	}, err
 }
 
@@ -54,12 +53,9 @@ func (app *TerraApp) ExportAppStateAndValidators(
 //
 //	in favour of export at a block height
 func (app *TerraApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
-	applyAllowedAddrs := false
+	applyAllowedAddrs := len(jailAllowedAddrs) > 0
 
 	// check if there is a allowed address list
-	if len(jailAllowedAddrs) > 0 {
-		applyAllowedAddrs = true
-	}
 
 	allowedAddrsMap := make(map[string]bool)
 

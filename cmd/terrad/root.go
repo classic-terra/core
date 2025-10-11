@@ -6,19 +6,23 @@ import (
 	"os"
 	"path/filepath"
 
-	log "cosmossdk.io/log"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-
 	"cosmossdk.io/client/v2/autocli"
+	log "cosmossdk.io/log"
 	sdklog "cosmossdk.io/log"
 	store "cosmossdk.io/store"
 	snapshots "cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	terraapp "github.com/classic-terra/core/v3/app"
+	terralegacy "github.com/classic-terra/core/v3/app/legacy"
+	"github.com/classic-terra/core/v3/app/params"
+	authcustomcli "github.com/classic-terra/core/v3/custom/auth/client/cli"
+	core "github.com/classic-terra/core/v3/types"
 	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -44,15 +48,8 @@ import (
 	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
-	terraapp "github.com/classic-terra/core/v3/app"
-	terralegacy "github.com/classic-terra/core/v3/app/legacy"
-	"github.com/classic-terra/core/v3/app/params"
-	authcustomcli "github.com/classic-terra/core/v3/custom/auth/client/cli"
-	core "github.com/classic-terra/core/v3/types"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
 )
 
 // NewRootCmd creates a new root command for terrad. It is called once in the
@@ -124,7 +121,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			// Enable SIGN_MODE_TEXTUAL when online (SDK 0.50 pattern)
 			if !initClientCtx.Offline {
-				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+				enabledSignModes := tx.DefaultSignModes
+				enabledSignModes = append(enabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 				txConfigOpts := tx.ConfigOptions{
 					EnabledSignModes:           enabledSignModes,
 					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
@@ -291,11 +289,6 @@ func txCommand(basicMgr module.BasicManager) *cobra.Command {
 	return cmd
 }
 
-// emptyAppOptions is a minimal AppOptions used for constructing a temporary app for CLI wiring
-type emptyAppOptions struct{}
-
-func (emptyAppOptions) Get(_ string) interface{} { return nil }
-
 type appCreator struct {
 	encodingConfig params.EncodingConfig
 }
@@ -375,7 +368,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-		//baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(server.FlagIAVLLazyLoading))),
+		// baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(server.FlagIAVLLazyLoading))),
 	)
 
 	return app

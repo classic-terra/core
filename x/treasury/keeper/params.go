@@ -1,9 +1,8 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/x/treasury/types"
-
 	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v3/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

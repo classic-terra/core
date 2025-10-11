@@ -4,15 +4,13 @@ import (
 	"sort"
 	"testing"
 
-	fuzz "github.com/google/gofuzz"
-	"github.com/stretchr/testify/require"
-
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/classic-terra/core/v3/x/oracle"
 	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	fuzz "github.com/google/gofuzz"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFuzz_Tally(t *testing.T) {

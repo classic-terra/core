@@ -4,13 +4,13 @@ import (
 	"io"
 	"testing"
 
+	// "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/stretchr/testify/suite"
-	// "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 )
 
 type CLITestSuite struct {

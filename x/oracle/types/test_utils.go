@@ -8,12 +8,11 @@ import (
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	tmprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/cometbft/cometbft/crypto/secp256k1"
-	tmprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 )
 
 const OracleDecPrecision = 8

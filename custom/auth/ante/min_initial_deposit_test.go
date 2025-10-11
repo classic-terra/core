@@ -1,21 +1,12 @@
 package ante_test
 
 import (
-	// "fmt"
-
 	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v3/custom/auth/ante"
+	core "github.com/classic-terra/core/v3/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	// banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/classic-terra/core/v3/custom/auth/ante"
-	core "github.com/classic-terra/core/v3/types"
-
-	// core "github.com/terra-money/core/types"
-	// treasury "github.com/terra-money/core/x/treasury/types"
-
 	// "github.com/cosmos/cosmos-sdk/types/query"
 	// cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	// "github.com/cosmos/cosmos-sdk/x/auth/types"

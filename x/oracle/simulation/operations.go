@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/oracle/keeper"
+	"github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,10 +21,6 @@ import (
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/keeper"
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // Simulation operation weights constants
@@ -86,7 +85,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgAggregateExchangeRatePrevote generates a MsgAggregateExchangeRatePrevote with random values.
-// nolint: funlen
 func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -153,7 +151,6 @@ func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.Ba
 }
 
 // SimulateMsgAggregateExchangeRateVote generates a MsgAggregateExchangeRateVote with random values.
-// nolint: funlen
 func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -224,7 +221,6 @@ func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankK
 }
 
 // SimulateMsgDelegateFeedConsent generates a MsgDelegateFeedConsent with random values.
-// nolint: funlen
 func SimulateMsgDelegateFeedConsent(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

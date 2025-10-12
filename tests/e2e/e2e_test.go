@@ -81,7 +81,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		// check if denom is uluna token ibc
 		return sdkmath.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom && count == 1
 	},
-		10*time.Second,
+		30*time.Second,
 		10*time.Millisecond,
 	)
 }

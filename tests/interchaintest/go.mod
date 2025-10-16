@@ -52,7 +52,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
-	github.com/cometbft/cometbft v0.37.15 // indirect
+	github.com/cometbft/cometbft v0.37.16 // indirect
 	github.com/cometbft/cometbft-db v0.11.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -257,7 +257,7 @@ replace (
 replace (
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.5.8
 	github.com/classic-terra/core/v3 => ../../
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.15
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.16
 	github.com/cosmos/ibc-go/v7 => github.com/classic-terra/ibc-go/v7 v7.0.0-20240419072319-aa9d74dc39ae
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	github.com/creachadair/taskgroup => github.com/creachadair/taskgroup v0.6.0
@@ -271,5 +271,4 @@ replace (
 	github.com/strangelove-ventures/interchaintest/v7 => github.com/Genuine-labs/interchaintest/v7 v7.0.0-terra.1
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	google.golang.org/grpc => google.golang.org/grpc v1.58.3
-
 )

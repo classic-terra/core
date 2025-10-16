@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/simapp v0.0.0-20230602123434-616841b9704d
 	github.com/CosmWasm/wasmd v0.46.0
 	github.com/CosmWasm/wasmvm v1.5.9
-	github.com/cometbft/cometbft v0.37.15
+	github.com/cometbft/cometbft v0.37.16
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/cosmos/gogoproto v1.7.0

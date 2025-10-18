@@ -214,7 +214,7 @@ func InitTestnet(
 
 		coins := sdk.Coins{
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), accTokens),
-			sdk.NewCoin(core.MicroLunaDenom, accStakingTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -225,7 +225,7 @@ func InitTestnet(
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr).String(),
 			valPubKeys[i],
-			sdk.NewCoin(core.MicroLunaDenom, valTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
 			sdkmath.OneInt(),

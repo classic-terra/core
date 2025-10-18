@@ -7,6 +7,8 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 
+func init() {}
+
 func main() {
 	rootCmd, _ := NewRootCmd()
 

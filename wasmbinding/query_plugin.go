@@ -13,6 +13,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 
 	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
@@ -78,7 +80,7 @@ func normalizeLegacyRoutedQueryJSON(request json.RawMessage) json.RawMessage {
 	}
 
 	switch lr.Route {
-	case "treasury":
+	case treasurytypes.ModuleName:
 		if _, ok := lr.QueryData["tax_rate"]; ok {
 			// modern tax_rate has empty object
 			if bz, err := json.Marshal(map[string]any{"tax_rate": struct{}{}}); err == nil {
@@ -91,14 +93,14 @@ func normalizeLegacyRoutedQueryJSON(request json.RawMessage) json.RawMessage {
 				return bz
 			}
 		}
-	case "oracle":
+	case oracletypes.ModuleName:
 		if er, ok := lr.QueryData["exchange_rates"]; ok {
 			// pass inner as-is (expects {base_denom, quote_denoms})
 			if bz, err := json.Marshal(map[string]json.RawMessage{"exchange_rates": er}); err == nil {
 				return bz
 			}
 		}
-	case "market":
+	case markettypes.ModuleName:
 		if sw, ok := lr.QueryData["swap"]; ok {
 			// pass inner as-is ({offer_coin, ask_denom})
 			if bz, err := json.Marshal(map[string]json.RawMessage{"swap": sw}); err == nil {

@@ -25,6 +25,14 @@ var (
 	KeySwapFeeBurnRate = []byte("SwapFeeBurnRate")
 	// Fraction of swap fee to send to Community Pool
 	KeySwapFeeCommunityRate = []byte("SwapFeeCommunityRate")
+	// Maximum oracle age in seconds
+	KeyMaxOracleAgeSeconds = []byte("MaxOracleAgeSeconds")
+	// TWAP lookback window in blocks
+	KeyTWAPLookbackWindow = []byte("TWAPLookbackWindow")
+	// Maximum TWAP deviation
+	KeyMaxTWAPDeviation = []byte("MaxTWAPDeviation")
+	// Daily cap factor
+	KeyDailyCapFactor = []byte("DailyCapFactor")
 )
 
 // Default parameter values
@@ -36,6 +44,14 @@ var (
 	// Default fee distribution: 0% burn, 0% community pool, 100% to oracle (remainder)
 	DefaultSwapFeeBurnRate      = sdk.ZeroDec()
 	DefaultSwapFeeCommunityRate = sdk.ZeroDec()
+	// Default oracle freshness: 75 seconds (25 blocks * 3s)
+	DefaultMaxOracleAgeSeconds = uint64(75)
+	// Default TWAP window: 45 blocks (~2.25 minutes at 3s/block)
+	DefaultTWAPLookbackWindow = uint64(45)
+	// Default TWAP deviation: 10%
+	DefaultMaxTWAPDeviation = sdk.NewDecWithPrec(10, 2) // 0.10
+	// Default daily cap: 10% of pool balance per day
+	DefaultDailyCapFactor = sdk.NewDecWithPrec(10, 2) // 0.10
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -49,6 +65,10 @@ func DefaultParams() Params {
 		EpochLengthBlocks:    DefaultEpochLengthBlocks,
 		SwapFeeBurnRate:      DefaultSwapFeeBurnRate,
 		SwapFeeCommunityRate: DefaultSwapFeeCommunityRate,
+		MaxOracleAgeSeconds:  DefaultMaxOracleAgeSeconds,
+		TwapLookbackWindow:   DefaultTWAPLookbackWindow,
+		MaxTwapDeviation:     DefaultMaxTWAPDeviation,
+		DailyCapFactor:       DefaultDailyCapFactor,
 	}
 }
 
@@ -73,6 +93,10 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyEpochLengthBlocks, &p.EpochLengthBlocks, validateEpochLengthBlocks),
 		paramstypes.NewParamSetPair(KeySwapFeeBurnRate, &p.SwapFeeBurnRate, validateFraction),
 		paramstypes.NewParamSetPair(KeySwapFeeCommunityRate, &p.SwapFeeCommunityRate, validateFraction),
+		paramstypes.NewParamSetPair(KeyMaxOracleAgeSeconds, &p.MaxOracleAgeSeconds, validateMaxOracleAgeSeconds),
+		paramstypes.NewParamSetPair(KeyTWAPLookbackWindow, &p.TwapLookbackWindow, validateTWAPLookbackWindow),
+		paramstypes.NewParamSetPair(KeyMaxTWAPDeviation, &p.MaxTwapDeviation, validateFraction),
+		paramstypes.NewParamSetPair(KeyDailyCapFactor, &p.DailyCapFactor, validateFraction),
 	}
 }
 
@@ -100,6 +124,19 @@ func (p Params) Validate() error {
 	}
 	if p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate).GT(sdk.OneDec()) {
 		return fmt.Errorf("sum of burn and community rates must be <= 1: %s", p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate))
+	}
+
+	if p.MaxOracleAgeSeconds == 0 {
+		return fmt.Errorf("max oracle age seconds must be positive, is %d", p.MaxOracleAgeSeconds)
+	}
+	if p.TwapLookbackWindow == 0 {
+		return fmt.Errorf("TWAP lookback window must be positive, is %d", p.TwapLookbackWindow)
+	}
+	if err := validateFraction(p.MaxTwapDeviation); err != nil {
+		return fmt.Errorf("max TWAP deviation invalid: %w", err)
+	}
+	if err := validateFraction(p.DailyCapFactor); err != nil {
+		return fmt.Errorf("daily cap factor invalid: %w", err)
 	}
 
 	return nil
@@ -171,6 +208,28 @@ func validateFraction(i interface{}) error {
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("fraction must be <= 1: %s", v)
+	}
+	return nil
+}
+
+func validateMaxOracleAgeSeconds(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v == 0 {
+		return fmt.Errorf("max oracle age seconds must be positive: %d", v)
+	}
+	return nil
+}
+
+func validateTWAPLookbackWindow(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v == 0 {
+		return fmt.Errorf("TWAP lookback window must be positive: %d", v)
 	}
 	return nil
 }

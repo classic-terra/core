@@ -43,6 +43,30 @@ func (k Keeper) SwapFeeCommunityRate(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
+// MaxOracleAgeSeconds returns the maximum age in seconds for oracle prices
+func (k Keeper) MaxOracleAgeSeconds(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, types.KeyMaxOracleAgeSeconds, &res)
+	return
+}
+
+// TwapLookbackWindow returns the number of blocks for TWAP calculation
+func (k Keeper) TwapLookbackWindow(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, types.KeyTWAPLookbackWindow, &res)
+	return
+}
+
+// MaxTwapDeviation returns the maximum deviation from TWAP
+func (k Keeper) MaxTwapDeviation(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeyMaxTWAPDeviation, &res)
+	return
+}
+
+// DailyCapFactor returns the daily cap factor
+func (k Keeper) DailyCapFactor(ctx sdk.Context) (res sdk.Dec) {
+	k.paramSpace.Get(ctx, types.KeyDailyCapFactor, &res)
+	return
+}
+
 // GetParams returns the total set of market parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSetIfExists(ctx, &params)

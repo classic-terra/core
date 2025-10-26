@@ -1,0 +1,411 @@
+package keeper
+
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+)
+
+// TestOracleFreshnessCheck tests that swaps are denied when oracle data is stale
+func TestOracleFreshnessCheck(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Set oracle prices
+	lunaPriceInUSD := sdk.NewDecWithPrec(5, 0) // 5 USD per LUNC
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, oracletypes.MetaUSDDenom, lunaPriceInUSD)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.OneDec())
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, lunaPriceInUSD)
+
+	// Set up pool liquidity
+	poolCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(10000000)),
+		sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(50000000)),
+	)
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, poolCoins)
+
+	// Set initial tally time
+	initialTime := time.Unix(1000000, 0)
+	input.Ctx = input.Ctx.WithBlockTime(initialTime)
+	input.MarketKeeper.SetLastOracleTallyTime(input.Ctx, initialTime.Unix())
+
+	// Test 1: Fresh oracle data - swap should succeed
+	input.Ctx = input.Ctx.WithBlockTime(initialTime.Add(30 * time.Second))
+	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000000))
+	_, _, err := input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroUSDDenom)
+	require.NoError(t, err, "swap should succeed with fresh oracle data")
+
+	// Test 2: Oracle data at max age (75s) - should still work
+	input.Ctx = input.Ctx.WithBlockTime(initialTime.Add(75 * time.Second))
+	_, _, err = input.MarketKeeper.ComputeSwap(input.Ctx, offerCoin, core.MicroUSDDenom)
+	require.NoError(t, err, "swap should succeed at max oracle age")
+
+	// Test 3: Stale oracle data (76s) - swap should fail
+	input.Ctx = input.Ctx.WithBlockTime(initialTime.Add(76 * time.Second))
+	trader := Addrs[0]
+	msgServer := NewMsgServerImpl(input.MarketKeeper)
+
+	swapMsg := types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
+	require.Error(t, err, "swap should fail with stale oracle data")
+	require.ErrorIs(t, err, types.ErrOraclePriceStale)
+
+	// Test 4: Update tally time - swap should succeed again
+	input.MarketKeeper.SetLastOracleTallyTime(input.Ctx, input.Ctx.BlockTime().Unix())
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
+	require.NoError(t, err, "swap should succeed after oracle update")
+}
+
+// TestTWAPTracking tests TWAP price snapshot tracking
+func TestTWAPTracking(t *testing.T) {
+	input := CreateTestInput(t)
+
+	denom := oracletypes.MetaUSDDenom // Use MetaUSDDenom as that's what the code tracks
+
+	// Test 1: No TWAP data initially
+	_, err := input.MarketKeeper.ComputeTWAP(input.Ctx, denom)
+	require.Error(t, err, "should error when no TWAP data exists")
+
+	// Test 2: Add price snapshots
+	prices := []sdk.Dec{
+		sdk.NewDecWithPrec(100, 2), // 1.00
+		sdk.NewDecWithPrec(105, 2), // 1.05
+		sdk.NewDecWithPrec(110, 2), // 1.10
+		sdk.NewDecWithPrec(95, 2),  // 0.95
+		sdk.NewDecWithPrec(100, 2), // 1.00
+	}
+
+	for i, price := range prices {
+		input.Ctx = input.Ctx.WithBlockHeight(int64(i + 1))
+		input.MarketKeeper.AddTWAPPrice(input.Ctx, denom, price)
+	}
+
+	// Test 3: Compute TWAP (simple average)
+	twap, err := input.MarketKeeper.ComputeTWAP(input.Ctx, denom)
+	require.NoError(t, err)
+	
+	expectedTWAP := sdk.NewDecWithPrec(102, 2) // (1.00 + 1.05 + 1.10 + 0.95 + 1.00) / 5 = 1.02
+	require.True(t, twap.Sub(expectedTWAP).Abs().LTE(sdk.NewDecWithPrec(1, 3)), 
+		"TWAP should be approximately %s, got %s", expectedTWAP, twap)
+
+	// Test 4: Old snapshots are pruned
+	lookbackWindow := input.MarketKeeper.TwapLookbackWindow(input.Ctx)
+	input.Ctx = input.Ctx.WithBlockHeight(int64(lookbackWindow) + 100)
+	input.MarketKeeper.AddTWAPPrice(input.Ctx, denom, sdk.NewDecWithPrec(200, 2))
+
+	// Get TWAP should still work with the new snapshot
+	twap2, err := input.MarketKeeper.ComputeTWAP(input.Ctx, denom)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewDecWithPrec(200, 2), twap2, "TWAP should be the new price after pruning")
+}
+
+// TestTWAPDeviationCheck tests that swaps are denied when price deviates too much from TWAP
+func TestTWAPDeviationCheck(t *testing.T) {
+	input := CreateTestInput(t)
+
+	trader := Addrs[0]
+	msgServer := NewMsgServerImpl(input.MarketKeeper)
+
+	// Set up TWAP with stable price around 1.00 USD
+	denom := oracletypes.MetaUSDDenom
+	basePrice := sdk.NewDecWithPrec(100, 2) // 1.00 USD
+	
+	for i := 0; i < 10; i++ {
+		input.Ctx = input.Ctx.WithBlockHeight(int64(i + 1))
+		// Add slight variations around 1.00
+		variation := sdk.NewDecWithPrec(int64(i%3-1), 2) // -0.01, 0, 0.01
+		input.MarketKeeper.AddTWAPPrice(input.Ctx, denom, basePrice.Add(variation))
+	}
+
+	// Set oracle prices (need SDR for swap calculations)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.OneDec())
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, basePrice)
+	
+	// Set oracle tally time
+	input.MarketKeeper.SetLastOracleTallyTime(input.Ctx, input.Ctx.BlockTime().Unix())
+
+	// Set up pool liquidity
+	poolCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(10000000)),
+		sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(10000000)),
+	)
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, poolCoins)
+
+	// Test 1: Current price within deviation (5% from TWAP) - should succeed
+	currentPrice := sdk.NewDecWithPrec(104, 2) // 1.04 USD (4% deviation)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, denom, currentPrice)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, currentPrice)
+
+	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000000))
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+
+	swapMsg := types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
+	_, err := msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
+	require.NoError(t, err, "swap should succeed with 4%% price deviation")
+
+	// Test 2: Current price exceeds max deviation (11% from TWAP) - should fail
+	currentPrice = sdk.NewDecWithPrec(112, 2) // 1.12 USD (12% deviation from 1.00)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, denom, currentPrice)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, currentPrice)
+
+	// Fund trader again
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+
+	swapMsg = types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
+	if err == nil {
+		t.Logf("Expected error but swap succeeded - checking TWAP data")
+		twap, twapErr := input.MarketKeeper.ComputeTWAP(input.Ctx, oracletypes.MetaUSDDenom)
+		t.Logf("TWAP: %v, err: %v", twap, twapErr)
+		t.Logf("Current price: %v", currentPrice)
+	}
+	require.Error(t, err, "swap should fail with 12%% price deviation")
+	require.ErrorIs(t, err, types.ErrTWAPDeviation)
+
+	// Test 3: Price drops below TWAP by >10% - should also fail
+	currentPrice = sdk.NewDecWithPrec(88, 2) // 0.88 USD (12% deviation downward)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, denom, currentPrice)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, currentPrice)
+
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+
+	swapMsg = types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
+	require.Error(t, err, "swap should fail with 12%% downward deviation")
+	require.ErrorIs(t, err, types.ErrTWAPDeviation)
+}
+
+// TestDailyCapBasicTracking tests basic daily cap tracking functionality
+func TestDailyCapBasicTracking(t *testing.T) {
+	input := CreateTestInput(t)
+
+	denom := core.MicroLunaDenom
+	baseline := sdk.NewInt(1000000) // 1M LUNC baseline
+
+	// Test 1: Set and get baseline
+	input.MarketKeeper.SetDailyCapBaseline(input.Ctx, denom, baseline)
+	retrievedBaseline := input.MarketKeeper.GetDailyCapBaseline(input.Ctx, denom)
+	require.Equal(t, baseline, retrievedBaseline)
+
+	// Test 2: Initial usage is zero
+	usage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, denom)
+	require.True(t, usage.IsZero())
+
+	// Test 3: Set and get usage
+	usageAmount := sdk.NewInt(50000) // 50k used
+	input.MarketKeeper.SetDailyCapUsage(input.Ctx, denom, usageAmount)
+	retrievedUsage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, denom)
+	require.Equal(t, usageAmount, retrievedUsage)
+
+	// Test 4: Daily reset clears usage
+	input.MarketKeeper.SetDailyCapResetHeight(input.Ctx, 100)
+	input.Ctx = input.Ctx.WithBlockHeight(100 + int64(core.BlocksPerDay) + 1)
+	
+	input.MarketKeeper.ResetDailyCapIfNeeded(input.Ctx)
+	
+	// Usage should be cleared
+	usage = input.MarketKeeper.GetDailyCapUsage(input.Ctx, denom)
+	require.True(t, usage.IsZero(), "usage should be reset after a day")
+}
+
+// TestDailyCapEnforcement tests daily cap enforcement during swaps
+func TestDailyCapEnforcement(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Set up oracle prices
+	lunaPriceInUSD := sdk.NewDecWithPrec(5, 0) // 5 USD per LUNC
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, oracletypes.MetaUSDDenom, lunaPriceInUSD)
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.OneDec())
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, lunaPriceInUSD)
+	input.MarketKeeper.SetLastOracleTallyTime(input.Ctx, input.Ctx.BlockTime().Unix())
+
+	// Set up pool with baseline
+	lunaBaseline := sdk.NewInt(1000000) // 1M LUNC
+	usdBaseline := sdk.NewInt(5000000)  // 5M USD (equivalent value)
+
+	poolCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, lunaBaseline),
+		sdk.NewCoin(core.MicroUSDDenom, usdBaseline),
+	)
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, poolCoins)
+
+	// Set block height and baselines (simulating epoch change)
+	input.Ctx = input.Ctx.WithBlockHeight(100)
+	input.MarketKeeper.SetDailyCapBaseline(input.Ctx, core.MicroLunaDenom, lunaBaseline)
+	input.MarketKeeper.SetDailyCapBaseline(input.Ctx, core.MicroUSDDenom, usdBaseline)
+	input.MarketKeeper.SetDailyCapResetHeight(input.Ctx, input.Ctx.BlockHeight())
+
+	trader := Addrs[0]
+	msgServer := NewMsgServerImpl(input.MarketKeeper)
+
+	// Daily cap is 10% of baseline = 100k LUNC or 500k USD
+
+	// Test 1: Drain 80k LUNC - should succeed (80k USD at 1:1 ratio = 80k LUNC)
+	offerCoin := sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(80000)) // 80k USD -> 80k LUNC (1:1 in pool)
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+
+	swapMsg := types.NewMsgSwap(trader, offerCoin, core.MicroLunaDenom)
+	_, err := msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
+	require.NoError(t, err, "first swap should succeed (80k LUNC)")
+
+	// Check usage was updated
+	usage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, core.MicroLunaDenom)
+	require.True(t, usage.GT(sdk.ZeroInt()), "usage should be tracked")
+
+	// Test 2: Try to drain another 30k LUNC - should fail (total 110k > 100k cap)
+	offerCoin2 := sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(30000)) // 30k USD -> 30k LUNC
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin2))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin2))
+
+	swapMsg2 := types.NewMsgSwap(trader, offerCoin2, core.MicroLunaDenom)
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg2)
+	require.Error(t, err, "second swap should fail (exceeds daily cap: 80k + 30k = 110k > 100k)")
+	require.ErrorIs(t, err, types.ErrDailyCapExceeded)
+
+	// Test 3: Swap back (add LUNC to pool) - should reduce usage
+	lunaToSwapBack := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(40000)) // 40k LUNC back
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(lunaToSwapBack))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(lunaToSwapBack))
+
+	swapBackMsg := types.NewMsgSwap(trader, lunaToSwapBack, core.MicroUSDDenom)
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapBackMsg)
+	require.NoError(t, err, "swap back should succeed")
+
+	// Usage should be reduced
+	newUsage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, core.MicroLunaDenom)
+	require.True(t, newUsage.LT(usage), "usage should decrease after swapping back")
+
+	// Test 4: After daily reset, can drain again
+	input.Ctx = input.Ctx.WithBlockHeight(input.Ctx.BlockHeight() + int64(core.BlocksPerDay) + 1)
+	input.MarketKeeper.ResetDailyCapIfNeeded(input.Ctx)
+
+	// Should be able to drain 80k LUNC again
+	offerCoin3 := sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(80000))
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin3))
+	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin3))
+
+	swapMsg3 := types.NewMsgSwap(trader, offerCoin3, core.MicroLunaDenom)
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg3)
+	require.NoError(t, err, "swap should succeed after daily reset")
+}
+
+// TestEpochBaselineSetup tests that baselines are set correctly at epoch change
+func TestEpochBaselineSetup(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Set up accumulator with funds (mint to market module first, then send)
+	accumCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2000000)),
+		sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(10000000)),
+	)
+	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, accumCoins)
+	input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, types.ModuleName, types.AccumulatorModuleName, accumCoins)
+
+	// Set epoch length and trigger epoch processing
+	params := input.MarketKeeper.GetParams(input.Ctx)
+	params.EpochLengthBlocks = 100
+	input.MarketKeeper.SetParams(input.Ctx, params)
+
+	input.Ctx = input.Ctx.WithBlockHeight(101)
+	input.MarketKeeper.ProcessEpochIfDue(input.Ctx)
+
+	// Check that baselines were set to the refilled amounts
+	lunaBaseline := input.MarketKeeper.GetDailyCapBaseline(input.Ctx, core.MicroLunaDenom)
+	usdBaseline := input.MarketKeeper.GetDailyCapBaseline(input.Ctx, core.MicroUSDDenom)
+
+	require.Equal(t, sdk.NewInt(2000000), lunaBaseline, "LUNC baseline should match refilled amount")
+	require.Equal(t, sdk.NewInt(10000000), usdBaseline, "USD baseline should match refilled amount")
+
+	// Check that daily reset height was initialized
+	resetHeight := input.MarketKeeper.GetDailyCapResetHeight(input.Ctx)
+	require.Equal(t, int64(101), resetHeight, "reset height should be set to epoch height")
+}
+
+// TestAfterOracleTallyHook tests that the oracle tally hook updates TWAP and timestamp
+func TestAfterOracleTallyHook(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Set block time and height first
+	tallyTime := time.Unix(2000000, 0)
+	input.Ctx = input.Ctx.WithBlockTime(tallyTime).WithBlockHeight(100)
+
+	// Set oracle price AFTER setting context
+	ustcPrice := sdk.NewDecWithPrec(102, 2) // 1.02 USD
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, oracletypes.MetaUSDDenom, ustcPrice)
+
+	// Verify price was set
+	retrievedPrice, err := input.OracleKeeper.GetLunaExchangeRate(input.Ctx, oracletypes.MetaUSDDenom)
+	require.NoError(t, err, "should be able to retrieve oracle price")
+	require.Equal(t, ustcPrice, retrievedPrice, "retrieved price should match")
+
+	// Call the hook
+	input.MarketKeeper.AfterOracleTally(input.Ctx)
+
+	// Test 1: Tally timestamp was updated
+	lastTallyTime := input.MarketKeeper.GetLastOracleTallyTime(input.Ctx)
+	require.Equal(t, tallyTime.Unix(), lastTallyTime, "tally timestamp should be updated")
+
+	// Test 2: TWAP price was added
+	snapshotsMeta := input.MarketKeeper.GetTWAPPrices(input.Ctx, oracletypes.MetaUSDDenom)
+	
+	require.Equal(t, 1, len(snapshotsMeta), "should have one TWAP snapshot for MetaUSDDenom")
+	require.Equal(t, ustcPrice, snapshotsMeta[0].Price, "TWAP snapshot should have correct price")
+	require.Equal(t, int64(100), snapshotsMeta[0].Height, "TWAP snapshot should have correct height")
+}
+
+// TestMultipleDenomDailyCap tests daily cap tracking for multiple denoms
+func TestMultipleDenomDailyCap(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Set baselines for multiple denoms
+	denoms := []string{core.MicroLunaDenom, core.MicroUSDDenom, core.MicroSDRDenom}
+	baselines := []sdk.Int{
+		sdk.NewInt(1000000),
+		sdk.NewInt(5000000),
+		sdk.NewInt(3000000),
+	}
+
+	for i, denom := range denoms {
+		input.MarketKeeper.SetDailyCapBaseline(input.Ctx, denom, baselines[i])
+	}
+
+	// Set different usage amounts
+	usages := []sdk.Int{
+		sdk.NewInt(50000),
+		sdk.NewInt(250000),
+		sdk.NewInt(100000),
+	}
+
+	for i, denom := range denoms {
+		input.MarketKeeper.SetDailyCapUsage(input.Ctx, denom, usages[i])
+	}
+
+	// Verify all are tracked independently
+	for i, denom := range denoms {
+		baseline := input.MarketKeeper.GetDailyCapBaseline(input.Ctx, denom)
+		usage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, denom)
+		
+		require.Equal(t, baselines[i], baseline, "baseline for %s should match", denom)
+		require.Equal(t, usages[i], usage, "usage for %s should match", denom)
+	}
+
+	// Reset and verify all are cleared
+	input.MarketKeeper.SetDailyCapResetHeight(input.Ctx, 100)
+	input.Ctx = input.Ctx.WithBlockHeight(100 + int64(core.BlocksPerDay) + 1)
+	input.MarketKeeper.ResetDailyCapIfNeeded(input.Ctx)
+
+	for _, denom := range denoms {
+		usage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, denom)
+		require.True(t, usage.IsZero(), "usage for %s should be reset", denom)
+	}
+}

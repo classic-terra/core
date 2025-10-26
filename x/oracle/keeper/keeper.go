@@ -18,6 +18,11 @@ import (
 	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
+// MarketHooks defines the interface for market module hooks
+type MarketHooks interface {
+	AfterOracleTally(ctx sdk.Context)
+}
+
 // Keeper of the oracle store
 type Keeper struct {
 	cdc        codec.BinaryCodec
@@ -29,7 +34,8 @@ type Keeper struct {
 	distrKeeper   types.DistributionKeeper
 	StakingKeeper types.StakingKeeper
 
-	distrName string
+	distrName   string
+	MarketHooks MarketHooks
 }
 
 // NewKeeper constructs a new keeper for oracle
@@ -61,8 +67,14 @@ func NewKeeper(
 		bankKeeper:    bankKeeper,
 		distrKeeper:   distrKeeper,
 		StakingKeeper: stakingKeeper,
-		distrName:     distrName,
+		distrName:   distrName,
+		MarketHooks: nil, // Set later via SetMarketHooks
 	}
+}
+
+// SetMarketHooks sets the market hooks
+func (k *Keeper) SetMarketHooks(hooks MarketHooks) {
+	k.MarketHooks = hooks
 }
 
 // Logger returns a module-specific logger.

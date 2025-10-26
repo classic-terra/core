@@ -73,10 +73,78 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, types.ErrNoEffectivePrice
 	}
 
+	// Oracle freshness check: ensure oracle prices are recent enough (time-based, not block-based)
+	lastTallyTime := k.GetLastOracleTallyTime(ctx)
+	if lastTallyTime > 0 {
+		currentTime := ctx.BlockTime().Unix()
+		maxAgeSeconds := int64(k.MaxOracleAgeSeconds(ctx))
+
+		// Calculate time elapsed since last tally
+		secondsSinceTally := currentTime - lastTallyTime
+
+		if secondsSinceTally > maxAgeSeconds {
+			return nil, types.ErrOraclePriceStale
+		}
+	}
+
 	// Compute exchange rates between the ask and offer
 	swapDecCoin, spread, err := k.ComputeSwap(ctx, offerCoin, askDenom)
 	if err != nil {
 		return nil, err
+	}
+
+	// TWAP deviation check: ensure current price doesn't deviate too much from TWAP
+	// We need to check TWAP for both sides of the swap to prevent manipulation
+	maxDeviation := k.MaxTwapDeviation(ctx)
+
+	// Helper function to check TWAP for a denom
+	checkTWAPDeviation := func(denom string) error {
+		// For USTC, use MetaUSDDenom (USTC price). For others, use the denom itself (LUNC price in that currency)
+		twapDenom := denom
+		if denom == core.MicroUSDDenom {
+			twapDenom = oracletypes.MetaUSDDenom // Use USTC price for USD swaps
+		}
+
+		currentPrice, err := k.OracleKeeper.GetLunaExchangeRate(ctx, twapDenom)
+		if err == nil && currentPrice.IsPositive() {
+			twapPrice, twapErr := k.ComputeTWAP(ctx, twapDenom)
+			if twapErr == nil && twapPrice.IsPositive() {
+				// Calculate deviation
+				var deviation sdk.Dec
+				if currentPrice.GT(twapPrice) {
+					deviation = currentPrice.Sub(twapPrice).Quo(twapPrice)
+				} else {
+					deviation = twapPrice.Sub(currentPrice).Quo(twapPrice)
+				}
+
+				if deviation.GT(maxDeviation) {
+					return types.ErrTWAPDeviation
+				}
+			}
+			// If no TWAP data yet, allow the swap (bootstrapping phase)
+		}
+		return nil
+	}
+
+	// Check TWAP for offer denom (if not LUNC)
+	if offerCoin.Denom != core.MicroLunaDenom {
+		if err := checkTWAPDeviation(offerCoin.Denom); err != nil {
+			return nil, err
+		}
+	}
+
+	// Check TWAP for ask denom (if not LUNC)
+	if askDenom != core.MicroLunaDenom {
+		if err := checkTWAPDeviation(askDenom); err != nil {
+			return nil, err
+		}
+	}
+
+	// If either side is LUNC, also check LUNC price (MicroUSDDenom = LUNC price in USD)
+	if offerCoin.Denom == core.MicroLunaDenom || askDenom == core.MicroLunaDenom {
+		if err := checkTWAPDeviation(core.MicroUSDDenom); err != nil {
+			return nil, err
+		}
 	}
 
 	// Charge a spread if applicable; the spread is burned
@@ -104,6 +172,12 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 
 	// Determine amounts to transfer out of the pool
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
+
+	// Daily cap check: ensure pool balance deviation from baseline doesn't exceed daily limit
+	// Check AFTER coins are in the pool but BEFORE sending out, with actual final amounts
+	if err := k.CheckAndUpdateDailyCapForSwap(ctx, offerCoin, swapCoin); err != nil {
+		return nil, err
+	}
 
 	// Ensure to fail the swap tx when zero swap coin
 	if !swapCoin.IsPositive() {

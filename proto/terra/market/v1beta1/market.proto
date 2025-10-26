@@ -42,4 +42,26 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+
+  // Maximum age in seconds for oracle prices before swaps are denied. Default: 75 seconds (25 blocks * 3s)
+  uint64 max_oracle_age_seconds = 7 [(gogoproto.moretags) = "yaml:\"max_oracle_age_seconds\""];
+
+  // Number of blocks for TWAP calculation window. Default: 45 blocks
+  uint64 twap_lookback_window = 8 [(gogoproto.moretags) = "yaml:\"twap_lookback_window\""];
+
+  // Maximum deviation from TWAP before swap is rejected [0,1]. Default: 0.10 (10%)
+  bytes max_twap_deviation = 9 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.moretags)   = "yaml:\"max_twap_deviation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Daily cap factor: fraction of pool balance usable per day [0,1]. Default: 0.10 (10%)
+  bytes daily_cap_factor = 10 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.moretags)   = "yaml:\"daily_cap_factor\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

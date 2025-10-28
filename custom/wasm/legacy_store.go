@@ -110,6 +110,24 @@ func translateNewToOld(newKey []byte) [][]byte {
 	return [][]byte{newKey}
 }
 
+// translateBoundsToOld converts new-format start/end bounds to old-format bounds.
+// Uses the first candidate (typically shortest/minimal) for both bounds to create
+// a wide enough range that captures all possible keys after filtering by the iterator.
+func translateBoundsToOld(start, end []byte) ([]byte, []byte) {
+	var oldStart, oldEnd []byte
+	if len(start) > 0 {
+		if candidates := translateNewToOld(start); len(candidates) > 0 {
+			oldStart = candidates[0]
+		}
+	}
+	if len(end) > 0 {
+		if candidates := translateNewToOld(end); len(candidates) > 0 {
+			oldEnd = candidates[0]
+		}
+	}
+	return oldStart, oldEnd
+}
+
 // mapOldToNew converts an old-format key to new-format; returns nil if not a wasm key we care about.
 func mapOldToNew(old []byte) []byte {
 	if len(old) == 0 {
@@ -190,12 +208,15 @@ func (s *legacyWasmStore) Delete(_ []byte) {
 }
 
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
-	// iterate entire underlying store; filter/map
-	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
+	// Translate new-format bounds to old-format to avoid full DB scan
+	oldStart, oldEnd := translateBoundsToOld(start, end)
+	return newLegacyIterator(s.parent.Iterator(oldStart, oldEnd), start, end)
 }
 
 func (s *legacyWasmStore) ReverseIterator(start, end []byte) storetypes.Iterator {
-	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
+	// Translate new-format bounds to old-format to avoid full DB scan
+	oldStart, oldEnd := translateBoundsToOld(start, end)
+	return newLegacyIterator(s.parent.ReverseIterator(oldStart, oldEnd), start, end)
 }
 
 func (s *legacyWasmStore) GetStoreType() storetypes.StoreType {
@@ -241,7 +262,6 @@ func (it *legacyIterator) advance() {
 		it.key = newKey
 		it.val = it.under.Value()
 		it.valid = true
-		it.under.Next() // move underlying ahead for next call
 		return
 	}
 	it.valid = false

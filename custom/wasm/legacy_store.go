@@ -193,7 +193,6 @@ func (s *legacyWasmStore) Delete(_ []byte) {
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
 	// Translate bounds to old format for efficient iteration
 	oldStart, oldEnd := translateBoundsForIteration(start, end)
-	fmt.Printf("DEBUG: Iterator called with start=%x end=%x -> oldStart=%x oldEnd=%x\n", start, end, oldStart, oldEnd)
 	return newLegacyIterator(s.parent.Iterator(oldStart, oldEnd), start, end)
 }
 
@@ -285,34 +284,21 @@ func (it *legacyIterator) Close() error             { it.under.Close(); return n
 func (it *legacyIterator) Error() error             { return nil }
 
 func (it *legacyIterator) advance() {
-	matchCount := 0
-	skipNilCount := 0
-	skipRangeCount := 0
-
 	for ; it.under.Valid(); it.under.Next() {
 		oldKey := it.under.Key()
 		newKey := mapOldToNew(oldKey)
 		if newKey == nil {
-			skipNilCount++
 			continue
 		}
 		if !rangeOK(newKey, it.start, it.end) {
-			skipRangeCount++
 			continue
 		}
-		matchCount++
 		it.key = newKey
 		it.val = it.under.Value()
 		it.valid = true
-		if matchCount == 1 {
-			fmt.Printf("DEBUG: First match - oldKey=%x newKey=%x\n", oldKey, newKey)
-		}
 		return
 	}
 	it.valid = false
-	if matchCount == 0 {
-		fmt.Printf("DEBUG: Iterator completed - no matches (skipNil=%d skipRange=%d)\n", skipNilCount, skipRangeCount)
-	}
 }
 
 func rangeOK(k, start, end []byte) bool {

@@ -191,15 +191,67 @@ func (s *legacyWasmStore) Delete(_ []byte) {
 }
 
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
-	// Need to iterate entire store because old keys don't have predictable ordering
-	// relative to new-format bounds due to length prefix ambiguity
-	fmt.Printf("DEBUG: Iterator called with start=%x end=%x\n", start, end)
-	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
+	// Translate bounds to old format for efficient iteration
+	oldStart, oldEnd := translateBoundsForIteration(start, end)
+	fmt.Printf("DEBUG: Iterator called with start=%x end=%x -> oldStart=%x oldEnd=%x\n", start, end, oldStart, oldEnd)
+	return newLegacyIterator(s.parent.Iterator(oldStart, oldEnd), start, end)
 }
 
 func (s *legacyWasmStore) ReverseIterator(start, end []byte) storetypes.Iterator {
-	// Need to iterate entire store for same reason as Iterator
-	return newLegacyIterator(s.parent.ReverseIterator(nil, nil), start, end)
+	oldStart, oldEnd := translateBoundsForIteration(start, end)
+	return newLegacyIterator(s.parent.ReverseIterator(oldStart, oldEnd), start, end)
+}
+
+// translateBoundsForIteration converts new-format bounds to old-format for the underlying iterator
+func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
+	if len(start) == 0 && len(end) == 0 {
+		return nil, nil
+	}
+
+	// For contract store queries (prefix 0x03), translate to old format (prefix 0x05)
+	if len(start) > 0 && start[0] == 0x03 {
+		// Old format: 0x05 + length_prefix + address + storage_key
+		// New format: 0x03 + address + storage_key
+		// We need to create old format with length prefix
+
+		body := start[1:] // address + storage_key
+		var oldStart []byte
+		if len(body) >= 20 {
+			// Add 0x05 prefix + 0x14 (20 bytes) length prefix + address + storage_key
+			oldStart = append([]byte{0x05, 0x14}, body...)
+		} else {
+			// Fallback: just change prefix
+			oldStart = append([]byte{0x05}, body...)
+		}
+
+		var oldEnd []byte
+		if len(end) > 0 && end[0] == 0x03 {
+			bodyEnd := end[1:]
+			if len(bodyEnd) >= 20 {
+				oldEnd = append([]byte{0x05, 0x14}, bodyEnd...)
+			} else {
+				oldEnd = append([]byte{0x05}, bodyEnd...)
+			}
+		}
+
+		return oldStart, oldEnd
+	}
+
+	// For other prefixes, use the translateNewToOld logic
+	var oldStart, oldEnd []byte
+	if len(start) > 0 {
+		candidates := translateNewToOld(start)
+		if len(candidates) > 0 {
+			oldStart = candidates[0]
+		}
+	}
+	if len(end) > 0 {
+		candidates := translateNewToOld(end)
+		if len(candidates) > 0 {
+			oldEnd = candidates[0]
+		}
+	}
+	return oldStart, oldEnd
 }
 
 func (s *legacyWasmStore) GetStoreType() storetypes.StoreType {

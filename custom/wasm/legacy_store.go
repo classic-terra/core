@@ -110,24 +110,6 @@ func translateNewToOld(newKey []byte) [][]byte {
 	return [][]byte{newKey}
 }
 
-// translateBoundsToOld converts new-format start/end bounds to old-format bounds.
-// Uses the first candidate (typically shortest/minimal) for both bounds to create
-// a wide enough range that captures all possible keys after filtering by the iterator.
-func translateBoundsToOld(start, end []byte) ([]byte, []byte) {
-	var oldStart, oldEnd []byte
-	if len(start) > 0 {
-		if candidates := translateNewToOld(start); len(candidates) > 0 {
-			oldStart = candidates[0]
-		}
-	}
-	if len(end) > 0 {
-		if candidates := translateNewToOld(end); len(candidates) > 0 {
-			oldEnd = candidates[0]
-		}
-	}
-	return oldStart, oldEnd
-}
-
 // mapOldToNew converts an old-format key to new-format; returns nil if not a wasm key we care about.
 func mapOldToNew(old []byte) []byte {
 	if len(old) == 0 {
@@ -208,15 +190,15 @@ func (s *legacyWasmStore) Delete(_ []byte) {
 }
 
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
-	// Translate new-format bounds to old-format to avoid full DB scan
-	oldStart, oldEnd := translateBoundsToOld(start, end)
-	return newLegacyIterator(s.parent.Iterator(oldStart, oldEnd), start, end)
+	// Need to iterate entire store because old keys don't have predictable ordering
+	// relative to new-format bounds due to length prefix ambiguity
+	fmt.Printf("DEBUG: Iterator called with start=%x end=%x\n", start, end)
+	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
 }
 
 func (s *legacyWasmStore) ReverseIterator(start, end []byte) storetypes.Iterator {
-	// Translate new-format bounds to old-format to avoid full DB scan
-	oldStart, oldEnd := translateBoundsToOld(start, end)
-	return newLegacyIterator(s.parent.ReverseIterator(oldStart, oldEnd), start, end)
+	// Need to iterate entire store for same reason as Iterator
+	return newLegacyIterator(s.parent.ReverseIterator(nil, nil), start, end)
 }
 
 func (s *legacyWasmStore) GetStoreType() storetypes.StoreType {
@@ -250,21 +232,34 @@ func (it *legacyIterator) Close() error             { it.under.Close(); return n
 func (it *legacyIterator) Error() error             { return nil }
 
 func (it *legacyIterator) advance() {
+	matchCount := 0
+	skipNilCount := 0
+	skipRangeCount := 0
+
 	for ; it.under.Valid(); it.under.Next() {
 		oldKey := it.under.Key()
 		newKey := mapOldToNew(oldKey)
 		if newKey == nil {
+			skipNilCount++
 			continue
 		}
 		if !rangeOK(newKey, it.start, it.end) {
+			skipRangeCount++
 			continue
 		}
+		matchCount++
 		it.key = newKey
 		it.val = it.under.Value()
 		it.valid = true
+		if matchCount == 1 {
+			fmt.Printf("DEBUG: First match - oldKey=%x newKey=%x\n", oldKey, newKey)
+		}
 		return
 	}
 	it.valid = false
+	if matchCount == 0 {
+		fmt.Printf("DEBUG: Iterator completed - no matches (skipNil=%d skipRange=%d)\n", skipNilCount, skipRangeCount)
+	}
 }
 
 func rangeOK(k, start, end []byte) bool {

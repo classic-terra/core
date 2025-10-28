@@ -296,6 +296,7 @@ func (it *legacyIterator) advance() {
 		it.key = newKey
 		it.val = it.under.Value()
 		it.valid = true
+		it.under.Next() // Advance before returning, since post-statement won't run
 		return
 	}
 	it.valid = false

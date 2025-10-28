@@ -148,7 +148,8 @@ func rebuildContractStoreBody(rest []byte) []byte {
 		// We cannot reliably know addr length if suffix appended; assume first byte declares address length.
 		ln := int(rest[0])
 		if len(rest) >= 1+ln { // minimal safety check
-			return append(rest[1:1+ln], rest[1+ln:]...)
+			// Skip the length prefix byte, keep address + suffix
+			return rest[1:]
 		}
 	}
 	return rest

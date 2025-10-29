@@ -1,8 +1,8 @@
 package wasm
 
 import (
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,18 +25,18 @@ func NewLegacyQueryHandler(next wasmkeeper.WasmVMQueryHandler, storeKey storetyp
 func (h *LegacyQueryHandler) HandleQuery(ctx sdk.Context, caller sdk.AccAddress, request wasmvmtypes.QueryRequest) ([]byte, error) {
 	// Check if we need legacy translation for this height
 	preMigration := isPreWasmKeyMigration(ctx.ChainID(), ctx.BlockHeight())
-	
+
 	if preMigration {
 		// Wrap context with legacy store
 		wrappedCtx, ok := prepareLegacyWasmContext(ctx, h.storeKey)
 		if ok {
 			ctx = wrappedCtx
-			ctx.Logger().Debug("contract query using legacy wasm store", 
-				"caller", caller.String(), 
+			ctx.Logger().Debug("contract query using legacy wasm store",
+				"caller", caller.String(),
 				"height", ctx.BlockHeight())
 		}
 	}
-	
+
 	// Execute the query with the (possibly wrapped) context
 	return h.next.HandleQuery(ctx, caller, request)
 }

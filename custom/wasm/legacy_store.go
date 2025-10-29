@@ -247,12 +247,22 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 		candidates := translateNewToOld(start)
 		if len(candidates) > 0 {
 			oldStart = candidates[0]
+			for _, c := range candidates[1:] {
+				if bytes.Compare(c, oldStart) < 0 {
+					oldStart = c
+				}
+			}
 		}
 	}
 	if len(end) > 0 {
 		candidates := translateNewToOld(end)
 		if len(candidates) > 0 {
 			oldEnd = candidates[0]
+			for _, c := range candidates[1:] {
+				if bytes.Compare(c, oldEnd) > 0 {
+					oldEnd = c
+				}
+			}
 		}
 	}
 	return oldStart, oldEnd

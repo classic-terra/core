@@ -215,13 +215,14 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 
 		body := start[1:] // address + storage_key
 		var oldStart []byte
-		if len(body) == 20 || len(body) > 20 && len(body) < 52 {
+		switch {
+		case len(body) == 20 || len(body) > 20 && len(body) < 52:
 			// 20-byte address (plus storage_key)
 			oldStart = append([]byte{0x05, 0x14}, body...)
-		} else if len(body) == 32 || len(body) > 32 && len(body) < 64 {
+		case len(body) == 32 || len(body) > 32 && len(body) < 64:
 			// 32-byte address (plus storage_key)
 			oldStart = append([]byte{0x05, 0x20}, body...)
-		} else {
+		default:
 			// Unexpected address length, cannot translate
 			oldStart = nil
 		}
@@ -229,11 +230,12 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 		var oldEnd []byte
 		if len(end) > 0 && end[0] == 0x03 {
 			bodyEnd := end[1:]
-			if len(bodyEnd) == 20 || len(bodyEnd) > 20 && len(bodyEnd) < 52 {
+			switch {
+			case len(bodyEnd) == 20 || len(bodyEnd) > 20 && len(bodyEnd) < 52:
 				oldEnd = append([]byte{0x05, 0x14}, bodyEnd...)
-			} else if len(bodyEnd) == 32 || len(bodyEnd) > 32 && len(bodyEnd) < 64 {
+			case len(bodyEnd) == 32 || len(bodyEnd) > 32 && len(bodyEnd) < 64:
 				oldEnd = append([]byte{0x05, 0x20}, bodyEnd...)
-			} else {
+			default:
 				oldEnd = nil
 			}
 		}

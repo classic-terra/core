@@ -215,21 +215,26 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 
 		body := start[1:] // address + storage_key
 		var oldStart []byte
-		if len(body) >= 20 {
-			// Add 0x05 prefix + 0x14 (20 bytes) length prefix + address + storage_key
+		if len(body) == 20 || len(body) > 20 && len(body) < 52 {
+			// 20-byte address (plus storage_key)
 			oldStart = append([]byte{0x05, 0x14}, body...)
+		} else if len(body) == 32 || len(body) > 32 && len(body) < 64 {
+			// 32-byte address (plus storage_key)
+			oldStart = append([]byte{0x05, 0x20}, body...)
 		} else {
-			// Fallback: just change prefix
-			oldStart = append([]byte{0x05}, body...)
+			// Unexpected address length, cannot translate
+			oldStart = nil
 		}
 
 		var oldEnd []byte
 		if len(end) > 0 && end[0] == 0x03 {
 			bodyEnd := end[1:]
-			if len(bodyEnd) >= 20 {
+			if len(bodyEnd) == 20 || len(bodyEnd) > 20 && len(bodyEnd) < 52 {
 				oldEnd = append([]byte{0x05, 0x14}, bodyEnd...)
+			} else if len(bodyEnd) == 32 || len(bodyEnd) > 32 && len(bodyEnd) < 64 {
+				oldEnd = append([]byte{0x05, 0x20}, bodyEnd...)
 			} else {
-				oldEnd = append([]byte{0x05}, bodyEnd...)
+				oldEnd = nil
 			}
 		}
 

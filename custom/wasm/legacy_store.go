@@ -2,13 +2,43 @@ package wasm
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	coretypes "github.com/classic-terra/core/v3/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// getAddressLengthPrefix determines the correct length prefix (0x14 or 0x20) for an address
+// by validating whether the first 20 or 32 bytes form a valid address using sdk.VerifyAddressFormat.
+// This handles both standard 20-byte Terra addresses and potential 32-byte addresses correctly.
+func getAddressLengthPrefix(body []byte) (byte, bool) {
+	if len(body) < 20 {
+		return 0, false // Too short to be any valid address
+	}
+
+	// For unambiguous cases (20-31 bytes), only 20-byte address is possible
+	if len(body) < 32 {
+		// Verify first 20 bytes are a valid address
+		if err := sdk.VerifyAddressFormat(body[:20]); err == nil {
+			return 0x14, true
+		}
+		return 0, false
+	}
+
+	// For ≥32 bytes, check if first 32 bytes form a valid address (0x20)
+	if err := sdk.VerifyAddressFormat(body[:32]); err == nil {
+		return 0x20, true
+	}
+
+	// Otherwise check if first 20 bytes form a valid address (0x14)
+	if err := sdk.VerifyAddressFormat(body[:20]); err == nil {
+		return 0x14, true
+	}
+
+	// Neither 20 nor 32 bytes validate as an address
+	return 0, false
+}
 
 const (
 	wasmMigrationHeightMainnet int64 = 25619230
@@ -181,13 +211,11 @@ func (s *legacyWasmStore) Has(key []byte) bool {
 }
 
 func (s *legacyWasmStore) Set(_, _ []byte) {
-	// Set is a no-op in the legacy store
-	fmt.Println("Set called on legacyWasmStore")
+	// Set is a no-op in the legacy store (queries are read-only)
 }
 
 func (s *legacyWasmStore) Delete(_ []byte) {
-	// Delete is a no-op in the legacy store
-	fmt.Println("Delete called on legacyWasmStore")
+	// Delete is a no-op in the legacy store (queries are read-only)
 }
 
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
@@ -211,31 +239,23 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 	if len(start) > 0 && start[0] == 0x03 {
 		// Old format: 0x05 + length_prefix + address + storage_key
 		// New format: 0x03 + address + storage_key
-		// We need to create old format with length prefix
+		// Determine correct length prefix (0x14 for 20-byte or 0x20 for 32-byte addresses)
 
 		body := start[1:] // address + storage_key
 		var oldStart []byte
-		switch {
-		case len(body) == 20 || len(body) > 20 && len(body) < 52:
-			// 20-byte address (plus storage_key)
-			oldStart = append([]byte{0x05, 0x14}, body...)
-		case len(body) == 32 || len(body) > 32 && len(body) < 64:
-			// 32-byte address (plus storage_key)
-			oldStart = append([]byte{0x05, 0x20}, body...)
-		default:
-			// Unexpected address length, cannot translate
-			oldStart = nil
+
+		if lenPrefix, ok := getAddressLengthPrefix(body); ok {
+			oldStart = append([]byte{0x05, lenPrefix}, body...)
+		} else {
+			oldStart = nil // Invalid
 		}
 
 		var oldEnd []byte
 		if len(end) > 0 && end[0] == 0x03 {
 			bodyEnd := end[1:]
-			switch {
-			case len(bodyEnd) == 20 || len(bodyEnd) > 20 && len(bodyEnd) < 52:
-				oldEnd = append([]byte{0x05, 0x14}, bodyEnd...)
-			case len(bodyEnd) == 32 || len(bodyEnd) > 32 && len(bodyEnd) < 64:
-				oldEnd = append([]byte{0x05, 0x20}, bodyEnd...)
-			default:
+			if lenPrefix, ok := getAddressLengthPrefix(bodyEnd); ok {
+				oldEnd = append([]byte{0x05, lenPrefix}, bodyEnd...)
+			} else {
 				oldEnd = nil
 			}
 		}

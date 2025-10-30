@@ -247,7 +247,11 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 		if lenPrefix, ok := getAddressLengthPrefix(body); ok {
 			oldStart = append([]byte{0x05, lenPrefix}, body...)
 		} else {
-			oldStart = nil // Invalid
+			// Invalid address in query bounds - return empty range to prevent full DB scan.
+			// Using [0x05, 0xff] creates an impossible range (0xff > valid length prefixes 0x14/0x20)
+			// that immediately returns zero results instead of scanning the entire database.
+			// This protects against DoS attacks using malformed pagination queries.
+			return []byte{0x05, 0xff}, []byte{0x05, 0xff}
 		}
 
 		var oldEnd []byte
@@ -256,7 +260,9 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 			if lenPrefix, ok := getAddressLengthPrefix(bodyEnd); ok {
 				oldEnd = append([]byte{0x05, lenPrefix}, bodyEnd...)
 			} else {
-				oldEnd = nil
+				// Invalid address in end bound - use start as both bounds to create empty range.
+				// This prevents nil bounds which would trigger full DB scan from beginning.
+				return oldStart, oldStart
 			}
 		}
 

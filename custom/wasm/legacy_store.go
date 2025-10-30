@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	coretypes "github.com/classic-terra/core/v3/types"
@@ -13,30 +14,40 @@ import (
 // by validating whether the first 20 or 32 bytes form a valid address using sdk.VerifyAddressFormat.
 // This handles both standard 20-byte Terra addresses and potential 32-byte addresses correctly.
 func getAddressLengthPrefix(body []byte) (byte, bool) {
+	fmt.Printf("DEBUG getAddressLengthPrefix: body_len=%d\n", len(body))
+	
 	if len(body) < 20 {
+		fmt.Printf("DEBUG getAddressLengthPrefix: TOO SHORT (< 20)\n")
 		return 0, false // Too short to be any valid address
 	}
 
 	// For unambiguous cases (20-31 bytes), only 20-byte address is possible
 	if len(body) < 32 {
 		// Verify first 20 bytes are a valid address
-		if err := sdk.VerifyAddressFormat(body[:20]); err == nil {
+		err := sdk.VerifyAddressFormat(body[:20])
+		fmt.Printf("DEBUG getAddressLengthPrefix: len < 32, checking first 20 bytes: err=%v\n", err)
+		if err == nil {
 			return 0x14, true
 		}
 		return 0, false
 	}
 
 	// For ≥32 bytes, check if first 32 bytes form a valid address (0x20)
-	if err := sdk.VerifyAddressFormat(body[:32]); err == nil {
+	err32 := sdk.VerifyAddressFormat(body[:32])
+	fmt.Printf("DEBUG getAddressLengthPrefix: len >= 32, checking first 32 bytes: err=%v\n", err32)
+	if err32 == nil {
 		return 0x20, true
 	}
 
 	// Otherwise check if first 20 bytes form a valid address (0x14)
-	if err := sdk.VerifyAddressFormat(body[:20]); err == nil {
+	err20 := sdk.VerifyAddressFormat(body[:20])
+	fmt.Printf("DEBUG getAddressLengthPrefix: checking first 20 bytes: err=%v\n", err20)
+	if err20 == nil {
 		return 0x14, true
 	}
 
 	// Neither 20 nor 32 bytes validate as an address
+	fmt.Printf("DEBUG getAddressLengthPrefix: NEITHER 20 NOR 32 BYTES VALID\n")
 	return 0, false
 }
 
@@ -244,28 +255,36 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 		body := start[1:] // address + storage_key
 		var oldStart []byte
 
+		fmt.Printf("DEBUG translateBounds: start=%x body_len=%d body=%x\n", start, len(body), body)
+
 		if lenPrefix, ok := getAddressLengthPrefix(body); ok {
 			oldStart = append([]byte{0x05, lenPrefix}, body...)
+			fmt.Printf("DEBUG translateBounds: VALID - lenPrefix=%x oldStart=%x\n", lenPrefix, oldStart)
 		} else {
 			// Invalid address in query bounds - return empty range to prevent full DB scan.
 			// Using [0x05, 0xff] creates an impossible range (0xff > valid length prefixes 0x14/0x20)
 			// that immediately returns zero results instead of scanning the entire database.
 			// This protects against DoS attacks using malformed pagination queries.
+			fmt.Printf("DEBUG translateBounds: INVALID ADDRESS - body_len=%d body=%x - RETURNING EMPTY RANGE\n", len(body), body)
 			return []byte{0x05, 0xff}, []byte{0x05, 0xff}
 		}
 
 		var oldEnd []byte
 		if len(end) > 0 && end[0] == 0x03 {
 			bodyEnd := end[1:]
+			fmt.Printf("DEBUG translateBounds: end=%x bodyEnd_len=%d bodyEnd=%x\n", end, len(bodyEnd), bodyEnd)
 			if lenPrefix, ok := getAddressLengthPrefix(bodyEnd); ok {
 				oldEnd = append([]byte{0x05, lenPrefix}, bodyEnd...)
+				fmt.Printf("DEBUG translateBounds: VALID END - lenPrefix=%x oldEnd=%x\n", lenPrefix, oldEnd)
 			} else {
 				// Invalid address in end bound - use start as both bounds to create empty range.
 				// This prevents nil bounds which would trigger full DB scan from beginning.
+				fmt.Printf("DEBUG translateBounds: INVALID END ADDRESS - using oldStart as both bounds\n")
 				return oldStart, oldStart
 			}
 		}
 
+		fmt.Printf("DEBUG translateBounds: FINAL - oldStart=%x oldEnd=%x\n", oldStart, oldEnd)
 		return oldStart, oldEnd
 	}
 

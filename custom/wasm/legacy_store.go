@@ -2,7 +2,6 @@ package wasm
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	coretypes "github.com/classic-terra/core/v3/types"
@@ -21,10 +20,7 @@ import (
 // Solution: Check the old database to see what length prefix was actually used for this contract.
 // We try both possibilities and see which one exists in the DB.
 func (s *legacyWasmStore) getAddressLengthPrefix(body []byte) (byte, bool) {
-	fmt.Printf("DEBUG getAddressLengthPrefix: body_len=%d\n", len(body))
-
 	if len(body) < 20 {
-		fmt.Printf("DEBUG getAddressLengthPrefix: TOO SHORT (< 20)\n")
 		return 0, false // Too short to contain a contract address
 	}
 
@@ -39,7 +35,6 @@ func (s *legacyWasmStore) getAddressLengthPrefix(body []byte) (byte, bool) {
 	iter20 := s.parent.Iterator(key20, storetypes.PrefixEndBytes(key20))
 	defer iter20.Close()
 	if iter20.Valid() {
-		fmt.Printf("DEBUG getAddressLengthPrefix: Found 20-byte address in DB, returning 0x14\n")
 		return 0x14, true
 	}
 
@@ -51,13 +46,11 @@ func (s *legacyWasmStore) getAddressLengthPrefix(body []byte) (byte, bool) {
 		iter32 := s.parent.Iterator(key32, storetypes.PrefixEndBytes(key32))
 		defer iter32.Close()
 		if iter32.Valid() {
-			fmt.Printf("DEBUG getAddressLengthPrefix: Found 32-byte address in DB, returning 0x20\n")
 			return 0x20, true
 		}
 	}
 
 	// Default to 20-byte if nothing found (first page query with just address, no storage key yet)
-	fmt.Printf("DEBUG getAddressLengthPrefix: No DB match, defaulting to 0x14 (20-byte)\n")
 	return 0x14, true
 }
 
@@ -265,36 +258,28 @@ func (s *legacyWasmStore) translateBoundsForIteration(start, end []byte) ([]byte
 		body := start[1:] // address + storage_key
 		var oldStart []byte
 
-		fmt.Printf("DEBUG translateBounds: start=%x body_len=%d body=%x\n", start, len(body), body)
-
 		if lenPrefix, ok := s.getAddressLengthPrefix(body); ok {
 			oldStart = append([]byte{0x05, lenPrefix}, body...)
-			fmt.Printf("DEBUG translateBounds: VALID - lenPrefix=%x oldStart=%x\n", lenPrefix, oldStart)
 		} else {
 			// Invalid address in query bounds - return empty range to prevent full DB scan.
 			// Using [0x05, 0xff] creates an impossible range (0xff > valid length prefixes 0x14/0x20)
 			// that immediately returns zero results instead of scanning the entire database.
 			// This protects against DoS attacks using malformed pagination queries.
-			fmt.Printf("DEBUG translateBounds: INVALID ADDRESS - body_len=%d body=%x - RETURNING EMPTY RANGE\n", len(body), body)
 			return []byte{0x05, 0xff}, []byte{0x05, 0xff}
 		}
 
 		var oldEnd []byte
 		if len(end) > 0 && end[0] == 0x03 {
 			bodyEnd := end[1:]
-			fmt.Printf("DEBUG translateBounds: end=%x bodyEnd_len=%d bodyEnd=%x\n", end, len(bodyEnd), bodyEnd)
 			if lenPrefix, ok := s.getAddressLengthPrefix(bodyEnd); ok {
 				oldEnd = append([]byte{0x05, lenPrefix}, bodyEnd...)
-				fmt.Printf("DEBUG translateBounds: VALID END - lenPrefix=%x oldEnd=%x\n", lenPrefix, oldEnd)
 			} else {
 				// Invalid address in end bound - use start as both bounds to create empty range.
 				// This prevents nil bounds which would trigger full DB scan from beginning.
-				fmt.Printf("DEBUG translateBounds: INVALID END ADDRESS - using oldStart as both bounds\n")
 				return oldStart, oldStart
 			}
 		}
 
-		fmt.Printf("DEBUG translateBounds: FINAL - oldStart=%x oldEnd=%x\n", oldStart, oldEnd)
 		return oldStart, oldEnd
 	}
 

@@ -10,45 +10,55 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// getAddressLengthPrefix determines the correct length prefix (0x14 or 0x20) for an address
-// by validating whether the first 20 or 32 bytes form a valid address using sdk.VerifyAddressFormat.
-// This handles both standard 20-byte Terra addresses and potential 32-byte addresses correctly.
-func getAddressLengthPrefix(body []byte) (byte, bool) {
+// getAddressLengthPrefix determines the correct length prefix (0x14 or 0x20) for a contract address
+// by checking what was actually stored in the old database format.
+//
+// The challenge: When we have body = address + storage_key, we need to determine if the address
+// is 20 or 32 bytes. We can't just validate the first 20 or 32 bytes because the wasmd verifier
+// accepts both lengths, so it would incorrectly validate (address + partial_storage_key) as a
+// valid 32-byte address.
+//
+// Solution: Check the old database to see what length prefix was actually used for this contract.
+// We try both possibilities and see which one exists in the DB.
+func (s *legacyWasmStore) getAddressLengthPrefix(body []byte) (byte, bool) {
 	fmt.Printf("DEBUG getAddressLengthPrefix: body_len=%d\n", len(body))
-	
+
 	if len(body) < 20 {
 		fmt.Printf("DEBUG getAddressLengthPrefix: TOO SHORT (< 20)\n")
-		return 0, false // Too short to be any valid address
+		return 0, false // Too short to contain a contract address
 	}
 
-	// For unambiguous cases (20-31 bytes), only 20-byte address is possible
-	if len(body) < 32 {
-		// Verify first 20 bytes are a valid address
-		err := sdk.VerifyAddressFormat(body[:20])
-		fmt.Printf("DEBUG getAddressLengthPrefix: len < 32, checking first 20 bytes: err=%v\n", err)
-		if err == nil {
-			return 0x14, true
-		}
-		return 0, false
-	}
+	// Extract potential addresses
+	addr20 := body[:20]
 
-	// For ≥32 bytes, check if first 32 bytes form a valid address (0x20)
-	err32 := sdk.VerifyAddressFormat(body[:32])
-	fmt.Printf("DEBUG getAddressLengthPrefix: len >= 32, checking first 32 bytes: err=%v\n", err32)
-	if err32 == nil {
-		return 0x20, true
-	}
+	// Try 20-byte address first (more common)
+	// Build old key with 0x14 prefix: 0x05 + 0x14 + addr20 + storage_key
+	key20 := append([]byte{0x05, 0x14}, addr20...)
 
-	// Otherwise check if first 20 bytes form a valid address (0x14)
-	err20 := sdk.VerifyAddressFormat(body[:20])
-	fmt.Printf("DEBUG getAddressLengthPrefix: checking first 20 bytes: err=%v\n", err20)
-	if err20 == nil {
+	// Check if any keys with this prefix exist in the DB
+	iter20 := s.parent.Iterator(key20, storetypes.PrefixEndBytes(key20))
+	defer iter20.Close()
+	if iter20.Valid() {
+		fmt.Printf("DEBUG getAddressLengthPrefix: Found 20-byte address in DB, returning 0x14\n")
 		return 0x14, true
 	}
 
-	// Neither 20 nor 32 bytes validate as an address
-	fmt.Printf("DEBUG getAddressLengthPrefix: NEITHER 20 NOR 32 BYTES VALID\n")
-	return 0, false
+	// Try 32-byte address if we have enough bytes
+	if len(body) >= 32 {
+		addr32 := body[:32]
+		key32 := append([]byte{0x05, 0x20}, addr32...)
+
+		iter32 := s.parent.Iterator(key32, storetypes.PrefixEndBytes(key32))
+		defer iter32.Close()
+		if iter32.Valid() {
+			fmt.Printf("DEBUG getAddressLengthPrefix: Found 32-byte address in DB, returning 0x20\n")
+			return 0x20, true
+		}
+	}
+
+	// Default to 20-byte if nothing found (first page query with just address, no storage key yet)
+	fmt.Printf("DEBUG getAddressLengthPrefix: No DB match, defaulting to 0x14 (20-byte)\n")
+	return 0x14, true
 }
 
 const (
@@ -231,17 +241,17 @@ func (s *legacyWasmStore) Delete(_ []byte) {
 
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
 	// Translate bounds to old format for efficient iteration
-	oldStart, oldEnd := translateBoundsForIteration(start, end)
+	oldStart, oldEnd := s.translateBoundsForIteration(start, end)
 	return newLegacyIterator(s.parent.Iterator(oldStart, oldEnd), start, end)
 }
 
 func (s *legacyWasmStore) ReverseIterator(start, end []byte) storetypes.Iterator {
-	oldStart, oldEnd := translateBoundsForIteration(start, end)
+	oldStart, oldEnd := s.translateBoundsForIteration(start, end)
 	return newLegacyIterator(s.parent.ReverseIterator(oldStart, oldEnd), start, end)
 }
 
 // translateBoundsForIteration converts new-format bounds to old-format for the underlying iterator
-func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
+func (s *legacyWasmStore) translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 	if len(start) == 0 && len(end) == 0 {
 		return nil, nil
 	}
@@ -257,7 +267,7 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 
 		fmt.Printf("DEBUG translateBounds: start=%x body_len=%d body=%x\n", start, len(body), body)
 
-		if lenPrefix, ok := getAddressLengthPrefix(body); ok {
+		if lenPrefix, ok := s.getAddressLengthPrefix(body); ok {
 			oldStart = append([]byte{0x05, lenPrefix}, body...)
 			fmt.Printf("DEBUG translateBounds: VALID - lenPrefix=%x oldStart=%x\n", lenPrefix, oldStart)
 		} else {
@@ -273,7 +283,7 @@ func translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
 		if len(end) > 0 && end[0] == 0x03 {
 			bodyEnd := end[1:]
 			fmt.Printf("DEBUG translateBounds: end=%x bodyEnd_len=%d bodyEnd=%x\n", end, len(bodyEnd), bodyEnd)
-			if lenPrefix, ok := getAddressLengthPrefix(bodyEnd); ok {
+			if lenPrefix, ok := s.getAddressLengthPrefix(bodyEnd); ok {
 				oldEnd = append([]byte{0x05, lenPrefix}, bodyEnd...)
 				fmt.Printf("DEBUG translateBounds: VALID END - lenPrefix=%x oldEnd=%x\n", lenPrefix, oldEnd)
 			} else {

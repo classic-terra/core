@@ -404,7 +404,7 @@ func prepareLegacyWasmContext(ctx sdk.Context, wasmKey storetypes.StoreKey) (sdk
 	}
 	legacyStore := &legacyWasmStore{parent: ctx.KVStore(wasmKey)}
 	wrapped := legacyMultiStore{MultiStore: ctx.MultiStore(), wasmKey: wasmKey, legacy: legacyStore}
-	newCtx := sdk.NewContext(wrapped, ctx.BlockHeader(), false, ctx.Logger())
-	newCtx = newCtx.WithGasMeter(ctx.GasMeter()).WithEventManager(ctx.EventManager())
+	newCtx := sdk.NewContext(wrapped, ctx.BlockHeader(), ctx.IsCheckTx(), ctx.Logger())
+	newCtx = newCtx.WithGasMeter(ctx.GasMeter()).WithEventManager(ctx.EventManager()).WithChainID(ctx.ChainID())
 	return newCtx, true
 }

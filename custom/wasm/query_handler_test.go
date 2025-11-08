@@ -93,9 +93,9 @@ func (suite *LegacyQueryHandlerTestSuite) TestNewLegacyQueryHandler() {
 	handler := NewLegacyQueryHandler(suite.mock, suite.storeKey)
 	require.NotNil(suite.T(), handler)
 
-	// Verify it implements the interface
-	_, ok := handler.(wasmkeeper.WasmVMQueryHandler)
-	require.True(suite.T(), ok)
+	// The function signature already guarantees it returns wasmkeeper.WasmVMQueryHandler
+	// so no need for type assertion - just verify it's not nil and can be called
+	require.Implements(suite.T(), (*wasmkeeper.WasmVMQueryHandler)(nil), handler)
 }
 
 func (suite *LegacyQueryHandlerTestSuite) TestHandleQuery_PostMigrationHeight() {

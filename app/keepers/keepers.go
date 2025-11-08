@@ -421,6 +421,9 @@ func NewAppKeepers(
 			appCodec,
 		)...,
 	)
+	// Register legacy query handler for contract-to-contract queries at historical heights
+	wasmOpts = append(wasmOpts, terrawasm.RegisterLegacyQueryHandler(appKeepers.keys[wasmtypes.StoreKey]))
+
 	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(appKeepers.keys[wasmtypes.StoreKey]),

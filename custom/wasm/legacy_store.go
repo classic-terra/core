@@ -2,13 +2,57 @@ package wasm
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	storetypes "cosmossdk.io/store/types"
 	coretypes "github.com/classic-terra/core/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// getAddressLengthPrefix determines the correct length prefix (0x14 or 0x20) for a contract address
+// by checking what was actually stored in the old database format.
+//
+// The challenge: When we have body = address + storage_key, we need to determine if the address
+// is 20 or 32 bytes. We can't just validate the first 20 or 32 bytes because the wasmd verifier
+// accepts both lengths, so it would incorrectly validate (address + partial_storage_key) as a
+// valid 32-byte address.
+//
+// Solution: Check the old database to see what length prefix was actually used for this contract.
+// We try both possibilities and see which one exists in the DB.
+func (s *legacyWasmStore) getAddressLengthPrefix(body []byte) (byte, bool) {
+	if len(body) < 20 {
+		return 0, false // Too short to contain a contract address
+	}
+
+	// Extract potential addresses
+	addr20 := body[:20]
+
+	// Try 20-byte address first (more common)
+	// Build old key with 0x14 prefix: 0x05 + 0x14 + addr20 + storage_key
+	key20 := append([]byte{0x05, 0x14}, addr20...)
+
+	// Check if any keys with this prefix exist in the DB
+	iter20 := s.parent.Iterator(key20, storetypes.PrefixEndBytes(key20))
+	defer iter20.Close()
+	if iter20.Valid() {
+		return 0x14, true
+	}
+
+	// Try 32-byte address if we have enough bytes
+	if len(body) >= 32 {
+		addr32 := body[:32]
+		key32 := append([]byte{0x05, 0x20}, addr32...)
+
+		iter32 := s.parent.Iterator(key32, storetypes.PrefixEndBytes(key32))
+		defer iter32.Close()
+		if iter32.Valid() {
+			return 0x20, true
+		}
+	}
+
+	// Default to 20-byte if nothing found (first page query with just address, no storage key yet)
+	return 0x14, true
+}
 
 const (
 	wasmMigrationHeightMainnet int64 = 25619230
@@ -148,7 +192,8 @@ func rebuildContractStoreBody(rest []byte) []byte {
 		// We cannot reliably know addr length if suffix appended; assume first byte declares address length.
 		ln := int(rest[0])
 		if len(rest) >= 1+ln { // minimal safety check
-			return append(rest[1:1+ln], rest[1+ln:]...)
+			// Skip the length prefix byte, keep address + suffix
+			return rest[1:]
 		}
 	}
 	return rest
@@ -180,22 +225,89 @@ func (s *legacyWasmStore) Has(key []byte) bool {
 }
 
 func (s *legacyWasmStore) Set(_, _ []byte) {
-	// Set is a no-op in the legacy store
-	fmt.Println("Set called on legacyWasmStore")
+	// Set is a no-op in the legacy store (queries are read-only)
 }
 
 func (s *legacyWasmStore) Delete(_ []byte) {
-	// Delete is a no-op in the legacy store
-	fmt.Println("Delete called on legacyWasmStore")
+	// Delete is a no-op in the legacy store (queries are read-only)
 }
 
 func (s *legacyWasmStore) Iterator(start, end []byte) storetypes.Iterator {
-	// iterate entire underlying store; filter/map
-	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
+	// Translate bounds to old format for efficient iteration
+	oldStart, oldEnd := s.translateBoundsForIteration(start, end)
+	return newLegacyIterator(s.parent.Iterator(oldStart, oldEnd), start, end)
 }
 
 func (s *legacyWasmStore) ReverseIterator(start, end []byte) storetypes.Iterator {
-	return newLegacyIterator(s.parent.Iterator(nil, nil), start, end)
+	oldStart, oldEnd := s.translateBoundsForIteration(start, end)
+	return newLegacyIterator(s.parent.ReverseIterator(oldStart, oldEnd), start, end)
+}
+
+// translateBoundsForIteration converts new-format bounds to old-format for the underlying iterator
+func (s *legacyWasmStore) translateBoundsForIteration(start, end []byte) ([]byte, []byte) {
+	if len(start) == 0 && len(end) == 0 {
+		return nil, nil
+	}
+
+	// For contract store queries (prefix 0x03), translate to old format (prefix 0x05)
+	if len(start) > 0 && start[0] == 0x03 {
+		// Old format: 0x05 + length_prefix + address + storage_key
+		// New format: 0x03 + address + storage_key
+		// Determine correct length prefix (0x14 for 20-byte or 0x20 for 32-byte addresses)
+
+		body := start[1:] // address + storage_key
+		var oldStart []byte
+
+		if lenPrefix, ok := s.getAddressLengthPrefix(body); ok {
+			oldStart = append([]byte{0x05, lenPrefix}, body...)
+		} else {
+			// Invalid address in query bounds - return empty range to prevent full DB scan.
+			// Using [0x05, 0xff] creates an impossible range (0xff > valid length prefixes 0x14/0x20)
+			// that immediately returns zero results instead of scanning the entire database.
+			// This protects against DoS attacks using malformed pagination queries.
+			return []byte{0x05, 0xff}, []byte{0x05, 0xff}
+		}
+
+		var oldEnd []byte
+		if len(end) > 0 && end[0] == 0x03 {
+			bodyEnd := end[1:]
+			if lenPrefix, ok := s.getAddressLengthPrefix(bodyEnd); ok {
+				oldEnd = append([]byte{0x05, lenPrefix}, bodyEnd...)
+			} else {
+				// Invalid address in end bound - use start as both bounds to create empty range.
+				// This prevents nil bounds which would trigger full DB scan from beginning.
+				return oldStart, oldStart
+			}
+		}
+
+		return oldStart, oldEnd
+	}
+
+	// For other prefixes, use the translateNewToOld logic
+	var oldStart, oldEnd []byte
+	if len(start) > 0 {
+		candidates := translateNewToOld(start)
+		if len(candidates) > 0 {
+			oldStart = candidates[0]
+			for _, c := range candidates[1:] {
+				if bytes.Compare(c, oldStart) < 0 {
+					oldStart = c
+				}
+			}
+		}
+	}
+	if len(end) > 0 {
+		candidates := translateNewToOld(end)
+		if len(candidates) > 0 {
+			oldEnd = candidates[0]
+			for _, c := range candidates[1:] {
+				if bytes.Compare(c, oldEnd) > 0 {
+					oldEnd = c
+				}
+			}
+		}
+	}
+	return oldStart, oldEnd
 }
 
 func (s *legacyWasmStore) GetStoreType() storetypes.StoreType {
@@ -241,7 +353,7 @@ func (it *legacyIterator) advance() {
 		it.key = newKey
 		it.val = it.under.Value()
 		it.valid = true
-		it.under.Next() // move underlying ahead for next call
+		it.under.Next() // Advance before returning, since post-statement won't run
 		return
 	}
 	it.valid = false
@@ -292,7 +404,7 @@ func prepareLegacyWasmContext(ctx sdk.Context, wasmKey storetypes.StoreKey) (sdk
 	}
 	legacyStore := &legacyWasmStore{parent: ctx.KVStore(wasmKey)}
 	wrapped := legacyMultiStore{MultiStore: ctx.MultiStore(), wasmKey: wasmKey, legacy: legacyStore}
-	newCtx := sdk.NewContext(wrapped, ctx.BlockHeader(), false, ctx.Logger())
-	newCtx = newCtx.WithGasMeter(ctx.GasMeter()).WithEventManager(ctx.EventManager())
+	newCtx := sdk.NewContext(wrapped, ctx.BlockHeader(), ctx.IsCheckTx(), ctx.Logger())
+	newCtx = newCtx.WithGasMeter(ctx.GasMeter()).WithEventManager(ctx.EventManager()).WithChainID(ctx.ChainID())
 	return newCtx, true
 }

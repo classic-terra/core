@@ -42,3 +42,10 @@ func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter, codec codec.Co
 		queryPluginOpt,
 	}
 }
+
+// RegisterLegacyQueryHandler wraps the wasm query handler with legacy store support for historical queries
+func RegisterLegacyQueryHandler(storeKey storetypes.StoreKey) wasmkeeper.Option {
+	return wasmkeeper.WithQueryHandlerDecorator(func(next wasmkeeper.WasmVMQueryHandler) wasmkeeper.WasmVMQueryHandler {
+		return customwasm.NewLegacyQueryHandler(next, storeKey)
+	})
+}

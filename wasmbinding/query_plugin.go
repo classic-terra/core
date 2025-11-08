@@ -35,7 +35,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		res, err := route(ctx, &abci.RequestQuery{
+		res, err := route(ctx, abci.RequestQuery{
 			Data: request.Data,
 			Path: request.Path,
 		})
@@ -52,11 +52,68 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 	}
 }
 
+// normalizeLegacyRoutedQueryJSON transforms legacy routed shape
+// {"route":"treasury|oracle","query_data":{...}}
+// into the modern flat TerraQuery JSON understood by bindings.TerraQuery.
+// If the request is not a legacy routed query or cannot be normalized,
+// the original request is returned unchanged.
+func normalizeLegacyRoutedQueryJSON(request json.RawMessage) json.RawMessage {
+	type legacyRouted struct {
+		Route     string                     `json:"route"`
+		QueryData map[string]json.RawMessage `json:"query_data"`
+	}
+
+	// limit request size to 64kb to check for legacy (DoS)
+	if len(request) > 64<<10 {
+		return request
+	}
+
+	var lr legacyRouted
+	// if it cannot be unmarshaled into legacyRouted, treat as modern TerraQuery
+	if err := json.Unmarshal(request, &lr); err != nil || lr.Route == "" {
+		return request
+	}
+
+	switch lr.Route {
+	case treasurytypes.ModuleName:
+		if _, ok := lr.QueryData["tax_rate"]; ok {
+			// modern tax_rate has empty object
+			if bz, err := json.Marshal(map[string]any{"tax_rate": struct{}{}}); err == nil {
+				return bz
+			}
+		}
+		if capRaw, ok := lr.QueryData["tax_cap"]; ok {
+			// pass inner as-is (object with denom expected by old callers)
+			if bz, err := json.Marshal(map[string]json.RawMessage{"tax_cap": capRaw}); err == nil {
+				return bz
+			}
+		}
+	case oracletypes.ModuleName:
+		if er, ok := lr.QueryData["exchange_rates"]; ok {
+			// pass inner as-is (expects {base_denom, quote_denoms})
+			if bz, err := json.Marshal(map[string]json.RawMessage{"exchange_rates": er}); err == nil {
+				return bz
+			}
+		}
+	case markettypes.ModuleName:
+		if sw, ok := lr.QueryData["swap"]; ok {
+			// pass inner as-is ({offer_coin, ask_denom})
+			if bz, err := json.Marshal(map[string]json.RawMessage{"swap": sw}); err == nil {
+				return bz
+			}
+		}
+	}
+
+	// none of the legacy routes matched, return original request
+	return request
+}
+
 // CustomQuerier dispatches custom CosmWasm bindings queries.
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
+		normalized := normalizeLegacyRoutedQueryJSON(request)
 		var contractQuery bindings.TerraQuery
-		if err := json.Unmarshal(request, &contractQuery); err != nil {
+		if err := json.Unmarshal(normalized, &contractQuery); err != nil {
 			return nil, errorsmod.Wrap(err, "terra query")
 		}
 

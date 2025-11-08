@@ -16,7 +16,7 @@ ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 
 if [[ "$FORK" == "true" ]]; then
-    export TERRAD_HALT_HEIGHT=20
+    export TERRAD_HALT_HEIGHT=100
 fi
 
 # underscore so that go tool will not take gocache into account
@@ -91,7 +91,7 @@ run_upgrade () {
     echo "upgrading"
 
     STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
+    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 100))
 
     tar -cf ./_build/new/terrad.tar -C ./_build/new terrad
     SUM=$(shasum -a 256 ./_build/new/terrad.tar | cut -d ' ' -f1)
@@ -110,6 +110,8 @@ run_upgrade () {
 
     ./_build/old/terrad tx gov deposit 1 "20000000${DENOM}" --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
+
+    
     sleep 5
 
     ./_build/old/terrad tx gov vote 1 yes --from test0 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
@@ -119,6 +121,9 @@ run_upgrade () {
     ./_build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
     sleep 5
+
+    ./_build/old/terrad tx gov vote 1 yes --from test2 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
+    
 
     # determine block_height to halt
     while true; do 

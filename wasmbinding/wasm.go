@@ -1,7 +1,9 @@
 package wasmbinding
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	customwasm "github.com/classic-terra/core/v3/custom/wasm"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"

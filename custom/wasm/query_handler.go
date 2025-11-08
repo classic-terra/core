@@ -1,9 +1,9 @@
 package wasm
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

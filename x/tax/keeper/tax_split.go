@@ -8,6 +8,7 @@ import (
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {

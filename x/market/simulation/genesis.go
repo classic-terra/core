@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // Simulation parameter constants
@@ -35,7 +34,7 @@ func GenPoolRecoveryPeriod(r *rand.Rand) uint64 {
 func GenEpochLengthBlocks(r *rand.Rand) uint64 {
 	// between 7 and 60 days worth of blocks
 	days := 7 + r.Intn(54)
-	return uint64(days) * uint64(core.BlocksPerDay)
+	return uint64(days) * core.BlocksPerDay
 }
 
 func GenMinSpread(r *rand.Rand) math.LegacyDec {
@@ -64,7 +63,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var epochLengthBlocks uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeyEpochLengthBlocks), &epochLengthBlocks,
+		string(types.KeyEpochLengthBlocks), &epochLengthBlocks, simState.Rand,
 		func(r *rand.Rand) { epochLengthBlocks = GenEpochLengthBlocks(r) },
 	)
 

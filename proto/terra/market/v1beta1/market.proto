@@ -31,7 +31,7 @@ message Params {
   bytes swap_fee_burn_rate = 5 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"swap_fee_burn_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 
@@ -39,7 +39,7 @@ message Params {
   bytes swap_fee_community_rate = 6 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"swap_fee_community_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 
@@ -53,7 +53,7 @@ message Params {
   bytes max_twap_deviation = 9 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"max_twap_deviation\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 
@@ -61,7 +61,7 @@ message Params {
   bytes daily_cap_factor = 10 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"daily_cap_factor\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }

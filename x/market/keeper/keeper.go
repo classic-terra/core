@@ -6,13 +6,12 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // Keeper of the market store
@@ -394,7 +393,7 @@ func (k Keeper) ResetDailyCapIfNeeded(ctx sdk.Context) {
 		// Clear all daily usage counters
 		// Note: We iterate through all denoms that have baselines
 		store := ctx.KVStore(k.storeKey)
-		iterator := sdk.KVStorePrefixIterator(store, types.DailyCapUsageKey)
+		iterator := storetypes.KVStorePrefixIterator(store, types.DailyCapUsageKey)
 		defer iterator.Close()
 
 		for ; iterator.Valid(); iterator.Next() {

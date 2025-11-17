@@ -16,7 +16,12 @@ import (
 )
 
 type NodeConfig struct {
-	initialization.Node
+	Name        string
+	ConfigDir   string
+	Mnemonic    string
+	PublicKey   string
+	PeerID      string
+	IsValidator bool
 
 	OperatorAddress  string
 	SnapshotInterval uint64
@@ -32,7 +37,12 @@ type NodeConfig struct {
 // NewNodeConfig returens new initialized NodeConfig.
 func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainID string, containerManager *containers.Manager) *NodeConfig {
 	return &NodeConfig{
-		Node:             *initNode,
+		Name:             initNode.Name,
+		ConfigDir:        initNode.ConfigDir,
+		Mnemonic:         initNode.Mnemonic,
+		PublicKey:        initNode.PublicKey,
+		PeerID:           initNode.PeerID,
+		IsValidator:      initNode.IsValidator,
 		SnapshotInterval: initConfig.SnapshotInterval,
 		chainID:          chainID,
 		containerManager: containerManager,

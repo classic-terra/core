@@ -76,13 +76,13 @@ func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdkmath.LegacyDe
 }
 
 // GetTaxRedirectRate returns the fraction of post-oracle-split distribution redirected to market accumulator
-func (k Keeper) GetTaxRedirectRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetTaxRedirectRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyTaxRedirectRate, &res)
 	return
 }
 
 // SetTaxRedirectRate sets the tax redirect rate
-func (k Keeper) SetTaxRedirectRate(ctx sdk.Context, redirect sdk.Dec) {
+func (k Keeper) SetTaxRedirectRate(ctx sdk.Context, redirect sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyTaxRedirectRate, redirect)
 }
 

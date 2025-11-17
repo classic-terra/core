@@ -94,7 +94,7 @@ func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (sdk.Coin, error) 
 			return c, nil
 		}
 	}
-	return sdk.NewCoin(denom, math.ZeroInt()), nil
+	return sdk.NewCoin(denom, sdkmath.ZeroInt()), nil
 }
 
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdkmath.Int, error) {

@@ -156,7 +156,7 @@ func (p Params) Validate() error {
 		return fmt.Errorf("treasury parameter TaxRedirectRate must be positive: %s", p.TaxRedirectRate)
 	}
 
-	if p.TaxRedirectRate.GT(sdk.OneDec()) {
+	if p.TaxRedirectRate.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("treasury parameter TaxRedirectRate must be less than or equal to 1.0: %s", p.TaxRedirectRate)
 	}
 
@@ -310,7 +310,7 @@ func validateOraceSplit(i interface{}) error {
 }
 
 func validateTaxRedirectRate(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid paramater type: %T", i)
 	}
@@ -319,7 +319,7 @@ func validateTaxRedirectRate(i interface{}) error {
 		return fmt.Errorf("tax redirect rate must be positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("tax redirect rate must be less than or equal to 1.0: %s", v)
 	}
 

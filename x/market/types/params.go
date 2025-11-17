@@ -38,7 +38,7 @@ var (
 	DefaultBasePool           = math.LegacyNewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
 	DefaultPoolRecoveryPeriod = core.BlocksPerDay                           // 14,400
 	DefaultMinStabilitySpread = math.LegacyNewDecWithPrec(2, 2)             // 2%
-	DefaultEpochLengthBlocks  = uint64(30 * core.BlocksPerDay)              // 30 days worth of blocks
+	DefaultEpochLengthBlocks  = 30 * core.BlocksPerDay                      // 30 days worth of blocks
 	// Default fee distribution: 0% burn, 0% community pool, 100% to oracle (remainder)
 	DefaultSwapFeeBurnRate      = math.LegacyZeroDec()
 	DefaultSwapFeeCommunityRate = math.LegacyZeroDec()

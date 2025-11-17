@@ -721,9 +721,11 @@ func (n *NodeConfig) SubmitOracleAggregateVote(salt string, amount string) {
 	require.NotEmpty(n.t, n.OperatorAddress, "validator operator address must be known before submitting oracle vote")
 	n.LogActionF("submitting oracle aggregate vote for %s", n.OperatorAddress)
 	// IMPORTANT: positional args must come BEFORE flags for cobra to parse them; pass validator before --from
-	base := []string{"terrad", "tx", "oracle", "aggregate-vote", salt, amount, n.OperatorAddress,
+	base := []string{
+		"terrad", "tx", "oracle", "aggregate-vote", salt, amount, n.OperatorAddress,
 		fmt.Sprintf("--from=%s", initialization.ValidatorWalletName), fmt.Sprintf("--chain-id=%s", n.chainID), "--yes", "--keyring-backend=test", "--log_format=json",
-		"--gas=4000000", "--fees=0uluna"}
+		"--gas=4000000", "--fees=0uluna",
+	}
 	// Use ExecCmd directly with empty success string so we can parse and retry ourselves without require.Eventually gating.
 	for attempt := 1; attempt <= 6; attempt++ {
 		outBuf, errBuf, _ := n.containerManager.ExecCmd(n.t, n.Name, base, "", false)

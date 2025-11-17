@@ -11,6 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const standardOracleRates = "1000.0ukrw,1.0uusd,1.0usdr,1.0UST"
+
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -315,7 +317,7 @@ func (s *IntegrationTestSuite) TestMarketSwap() {
 	// P: prevote; wait boundary; P+1: vote(prev P) then +1 block and prevote; then assert exchange rates and swap.
 	votePeriod := node.QueryOracleVotePeriod()
 	node.LogActionF("STEP 3: oracle votePeriod=%d", votePeriod)
-	rates := "1000.0ukrw,1.0uusd,1.0usdr,1.0UST"
+	rates := standardOracleRates
 	saltP := "0101"
 	// Anchor to next period start P
 	curH0, err := node.QueryCurrentHeight()
@@ -379,9 +381,9 @@ func (s *IntegrationTestSuite) TestMarketSwap() {
 	for denom, exp := range expected {
 		val, ok := got[denom]
 		s.Require().Truef(ok, "missing exchange rate for %s", denom)
-		expDec, err := sdk.NewDecFromStr(exp)
+		expDec, err := sdkmath.LegacyNewDecFromStr(exp)
 		s.Require().NoError(err)
-		gotDec, err := sdk.NewDecFromStr(val)
+		gotDec, err := sdkmath.LegacyNewDecFromStr(val)
 		s.Require().NoError(err)
 		s.Require().Truef(expDec.Equal(gotDec), "exchange rate mismatch for %s: expected %s got %s", denom, expDec.String(), gotDec.String())
 	}
@@ -426,7 +428,6 @@ func (s *IntegrationTestSuite) TestMarketSwap() {
 				v.SubmitOracleAggregatePrevote(saltP2, rates)
 			}
 		}
-		revealedPeriod = curPeriod
 	}
 
 	// query balance of market and accumulator
@@ -443,7 +444,7 @@ func (s *IntegrationTestSuite) TestMarketSwap() {
 	node.LogActionF("STEP 10b: captured initial balances uluna=%s uusd=%s", preLuna.Amount.String(), preUSD.Amount.String())
 
 	// Ensure there is sufficient liquidity. Module accounts are pre-funded at genesis; require at least 10,000,000 uusd each.
-	minLiquidity := sdk.NewInt(10000000)
+	minLiquidity := sdkmath.NewInt(10000000)
 	s.Require().True(marketBalance.Amount.GTE(minLiquidity), "market balance should be >= %s uusd", minLiquidity.String())
 	s.Require().True(accumulatorBalance.Amount.GTE(minLiquidity), "accumulator balance should be >= %s uusd", minLiquidity.String())
 
@@ -507,7 +508,7 @@ func (s *IntegrationTestSuite) TestMarketSwap() {
 	// Build TWAP history with consistent prices, then verify swaps work within normal deviation.
 	// Unit tests cover the case where price deviates >10% and swap fails.
 	node.LogActionF("STEP 12b: Building TWAP history for deviation protection")
-	consistentRates := "1000.0ukrw,1.0uusd,1.0usdr,1.0UST"
+	consistentRates := standardOracleRates
 
 	// Submit 2 more oracle rounds to build TWAP history
 	for round := 0; round < 2; round++ {
@@ -598,7 +599,7 @@ func (s *IntegrationTestSuite) TestMarketSwap() {
 	}
 
 	// Restore normal prices for remaining tests
-	normalRates := "1000.0ukrw,1.0uusd,1.0usdr,1.0UST"
+	normalRates := standardOracleRates
 	curH, _ = node.QueryCurrentHeight()
 	nextBoundary = ((curH / votePeriod) + 1) * votePeriod
 	chain.WaitUntilHeight(nextBoundary)

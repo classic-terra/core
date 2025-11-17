@@ -48,7 +48,7 @@ var (
 		{Name: core.MicroUSDDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroMNTDenom, TobinTax: DefaultTobinTax.MulInt64(8)},
 		// Meta USD denom to carry USTC/USD directly; set TobinTax to 0
-		{Name: MetaUSDDenom, TobinTax: sdk.ZeroDec()},
+		{Name: MetaUSDDenom, TobinTax: math.LegacyZeroDec()},
 	}
 	DefaultSlashFraction     = math.LegacyNewDecWithPrec(1, 4) // 0.01%
 	DefaultMinValidPerWindow = math.LegacyNewDecWithPrec(5, 2) // 5%

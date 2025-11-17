@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +31,7 @@ type BankKeeper interface {
 
 // DistributionKeeper defines expected methods from the distribution module
 type DistributionKeeper interface {
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 // OracleKeeper defines expected oracle keeper

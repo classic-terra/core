@@ -3,12 +3,11 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	sdkmath "cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/oracle/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 // Tests USD price calculation using feeder-reported USD/Luna (R) and generic denom rates
@@ -17,8 +16,8 @@ func TestGetUSDPrice_UlunaAndGeneric(t *testing.T) {
 	ctx := input.Ctx
 
 	// Setup: denom per 1 LUNA and R=USD per 1 LUNA
-	sdrPerLuna := sdk.NewDec(1_000)               // 1 LUNA = 1,000 uSDR
-	usdPerLunaR := sdk.MustNewDecFromStr("0.023") // R: 1 LUNA = 0.023 USD (from core.MicroUSDDenom)
+	sdrPerLuna := sdkmath.LegacyNewDec(1_000)               // 1 LUNA = 1,000 uSDR
+	usdPerLunaR := sdkmath.LegacyMustNewDecFromStr("0.023") // R: 1 LUNA = 0.023 USD (from core.MicroUSDDenom)
 
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroSDRDenom, sdrPerLuna)
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, usdPerLunaR)
@@ -40,7 +39,7 @@ func TestGetUSDPrice_UUSD_ReturnsMeta(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := input.Ctx
 
-	U := sdk.MustNewDecFromStr("0.021") // USD per 1 USTC
+	U := sdkmath.LegacyMustNewDecFromStr("0.021") // USD per 1 USTC
 	input.OracleKeeper.SetLunaExchangeRate(ctx, types.MetaUSDDenom, U)
 
 	// uusd should equal U, independent of R
@@ -58,7 +57,7 @@ func TestGetUSDPrice_MissingMetaOrBaseRates(t *testing.T) {
 	require.Error(t, err)
 
 	// Set uluna price (in USD) only: uluna works, uusd fails, generic fails until its E_d is set
-	usdPerLuna := sdk.MustNewDecFromStr("0.02")
+	usdPerLuna := sdkmath.LegacyMustNewDecFromStr("0.02")
 	input.OracleKeeper.SetLunaExchangeRate(ctx, core.MicroUSDDenom, usdPerLuna)
 
 	price, err := input.OracleKeeper.GetUSDPrice(ctx, core.MicroLunaDenom)
@@ -70,7 +69,7 @@ func TestGetUSDPrice_MissingMetaOrBaseRates(t *testing.T) {
 	require.Error(t, err)
 
 	// Set U: uusd works now
-	U := sdk.MustNewDecFromStr("0.021")
+	U := sdkmath.LegacyMustNewDecFromStr("0.021")
 	input.OracleKeeper.SetLunaExchangeRate(ctx, types.MetaUSDDenom, U)
 	price, err = input.OracleKeeper.GetUSDPrice(ctx, core.MicroUSDDenom)
 	require.NoError(t, err)
@@ -86,9 +85,9 @@ func TestQuerier_USDPriceAndUSDPrices(t *testing.T) {
 	ctx := sdk.WrapSDKContext(input.Ctx)
 	q := NewQuerier(input.OracleKeeper)
 
-	lunaPerKRW := sdk.NewDec(1_500)     // 1 LUNA = 1500 uKRW
-	R := sdk.MustNewDecFromStr("0.01")  // USD/Luna via core.MicroUSDDenom
-	U := sdk.MustNewDecFromStr("0.021") // USD per 1 USTC for uusd pricing
+	lunaPerKRW := sdkmath.LegacyNewDec(1_500)     // 1 LUNA = 1500 uKRW
+	R := sdkmath.LegacyMustNewDecFromStr("0.01")  // USD/Luna via core.MicroUSDDenom
+	U := sdkmath.LegacyMustNewDecFromStr("0.021") // USD per 1 USTC for uusd pricing
 
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, lunaPerKRW)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, R)

@@ -973,7 +973,7 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			// oracle split to 0% (oracle split is covered in another test)
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 			// Ensure no redirect for this focused test
-			tk.SetTaxRedirectRate(s.ctx, sdk.ZeroDec())
+			tk.SetTaxRedirectRate(s.ctx, sdkmath.LegacyZeroDec())
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1173,7 +1173,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 			// Set burn split rate to 50%
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 			// Disable market redirect in this test suite to keep legacy expectations
-			tk.SetTaxRedirectRate(s.ctx, sdk.ZeroDec())
+			tk.SetTaxRedirectRate(s.ctx, sdkmath.LegacyZeroDec())
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1351,7 +1351,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			// Set burn split rate to 50%
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
 			// Disable market redirect so fees/taxes remain at FeeCollector per legacy expectations
-			tk.SetTaxRedirectRate(s.ctx, sdk.ZeroDec())
+			tk.SetTaxRedirectRate(s.ctx, sdkmath.LegacyZeroDec())
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1545,7 +1545,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdkmath.LegacyDec, ora
 
 		// Community tax adjustment (same formula as keeper)
 		applyCommunityTax := communityTax.Mul(
-			oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Add(sdk.OneDec()).Sub(communityTax)),
+			oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Add(sdkmath.LegacyOneDec()).Sub(communityTax)),
 		)
 		expectedCommunityCoins := applyCommunityTax.MulInt(distributionDeltaCoins).RoundInt()
 		distributionDeltaCoins = distributionDeltaCoins.Sub(expectedCommunityCoins)

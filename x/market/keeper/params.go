@@ -32,13 +32,13 @@ func (k Keeper) EpochLengthBlocks(ctx sdk.Context) (res uint64) {
 }
 
 // SwapFeeBurnRate returns the fraction [0,1] of the swap fee that should be burned
-func (k Keeper) SwapFeeBurnRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SwapFeeBurnRate(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySwapFeeBurnRate, &res)
 	return
 }
 
 // SwapFeeCommunityRate returns the fraction [0,1] of the swap fee that should be sent to the Community Pool
-func (k Keeper) SwapFeeCommunityRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SwapFeeCommunityRate(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySwapFeeCommunityRate, &res)
 	return
 }
@@ -56,13 +56,13 @@ func (k Keeper) TwapLookbackWindow(ctx sdk.Context) (res uint64) {
 }
 
 // MaxTwapDeviation returns the maximum deviation from TWAP
-func (k Keeper) MaxTwapDeviation(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MaxTwapDeviation(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMaxTWAPDeviation, &res)
 	return
 }
 
 // DailyCapFactor returns the daily cap factor
-func (k Keeper) DailyCapFactor(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) DailyCapFactor(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyDailyCapFactor, &res)
 	return
 }

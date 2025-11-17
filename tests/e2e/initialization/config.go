@@ -8,6 +8,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/classic-terra/core/v3/tests/e2e/util"
+	core "github.com/classic-terra/core/v3/types"
+	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -24,15 +27,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	"github.com/classic-terra/core/v3/tests/e2e/util"
-	core "github.com/classic-terra/core/v3/types"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -343,8 +337,8 @@ func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 	// even across epoch burns/refills.
 	marketAddr := authtypes.NewModuleAddress(markettypes.ModuleName)
 	accumAddr := authtypes.NewModuleAddress(markettypes.AccumulatorModuleName)
-	seedCoins := sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdk.NewInt(1_000_000_000_000)))       // 1,000,000 USTC
-	seedCoinsUluna := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1_000_000_000_000))) // 1,000,000 LUNC
+	seedCoins := sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(1_000_000_000_000)))       // 1,000,000 USTC
+	seedCoinsUluna := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1_000_000_000_000))) // 1,000,000 LUNC
 
 	bankGenState.Balances = append(bankGenState.Balances,
 		banktypes.Balance{Address: marketAddr.String(), Coins: seedCoins},

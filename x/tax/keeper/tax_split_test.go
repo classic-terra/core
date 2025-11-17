@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	apphelpers "github.com/classic-terra/core/v3/app/testing"
 	core "github.com/classic-terra/core/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
-
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -21,22 +21,22 @@ func TestProcessTaxSplits_RedirectToMarketAccumulator(t *testing.T) {
 	// Setup app and context
 	chainID := "tax-redirect-test"
 	app := apphelpers.SetupApp(t, chainID)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
+	ctx := app.BaseApp.NewContext(false).WithBlockHeader(tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 
 	// Configure distribution params: community tax = 0 to simplify
 	distrParams := distrtypes.DefaultParams()
-	distrParams.CommunityTax = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distrParams)
+	distrParams.CommunityTax = sdkmath.LegacyZeroDec()
+	app.DistrKeeper.Params.Set(ctx, distrParams)
 
 	// Configure treasury params: BurnSplit=1.0, OracleSplit=0.5, TaxRedirectRate=1.0
 	tparams := treasurytypes.DefaultParams()
-	tparams.BurnTaxSplit = sdk.OneDec()                // 100% goes to distribution (no remainder to final burn)
-	tparams.OracleSplit = sdk.NewDecWithPrec(5, 1)     // 0.5 to oracle
-	tparams.TaxRedirectRate = sdk.NewDecWithPrec(5, 1) // 50% of post-oracle base to market accumulator
+	tparams.BurnTaxSplit = sdkmath.LegacyOneDec()                // 100% goes to distribution (no remainder to final burn)
+	tparams.OracleSplit = sdkmath.LegacyNewDecWithPrec(5, 1)     // 0.5 to oracle
+	tparams.TaxRedirectRate = sdkmath.LegacyNewDecWithPrec(5, 1) // 50% of post-oracle base to market accumulator
 	app.TreasuryKeeper.SetParams(ctx, tparams)
 
 	// Prepare taxes to split
-	taxAmt := sdk.NewInt(1_000_000)
+	taxAmt := sdkmath.NewInt(1_000_000)
 	taxes := sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, taxAmt))
 
 	// Fund FeeCollector: mint to treasury (has Minter) and transfer to FeeCollector
@@ -51,8 +51,8 @@ func TestProcessTaxSplits_RedirectToMarketAccumulator(t *testing.T) {
 	// Let T be full taxes; redirect M = 0.5*T to market accumulator; remaining T1 = 0.5*T.
 	// DistributionDelta = BurnTaxSplit * T1 = 1.0 * T1 = T1; CommunityTax=0; Oracle gets 0.5*T1 = 0.25*T.
 	// Remaining 'taxes' at end is zero (we subtracted DistributionDelta fully), so burn = 0.
-	expectedMarket := sdk.NewDecFromInt(taxAmt).Mul(sdk.NewDecWithPrec(5, 1)).TruncateInt() // 50% of T
-	expectedOracle := sdk.NewDecFromInt(taxAmt).Mul(sdk.NewDecWithPrec(25, 2)).TruncateInt() // 25% of T
+	expectedMarket := sdkmath.LegacyNewDecFromInt(taxAmt).Mul(sdkmath.LegacyNewDecWithPrec(5, 1)).TruncateInt()  // 50% of T
+	expectedOracle := sdkmath.LegacyNewDecFromInt(taxAmt).Mul(sdkmath.LegacyNewDecWithPrec(25, 2)).TruncateInt() // 25% of T
 
 	// Module addresses
 	oracleAddr := app.AccountKeeper.GetModuleAddress(oracletypes.ModuleName)

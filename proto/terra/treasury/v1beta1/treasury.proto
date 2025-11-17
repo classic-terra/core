@@ -51,7 +51,7 @@ message Params {
   string tax_redirect_rate = 11 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"tax_redirect_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }

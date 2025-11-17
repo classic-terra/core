@@ -9,7 +9,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
-	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v3/client/docs/statik"
 	customauth "github.com/classic-terra/core/v3/custom/auth"
 	customauthsim "github.com/classic-terra/core/v3/custom/auth/simulation"
@@ -42,6 +41,7 @@ import (
 	treasuryclient "github.com/classic-terra/core/v3/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
 	"github.com/classic-terra/core/v3/x/vesting"
+	// unnamed import of statik for swagger UI support
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -121,26 +121,26 @@ var (
 	)
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil, // just added to enable align fee
-		treasurytypes.BurnModuleName:   {authtypes.Burner},
-		minttypes.ModuleName:           {authtypes.Minter},
-		markettypes.ModuleName:         {authtypes.Burner},
+		authtypes.FeeCollectorName:        nil, // just added to enable align fee
+		treasurytypes.BurnModuleName:      {authtypes.Burner},
+		minttypes.ModuleName:              {authtypes.Minter},
+		markettypes.ModuleName:            {authtypes.Burner},
 		markettypes.AccumulatorModuleName: nil,
-		oracletypes.ModuleName:         nil,
-		distrtypes.ModuleName:          nil,
-		treasurytypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:            nil,
-		wasmtypes.ModuleName:           {authtypes.Burner},
+		oracletypes.ModuleName:            nil,
+		distrtypes.ModuleName:             nil,
+		treasurytypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
+		stakingtypes.BondedPoolName:       {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:               {authtypes.Burner},
+		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:               nil,
+		wasmtypes.ModuleName:              {authtypes.Burner},
 	}
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
-		oracletypes.ModuleName:       true,
-		treasurytypes.BurnModuleName: true,
-		markettypes.ModuleName:       true,
+		oracletypes.ModuleName:            true,
+		treasurytypes.BurnModuleName:      true,
+		markettypes.ModuleName:            true,
 		markettypes.AccumulatorModuleName: true,
 	}
 )

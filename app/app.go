@@ -17,6 +17,7 @@ import (
 	"github.com/classic-terra/core/v3/app/keepers"
 	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
 	// v9 had been used by tax2gas and has to be skipped
@@ -45,6 +46,7 @@ import (
 	custompost "github.com/classic-terra/core/v3/custom/auth/post"
 	customauthtx "github.com/classic-terra/core/v3/custom/auth/tx"
 	customserver "github.com/classic-terra/core/v3/server"
+
 	// unnamed import of statik for swagger UI support
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"

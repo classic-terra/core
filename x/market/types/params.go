@@ -3,12 +3,10 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
+	"cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
 // Parameter keys
@@ -37,21 +35,21 @@ var (
 
 // Default parameter values
 var (
-	DefaultBasePool           = sdk.NewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
-	DefaultPoolRecoveryPeriod = core.BlocksPerDay                    // 14,400
-	DefaultMinStabilitySpread = sdk.NewDecWithPrec(2, 2)             // 2%
-	DefaultEpochLengthBlocks  = uint64(30 * core.BlocksPerDay)       // 30 days worth of blocks
+	DefaultBasePool           = math.LegacyNewDec(1000000 * core.MicroUnit) // 1000,000sdr = 1000,000,000,000usdr
+	DefaultPoolRecoveryPeriod = core.BlocksPerDay                           // 14,400
+	DefaultMinStabilitySpread = math.LegacyNewDecWithPrec(2, 2)             // 2%
+	DefaultEpochLengthBlocks  = uint64(30 * core.BlocksPerDay)              // 30 days worth of blocks
 	// Default fee distribution: 0% burn, 0% community pool, 100% to oracle (remainder)
-	DefaultSwapFeeBurnRate      = sdk.ZeroDec()
-	DefaultSwapFeeCommunityRate = sdk.ZeroDec()
+	DefaultSwapFeeBurnRate      = math.LegacyZeroDec()
+	DefaultSwapFeeCommunityRate = math.LegacyZeroDec()
 	// Default oracle freshness: 75 seconds (25 blocks * 3s)
 	DefaultMaxOracleAgeSeconds = uint64(75)
 	// Default TWAP window: 45 blocks (~2.25 minutes at 3s/block)
 	DefaultTWAPLookbackWindow = uint64(45)
 	// Default TWAP deviation: 10%
-	DefaultMaxTWAPDeviation = sdk.NewDecWithPrec(10, 2) // 0.10
+	DefaultMaxTWAPDeviation = math.LegacyNewDecWithPrec(10, 2) // 0.10
 	// Default daily cap: 10% of pool balance per day
-	DefaultDailyCapFactor = sdk.NewDecWithPrec(10, 2) // 0.10
+	DefaultDailyCapFactor = math.LegacyNewDecWithPrec(10, 2) // 0.10
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -108,7 +106,7 @@ func (p Params) Validate() error {
 	if p.PoolRecoveryPeriod == 0 {
 		return fmt.Errorf("pool recovery period should be positive, is %d", p.PoolRecoveryPeriod)
 	}
-	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(sdk.OneDec()) {
+	if p.MinStabilitySpread.IsNegative() || p.MinStabilitySpread.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("market minimum stability spead should be a value between [0,1], is %s", p.MinStabilitySpread)
 	}
 	if p.EpochLengthBlocks == 0 {
@@ -122,7 +120,7 @@ func (p Params) Validate() error {
 	if err := validateFraction(p.SwapFeeCommunityRate); err != nil {
 		return fmt.Errorf("swap fee community rate invalid: %w", err)
 	}
-	if p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate).GT(sdk.OneDec()) {
+	if p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate).GT(math.LegacyOneDec()) {
 		return fmt.Errorf("sum of burn and community rates must be <= 1: %s", p.SwapFeeBurnRate.Add(p.SwapFeeCommunityRate))
 	}
 
@@ -143,7 +141,7 @@ func (p Params) Validate() error {
 }
 
 func validateBasePool(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -169,7 +167,7 @@ func validatePoolRecoveryPeriod(i interface{}) error {
 }
 
 func validateMinStabilitySpread(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -178,7 +176,7 @@ func validateMinStabilitySpread(i interface{}) error {
 		return fmt.Errorf("min spread must be positive or zero: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min spread is too large: %s", v)
 	}
 
@@ -199,14 +197,14 @@ func validateEpochLengthBlocks(i interface{}) error {
 
 // validateFraction ensures a decimal is in [0, 1]
 func validateFraction(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v.IsNegative() {
 		return fmt.Errorf("fraction must be >= 0: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("fraction must be <= 1: %s", v)
 	}
 	return nil

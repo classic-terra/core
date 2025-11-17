@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 // query endpoints supported by the auth Querier
@@ -44,8 +44,8 @@ type TaxCapsQueryResponse []TaxCapsResponseItem
 
 // IndicatorQueryResponse query response body
 type IndicatorQueryResponse struct {
-	TRLYear  sdk.Dec `json:"trl_year"`
-	TRLMonth sdk.Dec `json:"trl_month"`
+	TRLYear  sdkmath.LegacyDec `json:"trl_year"`
+	TRLMonth sdkmath.LegacyDec `json:"trl_month"`
 }
 
 // String implements fmt.Stringer interface

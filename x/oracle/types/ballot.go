@@ -2,10 +2,11 @@ package types
 
 import (
 	"fmt"
-	"math"
+	mathstd "math"
 	"sort"
 	"strconv"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,13 +16,13 @@ import (
 // VoteForTally is a convenience wrapper to reduce redundant lookup cost
 type VoteForTally struct {
 	Denom        string
-	ExchangeRate sdk.Dec
+	ExchangeRate math.LegacyDec
 	Voter        sdk.ValAddress
 	Power        int64
 }
 
 // NewVoteForTally returns a new VoteForTally instance
-func NewVoteForTally(rate sdk.Dec, denom string, voter sdk.ValAddress, power int64) VoteForTally {
+func NewVoteForTally(rate math.LegacyDec, denom string, voter sdk.ValAddress, power int64) VoteForTally {
 	return VoteForTally{
 		ExchangeRate: rate,
 		Denom:        denom,
@@ -34,8 +35,8 @@ func NewVoteForTally(rate sdk.Dec, denom string, voter sdk.ValAddress, power int
 type ExchangeRateBallot []VoteForTally
 
 // ToMap return organized exchange rate map by validator
-func (pb ExchangeRateBallot) ToMap() map[string]sdk.Dec {
-	exchangeRateMap := make(map[string]sdk.Dec)
+func (pb ExchangeRateBallot) ToMap() map[string]math.LegacyDec {
+	exchangeRateMap := make(map[string]math.LegacyDec)
 	for _, vote := range pb {
 		if vote.ExchangeRate.IsPositive() {
 			exchangeRateMap[string(vote.Voter)] = vote.ExchangeRate
@@ -46,7 +47,7 @@ func (pb ExchangeRateBallot) ToMap() map[string]sdk.Dec {
 }
 
 // ToCrossRate return cross_rate(base/exchange_rate) ballot
-func (pb ExchangeRateBallot) ToCrossRate(bases map[string]sdk.Dec) (cb ExchangeRateBallot) {
+func (pb ExchangeRateBallot) ToCrossRate(bases map[string]math.LegacyDec) (cb ExchangeRateBallot) {
 	for i := range pb {
 		vote := pb[i]
 
@@ -54,7 +55,7 @@ func (pb ExchangeRateBallot) ToCrossRate(bases map[string]sdk.Dec) (cb ExchangeR
 			vote.ExchangeRate = exchangeRateRT.Quo(vote.ExchangeRate)
 		} else {
 			// If we can't get reference terra exchange rate, we just convert the vote as abstain vote
-			vote.ExchangeRate = sdk.ZeroDec()
+			vote.ExchangeRate = math.LegacyZeroDec()
 			vote.Power = 0
 		}
 
@@ -65,7 +66,7 @@ func (pb ExchangeRateBallot) ToCrossRate(bases map[string]sdk.Dec) (cb ExchangeR
 }
 
 // ToCrossRateWithSort return cross_rate(base/exchange_rate) ballot
-func (pb ExchangeRateBallot) ToCrossRateWithSort(bases map[string]sdk.Dec) (cb ExchangeRateBallot) {
+func (pb ExchangeRateBallot) ToCrossRateWithSort(bases map[string]math.LegacyDec) (cb ExchangeRateBallot) {
 	for i := range pb {
 		vote := pb[i]
 
@@ -73,7 +74,7 @@ func (pb ExchangeRateBallot) ToCrossRateWithSort(bases map[string]sdk.Dec) (cb E
 			vote.ExchangeRate = exchangeRateRT.Quo(vote.ExchangeRate)
 		} else {
 			// If we can't get reference terra exchange rate, we just convert the vote as abstain vote
-			vote.ExchangeRate = sdk.ZeroDec()
+			vote.ExchangeRate = math.LegacyZeroDec()
 			vote.Power = 0
 		}
 
@@ -96,7 +97,7 @@ func (pb ExchangeRateBallot) Power() int64 {
 
 // WeightedMedian returns the median weighted by the power of the ExchangeRateVote.
 // CONTRACT: ballot must be sorted
-func (pb ExchangeRateBallot) WeightedMedian() sdk.Dec {
+func (pb ExchangeRateBallot) WeightedMedian() math.LegacyDec {
 	totalPower := pb.Power()
 	if pb.Len() > 0 {
 		pivot := int64(0)
@@ -109,22 +110,22 @@ func (pb ExchangeRateBallot) WeightedMedian() sdk.Dec {
 			}
 		}
 	}
-	return sdk.ZeroDec()
+	return math.LegacyZeroDec()
 }
 
 // StandardDeviation returns the standard deviation by the power of the ExchangeRateVote.
-func (pb ExchangeRateBallot) StandardDeviation(median sdk.Dec) (standardDeviation sdk.Dec) {
+func (pb ExchangeRateBallot) StandardDeviation(median math.LegacyDec) (standardDeviation math.LegacyDec) {
 	if len(pb) == 0 {
-		return sdk.ZeroDec()
+		return math.LegacyZeroDec()
 	}
 
 	defer func() {
 		if e := recover(); e != nil {
-			standardDeviation = sdk.ZeroDec()
+			standardDeviation = math.LegacyZeroDec()
 		}
 	}()
 
-	sum := sdk.ZeroDec()
+	sum := math.LegacyZeroDec()
 	for _, v := range pb {
 		deviation := v.ExchangeRate.Sub(median)
 		sum = sum.Add(deviation.Mul(deviation))
@@ -133,8 +134,8 @@ func (pb ExchangeRateBallot) StandardDeviation(median sdk.Dec) (standardDeviatio
 	variance := sum.QuoInt64(int64(len(pb)))
 
 	floatNum, _ := strconv.ParseFloat(variance.String(), 64)
-	floatNum = math.Sqrt(floatNum)
-	standardDeviation, _ = sdk.NewDecFromStr(fmt.Sprintf("%f", floatNum))
+	floatNum = mathstd.Sqrt(floatNum)
+	standardDeviation, _ = math.LegacyNewDecFromStr(fmt.Sprintf("%f", floatNum))
 
 	return
 }

@@ -4,22 +4,22 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFeeRewardsForEpoch(t *testing.T) {
 	input, _ := setupValidators(t)
 
-	taxAmount := sdk.NewInt(1000).MulRaw(core.MicroUnit)
+	taxAmount := sdkmath.NewInt(1000).MulRaw(core.MicroUnit)
 
 	// Set random prices
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.NewDec(1))
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, sdk.NewDec(10))
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroGBPDenom, sdk.NewDec(100))
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroCNYDenom, sdk.NewDec(1000))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdkmath.LegacyNewDec(1))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, sdkmath.LegacyNewDec(10))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroGBPDenom, sdkmath.LegacyNewDec(100))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroCNYDenom, sdkmath.LegacyNewDec(1000))
 
 	// Record tax proceeds
 	input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, sdk.Coins{
@@ -34,14 +34,14 @@ func TestFeeRewardsForEpoch(t *testing.T) {
 
 	// Get Tax Rawards (TR)
 	TR := input.TreasuryKeeper.GetTR(input.Ctx, input.TreasuryKeeper.GetEpoch(input.Ctx))
-	require.Equal(t, sdk.NewDec(1111).MulInt64(core.MicroUnit), TR)
+	require.Equal(t, sdkmath.LegacyNewDec(1111).MulInt64(core.MicroUnit), TR)
 }
 
 func TestSeigniorageRewardsForEpoch(t *testing.T) {
 	input, _ := setupValidators(t)
 
-	amt := sdk.NewInt(1000)
-	sdrRate := sdk.NewDec(10)
+	amt := sdkmath.NewInt(1000)
+	sdrRate := sdkmath.LegacyNewDec(10)
 
 	// Add seigniorage
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
@@ -66,14 +66,14 @@ func TestSeigniorageRewardsForEpoch(t *testing.T) {
 func TestMiningRewardsForEpoch(t *testing.T) {
 	input, _ := setupValidators(t)
 
-	amt := sdk.NewInt(1000).MulRaw(core.MicroUnit)
+	amt := sdkmath.NewInt(1000).MulRaw(core.MicroUnit)
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
 
 	// Set random prices
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdk.NewDec(1))
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, sdk.NewDec(10))
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroGBPDenom, sdk.NewDec(100))
-	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroCNYDenom, sdk.NewDec(1000))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdkmath.LegacyNewDec(1))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroKRWDenom, sdkmath.LegacyNewDec(10))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroGBPDenom, sdkmath.LegacyNewDec(100))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroCNYDenom, sdkmath.LegacyNewDec(1000))
 
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek))
 
@@ -98,28 +98,28 @@ func TestMiningRewardsForEpoch(t *testing.T) {
 	mProceeds := tProceeds.Add(sProceeds)
 
 	miningRewardWeight := input.TreasuryKeeper.GetRewardWeight(input.Ctx)
-	require.Equal(t, sdk.NewDec(1111).MulInt64(core.MicroUnit).Add(miningRewardWeight.MulInt(amt)), mProceeds)
+	require.Equal(t, sdkmath.LegacyNewDec(1111).MulInt64(core.MicroUnit).Add(miningRewardWeight.MulInt(amt)), mProceeds)
 }
 
 func TestLoadIndicatorByEpoch(t *testing.T) {
 	input := CreateTestInput(t)
 
-	TRArr := []sdk.Dec{
-		sdk.NewDec(100),
-		sdk.NewDec(200),
-		sdk.NewDec(300),
-		sdk.NewDec(400),
+	TRArr := []sdkmath.LegacyDec{
+		sdkmath.LegacyNewDec(100),
+		sdkmath.LegacyNewDec(200),
+		sdkmath.LegacyNewDec(300),
+		sdkmath.LegacyNewDec(400),
 	}
 
 	for epoch, TR := range TRArr {
 		input.TreasuryKeeper.SetTR(input.Ctx, int64(epoch), TR)
 	}
 
-	SRArr := []sdk.Dec{
-		sdk.NewDec(10),
-		sdk.NewDec(20),
-		sdk.NewDec(30),
-		sdk.NewDec(40),
+	SRArr := []sdkmath.LegacyDec{
+		sdkmath.LegacyNewDec(10),
+		sdkmath.LegacyNewDec(20),
+		sdkmath.LegacyNewDec(30),
+		sdkmath.LegacyNewDec(40),
 	}
 
 	for epoch, SR := range SRArr {
@@ -127,10 +127,10 @@ func TestLoadIndicatorByEpoch(t *testing.T) {
 	}
 
 	TSLArr := []math.Int{
-		sdk.NewInt(1000000),
-		sdk.NewInt(2000000),
-		sdk.NewInt(3000000),
-		sdk.NewInt(4000000),
+		sdkmath.NewInt(1000000),
+		sdkmath.NewInt(2000000),
+		sdkmath.NewInt(3000000),
+		sdkmath.NewInt(4000000),
 	}
 
 	for epoch, TSL := range TSLArr {
@@ -144,21 +144,21 @@ func TestLoadIndicatorByEpoch(t *testing.T) {
 	}
 
 	// empty epoch load test
-	require.Equal(t, sdk.ZeroDec(), TRL(input.Ctx, 5, input.TreasuryKeeper))
-	require.Equal(t, sdk.ZeroDec(), SR(input.Ctx, 5, input.TreasuryKeeper))
-	require.Equal(t, sdk.ZeroDec(), MR(input.Ctx, 5, input.TreasuryKeeper))
+	require.Equal(t, sdkmath.LegacyZeroDec(), TRL(input.Ctx, 5, input.TreasuryKeeper))
+	require.Equal(t, sdkmath.LegacyZeroDec(), SR(input.Ctx, 5, input.TreasuryKeeper))
+	require.Equal(t, sdkmath.LegacyZeroDec(), MR(input.Ctx, 5, input.TreasuryKeeper))
 }
 
 func TestSumIndicator(t *testing.T) {
 	input := CreateTestInput(t)
 
-	SRArr := []sdk.Dec{
-		sdk.NewDec(100),
-		sdk.NewDec(200),
-		sdk.NewDec(300),
-		sdk.NewDec(400),
-		sdk.NewDec(500),
-		sdk.NewDec(600),
+	SRArr := []sdkmath.LegacyDec{
+		sdkmath.LegacyNewDec(100),
+		sdkmath.LegacyNewDec(200),
+		sdkmath.LegacyNewDec(300),
+		sdkmath.LegacyNewDec(400),
+		sdkmath.LegacyNewDec(500),
+		sdkmath.LegacyNewDec(600),
 	}
 
 	for epoch, SR := range SRArr {
@@ -167,38 +167,38 @@ func TestSumIndicator(t *testing.T) {
 
 	// Case 1: at epoch 0 and summing over 0 epochs
 	rval := input.TreasuryKeeper.sumIndicator(input.Ctx, 0, SR)
-	require.Equal(t, sdk.ZeroDec(), rval)
+	require.Equal(t, sdkmath.LegacyZeroDec(), rval)
 
 	// Case 2: at epoch 0 and summing over negative epochs
 	rval = input.TreasuryKeeper.sumIndicator(input.Ctx, -1, SR)
-	require.Equal(t, sdk.ZeroDec(), rval)
+	require.Equal(t, sdkmath.LegacyZeroDec(), rval)
 
 	// Case 3: at epoch 3 and summing over 3, 4, 5 epochs; all should have the same rval
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek * 3))
 	rval = input.TreasuryKeeper.sumIndicator(input.Ctx, 4, SR)
 	rval2 := input.TreasuryKeeper.sumIndicator(input.Ctx, 5, SR)
 	rval3 := input.TreasuryKeeper.sumIndicator(input.Ctx, 6, SR)
-	require.Equal(t, sdk.NewDec(1000), rval)
+	require.Equal(t, sdkmath.LegacyNewDec(1000), rval)
 	require.Equal(t, rval, rval2)
 	require.Equal(t, rval2, rval3)
 
 	// Case 4: at epoch 3 and summing over 0 epochs
 	rval = input.TreasuryKeeper.sumIndicator(input.Ctx, 0, SR)
-	require.Equal(t, sdk.ZeroDec(), rval)
+	require.Equal(t, sdkmath.LegacyZeroDec(), rval)
 
 	// Case 5. Sum up to 6
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek * 5))
 	rval = input.TreasuryKeeper.sumIndicator(input.Ctx, 6, SR)
-	require.Equal(t, sdk.NewDec(2100), rval)
+	require.Equal(t, sdkmath.LegacyNewDec(2100), rval)
 }
 
 func TestRollingAverageIndicator(t *testing.T) {
 	input := CreateTestInput(t)
-	SRArr := []sdk.Dec{
-		sdk.NewDec(100),
-		sdk.NewDec(200),
-		sdk.NewDec(300),
-		sdk.NewDec(400),
+	SRArr := []sdkmath.LegacyDec{
+		sdkmath.LegacyNewDec(100),
+		sdkmath.LegacyNewDec(200),
+		sdkmath.LegacyNewDec(300),
+		sdkmath.LegacyNewDec(400),
 	}
 
 	for epoch, SR := range SRArr {
@@ -207,26 +207,26 @@ func TestRollingAverageIndicator(t *testing.T) {
 
 	// Case 1: at epoch 0 and averaging over 0 epochs
 	rval := input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, 0, SR)
-	require.Equal(t, sdk.ZeroDec(), rval)
+	require.Equal(t, sdkmath.LegacyZeroDec(), rval)
 
 	// Case 2: at epoch 0 and averaging over negative epochs
 	rval = input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, -1, SR)
-	require.Equal(t, sdk.ZeroDec(), rval)
+	require.Equal(t, sdkmath.LegacyZeroDec(), rval)
 
 	// Case 3: at epoch 3 and averaging over 3, 4, 5 epochs; all should have the same rval
 	input.Ctx = input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek * 3))
 	rval = input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, 4, SR)
 	rval2 := input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, 5, SR)
 	rval3 := input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, 6, SR)
-	require.Equal(t, sdk.NewDec(250), rval)
+	require.Equal(t, sdkmath.LegacyNewDec(250), rval)
 	require.Equal(t, rval, rval2)
 	require.Equal(t, rval2, rval3)
 
 	// Case 4: at epoch 3 and averaging over 0 epochs
 	rval = input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, 0, SR)
-	require.Equal(t, sdk.ZeroDec(), rval)
+	require.Equal(t, sdkmath.LegacyZeroDec(), rval)
 
 	// Case 5: at epoch 3 and averaging over 1 epoch
 	rval = input.TreasuryKeeper.rollingAverageIndicator(input.Ctx, 1, SR)
-	require.Equal(t, sdk.NewDec(400), rval)
+	require.Equal(t, sdkmath.LegacyNewDec(400), rval)
 }

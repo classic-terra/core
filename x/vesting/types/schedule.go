@@ -3,14 +3,14 @@ package types
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 )
 
 //-----------------------------------------------------------------------------
 // Schedule
 
 // NewSchedule returns new Schedule instance
-func NewSchedule(startTime, endTime int64, ratio sdk.Dec) Schedule {
+func NewSchedule(startTime, endTime int64, ratio math.LegacyDec) Schedule {
 	return Schedule{
 		StartTime: startTime,
 		EndTime:   endTime,
@@ -29,7 +29,7 @@ func (s Schedule) GetEndTime() int64 {
 }
 
 // GetRatio returns ratio
-func (s Schedule) GetRatio() sdk.Dec {
+func (s Schedule) GetRatio() math.LegacyDec {
 	return s.Ratio
 }
 
@@ -47,7 +47,7 @@ func (s Schedule) Validate() error {
 		return errors.New("vesting start-time cannot be before end-time")
 	}
 
-	if ratio.LTE(sdk.ZeroDec()) {
+	if ratio.LTE(math.LegacyZeroDec()) {
 		return errors.New("vesting ratio cannot be smaller than or equal with zero")
 	}
 
@@ -69,8 +69,8 @@ func NewVestingSchedule(denom string, schedules Schedules) VestingSchedule {
 }
 
 // GetVestedRatio returns the ratio of tokens that have vested by blockTime.
-func (vs VestingSchedule) GetVestedRatio(blockTime int64) sdk.Dec {
-	sumRatio := sdk.ZeroDec()
+func (vs VestingSchedule) GetVestedRatio(blockTime int64) math.LegacyDec {
+	sumRatio := math.LegacyZeroDec()
 	for _, lazySchedule := range vs.Schedules {
 		startTime := lazySchedule.GetStartTime()
 		endTime := lazySchedule.GetEndTime()
@@ -97,7 +97,7 @@ func (vs VestingSchedule) GetDenom() string {
 
 // Validate checks that the vesting lazy schedule is valid.
 func (vs VestingSchedule) Validate() error {
-	sumRatio := sdk.ZeroDec()
+	sumRatio := math.LegacyZeroDec()
 	for _, lazySchedule := range vs.Schedules {
 		if err := lazySchedule.Validate(); err != nil {
 			return err
@@ -108,8 +108,8 @@ func (vs VestingSchedule) Validate() error {
 
 	// add rounding to allow language specific calculation errors
 	const fixedPointDecimals = 1000000000
-	if !sdk.NewDec(sumRatio.MulInt64(fixedPointDecimals).RoundInt64()).
-		QuoInt64(fixedPointDecimals).Equal(sdk.OneDec()) {
+	if !math.LegacyNewDec(sumRatio.MulInt64(fixedPointDecimals).RoundInt64()).
+		QuoInt64(fixedPointDecimals).Equal(math.LegacyOneDec()) {
 		return errors.New("vesting total ratio must be one")
 	}
 

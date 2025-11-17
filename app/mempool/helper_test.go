@@ -5,11 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	log "cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -19,6 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	proto "google.golang.org/protobuf/proto"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -58,7 +58,15 @@ func (tx testTx) GetMsgs() []sdk.Msg {
 	return tx.msgs
 }
 
-func (tx testTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+func (tx testTx) GetMsgsV2() ([]proto.Message, error) {
+	protoMsg := make([]proto.Message, len(tx.msgs))
+	for i, msg := range tx.msgs {
+		protoMsg[i] = msg.(proto.Message)
+	}
+	return protoMsg, nil
+}
+
+func (tx testTx) GetSigners() ([][]byte, error) { return [][]byte{tx.address}, nil }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
@@ -92,9 +100,11 @@ func (sigErrTx) Size() int64 { return 0 }
 
 func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
 
+func (sigErrTx) GetMsgsV2() ([]proto.Message, error) { return nil, nil }
+
 func (sigErrTx) ValidateBasic() error { return nil }
 
-func (sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+func (sigErrTx) GetSigners() ([][]byte, error) { return nil, nil }
 
 func (sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
 
@@ -156,6 +166,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 		err := s.mempool.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
+
 	require.Equal(t, len(accounts), s.mempool.CountTx())
 
 	// distinct sender-nonce should not overwrite a tx
@@ -208,7 +219,7 @@ type MempoolTestSuite struct {
 
 func (s *MempoolTestSuite) resetMempool() {
 	s.iterations = 0
-	s.mempool = mempool.NewSenderNonceMempool()
+	s.mempool = mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(1000))
 }
 
 func (s *MempoolTestSuite) SetupTest() {

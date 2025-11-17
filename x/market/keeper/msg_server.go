@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
@@ -110,7 +111,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 			twapPrice, twapErr := k.ComputeTWAP(ctx, twapDenom)
 			if twapErr == nil && twapPrice.IsPositive() {
 				// Calculate deviation
-				var deviation sdk.Dec
+				var deviation math.LegacyDec
 				if currentPrice.GT(twapPrice) {
 					deviation = currentPrice.Sub(twapPrice).Quo(twapPrice)
 				} else {
@@ -152,7 +153,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	if spread.IsPositive() {
 		feeDecCoin = sdk.NewDecCoinFromDec(swapDecCoin.Denom, spread.Mul(swapDecCoin.Amount))
 	} else {
-		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, sdk.ZeroInt())
+		feeDecCoin = sdk.NewDecCoin(swapDecCoin.Denom, math.ZeroInt())
 	}
 
 	// Subtract fee from the swap coin
@@ -204,7 +205,7 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		burnRate := k.SwapFeeBurnRate(ctx)
 		cpRate := k.SwapFeeCommunityRate(ctx)
 		// compute amounts: floor for burn and CP; remainder to oracle
-		feeAmtDec := sdk.NewDecFromInt(feeCoin.Amount)
+		feeAmtDec := math.LegacyNewDecFromInt(feeCoin.Amount)
 		burnAmt := burnRate.Mul(feeAmtDec).TruncateInt()
 		cpAmt := cpRate.Mul(feeAmtDec).TruncateInt()
 		oracleAmt := feeCoin.Amount.Sub(burnAmt).Sub(cpAmt)

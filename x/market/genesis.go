@@ -3,10 +3,9 @@ package market
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/classic-terra/core/v3/x/market/keeper"
 	"github.com/classic-terra/core/v3/x/market/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initialize default parameters

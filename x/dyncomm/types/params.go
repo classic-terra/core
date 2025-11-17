@@ -3,10 +3,9 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
 // Parameter keys
@@ -19,10 +18,10 @@ var (
 
 // Default dyncomm parameter values
 var (
-	DefaultMaxZero       = sdk.NewDecWithPrec(5, 1)  // StrathColes A = 0.5
-	DefaultSlopeBase     = sdk.NewDecWithPrec(2, 0)  // StrathColes B = 2
-	DefaultSlopeVpImpact = sdk.NewDecWithPrec(10, 0) // StrathColes C = 10
-	DefaultCap           = sdk.NewDecWithPrec(2, 1)  // StrathColes D = 20%
+	DefaultMaxZero       = math.LegacyNewDecWithPrec(5, 1)  // StrathColes A = 0.5
+	DefaultSlopeBase     = math.LegacyNewDecWithPrec(2, 0)  // StrathColes B = 2
+	DefaultSlopeVpImpact = math.LegacyNewDecWithPrec(10, 0) // StrathColes C = 10
+	DefaultCap           = math.LegacyNewDecWithPrec(2, 1)  // StrathColes D = 20%
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -70,13 +69,13 @@ func (p Params) Validate() error {
 	if p.Cap.IsNegative() {
 		return fmt.Errorf("cap shall be 0 or positive: %s", p.Cap)
 	}
-	if p.Cap.GT(sdk.OneDec()) {
+	if p.Cap.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("cap shall be less than 1.0: %s", p.Cap)
 	}
 	if p.MaxZero.IsNegative() {
 		return fmt.Errorf("max zero shall be 0 or positive: %s", p.MaxZero)
 	}
-	if p.MaxZero.GT(sdk.OneDec()) {
+	if p.MaxZero.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("max zero shall be less than 1.0: %s", p.MaxZero)
 	}
 
@@ -84,7 +83,7 @@ func (p Params) Validate() error {
 }
 
 func validateMaxZero(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -93,7 +92,7 @@ func validateMaxZero(i interface{}) error {
 		return fmt.Errorf("max zero shall be 0 or positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("max zero shall be less than 1.0: %s", v)
 	}
 
@@ -101,7 +100,7 @@ func validateMaxZero(i interface{}) error {
 }
 
 func validateSlopeBase(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -114,7 +113,7 @@ func validateSlopeBase(i interface{}) error {
 }
 
 func validateSlopeVpImpact(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -127,7 +126,7 @@ func validateSlopeVpImpact(i interface{}) error {
 }
 
 func validateCap(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -136,7 +135,7 @@ func validateCap(i interface{}) error {
 		return fmt.Errorf("cap shall be 0 or positive: %s", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("cap shall be less than 1.0: %s", v)
 	}
 

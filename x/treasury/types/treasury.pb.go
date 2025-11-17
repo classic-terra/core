@@ -5,14 +5,16 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
+	cosmossdk_io_math "cosmossdk.io/math"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -111,10 +113,10 @@ func (m *Params) GetWindowProbation() uint64 {
 
 // PolicyConstraints - defines policy constraints can be applied in tax & reward policies
 type PolicyConstraints struct {
-	RateMin       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=rate_min,json=rateMin,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate_min" yaml:"rate_min"`
-	RateMax       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=rate_max,json=rateMax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"rate_max" yaml:"rate_max"`
-	Cap           types.Coin                             `protobuf:"bytes,3,opt,name=cap,proto3" json:"cap" yaml:"cap"`
-	ChangeRateMax github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=change_rate_max,json=changeRateMax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"change_rate_max" yaml:"change_rate_max"`
+	RateMin       cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=rate_min,json=rateMin,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate_min" yaml:"rate_min"`
+	RateMax       cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=rate_max,json=rateMax,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate_max" yaml:"rate_max"`
+	Cap           types.Coin                  `protobuf:"bytes,3,opt,name=cap,proto3" json:"cap" yaml:"cap"`
+	ChangeRateMax cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=change_rate_max,json=changeRateMax,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"change_rate_max" yaml:"change_rate_max"`
 }
 
 func (m *PolicyConstraints) Reset()      { *m = PolicyConstraints{} }

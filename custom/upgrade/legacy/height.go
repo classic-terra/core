@@ -8,7 +8,7 @@ const (
 	TestnetUpgradeHeightV1 = int64(14584970) // rebel-2 testnet upgrade height to v4
 	TestnetUpgradeHeightV2 = int64(19354000) // rebel-2 testnet upgrade height to v8
 	LegacyUpgradeHeightV1  = int64(0)        // This is not included in the local testing as it would need v3 as a basis
-	LegacyUpgradeHeightV2  = int64(25)       // Local testing upgrade height to v8 (using upgrade-test-multi.sh script)
+	LegacyUpgradeHeightV2  = int64(70)       // Local testing upgrade height to v8 (using upgrade-test-multi.sh script)
 )
 
 // LegacyHandlingVersion represents different versions of legacy handling

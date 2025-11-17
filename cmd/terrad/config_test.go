@@ -10,6 +10,6 @@ func TestOverrideConfigCacheSize(t *testing.T) {
 	_, cfg := initAppConfig()
 	terraCfg, ok := cfg.(TerraAppConfig)
 	require.Equal(t, ok, true)
-	require.Equal(t, terraCfg.Config.IAVLCacheSize, uint64(DefaultIAVLCacheSize))
-	require.Equal(t, terraCfg.Config.IAVLDisableFastNode, IavlDisablefastNodeDefault)
+	require.Equal(t, terraCfg.IAVLCacheSize, uint64(DefaultIAVLCacheSize))
+	require.Equal(t, terraCfg.IAVLDisableFastNode, IavlDisablefastNodeDefault)
 }

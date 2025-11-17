@@ -3,13 +3,12 @@ package crisis
 import (
 	"encoding/json"
 
+	customtypes "github.com/classic-terra/core/v3/custom/crisis/types"
+	core "github.com/classic-terra/core/v3/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
-
-	customtypes "github.com/classic-terra/core/v3/custom/crisis/types"
-	core "github.com/classic-terra/core/v3/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}
@@ -22,7 +21,6 @@ type AppModuleBasic struct {
 // RegisterLegacyAminoCodec registers the crisis module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
-	*types.ModuleCdc = *customtypes.ModuleCdc
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the gov

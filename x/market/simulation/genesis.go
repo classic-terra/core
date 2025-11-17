@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"cosmossdk.io/math"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/x/market/types"
 )
@@ -22,18 +22,13 @@ const (
 )
 
 // GenBasePool randomized MintBasePool
-func GenBasePool(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(50000000000000).Add(sdk.NewDec(int64(r.Intn(10000000000))))
+func GenBasePool(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDec(50000000000000).Add(math.LegacyNewDec(int64(r.Intn(10000000000))))
 }
 
 // GenPoolRecoveryPeriod randomized PoolRecoveryPeriod
 func GenPoolRecoveryPeriod(r *rand.Rand) uint64 {
 	return uint64(100 + r.Intn(10000000000))
-}
-
-// GenMinSpread randomized MinSpread
-func GenMinSpread(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(r.Intn(3)), 2)
 }
 
 // GenEpochLengthBlocks randomized EpochLengthBlocks
@@ -43,42 +38,43 @@ func GenEpochLengthBlocks(r *rand.Rand) uint64 {
 	return uint64(days) * uint64(core.BlocksPerDay)
 }
 
+func GenMinSpread(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(1, 2).Add(math.LegacyNewDecWithPrec(int64(r.Intn(100)), 3))
+}
+
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
-	var basePool sdk.Dec
+	var basePool math.LegacyDec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeyBasePool), &basePool, nil,
+		basePoolKey, &basePool, simState.Rand,
 		func(r *rand.Rand) { basePool = GenBasePool(r) },
 	)
 
 	var poolRecoveryPeriod uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, poolRecoveryPeriodKey, &poolRecoveryPeriod, simState.Rand,
+		poolRecoveryPeriodKey, &poolRecoveryPeriod, simState.Rand,
 		func(r *rand.Rand) { poolRecoveryPeriod = GenPoolRecoveryPeriod(r) },
 	)
 
-	var minStabilitySpread sdk.Dec
+	var minStabilitySpread math.LegacyDec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeyMinStabilitySpread), &minStabilitySpread, nil,
+		minStabilitySpreadKey, &minStabilitySpread, simState.Rand,
 		func(r *rand.Rand) { minStabilitySpread = GenMinSpread(r) },
 	)
 
 	var epochLengthBlocks uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, string(types.KeyEpochLengthBlocks), &epochLengthBlocks, nil,
+		simState.Cdc, string(types.KeyEpochLengthBlocks), &epochLengthBlocks,
 		func(r *rand.Rand) { epochLengthBlocks = GenEpochLengthBlocks(r) },
 	)
 
-	params := types.Params{
-		BasePool:           basePool,
-		PoolRecoveryPeriod: poolRecoveryPeriod,
-		MinStabilitySpread: minStabilitySpread,
-		EpochLengthBlocks:  epochLengthBlocks,
-	}
-
 	marketGenesis := types.NewGenesisState(
-		sdk.ZeroDec(),
-		params,
+		math.LegacyZeroDec(),
+		types.Params{
+			BasePool:           basePool,
+			PoolRecoveryPeriod: poolRecoveryPeriod,
+			MinStabilitySpread: minStabilitySpread,
+		},
 	)
 
 	bz, err := json.MarshalIndent(&marketGenesis.Params, "", " ")

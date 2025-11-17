@@ -6,6 +6,7 @@ HOME_DIR=mytestnet
 ENV=${ENV:-""}
 
 if [ "$CONTINUE" == "true" ]; then
+    echo "Running node in continue mode ..."
     $BINARY start --home $HOME_DIR --log_level debug
     exit 0
 fi
@@ -64,6 +65,7 @@ $BINARY add-genesis-account $KEY2 "1000000000000${DENOM}" --keyring-backend $KEY
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
 update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
 update_test_genesis '.app_state["gov"]["params"]["voting_period"]="5s"'
+#update_test_genesis '.app_state["gov"]["params"]["expedited_voting_period"]="4s"'
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 
@@ -72,7 +74,7 @@ $SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME_DIR/config/app.toml
 $SED_BINARY -i 's/swagger = false/swagger = true/' $HOME_DIR/config/app.toml
 $SED_BINARY -i -e 's/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' $HOME_DIR/config/app.toml
 $SED_BINARY -i -e 's/max-txs = 5000/max-txs = 3/g' $HOME_DIR/config/app.toml
-$SED_BINARY -i -e 's/timeout_commit = "5s"/timeout_commit = "2s"/g' $HOME_DIR/config/config.toml
+$SED_BINARY -i -e 's/timeout_commit = "5s"/timeout_commit = "500ms"/g' $HOME_DIR/config/config.toml
 
 
 

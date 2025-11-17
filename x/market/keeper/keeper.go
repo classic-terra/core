@@ -3,15 +3,15 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
-
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/classic-terra/core/v3/x/market/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
@@ -88,11 +88,11 @@ func (k Keeper) isAllowedSwapDenom(denom string) bool {
 }
 
 // GetTerraPoolDelta returns the gap between the TerraPool and the TerraBasePool
-func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) math.LegacyDec {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.TerraPoolDeltaKey)
 	if bz == nil {
-		return sdk.ZeroDec()
+		return math.LegacyZeroDec()
 	}
 
 	dp := sdk.DecProto{}
@@ -101,7 +101,7 @@ func (k Keeper) GetTerraPoolDelta(ctx sdk.Context) sdk.Dec {
 }
 
 // SetTerraPoolDelta updates TerraPoolDelta which is gap between the TerraPool and the BasePool
-func (k Keeper) SetTerraPoolDelta(ctx sdk.Context, delta sdk.Dec) {
+func (k Keeper) SetTerraPoolDelta(ctx sdk.Context, delta math.LegacyDec) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: delta})
 	store.Set(types.TerraPoolDeltaKey, bz)
@@ -226,7 +226,7 @@ func (k Keeper) SetLastOracleTallyTime(ctx sdk.Context, timestamp int64) {
 // PriceSnapshot represents a price observation at a specific height
 type PriceSnapshot struct {
 	Height int64
-	Price  sdk.Dec
+	Price  math.LegacyDec
 }
 
 // GetTWAPPrices returns the recent price snapshots for a denom
@@ -270,7 +270,7 @@ func (k Keeper) GetTWAPPrices(ctx sdk.Context, denom string) []PriceSnapshot {
 }
 
 // AddTWAPPrice adds a new price snapshot and prunes old ones
-func (k Keeper) AddTWAPPrice(ctx sdk.Context, denom string, price sdk.Dec) {
+func (k Keeper) AddTWAPPrice(ctx sdk.Context, denom string, price math.LegacyDec) {
 	snapshots := k.GetTWAPPrices(ctx, denom)
 	currentHeight := ctx.BlockHeight()
 	lookback := int64(k.TwapLookbackWindow(ctx))
@@ -313,14 +313,14 @@ func (k Keeper) AddTWAPPrice(ctx sdk.Context, denom string, price sdk.Dec) {
 }
 
 // ComputeTWAP calculates the time-weighted average price from snapshots
-func (k Keeper) ComputeTWAP(ctx sdk.Context, denom string) (sdk.Dec, error) {
+func (k Keeper) ComputeTWAP(ctx sdk.Context, denom string) (math.LegacyDec, error) {
 	snapshots := k.GetTWAPPrices(ctx, denom)
 	if len(snapshots) == 0 {
-		return sdk.ZeroDec(), fmt.Errorf("no TWAP data for %s", denom)
+		return math.LegacyZeroDec(), fmt.Errorf("no TWAP data for %s", denom)
 	}
 
 	// Simple average for now (could be improved to true time-weighted)
-	sum := sdk.ZeroDec()
+	sum := math.LegacyZeroDec()
 	for _, snap := range snapshots {
 		sum = sum.Add(snap.Price)
 	}
@@ -345,11 +345,11 @@ func (k Keeper) SetDailyCapResetHeight(ctx sdk.Context, h int64) {
 }
 
 // GetDailyCapBaseline returns the baseline balance for a denom set at epoch change
-func (k Keeper) GetDailyCapBaseline(ctx sdk.Context, denom string) sdk.Int {
+func (k Keeper) GetDailyCapBaseline(ctx sdk.Context, denom string) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetDailyCapBaselineKey(denom))
 	if bz == nil {
-		return sdk.ZeroInt()
+		return math.ZeroInt()
 	}
 
 	var amount sdk.IntProto
@@ -358,18 +358,18 @@ func (k Keeper) GetDailyCapBaseline(ctx sdk.Context, denom string) sdk.Int {
 }
 
 // SetDailyCapBaseline stores the baseline balance for a denom (set at epoch change)
-func (k Keeper) SetDailyCapBaseline(ctx sdk.Context, denom string, amount sdk.Int) {
+func (k Keeper) SetDailyCapBaseline(ctx sdk.Context, denom string, amount math.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: amount})
 	store.Set(types.GetDailyCapBaselineKey(denom), bz)
 }
 
 // GetDailyCapUsage returns the amount drained today for a denom
-func (k Keeper) GetDailyCapUsage(ctx sdk.Context, denom string) sdk.Int {
+func (k Keeper) GetDailyCapUsage(ctx sdk.Context, denom string) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetDailyCapUsageKey(denom))
 	if bz == nil {
-		return sdk.ZeroInt()
+		return math.ZeroInt()
 	}
 
 	var amount sdk.IntProto
@@ -378,7 +378,7 @@ func (k Keeper) GetDailyCapUsage(ctx sdk.Context, denom string) sdk.Int {
 }
 
 // SetDailyCapUsage stores the amount drained today for a denom
-func (k Keeper) SetDailyCapUsage(ctx sdk.Context, denom string, amount sdk.Int) {
+func (k Keeper) SetDailyCapUsage(ctx sdk.Context, denom string, amount math.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: amount})
 	store.Set(types.GetDailyCapUsageKey(denom), bz)

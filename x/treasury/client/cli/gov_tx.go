@@ -58,9 +58,6 @@ $ %s tx gov submit-legacy-proposal add-burn-tax-exemption-address terra1dczz24r3
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -115,9 +112,6 @@ $ %s tx gov submit-proposal remove-burn-tax-exemption-address terra1dczz24r33fwl
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
 			if err != nil {
-				return err
-			}
-			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 

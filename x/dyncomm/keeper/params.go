@@ -1,26 +1,27 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"github.com/classic-terra/core/v3/x/dyncomm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) GetMaxZero(ctx sdk.Context) (ret sdk.Dec) {
+func (k Keeper) GetMaxZero(ctx sdk.Context) (ret math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMaxZero, &ret)
 	return ret
 }
 
-func (k Keeper) GetSlopeBase(ctx sdk.Context) (ret sdk.Dec) {
+func (k Keeper) GetSlopeBase(ctx sdk.Context) (ret math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySlopeBase, &ret)
 	return ret
 }
 
-func (k Keeper) GetSlopeVpImpact(ctx sdk.Context) (ret sdk.Dec) {
+func (k Keeper) GetSlopeVpImpact(ctx sdk.Context) (ret math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySlopeVpImpact, &ret)
 	return ret
 }
 
-func (k Keeper) GetCap(ctx sdk.Context) (ret sdk.Dec) {
+func (k Keeper) GetCap(ctx sdk.Context) (ret math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyCap, &ret)
 	return ret
 }

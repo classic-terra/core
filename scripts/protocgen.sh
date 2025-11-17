@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -eo pipefail
+set -e
 
 # get protoc executions - not needed, creating issues with proto generation
 # go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null

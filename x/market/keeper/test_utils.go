@@ -7,8 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
+	sdklog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	store "cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
 	customauth "github.com/classic-terra/core/v3/custom/auth"
 	custombank "github.com/classic-terra/core/v3/custom/bank"
 	customdistr "github.com/classic-terra/core/v3/custom/distribution"
@@ -19,19 +22,16 @@ import (
 	"github.com/classic-terra/core/v3/x/oracle"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-
-	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	simparams "cosmossdk.io/simapp/params"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -46,6 +46,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 const faucetAccountName = "faucet"
@@ -64,8 +65,16 @@ func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
+// EncodingConfig mirrors the fields needed in tests; avoids importing simapp.
+type EncodingConfig struct {
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Codec             codec.Codec
+	TxConfig          client.TxConfig
+	Amino             *codec.LegacyAmino
+}
+
 // MakeEncodingConfig
-func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
+func MakeEncodingConfig(_ *testing.T) EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
@@ -79,7 +88,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	types.RegisterLegacyAminoCodec(amino)
 	types.RegisterInterfaces(interfaceRegistry)
 
-	return simparams.EncodingConfig{
+	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
 		TxConfig:          txCfg,
@@ -121,18 +130,18 @@ type TestInput struct {
 }
 
 func CreateTestInput(t *testing.T) TestInput {
-	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
-	keyBank := sdk.NewKVStoreKey(banktypes.StoreKey)
-	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tKeyParams := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
-	keyOracle := sdk.NewKVStoreKey(oracletypes.StoreKey)
-	keyStaking := sdk.NewKVStoreKey(stakingtypes.StoreKey)
-	keyDistr := sdk.NewKVStoreKey(distrtypes.StoreKey)
-	keyMarket := sdk.NewKVStoreKey(types.StoreKey)
+	keyAcc := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	keyBank := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	keyParams := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tKeyParams := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
+	keyOracle := storetypes.NewKVStoreKey(oracletypes.StoreKey)
+	keyStaking := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	keyDistr := storetypes.NewKVStoreKey(distrtypes.StoreKey)
+	keyMarket := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, log.NewNopLogger())
+	ms := store.NewCommitMultiStore(db, sdklog.NewNopLogger(), storemetrics.NewNoOpMetrics())
+	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, sdklog.NewNopLogger())
 	encodingConfig := MakeEncodingConfig(t)
 	appCodec, legacyAmino := encodingConfig.Codec, encodingConfig.Amino
 
@@ -167,8 +176,17 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	accAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+	accountKeeper := authkeeper.NewAccountKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keyAcc),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		accAddrCodec,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, runtime.NewKVStoreService(keyBank), accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(), sdklog.NewNopLogger())
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)*10))))
 	err := bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
@@ -176,10 +194,12 @@ func CreateTestInput(t *testing.T) TestInput {
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
-		keyStaking,
+		runtime.NewKVStoreService(keyStaking),
 		accountKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 
 	stakingParams := stakingtypes.DefaultParams()
@@ -187,20 +207,22 @@ func CreateTestInput(t *testing.T) TestInput {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec, keyDistr,
+		appCodec,
+		runtime.NewKVStoreService(keyDistr),
 		accountKeeper, bankKeeper, stakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	distrKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
+	distrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool())
 	distrParams := distrtypes.DefaultParams()
-	distrParams.CommunityTax = sdk.NewDecWithPrec(2, 2)
-	distrParams.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
-	distrParams.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
-	distrKeeper.SetParams(ctx, distrParams)
+	distrParams.CommunityTax = sdkmath.LegacyNewDecWithPrec(2, 2)
+	distrParams.BaseProposerReward = sdkmath.LegacyNewDecWithPrec(1, 2)
+	distrParams.BonusProposerReward = sdkmath.LegacyNewDecWithPrec(4, 2)
+	distrKeeper.Params.Set(ctx, distrParams)
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks()))
 
+	faucetAcc := authtypes.NewEmptyModuleAccount(faucetAccountName, authtypes.Minter)
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
 	notBondedPool := authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, authtypes.Staking)
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
@@ -208,6 +230,22 @@ func CreateTestInput(t *testing.T) TestInput {
 	oracleAcc := authtypes.NewEmptyModuleAccount(oracletypes.ModuleName)
 	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner, authtypes.Minter)
 	marketAccumAcc := authtypes.NewEmptyModuleAccount(types.AccumulatorModuleName)
+
+	// assign unique account numbers and set module accounts first
+	faucetAccI := accountKeeper.NewAccount(ctx, faucetAcc)
+	accountKeeper.SetModuleAccount(ctx, faucetAccI.(authtypes.ModuleAccountI))
+	feeCollectorAccI := accountKeeper.NewAccount(ctx, feeCollectorAcc)
+	accountKeeper.SetModuleAccount(ctx, feeCollectorAccI.(authtypes.ModuleAccountI))
+	bondPoolAccI := accountKeeper.NewAccount(ctx, bondPool)
+	accountKeeper.SetModuleAccount(ctx, bondPoolAccI.(authtypes.ModuleAccountI))
+	notBondedPoolAccI := accountKeeper.NewAccount(ctx, notBondedPool)
+	accountKeeper.SetModuleAccount(ctx, notBondedPoolAccI.(authtypes.ModuleAccountI))
+	distrAccI := accountKeeper.NewAccount(ctx, distrAcc)
+	accountKeeper.SetModuleAccount(ctx, distrAccI.(authtypes.ModuleAccountI))
+	oracleAccI := accountKeeper.NewAccount(ctx, oracleAcc)
+	accountKeeper.SetModuleAccount(ctx, oracleAccI.(authtypes.ModuleAccountI))
+	marketAccI := accountKeeper.NewAccount(ctx, marketAcc)
+	accountKeeper.SetModuleAccount(ctx, marketAccI.(authtypes.ModuleAccountI))
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs))))))
 	require.NoError(t, err)
@@ -221,7 +259,9 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, marketAccumAcc)
 
 	for _, addr := range Addrs {
-		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
+		baseAcc := authtypes.NewBaseAccountWithAddress(addr)
+		accI := accountKeeper.NewAccount(ctx, baseAcc)
+		accountKeeper.SetAccount(ctx, accI)
 		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, InitCoins)
 		require.NoError(t, err)
 		require.Equal(t, bankKeeper.GetAllBalances(ctx, addr), InitCoins)

@@ -19,7 +19,7 @@ message GenesisState {
 message ValidatorCommissionRate {
   string validator_address   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string min_commission_rate = 2
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
   string target_commission_rate = 3
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
 }

@@ -6,11 +6,10 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 )
 
 func (suite *AnteTestSuite) TestMemoSpamming() {
@@ -26,10 +25,10 @@ func (suite *AnteTestSuite) TestMemoSpamming() {
 	// Set IsCheckTx to true
 	suite.ctx = suite.ctx.WithIsCheckTx(true)
 
-	suite.app.AccountKeeper.SetParams(suite.ctx, authtypes.DefaultParams())
+	suite.app.AccountKeeper.Params.Set(suite.ctx, authtypes.DefaultParams())
 	authParams := suite.app.AccountKeeper.GetParams(suite.ctx)
 	authParams.MaxMemoCharacters = 512
-	suite.app.AccountKeeper.SetParams(suite.ctx, authParams)
+	suite.app.AccountKeeper.Params.Set(suite.ctx, authParams)
 
 	transferCoin := sdk.Coin{}
 	msg := ibctransfertypes.NewMsgTransfer(

@@ -1,12 +1,14 @@
 #!/bin/sh
 
 BINARY=_build/old/terrad
-CONTRACTPATH="scripts/wasm/contracts/old_cw721_base.wasm"
+WASMFILE="cw721_base.wasm"
+CONTRACTPATH="scripts/wasm/contracts/$WASMFILE"
 KEYRING_BACKEND="test"
 HOME=mytestnet
 CHAIN_ID=localterra
 
 TXHASH=()
+CONTRACT_ADDRESSES=()
 
 echo "SETTING UP SMART CONTRACT INTERACTION"
 
@@ -18,14 +20,14 @@ for j in $(seq 0 1); do
 	# stores contract
 	echo "... stores a wasm"
 	addr=$($BINARY keys show test$j -a --home $HOME --keyring-backend $KEYRING_BACKEND)
-	out=$($BINARY tx wasm store ${CONTRACTPATH} --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 100000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
+	out=$($BINARY tx wasm store ${CONTRACTPATH} --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 1000000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y )
 	code=$(echo $out | jq -r '.code')
 	if [ "$code" != "0" ]; then
 		echo "... Could not store NFT binary" >&2
 		echo $out >&2
 		exit $code
 	fi
-	sleep 10
+	sleep 5
 	txhash=$(echo $out | jq -r '.txhash')
 	TXHASH+=($txhash)
 	id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
@@ -33,17 +35,20 @@ for j in $(seq 0 1); do
 	# instantiates contract
 	echo "... instantiates contract"
 	msg='{"name":"BaseNFT","symbol":"BASE","minter":"'$addr'"}'
-	out=$($BINARY tx wasm instantiate $id "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y)
+	out=$($BINARY tx wasm instantiate $id "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --label mynft --admin $addr)
 	code=$(echo $out | jq -r '.code')
 	if [ "$code" != "0" ]; then
 		echo "... Could not instantiate NFT contract" >&2
 		echo $out >&2
 		exit $code
 	fi
-	sleep 10
+	sleep 5
 	txhash=$(echo $out | jq -r '.txhash')
 	TXHASH+=("$txhash")
-	contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[0].attributes[3].value')
+	contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[0].value')
+	CONTRACT_ADDRESSES+=("$contract_addr")
+	echo $($BINARY q tx $txhash -o json | jq -r '.raw_log')
+	echo "contract_addr = $contract_addr"
 
 	# mints some tokens
 	echo "... mints tokens"
@@ -60,7 +65,7 @@ for j in $(seq 0 1); do
 		txhash=$(echo $out | jq -r '.txhash')
 		TXHASH+=("$txhash")
 
-		sleep 10
+		sleep 5
 	done
 
 	# sends token to other nodes
@@ -81,11 +86,22 @@ for j in $(seq 0 1); do
 		txhash=$(echo $out | jq -r '.txhash')
 		TXHASH+=("$txhash")
 
-		sleep 10
+		sleep 5
 	done
+
+		# write the contract state to a file
+	echo "Writing contract state to file"
+	mkdir -p scripts/wasm/contract_states/
+	$BINARY q wasm contract-state all $contract_addr --output json --home $HOME > scripts/wasm/contract_states/old_$contract_addr.json
+
 
 done
 
 TXHASH_STRING="${TXHASH[*]}"
+CONTRACT_ADDRESSES_STRING="${CONTRACT_ADDRESSES[*]}"
+
 echo "TXHASH = $TXHASH_STRING"
+echo "CONTRACT_ADDRESSES = $CONTRACT_ADDRESSES_STRING"
+
 export TXHASH_STRING
+export CONTRACT_ADDRESSES_STRING

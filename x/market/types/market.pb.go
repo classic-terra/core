@@ -5,13 +5,14 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-proto"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+
+	cosmossdk_io_math "cosmossdk.io/math"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,23 +28,23 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the parameters for the market module.
 type Params struct {
-	BasePool           github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=base_pool,json=basePool,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_pool" yaml:"base_pool"`
-	PoolRecoveryPeriod uint64                                 `protobuf:"varint,2,opt,name=pool_recovery_period,json=poolRecoveryPeriod,proto3" json:"pool_recovery_period,omitempty" yaml:"pool_recovery_period"`
-	MinStabilitySpread github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=min_stability_spread,json=minStabilitySpread,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_stability_spread" yaml:"min_stability_spread"`
+	BasePool           cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=base_pool,json=basePool,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_pool" yaml:"base_pool"`
+	PoolRecoveryPeriod uint64                      `protobuf:"varint,2,opt,name=pool_recovery_period,json=poolRecoveryPeriod,proto3" json:"pool_recovery_period,omitempty" yaml:"pool_recovery_period"`
+	MinStabilitySpread cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=min_stability_spread,json=minStabilitySpread,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_stability_spread" yaml:"min_stability_spread"`
 	// Number of blocks per epoch for market burn/refill. Default: 30 days worth of blocks.
 	EpochLengthBlocks uint64 `protobuf:"varint,4,opt,name=epoch_length_blocks,json=epochLengthBlocks,proto3" json:"epoch_length_blocks,omitempty" yaml:"epoch_length_blocks"`
 	// Fraction of swap fee to burn [0,1]
-	SwapFeeBurnRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=swap_fee_burn_rate,json=swapFeeBurnRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee_burn_rate" yaml:"swap_fee_burn_rate"`
+	SwapFeeBurnRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=swap_fee_burn_rate,json=swapFeeBurnRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee_burn_rate" yaml:"swap_fee_burn_rate"`
 	// Fraction of swap fee to send to Community Pool [0,1]
-	SwapFeeCommunityRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=swap_fee_community_rate,json=swapFeeCommunityRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee_community_rate" yaml:"swap_fee_community_rate"`
+	SwapFeeCommunityRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,opt,name=swap_fee_community_rate,json=swapFeeCommunityRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee_community_rate" yaml:"swap_fee_community_rate"`
 	// Maximum age in seconds for oracle prices before swaps are denied. Default: 75 seconds (25 blocks * 3s)
 	MaxOracleAgeSeconds uint64 `protobuf:"varint,7,opt,name=max_oracle_age_seconds,json=maxOracleAgeSeconds,proto3" json:"max_oracle_age_seconds,omitempty" yaml:"max_oracle_age_seconds"`
 	// Number of blocks for TWAP calculation window. Default: 45 blocks
 	TwapLookbackWindow uint64 `protobuf:"varint,8,opt,name=twap_lookback_window,json=twapLookbackWindow,proto3" json:"twap_lookback_window,omitempty" yaml:"twap_lookback_window"`
 	// Maximum deviation from TWAP before swap is rejected [0,1]. Default: 0.10 (10%)
-	MaxTwapDeviation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,9,opt,name=max_twap_deviation,json=maxTwapDeviation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_twap_deviation" yaml:"max_twap_deviation"`
+	MaxTwapDeviation cosmossdk_io_math.LegacyDec `protobuf:"bytes,9,opt,name=max_twap_deviation,json=maxTwapDeviation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_twap_deviation" yaml:"max_twap_deviation"`
 	// Daily cap factor: fraction of pool balance usable per day [0,1]. Default: 0.10 (10%)
-	DailyCapFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,10,opt,name=daily_cap_factor,json=dailyCapFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"daily_cap_factor" yaml:"daily_cap_factor"`
+	DailyCapFactor cosmossdk_io_math.LegacyDec `protobuf:"bytes,10,opt,name=daily_cap_factor,json=dailyCapFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"daily_cap_factor" yaml:"daily_cap_factor"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }

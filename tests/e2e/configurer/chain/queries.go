@@ -9,20 +9,17 @@ import (
 	"net/http"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	tmabcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/classic-terra/core/v3/tests/e2e/initialization"
 	"github.com/classic-terra/core/v3/tests/e2e/util"
-
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
+	taxexemptiontypes "github.com/classic-terra/core/v3/x/taxexemption/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	tmabcitypes "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -100,38 +97,38 @@ func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (sdk.Coin, error) 
 	return sdk.NewCoin(denom, math.ZeroInt()), nil
 }
 
-func (n *NodeConfig) QuerySupplyOf(denom string) (math.Int, error) {
+func (n *NodeConfig) QuerySupplyOf(denom string) (sdkmath.Int, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
 	var supplyResp banktypes.QuerySupplyOfResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
-		return sdk.NewInt(0), err
+		return sdkmath.NewInt(0), err
 	}
 	return supplyResp.Amount.Amount, nil
 }
 
-func (n *NodeConfig) QueryTaxRate() (sdk.Dec, error) {
+func (n *NodeConfig) QueryTaxRate() (sdkmath.LegacyDec, error) {
 	path := "terra/treasury/v1beta1/tax_rate"
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
 	var taxRateResp treasurytypes.QueryTaxRateResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
-		return sdk.ZeroDec(), err
+		return sdkmath.LegacyZeroDec(), err
 	}
 	return taxRateResp.TaxRate, nil
 }
 
-func (n *NodeConfig) QueryBurnTaxRate() (sdk.Dec, error) {
+func (n *NodeConfig) QueryBurnTaxRate() (sdkmath.LegacyDec, error) {
 	path := "terra/tax/v1beta1/burn_tax_rate"
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
 	var taxRateResp taxtypes.QueryBurnTaxRateResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
-		return sdk.ZeroDec(), err
+		return sdkmath.LegacyZeroDec(), err
 	}
 	return taxRateResp.TaxRate, nil
 }
@@ -147,6 +144,39 @@ func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {
 	}
 
 	return taxRateResp.Addresses, nil
+}
+
+// QueryTaxExemptionZones returns the list of tax exemption zones.
+func (n *NodeConfig) QueryTaxExemptionZones() ([]taxexemptiontypes.Zone, error) {
+	path := "terra/taxexemption/v1/zones"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var resp taxexemptiontypes.QueryTaxExemptionZonesResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &resp); err != nil {
+		return nil, err
+	}
+
+	zones := make([]taxexemptiontypes.Zone, 0, len(resp.Zones))
+	for _, z := range resp.Zones {
+		if z != nil {
+			zones = append(zones, *z)
+		}
+	}
+	return zones, nil
+}
+
+// QueryTaxExemptionAddresses returns the addresses for a given zone.
+func (n *NodeConfig) QueryTaxExemptionAddresses(zone string) ([]string, error) {
+	path := fmt.Sprintf("terra/taxexemption/v1/%s/addresses", zone)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var resp taxexemptiontypes.QueryTaxExemptionAddressResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &resp); err != nil {
+		return nil, err
+	}
+	return resp.Addresses, nil
 }
 
 func (n *NodeConfig) QueryContractsFromID(codeID int) ([]string, error) {

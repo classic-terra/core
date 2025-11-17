@@ -15,13 +15,13 @@ message Params {
   string vote_threshold = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"vote_threshold\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   string reward_band = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"reward_band\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   uint64         reward_distribution_window = 4 [(gogoproto.moretags) = "yaml:\"reward_distribution_window\""];
@@ -33,14 +33,14 @@ message Params {
   string slash_fraction = 6 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"slash_fraction\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   uint64 slash_window         = 7 [(gogoproto.moretags) = "yaml:\"slash_window\""];
   string min_valid_per_window = 8 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"min_valid_per_window\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -55,7 +55,7 @@ message Denom {
   string tobin_tax = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"tobin_tax\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -99,7 +99,7 @@ message ExchangeRateTuple {
   string exchange_rate = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"exchange_rate\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package terra.oracle.v1beta1;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/classic-terra/core/v3/x/oracle/types";
@@ -22,6 +23,7 @@ service Msg {
 // MsgAggregateExchangeRatePrevote represents a message to submit
 // aggregate exchange rate prevote.
 message MsgAggregateExchangeRatePrevote {
+  option (cosmos.msg.v1.signer)     = "feeder";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -36,6 +38,7 @@ message MsgAggregateExchangeRatePrevoteResponse {}
 // MsgAggregateExchangeRateVote represents a message to submit
 // aggregate exchange rate vote.
 message MsgAggregateExchangeRateVote {
+  option (cosmos.msg.v1.signer)     = "feeder";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -51,6 +54,7 @@ message MsgAggregateExchangeRateVoteResponse {}
 // MsgDelegateFeedConsent represents a message to
 // delegate oracle voting rights to another address.
 message MsgDelegateFeedConsent {
+  option (cosmos.msg.v1.signer)     = "operator";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

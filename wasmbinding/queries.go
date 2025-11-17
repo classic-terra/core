@@ -1,10 +1,6 @@
 package wasmbinding
 
 import (
-	//	"fmt"
-
-	//	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	//	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"

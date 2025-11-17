@@ -3,11 +3,11 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v3/x/oracle/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over q
@@ -53,7 +53,7 @@ func (q querier) ExchangeRates(c context.Context, _ *types.QueryExchangeRatesReq
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var exchangeRates sdk.DecCoins
-	q.IterateLunaExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateLunaExchangeRates(ctx, func(denom string, rate math.LegacyDec) (stop bool) {
 		exchangeRates = append(exchangeRates, sdk.NewDecCoinFromDec(denom, rate))
 		return false
 	})
@@ -85,7 +85,7 @@ func (q querier) TobinTaxes(c context.Context, _ *types.QueryTobinTaxesRequest) 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var tobinTaxes types.DenomList
-	q.IterateTobinTaxes(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateTobinTaxes(ctx, func(denom string, rate math.LegacyDec) (stop bool) {
 		tobinTaxes = append(tobinTaxes, types.Denom{
 			Name:     denom,
 			TobinTax: rate,
@@ -101,7 +101,7 @@ func (q querier) Actives(c context.Context, _ *types.QueryActivesRequest) (*type
 	ctx := sdk.UnwrapSDKContext(c)
 
 	denoms := []string{}
-	q.IterateLunaExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	q.IterateLunaExchangeRates(ctx, func(denom string, rate math.LegacyDec) (stop bool) {
 		denoms = append(denoms, denom)
 		return false
 	})
@@ -241,15 +241,15 @@ func (q querier) USDPrice(c context.Context, req *types.QueryUSDPriceRequest) (*
 
 // USDPrices queries USD prices of all denoms
 func (q querier) USDPrices(c context.Context, _ *types.QueryUSDPricesRequest) (*types.QueryUSDPricesResponse, error) {
-    ctx := sdk.UnwrapSDKContext(c)
-    var prices sdk.DecCoins
-    if err := q.IterateUSDPrices(ctx, func(denom string, usdPrice sdk.Dec) (stop bool) {
-        prices = append(prices, sdk.NewDecCoinFromDec(denom, usdPrice))
-        return false
-    }); err != nil {
-        return nil, err
-    }
-    // Sort for deterministic order and reliable AmountOf
-    prices = prices.Sort()
-    return &types.QueryUSDPricesResponse{UsdPrices: prices}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	var prices sdk.DecCoins
+	if err := q.IterateUSDPrices(ctx, func(denom string, usdPrice math.LegacyDec) (stop bool) {
+		prices = append(prices, sdk.NewDecCoinFromDec(denom, usdPrice))
+		return false
+	}); err != nil {
+		return nil, err
+	}
+	// Sort for deterministic order and reliable AmountOf
+	prices = prices.Sort()
+	return &types.QueryUSDPricesResponse{UsdPrices: prices}, nil
 }

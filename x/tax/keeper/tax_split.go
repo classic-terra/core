@@ -1,20 +1,22 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	sdkmath "cosmossdk.io/math"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 	burnSplitRate := k.treasuryKeeper.GetBurnSplitRate(ctx)
 	oracleSplitRate := k.treasuryKeeper.GetOracleSplitRate(ctx)
-	communityTax := k.distributionKeeper.GetCommunityTax(ctx)
+	communityTax, err := k.distributionKeeper.GetCommunityTax(ctx)
+	if err != nil {
+		return err
+	}
 	distributionDeltaCoins := sdk.NewCoins()
 	oracleSplitCoins := sdk.NewCoins()
 	communityTaxCoins := sdk.NewCoins()
@@ -46,7 +48,7 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 	// Calculate community tax coins
 	if communityTax.IsPositive() {
 		// Adjust community tax to avoid double taxation
-		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Add(sdk.OneDec()).Sub(communityTax)))
+		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Add(sdkmath.LegacyOneDec()).Sub(communityTax)))
 
 		for _, distrCoin := range distributionDeltaCoins {
 			communityTaxAmount := applyCommunityTax.MulInt(distrCoin.Amount).RoundInt()
@@ -66,19 +68,18 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 
 	// Handle community tax coins
 	if !communityTaxCoins.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(
+		if err := k.distributionKeeper.FundCommunityPool(
 			ctx,
-			authtypes.FeeCollectorName,
-			distributiontypes.ModuleName,
 			communityTaxCoins,
+			authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 		); err != nil {
 			return err
 		}
 
 		// Add to community pool
-		feePool := k.distributionKeeper.GetFeePool(ctx)
+		feePool, _ := k.distributionKeeper.FeePool.Get(ctx)
 		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(communityTaxCoins...)...)
-		k.distributionKeeper.SetFeePool(ctx, feePool)
+		k.distributionKeeper.FeePool.Set(ctx, feePool)
 
 		// Emit event for community tax transfer
 		ctx.EventManager().EmitEvent(
@@ -88,7 +89,7 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 				sdk.NewAttribute(taxtypes.AttributeKeyFromModule, authtypes.FeeCollectorName),
 				sdk.NewAttribute(taxtypes.AttributeKeyToModule, distributiontypes.ModuleName),
 				sdk.NewAttribute(taxtypes.AttributeKeyAmount, communityTaxCoins.String()),
-				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdk.NewInt(ctx.BlockHeight()).String()),
+				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdkmath.NewInt(ctx.BlockHeight()).String()),
 			),
 		)
 	}
@@ -112,7 +113,7 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 				sdk.NewAttribute(taxtypes.AttributeKeyFromModule, authtypes.FeeCollectorName),
 				sdk.NewAttribute(taxtypes.AttributeKeyToModule, oracletypes.ModuleName),
 				sdk.NewAttribute(taxtypes.AttributeKeyAmount, oracleSplitCoins.String()),
-				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdk.NewInt(ctx.BlockHeight()).String()),
+				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdkmath.NewInt(ctx.BlockHeight()).String()),
 			),
 		)
 	}
@@ -136,7 +137,7 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 				sdk.NewAttribute(taxtypes.AttributeKeyFromModule, authtypes.FeeCollectorName),
 				sdk.NewAttribute(taxtypes.AttributeKeyToModule, markettypes.AccumulatorModuleName),
 				sdk.NewAttribute(taxtypes.AttributeKeyAmount, marketSplitCoins.String()),
-				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdk.NewInt(ctx.BlockHeight()).String()),
+				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdkmath.NewInt(ctx.BlockHeight()).String()),
 			),
 		)
 	}
@@ -160,7 +161,7 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 				sdk.NewAttribute(taxtypes.AttributeKeyFromModule, authtypes.FeeCollectorName),
 				sdk.NewAttribute(taxtypes.AttributeKeyToModule, treasurytypes.BurnModuleName),
 				sdk.NewAttribute(taxtypes.AttributeKeyAmount, taxes.String()),
-				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdk.NewInt(ctx.BlockHeight()).String()),
+				sdk.NewAttribute(taxtypes.AttributeKeyHeight, sdkmath.NewInt(ctx.BlockHeight()).String()),
 			),
 		)
 	}

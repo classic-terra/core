@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
 	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"

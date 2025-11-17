@@ -1,14 +1,14 @@
 package wasmbinding
 
 import (
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
+	customwasm "github.com/classic-terra/core/v3/custom/wasm"
 	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
 	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
 	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func RegisterCustomPlugins(
@@ -43,4 +43,11 @@ func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter, codec codec.Co
 	return []wasmkeeper.Option{
 		queryPluginOpt,
 	}
+}
+
+// RegisterLegacyQueryHandler wraps the wasm query handler with legacy store support for historical queries
+func RegisterLegacyQueryHandler(storeKey storetypes.StoreKey) wasmkeeper.Option {
+	return wasmkeeper.WithQueryHandlerDecorator(func(next wasmkeeper.WasmVMQueryHandler) wasmkeeper.WasmVMQueryHandler {
+		return customwasm.NewLegacyQueryHandler(next, storeKey)
+	})
 }

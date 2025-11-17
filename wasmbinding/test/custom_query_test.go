@@ -3,8 +3,8 @@ package wasmbinding_test
 import (
 	"encoding/json"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-
+	sdkmath "cosmossdk.io/math"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	core "github.com/classic-terra/core/v3/types"
 	"github.com/classic-terra/core/v3/wasmbinding/bindings"
 	markettypes "github.com/classic-terra/core/v3/x/market/types"
@@ -29,18 +29,18 @@ func (s *WasmTestSuite) QuerySwap(contractPath string, queryFunc func(contract s
 
 	// setup swap environment
 	// Set Oracle Price
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	lunaPriceInSDR := sdkmath.LegacyNewDecWithPrec(17, 1)
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
 	// Calculate expected swapped SDR
-	expectedSwappedSDR := sdk.NewDec(1000).Mul(lunaPriceInSDR)
+	expectedSwappedSDR := sdkmath.LegacyNewDec(1000).Mul(lunaPriceInSDR)
 	tax := markettypes.DefaultMinStabilitySpread.Mul(expectedSwappedSDR)
 	expectedSwappedSDR = expectedSwappedSDR.Sub(tax)
 
 	// query swap
 	query := bindings.TerraQuery{
 		Swap: &markettypes.QuerySwapParams{
-			OfferCoin: sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(1000)),
+			OfferCoin: sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1000)),
 			AskDenom:  core.MicroSDRDenom,
 		},
 	}
@@ -63,7 +63,7 @@ func (s *WasmTestSuite) QueryExchangeRates(contractPath string, queryFunc func(c
 	contractAddr := s.InstantiateContract(actor, contractPath)
 	s.Require().NotEmpty(contractAddr)
 
-	lunaPriceInSDR := sdk.NewDecWithPrec(17, 1)
+	lunaPriceInSDR := sdkmath.LegacyNewDecWithPrec(17, 1)
 	s.App.OracleKeeper.SetLunaExchangeRate(s.Ctx, core.MicroSDRDenom, lunaPriceInSDR)
 
 	query := bindings.TerraQuery{
@@ -76,7 +76,7 @@ func (s *WasmTestSuite) QueryExchangeRates(contractPath string, queryFunc func(c
 	resp := bindings.ExchangeRatesQueryResponse{}
 	queryFunc(contractAddr, query, &resp)
 
-	s.Require().Equal(lunaPriceInSDR, sdk.MustNewDecFromStr(resp.ExchangeRates[0].ExchangeRate))
+	s.Require().Equal(lunaPriceInSDR, sdkmath.LegacyMustNewDecFromStr(resp.ExchangeRates[0].ExchangeRate))
 }
 
 // go test -v -run ^TestQueryTaxRate$ github.com/classic-terra/core/v3/wasmbinding/test
@@ -98,7 +98,7 @@ func (s *WasmTestSuite) QueryTaxRate(contractPath string, queryFunc func(contrac
 	resp := bindings.TaxRateQueryResponse{}
 	queryFunc(contractAddr, query, &resp)
 
-	s.Require().Equal(treasurytypes.DefaultTaxRate, sdk.MustNewDecFromStr(resp.Rate))
+	s.Require().Equal(treasurytypes.DefaultTaxRate, sdkmath.LegacyMustNewDecFromStr(resp.Rate))
 }
 
 // go test -v -run ^TestQueryTaxCap$ github.com/classic-terra/core/v3/wasmbinding/test

@@ -6,6 +6,11 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
+	cosmossdk_io_math "cosmossdk.io/math"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -16,9 +21,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -75,7 +77,7 @@ var xxx_messageInfo_QueryExchangeRateRequest proto.InternalMessageInfo
 // Query/ExchangeRate RPC method.
 type QueryExchangeRateResponse struct {
 	// exchange_rate defines the exchange rate of Luna denominated in various Terra
-	ExchangeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=exchange_rate,json=exchangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"exchange_rate"`
+	ExchangeRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=exchange_rate,json=exchangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"exchange_rate"`
 }
 
 func (m *QueryExchangeRateResponse) Reset()         { *m = QueryExchangeRateResponse{} }
@@ -238,7 +240,7 @@ var xxx_messageInfo_QueryTobinTaxRequest proto.InternalMessageInfo
 // Query/TobinTax RPC method.
 type QueryTobinTaxResponse struct {
 	// tobin_taxe defines the tobin tax of a denom
-	TobinTax github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=tobin_tax,json=tobinTax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tobin_tax"`
+	TobinTax cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=tobin_tax,json=tobinTax,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"tobin_tax"`
 }
 
 func (m *QueryTobinTaxResponse) Reset()         { *m = QueryTobinTaxResponse{} }

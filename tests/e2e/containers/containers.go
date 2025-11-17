@@ -83,6 +83,10 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, 
 	return m.ExecTxCmdWithSuccessString(t, chainID, containerName, command, "\"code\":0")
 }
 
+func (m *Manager) GetPool() *dockertest.Pool {
+	return m.pool
+}
+
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json"`,
 // and searching for `successStr`
@@ -376,8 +380,8 @@ func (m *Manager) RunChainInitResource(chainID string, chainVotingPeriod, chainE
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       chainID,
-			Repository: m.ImageConfig.InitRepository,
-			Tag:        m.ImageConfig.InitTag,
+			Repository: m.InitRepository,
+			Tag:        m.InitTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", mountDir),

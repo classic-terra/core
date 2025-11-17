@@ -1,10 +1,9 @@
 package module
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/classic-terra/core/v3/x/tax/keeper"
 	"github.com/classic-terra/core/v3/x/tax/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes default parameters

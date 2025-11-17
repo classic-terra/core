@@ -16,7 +16,7 @@ ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 
 if [[ "$FORK" == "true" ]]; then
-    export TERRAD_HALT_HEIGHT=20
+    export TERRAD_HALT_HEIGHT=100
 fi
 
 # underscore so that go tool will not take gocache into account
@@ -120,6 +120,9 @@ run_upgrade () {
     ./_build/old/terrad tx gov vote 1 yes --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
     sleep 2
+
+    ./_build/old/terrad tx gov vote 1 yes --from test2 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
+    
 
     # determine block_height to halt
     while true; do 

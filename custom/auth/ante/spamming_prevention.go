@@ -9,7 +9,7 @@ import (
 	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 )
 
-const MAX_ORACLE_GAS_LIMIT = 1_000_000
+const MaxOracleGasLimit = 1_000_000
 
 // SpammingPreventionDecorator will check if the transaction's gas is smaller than
 // configured hard cap
@@ -44,8 +44,8 @@ func (spd SpammingPreventionDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 				return ctx, sdkerrors.ErrTxDecode.Wrap("oracle tx must be a FeeTx")
 			}
 
-			if feeTx.GetGas() > MAX_ORACLE_GAS_LIMIT {
-				return ctx, sdkerrors.ErrInvalidGasLimit.Wrapf("oracle tx gas limit %d exceeds maximum %d", feeTx.GetGas(), MAX_ORACLE_GAS_LIMIT)
+			if feeTx.GetGas() > MaxOracleGasLimit {
+				return ctx, sdkerrors.ErrInvalidGasLimit.Wrapf("oracle tx gas limit %d exceeds maximum %d", feeTx.GetGas(), MaxOracleGasLimit)
 			}
 		}
 

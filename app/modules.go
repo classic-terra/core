@@ -15,7 +15,6 @@ import (
 	customauthsim "github.com/classic-terra/core/v3/custom/auth/simulation"
 	customauthz "github.com/classic-terra/core/v3/custom/authz"
 	custombank "github.com/classic-terra/core/v3/custom/bank"
-	customcrisis "github.com/classic-terra/core/v3/custom/crisis"
 	customdistr "github.com/classic-terra/core/v3/custom/distribution"
 	customevidence "github.com/classic-terra/core/v3/custom/evidence"
 	customfeegrant "github.com/classic-terra/core/v3/custom/feegrant"
@@ -50,7 +49,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -72,7 +70,7 @@ import (
 	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/types"
 	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
-	transfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v10/modules/core"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
@@ -99,7 +97,6 @@ var (
 			},
 		),
 		customparams.AppModuleBasic{},
-		customcrisis.AppModuleBasic{},
 		customslashing.AppModuleBasic{},
 		customfeegrant.AppModuleBasic{},
 		ibc.AppModuleBasic{},
@@ -145,7 +142,6 @@ var (
 func appModules(
 	app *TerraApp,
 	encodingConfig terraappparams.EncodingConfig,
-	skipGenesisInvariants bool,
 ) []module.AppModule {
 	appCodec := encodingConfig.Marshaler
 	return []module.AppModule{
@@ -177,14 +173,12 @@ func appModules(
 		ibchooks.NewAppModule(app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		taxmodule.NewAppModule(appCodec, app.TaxKeeper),
-		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	}
 }
 
 func simulationModules(
 	app *TerraApp,
 	encodingConfig terraappparams.EncodingConfig,
-	_ bool,
 ) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
 	return []module.AppModuleSimulation{

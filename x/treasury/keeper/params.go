@@ -9,48 +9,48 @@ import (
 // TaxPolicy defines constraints for TaxRate
 func (k Keeper) TaxPolicy(ctx sdk.Context) (res types.PolicyConstraints) {
 	k.paramSpace.Get(ctx, types.KeyTaxPolicy, &res)
-	return
+	return res
 }
 
 // RewardPolicy defines constraints for RewardWeight
 func (k Keeper) RewardPolicy(ctx sdk.Context) (res types.PolicyConstraints) {
 	k.paramSpace.Get(ctx, types.KeyRewardPolicy, &res)
-	return
+	return res
 }
 
 // SeigniorageBurdenTarget defines fixed target for the Seigniorage Burden. Between 0 and 1.
 func (k Keeper) SeigniorageBurdenTarget(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySeigniorageBurdenTarget, &res)
-	return
+	return res
 }
 
 // MiningIncrement is a factor used to determine how fast MRL should grow over time
 func (k Keeper) MiningIncrement(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMiningIncrement, &res)
-	return
+	return res
 }
 
 // WindowShort is a short period window for moving average
 func (k Keeper) WindowShort(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyWindowShort, &res)
-	return
+	return res
 }
 
 // WindowLong is a long period window for moving average
 func (k Keeper) WindowLong(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyWindowLong, &res)
-	return
+	return res
 }
 
 // WindowProbation is a period of time to prevent updates
 func (k Keeper) WindowProbation(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyWindowProbation, &res)
-	return
+	return res
 }
 
 func (k Keeper) GetBurnSplitRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyBurnTaxSplit, &res)
-	return
+	return res
 }
 
 func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdkmath.LegacyDec) {
@@ -59,7 +59,7 @@ func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdkmath.LegacyDec
 
 func (k Keeper) GetMinInitialDepositRatio(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMinInitialDepositRatio, &res)
-	return
+	return res
 }
 
 func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRatio sdkmath.LegacyDec) {
@@ -68,7 +68,7 @@ func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRati
 
 func (k Keeper) GetOracleSplitRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyOracleSplit, &res)
-	return
+	return res
 }
 
 func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdkmath.LegacyDec) {

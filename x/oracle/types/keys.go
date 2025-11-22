@@ -76,5 +76,5 @@ func GetTobinTaxKey(d string) []byte {
 // ExtractDenomFromTobinTaxKey - split denom from the tobin tax key
 func ExtractDenomFromTobinTaxKey(key []byte) (denom string) {
 	denom = string(key[1:])
-	return
+	return denom
 }

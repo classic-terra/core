@@ -224,10 +224,10 @@ func (k Keeper) GetAggregateExchangeRatePrevote(ctx sdk.Context, voter sdk.ValAd
 	b := store.Get(types.GetAggregateExchangeRatePrevoteKey(voter))
 	if b == nil {
 		err = errorsmod.Wrap(types.ErrNoAggregatePrevote, voter.String())
-		return
+		return aggregatePrevote, err
 	}
 	k.cdc.MustUnmarshal(b, &aggregatePrevote)
-	return
+	return aggregatePrevote, err
 }
 
 // SetAggregateExchangeRatePrevote set an oracle aggregate prevote to the store
@@ -269,10 +269,10 @@ func (k Keeper) GetAggregateExchangeRateVote(ctx sdk.Context, voter sdk.ValAddre
 	b := store.Get(types.GetAggregateExchangeRateVoteKey(voter))
 	if b == nil {
 		err = errorsmod.Wrap(types.ErrNoAggregateVote, voter.String())
-		return
+		return aggregateVote, err
 	}
 	k.cdc.MustUnmarshal(b, &aggregateVote)
-	return
+	return aggregateVote, err
 }
 
 // SetAggregateExchangeRateVote adds an oracle aggregate prevote to the store

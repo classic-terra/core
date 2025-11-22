@@ -40,7 +40,7 @@ func GenerateRandomTestCase() (rates []float64, valValAddrs []sdk.ValAddress, st
 
 	stakingKeeper = NewDummyStakingKeeper(mockValidators)
 
-	return
+	return rates, valValAddrs, stakingKeeper
 }
 
 var _ StakingKeeper = DummyStakingKeeper{}
@@ -103,7 +103,7 @@ func (DummyStakingKeeper) MaxValidators(context.Context) (uint32, error) {
 // PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power
 func (DummyStakingKeeper) PowerReduction(context.Context) (res math.Int) {
 	res = sdk.DefaultPowerReduction
-	return
+	return res
 }
 
 type MockValidator struct {

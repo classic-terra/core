@@ -169,7 +169,7 @@ func computeTax(clientCtx client.Context, taxRate math.LegacyDec, principal sdk.
 		taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxDue))
 	}
 
-	return
+	return taxes, err
 }
 
 func queryTaxRate(clientCtx client.Context) (math.LegacyDec, error) {

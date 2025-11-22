@@ -1,6 +1,7 @@
 package keepers
 
 import (
+	"fmt"
 	"path/filepath"
 
 	sdklog "cosmossdk.io/log"
@@ -42,8 +43,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -89,7 +88,6 @@ type AppKeepers struct {
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             govkeeper.Keeper
-	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
 	IBCKeeper             *ibckeeper.Keeper // IBC Keeper must be a pointer in the appKeepers, so we can SetRouter on it correctly
@@ -126,7 +124,6 @@ func NewAppKeepers(
 	appOpts servertypes.AppOptions,
 ) *AppKeepers {
 	keys := map[string]*storetypes.KVStoreKey{
-		crisistypes.StoreKey:         storetypes.NewKVStoreKey(crisistypes.StoreKey),
 		authtypes.StoreKey:           storetypes.NewKVStoreKey(authtypes.StoreKey),
 		banktypes.StoreKey:           storetypes.NewKVStoreKey(banktypes.StoreKey),
 		stakingtypes.StoreKey:        storetypes.NewKVStoreKey(stakingtypes.StoreKey),
@@ -168,6 +165,11 @@ func NewAppKeepers(
 	accAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 	valAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
 	valConsAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix())
+
+	// load state streaming if enabled
+	if err := bApp.RegisterStreamingServices(appOpts, appKeepers.keys); err != nil {
+		panic(fmt.Errorf("failed to load state streaming err %v", err))
+	}
 
 	// init params keeper and subspaces
 	appKeepers.ParamsKeeper = initParamsKeeper(
@@ -248,15 +250,6 @@ func NewAppKeepers(
 		runtime.NewKVStoreService(appKeepers.keys[slashingtypes.StoreKey]),
 		appKeepers.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(appKeepers.keys[crisistypes.StoreKey]),
-		invCheckPeriod,
-		appKeepers.BankKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		accAddrCodec,
 	)
 	appKeepers.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
@@ -509,7 +502,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(distrtypes.ModuleName).WithKeyTable(distrtypes.ParamKeyTable())
 	paramsKeeper.Subspace(slashingtypes.ModuleName).WithKeyTable(slashingtypes.ParamKeyTable())
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName).WithKeyTable(crisistypes.ParamKeyTable())
 	// IBC Transfer legacy params key table (SendEnabled, ReceiveEnabled)
 	{
 		transferSS := paramsKeeper.Subspace(ibctransfertypes.ModuleName)

@@ -3,6 +3,7 @@ package v14
 import (
 	store "cosmossdk.io/store/types"
 	"github.com/classic-terra/core/v3/app/upgrades"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 const UpgradeName = "v14"
@@ -13,8 +14,10 @@ var Upgrade = upgrades.Upgrade{
 	// Add new stores introduced since the last upgrade here. If there are
 	// no new stores for this upgrade, leave this empty.
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{},
-		Deleted: []string{},
+		Added: []string{},
+		Deleted: []string{
+			crisistypes.ModuleName,
+		},
 		Renamed: []store.StoreRename{},
 	},
 }

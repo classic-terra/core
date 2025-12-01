@@ -76,20 +76,14 @@ query_pair_address() {
     local token1=$2
     local token2=$3
 
-    echo "factory address: $factory_address"
+    >&2 echo "factory address: $factory_address"
 
     local pair_query="{\"pair\":{\"asset_infos\":[$(create_asset_info_json $token1),$(create_asset_info_json $token2)]}}"
 
-    echo "Pair query: $pair_query"
-    $BINARY query wasm contract-state smart $factory_address "$pair_query" --home $HOME --output json
+    >&2 echo "Pair query: $pair_query"
 
-    local pair_info=$($BINARY query wasm contract-state smart $factory_address $pair_query --home $HOME --output json)
-    
-    echo "pair info: $pair_info"
-    
-    echo $(echo $pair_info | jq -r '.data.contract_addr')
-
-    echo "Pair info: $pair_info"
+    local pair_info=$($BINARY query wasm contract-state smart $factory_address "$pair_query" --home "$HOME" --output json)
+    echo $pair_info | jq -r '.data.contract_addr'
 }
 
 increase_allowance() {
@@ -97,6 +91,9 @@ increase_allowance() {
     local spender=$2
     local amount=$3
 
+    >&2 echo "token_address: $token_address"
+    >&2 echo "spender: $spender"
+    >&2 echo "amount: $amount"
     >&2 echo "Increasing allowance for token $token_address..."
     out=$($BINARY tx wasm execute $token_address \
         "{\"increase_allowance\":{\"spender\":\"$spender\",\"amount\":\"$amount\"}}" \
@@ -109,6 +106,7 @@ increase_allowance() {
         --output json \
         -y)
     
+    >&2 echo "finished increasing allowance"
     txhash=$(echo $out | jq -r '.txhash')
     sleep $SLEEP_TIME
     tx_response=$($BINARY q tx $txhash --output json)

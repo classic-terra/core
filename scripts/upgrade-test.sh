@@ -71,7 +71,6 @@ if [ ! -z "$ADDITIONAL_PRE_SCRIPTS" ]; then
     done
 fi
 
-exit 0
 run_fork () {
     echo "forking"
 

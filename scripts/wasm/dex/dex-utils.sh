@@ -76,9 +76,20 @@ query_pair_address() {
     local token1=$2
     local token2=$3
 
+    echo "factory address: $factory_address"
+
     local pair_query="{\"pair\":{\"asset_infos\":[$(create_asset_info_json $token1),$(create_asset_info_json $token2)]}}"
-    local pair_info=$($BINARY query wasm contract-state smart $factory_address "$pair_query" --output json)
+
+    echo "Pair query: $pair_query"
+    $BINARY query wasm contract-state smart $factory_address "$pair_query" --home $HOME --output json
+
+    local pair_info=$($BINARY query wasm contract-state smart $factory_address $pair_query --home $HOME --output json)
+    
+    echo "pair info: $pair_info"
+    
     echo $(echo $pair_info | jq -r '.data.contract_addr')
+
+    echo "Pair info: $pair_info"
 }
 
 increase_allowance() {
@@ -112,11 +123,18 @@ provide_liquidity() {
     local amount2=$5
 
     >&2 echo "Providing liquidity..."
+    >&2 echo "Factory address: $factory_address"
+    >&2 echo "Token 1: $token1"
+    >&2 echo "Amount 1: $amount1"
+    >&2 echo "Token 2: $token2"
+    >&2 echo "Amount 2: $amount2"
 
     local pair_address=$(query_pair_address "$factory_address" "$token1" "$token2")
+    >&2 echo "Pair address: $pair_address"
 
     local asset1=$(create_asset_json "$token1" "$amount1")
     local asset2=$(create_asset_json "$token2" "$amount2")
+
 
     if [[ $token1 == terra* ]]; then
         increase_allowance "$token1" "$pair_address" "$amount1"

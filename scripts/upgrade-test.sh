@@ -11,8 +11,8 @@ ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
 SOFTWARE_UPGRADE_NAME="v14"
-ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
-ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
+ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-"scripts/wasm/dex/pre-dex.sh"}
+ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-"scripts/wasm/dex/post-dex.sh"}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 
 if [[ "$FORK" == "true" ]]; then
@@ -71,6 +71,7 @@ if [ ! -z "$ADDITIONAL_PRE_SCRIPTS" ]; then
     done
 fi
 
+exit 0
 run_fork () {
     echo "forking"
 

@@ -17,6 +17,7 @@ import (
 	"github.com/classic-terra/core/v3/app/keepers"
 	appmempool "github.com/classic-terra/core/v3/app/mempool"
 	terraappparams "github.com/classic-terra/core/v3/app/params"
+
 	// upgrades
 	"github.com/classic-terra/core/v3/app/upgrades"
 	// v9 had been used by tax2gas and has to be skipped
@@ -39,6 +40,7 @@ import (
 	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v3/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
+
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v3/client/docs/statik"
 	customante "github.com/classic-terra/core/v3/custom/auth/ante"
@@ -68,54 +70,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-<<<<<<< HEAD
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-=======
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	"github.com/classic-terra/core/v3/app/keepers"
-	terraappparams "github.com/classic-terra/core/v3/app/params"
-	customserver "github.com/classic-terra/core/v3/server"
-
-	// upgrades
-	"github.com/classic-terra/core/v3/app/upgrades"
-	v11_2 "github.com/classic-terra/core/v3/app/upgrades/v11_2"
-	v2 "github.com/classic-terra/core/v3/app/upgrades/v2"
-	v3 "github.com/classic-terra/core/v3/app/upgrades/v3"
-	v4 "github.com/classic-terra/core/v3/app/upgrades/v4"
-	v5 "github.com/classic-terra/core/v3/app/upgrades/v5"
-	v6 "github.com/classic-terra/core/v3/app/upgrades/v6"
-	v6_1 "github.com/classic-terra/core/v3/app/upgrades/v6_1"
-	v7 "github.com/classic-terra/core/v3/app/upgrades/v7"
-	v7_1 "github.com/classic-terra/core/v3/app/upgrades/v7_1"
-	v8 "github.com/classic-terra/core/v3/app/upgrades/v8"
-	v8_1 "github.com/classic-terra/core/v3/app/upgrades/v8_1"
-	v8_2 "github.com/classic-terra/core/v3/app/upgrades/v8_2"
-	v8_3 "github.com/classic-terra/core/v3/app/upgrades/v8_3"
-
-	// v9 had been used by tax2gas and has to be skipped
-	v10_1 "github.com/classic-terra/core/v3/app/upgrades/v10_1"
-	v11 "github.com/classic-terra/core/v3/app/upgrades/v11"
-	v11_1 "github.com/classic-terra/core/v3/app/upgrades/v11_1"
-	v12 "github.com/classic-terra/core/v3/app/upgrades/v12"
-	v13 "github.com/classic-terra/core/v3/app/upgrades/v13"
-	v13_1 "github.com/classic-terra/core/v3/app/upgrades/v13_1"
-
-	customante "github.com/classic-terra/core/v3/custom/auth/ante"
-	custompost "github.com/classic-terra/core/v3/custom/auth/post"
-	customauthtx "github.com/classic-terra/core/v3/custom/auth/tx"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/classic-terra/core/v3/client/docs/statik"
->>>>>>> main
 )
 
 const appName = "TerraApp"
@@ -144,11 +103,7 @@ var (
 		v11_2.Upgrade,
 		v12.Upgrade,
 		v13.Upgrade,
-<<<<<<< HEAD
 		v14.Upgrade,
-=======
-		v13_1.Upgrade,
->>>>>>> main
 	}
 
 	// Forks defines forks to be applied to the network

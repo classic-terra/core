@@ -2,11 +2,11 @@
 package v13_1
 
 import (
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/classic-terra/core/v3/app/keepers"
 	"github.com/classic-terra/core/v3/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func CreateV131UpgradeHandler(

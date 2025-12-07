@@ -48,7 +48,8 @@ func TestTerraGaiaIBCTranfer(t *testing.T) {
 		},
 		{
 			Name:          "gaia",
-			Version:       "v12.0.0",
+			Version:       "v25.1.0",
+			ChainConfig:   createGaiaConfig(), // Added chain config for Gaia
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 		},
@@ -61,8 +62,8 @@ func TestTerraGaiaIBCTranfer(t *testing.T) {
 	terra, gaia := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
-	r := interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(t)).
-		Build(t, client, network)
+	rf := interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(t))
+	r := rf.Build(t, client, network)
 
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
 	ic := interchaintest.NewInterchain().

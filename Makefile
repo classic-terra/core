@@ -278,7 +278,9 @@ ictest-oracle: ictest-build
 ictest-ibc-v2: ictest-build
 	@cd tests/interchaintest && go test -race -v -run 'TestIBCv2' .
 
-ictest-all: ictest-start ictest-validator ictest-ibc ictest-ibc-hooks ictest-ibc-pfm ictest-ibc-pfm-terra ictest-oracle ictest-ibc-v2
+ictest-upgrade-ibc: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraClassicUpgradeIBC .
+ictest-all: ictest-start ictest-validator ictest-ibc ictest-ibc-hooks ictest-ibc-pfm ictest-ibc-pfm-terra ictest-oracle ictest-ibc-v2 ictest-upgrade-ibc		
 
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .

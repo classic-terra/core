@@ -26,6 +26,7 @@ import (
 	v11_2 "github.com/classic-terra/core/v3/app/upgrades/v11_2"
 	v12 "github.com/classic-terra/core/v3/app/upgrades/v12"
 	v13 "github.com/classic-terra/core/v3/app/upgrades/v13"
+	v13_1 "github.com/classic-terra/core/v3/app/upgrades/v13_1"
 	v14 "github.com/classic-terra/core/v3/app/upgrades/v14"
 	v2 "github.com/classic-terra/core/v3/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v3/app/upgrades/v3"

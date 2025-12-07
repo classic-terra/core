@@ -100,6 +100,7 @@ var (
 		v11_2.Upgrade,
 		v12.Upgrade,
 		v13.Upgrade,
+		v13_1.Upgrade,
 		v14.Upgrade,
 	}
 

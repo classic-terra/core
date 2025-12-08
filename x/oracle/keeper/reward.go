@@ -66,7 +66,7 @@ func (k Keeper) RewardBallotWinners(
 	var distributedReward sdk.Coins
 	for _, winner := range ballotWinners {
 		receiverVal, err := k.StakingKeeper.Validator(ctx, winner.Recipient)
-		if err != nil {
+		if err != nil || receiverVal == nil {
 			continue
 		}
 
@@ -74,7 +74,7 @@ func (k Keeper) RewardBallotWinners(
 		rewardCoins, _ := periodRewards.MulDec(math.LegacyNewDec(winner.Weight).QuoInt64(ballotPowerSum)).TruncateDecimal()
 
 		// In case absence of the validator, we just skip distribution
-		if receiverVal != nil && !rewardCoins.IsZero() {
+		if !rewardCoins.IsZero() {
 			k.distrKeeper.AllocateTokensToValidator(ctx, receiverVal, sdk.NewDecCoinsFromCoins(rewardCoins...))
 			distributedReward = distributedReward.Add(rewardCoins...)
 		} else {

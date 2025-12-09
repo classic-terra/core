@@ -81,3 +81,76 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	validator, _ = input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[0])
 	require.Equal(t, amt, validator.Tokens)
 }
+
+func TestSlashExceedingMissCounters(t *testing.T) {
+	// initial setup
+	input := CreateTestInput(t)
+	addr, val := ValAddrs[0], ValPubKeys[0]
+	addr1, val1 := ValAddrs[1], ValPubKeys[1]
+	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(input.StakingKeeper)
+	ctx := input.Ctx
+
+	// Validator created
+	_, err := stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	require.NoError(t, err)
+	_, err = stakingMsgSvr.CreateValidator(ctx, NewTestMsgCreateValidator(addr1, val1, amt))
+	require.NoError(t, err)
+	staking.EndBlocker(ctx, input.StakingKeeper)
+
+	require.Equal(t, amt, input.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
+	require.Equal(t, amt, input.StakingKeeper.Validator(ctx, addr1).GetBondedTokens())
+
+	votePeriodsPerWindow := sdk.NewDec(int64(input.OracleKeeper.SlashWindow(input.Ctx))).QuoInt64(int64(input.OracleKeeper.VotePeriod(input.Ctx))).TruncateInt64()
+	slashFraction := input.OracleKeeper.SlashFraction(input.Ctx)
+	minValidVotes := input.OracleKeeper.MinValidPerWindow(input.Ctx).MulInt64(votePeriodsPerWindow).TruncateInt64()
+
+	// Case 1: Miss counter at threshold boundary - should NOT slash (validator can still meet minValidPerWindow)
+	// If missCounter = votePeriodsPerWindow - minValidVotes, validVoteRate = minValidVotes/votePeriodsPerWindow = minValidPerWindow (exactly at threshold, not below)
+	input.OracleKeeper.SetMissCounter(input.Ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes))
+	input.OracleKeeper.SlashExceedingMissCounters(input.Ctx)
+	staking.EndBlocker(input.Ctx, input.StakingKeeper)
+
+	validator, _ := input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[0])
+	require.Equal(t, amt, validator.GetBondedTokens())
+	require.False(t, validator.IsJailed())
+
+	// Case 2: Miss counter exceeds threshold by 1 - should slash (validVoteRate < minValidPerWindow, cannot recover)
+	input.OracleKeeper.SetMissCounter(input.Ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
+	input.OracleKeeper.SlashExceedingMissCounters(input.Ctx)
+
+	validator, _ = input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[0])
+	require.Equal(t, amt.Sub(slashFraction.MulInt(amt).TruncateInt()), validator.GetBondedTokens())
+	require.True(t, validator.IsJailed())
+
+	// Case 3: Unbonded validator should not be slashed
+	validator, _ = input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[1])
+	validator.Status = stakingtypes.Unbonded
+	validator.Jailed = false
+	validator.Tokens = amt
+	input.StakingKeeper.SetValidator(input.Ctx, validator)
+
+	input.OracleKeeper.SetMissCounter(input.Ctx, ValAddrs[1], uint64(votePeriodsPerWindow-minValidVotes+1))
+	input.OracleKeeper.SlashExceedingMissCounters(input.Ctx)
+
+	validator, _ = input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[1])
+	require.Equal(t, amt, validator.Tokens)
+	require.False(t, validator.IsJailed())
+
+	// Case 4: Already jailed validator should not be slashed again
+	validator, _ = input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[1])
+	validator.Status = stakingtypes.Bonded
+	validator.Jailed = true
+	validator.Tokens = amt
+	input.StakingKeeper.SetValidator(input.Ctx, validator)
+
+	input.OracleKeeper.SetMissCounter(input.Ctx, ValAddrs[1], uint64(votePeriodsPerWindow-minValidVotes+1))
+	input.OracleKeeper.SlashExceedingMissCounters(input.Ctx)
+
+	validator, _ = input.StakingKeeper.GetValidator(input.Ctx, ValAddrs[1])
+	require.Equal(t, amt, validator.Tokens)
+
+	// Case 5: Verify miss counter is NOT deleted (only SlashAndResetMissCounters deletes it)
+	missCounter := input.OracleKeeper.GetMissCounter(input.Ctx, ValAddrs[1])
+	require.Equal(t, uint64(votePeriodsPerWindow-minValidVotes+1), missCounter)
+}

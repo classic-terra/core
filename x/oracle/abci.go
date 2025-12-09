@@ -4,6 +4,7 @@ import (
 	"time"
 
 	core "github.com/classic-terra/core/v3/types"
+	"github.com/classic-terra/core/v3/types/util"
 	"github.com/classic-terra/core/v3/x/oracle/keeper"
 	"github.com/classic-terra/core/v3/x/oracle/types"
 
@@ -117,5 +118,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// reset miss counters of all validators at the last block of slash window
 	if core.IsPeriodLastBlock(ctx, params.SlashWindow) {
 		k.SlashAndResetMissCounters(ctx)
+	} else if core.IsPeriodLastBlock(ctx, util.BlocksPerHour*12) {
+		// Every ~12 hours, check if any validator has exceeded the maximum allowed misses
+		// and can no longer recover to meet MinValidPerWindow - slash them immediately
+		// rather than waiting until the end of SlashWindow
+		k.SlashExceedingMissCounters(ctx)
 	}
 }

@@ -26,6 +26,11 @@ func (k Keeper) SlashExceedingMissCounters(ctx sdk.Context) {
 	k.IterateMissCounters(ctx, func(operator sdk.ValAddress, missCounter uint64) bool {
 		// Calculate valid vote rate; (votePeriodsPerWindow - missCounter) / votePeriodsPerWindow
 		// This is the BEST CASE scenario assuming perfect voting for the rest of the window
+		if missCounter >= votePeriodsPerWindow {
+			// Already exceeded total periods - definitely slash
+			missCounter = votePeriodsPerWindow
+		}
+
 		validVoteRate := sdk.NewDecFromInt(
 			sdk.NewInt(int64(votePeriodsPerWindow - missCounter))).
 			QuoInt64(int64(votePeriodsPerWindow))

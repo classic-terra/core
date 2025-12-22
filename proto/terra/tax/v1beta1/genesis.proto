@@ -12,16 +12,13 @@ message Params {
   option (amino.name)                 = "terra/x/tax/Params";
 
   repeated cosmos.base.v1beta1.DecCoin gas_prices = 1 [
-    (gogoproto.moretags)   = "yaml:\"gas_prices\"",
+    (gogoproto.moretags)     = "yaml:\"gas_prices\"",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)   = false,
+    (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];
 
-  string burn_tax_rate = 2 [
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false
-  ];
+  string burn_tax_rate = 2 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
 }
 
 // GenesisState defines the tax module's genesis state.

@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/types"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )

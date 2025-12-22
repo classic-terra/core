@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/classic-terra/core/v3/tests/e2e/util"
-	coreutil "github.com/classic-terra/core/v3/types/util"
+	"github.com/classic-terra/core/v4/tests/e2e/util"
+	coreutil "github.com/classic-terra/core/v4/types/util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

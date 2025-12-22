@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	feeutils "github.com/classic-terra/core/v4/custom/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"

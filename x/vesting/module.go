@@ -3,7 +3,7 @@ package vesting
 import (
 	"encoding/json"
 
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

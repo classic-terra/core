@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/classic-terra/core/v3/x/tax/types"
+	"github.com/classic-terra/core/v4/x/tax/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 )

@@ -3,7 +3,7 @@ package cli
 import (
 	"strings"
 
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	feeutils "github.com/classic-terra/core/v4/custom/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"

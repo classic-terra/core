@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/classic-terra/core/v3/x/tax/types"
+	"github.com/classic-terra/core/v4/x/tax/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

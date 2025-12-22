@@ -8,8 +8,8 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 

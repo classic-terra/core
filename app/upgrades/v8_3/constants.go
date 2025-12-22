@@ -1,7 +1,7 @@
 package v8_3
 
 import (
-	"github.com/classic-terra/core/v3/app/upgrades"
+	"github.com/classic-terra/core/v4/app/upgrades"
 )
 
 const UpgradeName = "v8_3"

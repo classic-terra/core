@@ -2,8 +2,8 @@ package keeper
 
 import (
 	sdkmath "cosmossdk.io/math"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/stretchr/testify/require"
 )
 

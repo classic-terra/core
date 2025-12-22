@@ -1,9 +1,9 @@
 package bank
 
 import (
-	customcli "github.com/classic-terra/core/v3/custom/bank/client/cli"
-	customsim "github.com/classic-terra/core/v3/custom/bank/simulation"
-	customtypes "github.com/classic-terra/core/v3/custom/bank/types"
+	customcli "github.com/classic-terra/core/v4/custom/bank/client/cli"
+	customsim "github.com/classic-terra/core/v4/custom/bank/simulation"
+	customtypes "github.com/classic-terra/core/v4/custom/bank/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

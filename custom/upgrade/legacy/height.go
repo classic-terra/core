@@ -1,6 +1,6 @@
 package legacy
 
-import core "github.com/classic-terra/core/v3/types"
+import core "github.com/classic-terra/core/v4/types"
 
 const (
 	MainnetUpgradeHeightV1 = int64(13215800) // columbus-5 mainnet upgrade height to v4

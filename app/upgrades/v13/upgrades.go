@@ -10,8 +10,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v3/app/keepers"
-	"github.com/classic-terra/core/v3/app/upgrades"
+	"github.com/classic-terra/core/v4/app/keepers"
+	"github.com/classic-terra/core/v4/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

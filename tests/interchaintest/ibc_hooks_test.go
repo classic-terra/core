@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/test/interchaintest/helpers"
+	"github.com/classic-terra/core/v4/test/interchaintest/helpers"
 	"github.com/cosmos/interchaintest/v10"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 	"github.com/cosmos/interchaintest/v10/ibc"

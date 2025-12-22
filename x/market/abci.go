@@ -1,7 +1,7 @@
 package market
 
 import (
-	"github.com/classic-terra/core/v3/x/market/keeper"
+	"github.com/classic-terra/core/v4/x/market/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

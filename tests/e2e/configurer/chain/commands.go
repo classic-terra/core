@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	app "github.com/classic-terra/core/v3/app"
-	"github.com/classic-terra/core/v3/tests/e2e/initialization"
-	"github.com/classic-terra/core/v3/types/assets"
+	app "github.com/classic-terra/core/v4/app"
+	"github.com/classic-terra/core/v4/tests/e2e/initialization"
+	"github.com/classic-terra/core/v4/types/assets"
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/p2p"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"

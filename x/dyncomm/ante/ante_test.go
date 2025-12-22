@@ -7,11 +7,11 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/app"
-	appparams "github.com/classic-terra/core/v3/app/params"
-	apptesting "github.com/classic-terra/core/v3/app/testing"
-	core "github.com/classic-terra/core/v3/types"
-	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
+	"github.com/classic-terra/core/v4/app"
+	appparams "github.com/classic-terra/core/v4/app/params"
+	apptesting "github.com/classic-terra/core/v4/app/testing"
+	core "github.com/classic-terra/core/v4/types"
+	dyncommante "github.com/classic-terra/core/v4/x/dyncomm/ante"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -345,7 +345,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 	suite.Require().NoError(err)
 }
 
-// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v3/x/dyncomm/ante
+// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v4/x/dyncomm/ante
 // check that account keeper sequence no longer increases when editing validator unsuccessfully
 func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	suite.SetupTest() // setup

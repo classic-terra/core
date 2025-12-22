@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/classic-terra/core/v3/x/taxexemption/client/cli"
+	"github.com/classic-terra/core/v4/x/taxexemption/client/cli"
 )
 
 func (s *CLITestSuite) TestGetQueryCmd() {

@@ -6,11 +6,11 @@ import (
 	sdkmath "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
-	core "github.com/classic-terra/core/v3/types"
+	core "github.com/classic-terra/core/v4/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v3/wasmbinding/test
+// go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v4/wasmbinding/test
 func (s *WasmTestSuite) TestTax() {
 	s.SetupTest()
 	taxRate := sdkmath.LegacyNewDecWithPrec(11, 2)  // 11%

@@ -2,7 +2,7 @@
 package v13_1
 
 import (
-	"github.com/classic-terra/core/v3/app/upgrades"
+	"github.com/classic-terra/core/v4/app/upgrades"
 )
 
 const UpgradeName = "v13_1"

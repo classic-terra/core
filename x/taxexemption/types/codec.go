@@ -1,7 +1,7 @@
 package types
 
 import (
-	govamino "github.com/classic-terra/core/v3/custom/gov/types"
+	govamino "github.com/classic-terra/core/v4/custom/gov/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

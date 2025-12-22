@@ -4,9 +4,9 @@ import (
 	"slices"
 	"testing"
 
-	taxexemption "github.com/classic-terra/core/v3/x/taxexemption"
-	util "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
+	taxexemption "github.com/classic-terra/core/v4/x/taxexemption"
+	util "github.com/classic-terra/core/v4/x/taxexemption/keeper"
+	"github.com/classic-terra/core/v4/x/taxexemption/types"
 	"github.com/stretchr/testify/require"
 )
 

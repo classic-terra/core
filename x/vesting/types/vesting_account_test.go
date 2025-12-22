@@ -6,8 +6,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/vesting/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"

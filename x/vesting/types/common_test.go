@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/classic-terra/core/v3/custom/auth"
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/classic-terra/core/v4/custom/auth"
+	"github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/codec"

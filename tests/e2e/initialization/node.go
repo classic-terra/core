@@ -11,8 +11,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	terraApp "github.com/classic-terra/core/v3/app"
-	"github.com/classic-terra/core/v3/tests/e2e/util"
+	terraApp "github.com/classic-terra/core/v4/app"
+	"github.com/classic-terra/core/v4/tests/e2e/util"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cometbft/cometbft/p2p"

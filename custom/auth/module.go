@@ -1,8 +1,8 @@
 package auth
 
 import (
-	customsim "github.com/classic-terra/core/v3/custom/auth/simulation"
-	customtypes "github.com/classic-terra/core/v3/custom/auth/types"
+	customsim "github.com/classic-terra/core/v4/custom/auth/simulation"
+	customtypes "github.com/classic-terra/core/v4/custom/auth/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"

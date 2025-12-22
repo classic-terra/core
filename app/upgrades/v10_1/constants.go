@@ -2,8 +2,8 @@ package v10_1
 
 import (
 	store "cosmossdk.io/store/types"
-	"github.com/classic-terra/core/v3/app/upgrades"
-	tax2gastypes "github.com/classic-terra/core/v3/x/tax/types"
+	"github.com/classic-terra/core/v4/app/upgrades"
+	tax2gastypes "github.com/classic-terra/core/v4/x/tax/types"
 )
 
 const UpgradeName = "v10_1"

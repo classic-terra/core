@@ -1,8 +1,8 @@
 package forks
 
 import (
-	"github.com/classic-terra/core/v3/app/upgrades"
-	"github.com/classic-terra/core/v3/types/fork"
+	"github.com/classic-terra/core/v4/app/upgrades"
+	"github.com/classic-terra/core/v4/types/fork"
 )
 
 var DisableSwapFork = upgrades.Fork{

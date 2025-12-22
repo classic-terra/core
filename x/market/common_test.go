@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/market/keeper"
-	"github.com/classic-terra/core/v3/x/market/types"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/market/keeper"
+	"github.com/classic-terra/core/v4/x/market/types"
 )
 
 var randomPrice = sdkmath.LegacyNewDec(1700)

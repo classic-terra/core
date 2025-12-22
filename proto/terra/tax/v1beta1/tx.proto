@@ -7,7 +7,7 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "terra/tax/v1beta1/genesis.proto";
 
-option go_package = "github.com/classic-terra/core/v3/x/tax/types";
+option go_package = "github.com/classic-terra/core/v4/x/tax/types";
 
 service Msg {
   option (cosmos.msg.v1.service) = true;

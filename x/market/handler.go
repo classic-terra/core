@@ -7,8 +7,8 @@ package market
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 // 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 //
-// 	"github.com/classic-terra/core/v3/x/market/keeper"
-// 	"github.com/classic-terra/core/v3/x/market/types"
+// 	"github.com/classic-terra/core/v4/x/market/keeper"
+// 	"github.com/classic-terra/core/v4/x/market/types"
 // )
 
 // NewHandler creates a new handler for all market type messages.

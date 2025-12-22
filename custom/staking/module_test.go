@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	apptesting "github.com/classic-terra/core/v3/app/testing"
-	"github.com/classic-terra/core/v3/types"
+	apptesting "github.com/classic-terra/core/v4/app/testing"
+	"github.com/classic-terra/core/v4/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -24,7 +24,7 @@ func TestStakingTestSuite(t *testing.T) {
 	suite.Run(t, new(StakingTestSuite))
 }
 
-// go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v3/custom/staking
+// go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v4/custom/staking
 func (s *StakingTestSuite) TestValidatorVPLimit() {
 	s.Setup(s.T(), types.ColumbusChainID)
 

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	customtypes "github.com/classic-terra/core/v3/custom/staking/types"
-	core "github.com/classic-terra/core/v3/types"
+	customtypes "github.com/classic-terra/core/v4/custom/staking/types"
+	core "github.com/classic-terra/core/v4/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"

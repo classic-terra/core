@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
+	dyncommkeeper "github.com/classic-terra/core/v4/x/dyncomm/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

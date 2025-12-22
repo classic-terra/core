@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

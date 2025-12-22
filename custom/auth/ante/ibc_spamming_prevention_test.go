@@ -2,7 +2,7 @@ package ante_test
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/custom/auth/ante"
+	"github.com/classic-terra/core/v4/custom/auth/ante"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

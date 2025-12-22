@@ -6,7 +6,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	apptesting "github.com/classic-terra/core/v3/app/testing"
+	apptesting "github.com/classic-terra/core/v4/app/testing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 )

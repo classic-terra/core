@@ -13,7 +13,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
+	core "github.com/classic-terra/core/v4/types"
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	tmrand "github.com/cometbft/cometbft/libs/rand"

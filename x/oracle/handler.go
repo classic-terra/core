@@ -7,8 +7,8 @@ package oracle
 //     sdk "github.com/cosmos/cosmos-sdk/types"
 //     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 //
-//     "github.com/classic-terra/core/v3/x/oracle/keeper"
-//     "github.com/classic-terra/core/v3/x/oracle/types"
+//     "github.com/classic-terra/core/v4/x/oracle/keeper"
+//     "github.com/classic-terra/core/v4/x/oracle/types"
 // )
 //
 // // NewHandler returns a handler for "oracle" type messages.

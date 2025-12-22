@@ -7,9 +7,9 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/tests/e2e/util"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	"github.com/classic-terra/core/v4/tests/e2e/util"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/server"

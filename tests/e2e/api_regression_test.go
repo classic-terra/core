@@ -62,6 +62,34 @@ type TaxComputeResponse struct {
 	} `json:"tax_amount"`
 }
 
+// SigningInfosResponse represents the response from slashing signing_infos query
+type SigningInfosResponse struct {
+	Info []struct {
+		Address             string `json:"address"`
+		StartHeight         string `json:"start_height"`
+		IndexOffset         string `json:"index_offset"`
+		JailedUntil         string `json:"jailed_until"`
+		Tombstoned          bool   `json:"tombstoned"`
+		MissedBlocksCounter string `json:"missed_blocks_counter"`
+	} `json:"info"`
+	Pagination struct {
+		NextKey string `json:"next_key"`
+		Total   string `json:"total"`
+	} `json:"pagination"`
+}
+
+// SpecificSigningInfoResponse represents the response from specific signing_info query
+type SpecificSigningInfoResponse struct {
+	ValSigningInfo struct {
+		Address             string `json:"address"`
+		StartHeight         string `json:"start_height"`
+		IndexOffset         string `json:"index_offset"`
+		JailedUntil         string `json:"jailed_until"`
+		Tombstoned          bool   `json:"tombstoned"`
+		MissedBlocksCounter string `json:"missed_blocks_counter"`
+	} `json:"val_signing_info"`
+}
+
 func (s *IntegrationTestSuite) TestAPIRegression() {
 	s.Run("Tax Computation Test", func() {
 		chain := s.configurer.GetChainConfig(0)
@@ -259,5 +287,75 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		resp, err = apiClient.GetWithHeaders(wasmCodesPath, headers)
 		s.Suite.Require().NoError(err)
 		s.Suite.Require().Equal(200, resp.StatusCode)
+	})
+
+	// Test for slashing signing info query with terravalcons bech32 prefix
+	// This tests the fix for the bech32 prefix mismatch error:
+	// "hrp does not match bech32 prefix: expected 'cosmosvalcons' got 'terravalcons'"
+	s.Run("Slashing Signing Info Query Test", func() {
+		chain := s.configurer.GetChainConfig(0)
+		node, err := chain.GetDefaultNode()
+		s.Suite.Require().NoError(err)
+
+		hostPort, err := node.GetHostPort("1317/tcp")
+		s.Suite.Require().NoError(err)
+
+		apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
+		emptyHeaders := map[string]string{}
+
+		// First, query the list of all signing infos to get a valid terravalcons address
+		signingInfosPath := "/cosmos/slashing/v1beta1/signing_infos"
+		var signingInfosResp SigningInfosResponse
+		s.Eventually(func() bool {
+			resp, err := apiClient.GetWithHeaders(signingInfosPath, emptyHeaders)
+			if err != nil {
+				s.Suite.T().Logf("Failed to query signing infos: %v", err)
+				return false
+			}
+			if resp.StatusCode != 200 {
+				s.Suite.T().Logf("Unexpected status code for signing infos: %d", resp.StatusCode)
+				return false
+			}
+
+			err = util.UnmarshalResponse(resp, &signingInfosResp)
+			if err != nil {
+				s.Suite.T().Logf("Failed to unmarshal signing infos response: %v", err)
+				return false
+			}
+
+			return len(signingInfosResp.Info) > 0
+		},
+			30*time.Second,
+			1*time.Second,
+		)
+
+		s.Suite.Require().NotEmpty(signingInfosResp.Info, "Expected at least one validator signing info")
+
+		// Get the first validator's consensus address (should be terravalcons format)
+		consAddress := signingInfosResp.Info[0].Address
+		s.Suite.T().Logf("Found validator consensus address: %s", consAddress)
+
+		// Verify the address has the correct terravalcons prefix
+		s.Suite.Require().True(
+			len(consAddress) > 0 && consAddress[:11] == "terravalcons",
+			"Expected terravalcons prefix, got: %s", consAddress,
+		)
+
+		// Now query the specific signing info for this validator
+		// This is the query that was failing with bech32 prefix mismatch before the fix
+		specificSigningInfoPath := fmt.Sprintf("/cosmos/slashing/v1beta1/signing_infos/%s", consAddress)
+		var specificSigningInfoResp SpecificSigningInfoResponse
+		resp, err := apiClient.GetWithHeaders(specificSigningInfoPath, emptyHeaders)
+		s.Suite.Require().NoError(err, "Failed to query specific signing info")
+		s.Suite.Require().Equal(200, resp.StatusCode, "Expected 200 status code for specific signing info query")
+
+		err = util.UnmarshalResponse(resp, &specificSigningInfoResp)
+		s.Suite.Require().NoError(err, "Failed to unmarshal specific signing info response")
+
+		// Verify we got a valid response with the same address
+		s.Suite.Require().Equal(consAddress, specificSigningInfoResp.ValSigningInfo.Address,
+			"Response address should match query address")
+
+		s.Suite.T().Logf("Slashing signing info query test passed - terravalcons prefix working correctly")
 	})
 }

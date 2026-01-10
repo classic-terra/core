@@ -337,7 +337,7 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 
 		// Verify the address has the correct terravalcons prefix
 		s.Suite.Require().True(
-			len(consAddress) > 0 && consAddress[:11] == "terravalcons",
+			len(consAddress) > 0 && consAddress[:12] == "terravalcons",
 			"Expected terravalcons prefix, got: %s", consAddress,
 		)
 

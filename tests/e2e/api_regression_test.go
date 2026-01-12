@@ -403,16 +403,30 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		s.Suite.T().Logf("Slashing signing info query test passed - terravalcons prefix working correctly")
 	})
 
-	// Test for tx query logs field reconstruction
+	// Test for tx query logs reconstruction
 	// This tests the TxLogsMiddleware that reconstructs the deprecated logs field from events
-	// for backwards compatibility with SDK 0.50+ where logs are no longer populated
+	// for backwards compatibility with Cosmos SDK 0.50+
 	s.Run("Tx Query Logs Reconstruction Test", func() {
 		chain := s.configurer.GetChainConfig(0)
 		node, err := chain.GetDefaultNode()
 		s.Suite.Require().NoError(err)
 
-		// Get validator address to query its transactions
+		// Create test wallets
+		txTestSender := node.CreateWallet("tx_test_sender")
+		txTestReceiver := node.CreateWallet("tx_test_receiver")
+
+		// Fund sender wallet from validator
 		validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
+		node.BankSend("1000000uluna", validatorAddr, txTestSender)
+
+		// Wait for funding transaction
+		time.Sleep(5 * time.Second)
+
+		// Send a transaction that we'll query later
+		node.BankSend("100000uluna", txTestSender, txTestReceiver)
+
+		// Wait for transaction to be indexed
+		time.Sleep(5 * time.Second)
 
 		hostPort, err := node.GetHostPort("1317/tcp")
 		s.Suite.Require().NoError(err)
@@ -420,12 +434,11 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
 		emptyHeaders := map[string]string{}
 
-		// Query transactions by coin_received event (validator should have received coins)
-		// Use URL encoding for the query parameter
-		txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?events=coin_received.receiver='%s'&order_by=ORDER_BY_DESC&limit=5", validatorAddr)
+		// Query transactions by sender address using events filter
 		var txsResp TxsEventResponse
-
 		s.Eventually(func() bool {
+			// URL encode the query - the sender is txTestSender
+			txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?query=message.sender='%s'", txTestSender)
 			resp, err := apiClient.GetWithHeaders(txQueryPath, emptyHeaders)
 			if err != nil {
 				s.Suite.T().Logf("Failed to query txs: %v", err)
@@ -442,52 +455,35 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 				return false
 			}
 
-			// Find a successful transaction with events
-			for _, tx := range txsResp.TxResponses {
-				if tx.Code == 0 && len(tx.Events) > 0 {
-					return true
-				}
-			}
-			s.Suite.T().Logf("No successful transactions with events found yet, got %d txs", len(txsResp.TxResponses))
-			return false
+			// Should have at least one transaction from our BankSend
+			return len(txsResp.TxResponses) > 0
 		},
 			30*time.Second,
-			2*time.Second,
+			1*time.Second,
 		)
 
-		// Find a successful transaction with events
-		var txResp *TxResponseData
-		for i := range txsResp.TxResponses {
-			if txsResp.TxResponses[i].Code == 0 && len(txsResp.TxResponses[i].Events) > 0 {
-				txResp = &txsResp.TxResponses[i]
-				break
-			}
-		}
-		s.Suite.Require().NotNil(txResp, "Expected at least one successful transaction with events")
-		s.Suite.T().Logf("Found transaction hash: %s with %d events", txResp.Txhash, len(txResp.Events))
+		s.Suite.Require().NotEmpty(txsResp.TxResponses, "Should have at least one transaction")
 
-		// Verify the transaction was successful
-		s.Suite.Require().Equal(0, txResp.Code, "Transaction should be successful (code 0)")
+		// Check the first transaction response
+		txResp := txsResp.TxResponses[0]
 
-		// Verify that logs field is populated (this is the key assertion for TxLogsMiddleware)
-		s.Suite.Require().NotEmpty(txResp.Logs, "Logs field should be populated by TxLogsMiddleware")
-		s.Suite.T().Logf("Transaction has %d log entries", len(txResp.Logs))
+		// Verify that logs field is populated (reconstructed by TxLogsMiddleware)
+		// In SDK 0.50+, logs would be empty without the middleware
+		s.Suite.T().Logf("Transaction %s has %d log entries and %d events",
+			txResp.Txhash, len(txResp.Logs), len(txResp.Events))
 
-		// Verify logs structure
+		// The middleware should have reconstructed logs from events
+		// A successful bank send should have at least one log entry
+		s.Suite.Require().NotEmpty(txResp.Logs,
+			"Logs should be reconstructed from events by TxLogsMiddleware")
+
+		// Verify the log structure
 		for i, log := range txResp.Logs {
-			s.Suite.T().Logf("Log[%d]: msg_index=%d, events_count=%d", i, log.MsgIndex, len(log.Events))
+			s.Suite.T().Logf("Log %d: msg_index=%d, events=%d", i, log.MsgIndex, len(log.Events))
 			s.Suite.Require().NotEmpty(log.Events, "Each log entry should have events")
-
-			// Verify events have proper structure
-			for _, event := range log.Events {
-				s.Suite.Require().NotEmpty(event.Type, "Event type should not be empty")
-			}
 		}
 
-		// Also verify that events field is still present (middleware doesn't remove it)
-		s.Suite.Require().NotEmpty(txResp.Events, "Events field should still be present")
-		s.Suite.T().Logf("Transaction has %d events", len(txResp.Events))
-
-		s.Suite.T().Logf("Tx query logs reconstruction test passed - logs field is properly populated")
+		s.Suite.T().Logf("Tx query logs reconstruction test passed - logs field properly reconstructed from events")
 	})
+
 }

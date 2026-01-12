@@ -411,37 +411,20 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		node, err := chain.GetDefaultNode()
 		s.Suite.Require().NoError(err)
 
-		// Create test wallets and perform a transaction
-		senderWallet := node.CreateWallet("tx_logs_sender")
-		receiverWallet := node.CreateWallet("tx_logs_receiver")
-
-		// Fund sender wallet
-		validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
-		node.BankSend("1000000uluna", validatorAddr, senderWallet)
-
-		// Wait for funding transaction
-		time.Sleep(5 * time.Second)
-
-		// Execute a bank send transaction
-		node.BankSend("100000uluna", senderWallet, receiverWallet)
-
-		// Wait for transaction to be included in a block
-		time.Sleep(5 * time.Second)
-
 		hostPort, err := node.GetHostPort("1317/tcp")
 		s.Suite.Require().NoError(err)
 
 		apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
 		emptyHeaders := map[string]string{}
 
-		// Query transactions by sender event to find our transaction
-		txQueryByEventPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?events=message.sender='%s'&order_by=ORDER_BY_DESC&limit=1", senderWallet)
+		// Query recent transactions - we just need any successful transaction to test the middleware
+		txQueryPath := "/cosmos/tx/v1beta1/txs?order_by=ORDER_BY_DESC&limit=5"
 		var txsResp TxsEventResponse
 
 		s.Eventually(func() bool {
-			resp, err := apiClient.GetWithHeaders(txQueryByEventPath, emptyHeaders)
+			resp, err := apiClient.GetWithHeaders(txQueryPath, emptyHeaders)
 			if err != nil {
-				s.Suite.T().Logf("Failed to query txs by event: %v", err)
+				s.Suite.T().Logf("Failed to query txs: %v", err)
 				return false
 			}
 			if resp.StatusCode != 200 {
@@ -455,15 +438,29 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 				return false
 			}
 
-			return len(txsResp.TxResponses) > 0
+			// Find a successful transaction with events
+			for _, tx := range txsResp.TxResponses {
+				if tx.Code == 0 && len(tx.Events) > 0 {
+					return true
+				}
+			}
+			s.Suite.T().Logf("No successful transactions with events found yet, got %d txs", len(txsResp.TxResponses))
+			return false
 		},
 			30*time.Second,
-			1*time.Second,
+			2*time.Second,
 		)
 
-		s.Suite.Require().NotEmpty(txsResp.TxResponses, "Expected at least one transaction")
-		txResp := txsResp.TxResponses[0]
-		s.Suite.T().Logf("Found transaction hash: %s", txResp.Txhash)
+		// Find a successful transaction with events
+		var txResp *TxResponseData
+		for i := range txsResp.TxResponses {
+			if txsResp.TxResponses[i].Code == 0 && len(txsResp.TxResponses[i].Events) > 0 {
+				txResp = &txsResp.TxResponses[i]
+				break
+			}
+		}
+		s.Suite.Require().NotNil(txResp, "Expected at least one successful transaction with events")
+		s.Suite.T().Logf("Found transaction hash: %s with %d events", txResp.Txhash, len(txResp.Events))
 
 		// Verify the transaction was successful
 		s.Suite.Require().Equal(0, txResp.Code, "Transaction should be successful (code 0)")

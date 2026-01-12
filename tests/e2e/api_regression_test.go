@@ -90,6 +90,50 @@ type SpecificSigningInfoResponse struct {
 	} `json:"val_signing_info"`
 }
 
+// TxResponseData represents a single transaction response
+type TxResponseData struct {
+	Height    string `json:"height"`
+	Txhash    string `json:"txhash"`
+	Codespace string `json:"codespace"`
+	Code      int    `json:"code"`
+	RawLog    string `json:"raw_log"`
+	Logs      []struct {
+		MsgIndex int    `json:"msg_index"`
+		Log      string `json:"log"`
+		Events   []struct {
+			Type       string `json:"type"`
+			Attributes []struct {
+				Key   string `json:"key"`
+				Value string `json:"value"`
+			} `json:"attributes"`
+		} `json:"events"`
+	} `json:"logs"`
+	Events []struct {
+		Type       string `json:"type"`
+		Attributes []struct {
+			Key      string `json:"key"`
+			Value    string `json:"value"`
+			MsgIndex int    `json:"msg_index,omitempty"`
+		} `json:"attributes"`
+	} `json:"events"`
+}
+
+// TxQueryResponse represents the response from single tx query endpoint
+type TxQueryResponse struct {
+	Tx         json.RawMessage `json:"tx"`
+	TxResponse TxResponseData  `json:"tx_response"`
+}
+
+// TxsEventResponse represents the response from tx query by events endpoint
+type TxsEventResponse struct {
+	Txs         []json.RawMessage `json:"txs"`
+	TxResponses []TxResponseData  `json:"tx_responses"`
+	Pagination  struct {
+		NextKey string `json:"next_key"`
+		Total   string `json:"total"`
+	} `json:"pagination"`
+}
+
 func (s *IntegrationTestSuite) TestAPIRegression() {
 	s.Run("Tax Computation Test", func() {
 		chain := s.configurer.GetChainConfig(0)
@@ -357,5 +401,92 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 			"Response address should match query address")
 
 		s.Suite.T().Logf("Slashing signing info query test passed - terravalcons prefix working correctly")
+	})
+
+	// Test for tx query logs field reconstruction
+	// This tests the TxLogsMiddleware that reconstructs the deprecated logs field from events
+	// for backwards compatibility with SDK 0.50+ where logs are no longer populated
+	s.Run("Tx Query Logs Reconstruction Test", func() {
+		chain := s.configurer.GetChainConfig(0)
+		node, err := chain.GetDefaultNode()
+		s.Suite.Require().NoError(err)
+
+		// Create test wallets and perform a transaction
+		senderWallet := node.CreateWallet("tx_logs_sender")
+		receiverWallet := node.CreateWallet("tx_logs_receiver")
+
+		// Fund sender wallet
+		validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
+		node.BankSend("1000000uluna", validatorAddr, senderWallet)
+
+		// Wait for funding transaction
+		time.Sleep(5 * time.Second)
+
+		// Execute a bank send transaction
+		node.BankSend("100000uluna", senderWallet, receiverWallet)
+
+		// Wait for transaction to be included in a block
+		time.Sleep(5 * time.Second)
+
+		hostPort, err := node.GetHostPort("1317/tcp")
+		s.Suite.Require().NoError(err)
+
+		apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
+		emptyHeaders := map[string]string{}
+
+		// Query transactions by sender event to find our transaction
+		txQueryByEventPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?events=message.sender='%s'&order_by=ORDER_BY_DESC&limit=1", senderWallet)
+		var txsResp TxsEventResponse
+
+		s.Eventually(func() bool {
+			resp, err := apiClient.GetWithHeaders(txQueryByEventPath, emptyHeaders)
+			if err != nil {
+				s.Suite.T().Logf("Failed to query txs by event: %v", err)
+				return false
+			}
+			if resp.StatusCode != 200 {
+				s.Suite.T().Logf("Unexpected status code for txs query: %d", resp.StatusCode)
+				return false
+			}
+
+			err = util.UnmarshalResponse(resp, &txsResp)
+			if err != nil {
+				s.Suite.T().Logf("Failed to unmarshal txs response: %v", err)
+				return false
+			}
+
+			return len(txsResp.TxResponses) > 0
+		},
+			30*time.Second,
+			1*time.Second,
+		)
+
+		s.Suite.Require().NotEmpty(txsResp.TxResponses, "Expected at least one transaction")
+		txResp := txsResp.TxResponses[0]
+		s.Suite.T().Logf("Found transaction hash: %s", txResp.Txhash)
+
+		// Verify the transaction was successful
+		s.Suite.Require().Equal(0, txResp.Code, "Transaction should be successful (code 0)")
+
+		// Verify that logs field is populated (this is the key assertion for TxLogsMiddleware)
+		s.Suite.Require().NotEmpty(txResp.Logs, "Logs field should be populated by TxLogsMiddleware")
+		s.Suite.T().Logf("Transaction has %d log entries", len(txResp.Logs))
+
+		// Verify logs structure
+		for i, log := range txResp.Logs {
+			s.Suite.T().Logf("Log[%d]: msg_index=%d, events_count=%d", i, log.MsgIndex, len(log.Events))
+			s.Suite.Require().NotEmpty(log.Events, "Each log entry should have events")
+
+			// Verify events have proper structure
+			for _, event := range log.Events {
+				s.Suite.Require().NotEmpty(event.Type, "Event type should not be empty")
+			}
+		}
+
+		// Also verify that events field is still present (middleware doesn't remove it)
+		s.Suite.Require().NotEmpty(txResp.Events, "Events field should still be present")
+		s.Suite.T().Logf("Transaction has %d events", len(txResp.Events))
+
+		s.Suite.T().Logf("Tx query logs reconstruction test passed - logs field is properly populated")
 	})
 }

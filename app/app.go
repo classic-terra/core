@@ -485,6 +485,8 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 	}
 
 	// Apply custom middleware
+	// TxLogsMiddleware reconstructs the deprecated logs field from events for backwards compatibility
+	apiSvr.Router.Use(customserver.TxLogsMiddleware)
 	apiSvr.Router.Use(customserver.BlockHeightMiddleware)
 }
 

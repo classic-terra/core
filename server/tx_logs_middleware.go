@@ -24,20 +24,40 @@ func TxLogsMiddleware(next http.Handler) http.Handler {
 			ResponseWriter: w,
 			body:           &bytes.Buffer{},
 			statusCode:     http.StatusOK,
+			headers:        make(http.Header),
 		}
 
 		next.ServeHTTP(recorder, r)
+
+		// Only transform successful responses
+		if recorder.statusCode != http.StatusOK {
+			// Forward original headers
+			for k, v := range recorder.headers {
+				w.Header()[k] = v
+			}
+			w.WriteHeader(recorder.statusCode)
+			w.Write(recorder.body.Bytes())
+			return
+		}
 
 		// Try to transform the response
 		transformed, err := transformTxResponse(recorder.body.Bytes())
 		if err != nil {
 			// If transformation fails, return original response
+			for k, v := range recorder.headers {
+				w.Header()[k] = v
+			}
 			w.WriteHeader(recorder.statusCode)
 			w.Write(recorder.body.Bytes())
 			return
 		}
 
 		// Write transformed response
+		for k, v := range recorder.headers {
+			if k != "Content-Length" {
+				w.Header()[k] = v
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Length", strconv.Itoa(len(transformed)))
 		w.WriteHeader(recorder.statusCode)
@@ -56,6 +76,11 @@ type responseRecorder struct {
 	http.ResponseWriter
 	body       *bytes.Buffer
 	statusCode int
+	headers    http.Header
+}
+
+func (r *responseRecorder) Header() http.Header {
+	return r.headers
 }
 
 func (r *responseRecorder) WriteHeader(statusCode int) {

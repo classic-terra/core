@@ -411,14 +411,18 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		node, err := chain.GetDefaultNode()
 		s.Suite.Require().NoError(err)
 
+		// Get validator address to query its transactions
+		validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
+
 		hostPort, err := node.GetHostPort("1317/tcp")
 		s.Suite.Require().NoError(err)
 
 		apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
 		emptyHeaders := map[string]string{}
 
-		// Query recent transactions - we just need any successful transaction to test the middleware
-		txQueryPath := "/cosmos/tx/v1beta1/txs?order_by=ORDER_BY_DESC&limit=5"
+		// Query transactions by coin_received event (validator should have received coins)
+		// Use URL encoding for the query parameter
+		txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?events=coin_received.receiver='%s'&order_by=ORDER_BY_DESC&limit=5", validatorAddr)
 		var txsResp TxsEventResponse
 
 		s.Eventually(func() bool {

@@ -46,8 +46,12 @@ RUN set -eux &&\
 # download dependencies to cache as layer
 WORKDIR ${GOPATH}/src/app
 COPY ${source}go.mod ${source}go.sum ./
+
+# Copy pre-downloaded Go modules from host cache (if available)
+# This avoids re-downloading ~300MB in CI where host cache is already populated
+COPY ${source}.cache/go-mod /go/pkg/mod/
+
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/root/go/pkg/mod \
     go mod download -x
 
 # Cosmwasm - Download correct libwasmvm version and verify checksum

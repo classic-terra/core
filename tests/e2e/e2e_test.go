@@ -203,10 +203,11 @@ func (s *IntegrationTestSuite) TestAuthz() {
 	test2Addr := node.CreateWallet(test2WalletName)
 	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
-	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
-	s.Require().NoError(err)
 
 	node.GrantBankSend(test1Addr, transferCoin1.String(), "val")
+
+	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
+	s.Require().NoError(err)
 	node.BankSendWithWallet(transferCoin1.String(), validatorAddr, test2Addr, test1WalletName)
 
 	newValidatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)

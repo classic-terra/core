@@ -142,4 +142,4 @@ jobs:
             # 7. Run specific E2E test
             - name: Run ${{ matrix.test }}
               run: |
-                  VERSION=$(git describe --tags --always) TERRA_E2E=True TERRA_E2E_DEBUG_LOG=True go test -mod=readonly -timeout=20m -v ./tests/e2e/... -run ${{ matrix.test }}
+                  VERSION=$(git describe --tags --always) TERRA_E2E=True TERRA_E2E_DEBUG_LOG=True go test -mod=readonly -timeout=20m -v ./tests/e2e/... -run TestIntegrationTestSuite/${{ matrix.test }}

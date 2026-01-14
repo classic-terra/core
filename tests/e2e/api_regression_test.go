@@ -485,5 +485,4 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 
 		s.Suite.T().Logf("Tx query logs reconstruction test passed - logs field properly reconstructed from events")
 	})
-
 }

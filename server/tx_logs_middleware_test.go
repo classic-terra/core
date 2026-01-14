@@ -156,12 +156,67 @@ func TestTxLogsMiddleware(t *testing.T) {
 			err := json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			if tc.expectTransform && tc.expectLogsLen > 0 {
+			if tc.expectTransform {
 				// Check single tx_response
 				if txResponse, ok := response["tx_response"].(map[string]interface{}); ok {
 					logs, ok := txResponse["logs"].([]interface{})
 					require.True(t, ok, "logs should be present")
-					require.Equal(t, tc.expectLogsLen, len(logs))
+					if tc.expectLogsLen > 0 {
+						require.Equal(t, tc.expectLogsLen, len(logs))
+					}
+				}
+
+				// Check multiple tx_responses (GetTxsEvent)
+				if txResponses, ok := response["tx_responses"].([]interface{}); ok {
+					require.Equal(t, 2, len(txResponses), "should have 2 tx_responses")
+
+					// Verify first transaction (TX1)
+					tx1, ok := txResponses[0].(map[string]interface{})
+					require.True(t, ok, "first tx_response should be a map")
+					require.Equal(t, "TX1", tx1["txhash"], "first tx hash should match")
+					logs1, ok := tx1["logs"].([]interface{})
+					require.True(t, ok, "first tx should have logs")
+					require.Equal(t, 1, len(logs1), "first tx should have 1 log entry")
+					// Verify log content
+					log1, ok := logs1[0].(map[string]interface{})
+					require.True(t, ok, "log should be a map")
+					events1, ok := log1["events"].([]interface{})
+					require.True(t, ok, "log should have events")
+					require.Equal(t, 1, len(events1), "log should have 1 event")
+					event1, ok := events1[0].(map[string]interface{})
+					require.True(t, ok, "event should be a map")
+					require.Equal(t, "message", event1["type"], "event type should be message")
+					attrs1, ok := event1["attributes"].([]interface{})
+					require.True(t, ok, "event should have attributes")
+					require.Equal(t, 1, len(attrs1), "event should have 1 attribute")
+					attr1, ok := attrs1[0].(map[string]interface{})
+					require.True(t, ok, "attribute should be a map")
+					require.Equal(t, "action", attr1["key"], "attribute key should be action")
+					require.Equal(t, "send", attr1["value"], "attribute value should be send")
+
+					// Verify second transaction (TX2)
+					tx2, ok := txResponses[1].(map[string]interface{})
+					require.True(t, ok, "second tx_response should be a map")
+					require.Equal(t, "TX2", tx2["txhash"], "second tx hash should match")
+					logs2, ok := tx2["logs"].([]interface{})
+					require.True(t, ok, "second tx should have logs")
+					require.Equal(t, 1, len(logs2), "second tx should have 1 log entry")
+					// Verify log content
+					log2, ok := logs2[0].(map[string]interface{})
+					require.True(t, ok, "log should be a map")
+					events2, ok := log2["events"].([]interface{})
+					require.True(t, ok, "log should have events")
+					require.Equal(t, 1, len(events2), "log should have 1 event")
+					event2, ok := events2[0].(map[string]interface{})
+					require.True(t, ok, "event should be a map")
+					require.Equal(t, "message", event2["type"], "event type should be message")
+					attrs2, ok := event2["attributes"].([]interface{})
+					require.True(t, ok, "event should have attributes")
+					require.Equal(t, 1, len(attrs2), "event should have 1 attribute")
+					attr2, ok := attrs2[0].(map[string]interface{})
+					require.True(t, ok, "attribute should be a map")
+					require.Equal(t, "action", attr2["key"], "attribute key should be action")
+					require.Equal(t, "delegate", attr2["value"], "attribute value should be delegate")
 				}
 			}
 

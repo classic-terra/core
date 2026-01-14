@@ -859,3 +859,549 @@ func TestRealBankSendWithTaxPaymentLogsReconstruction(t *testing.T) {
 
 	require.Equal(t, "false", attrMap["reverse_charge"])
 }
+
+// TestRealOracleMultiMessageTxLogsReconstruction tests logs reconstruction with a real
+// Terra Classic oracle multi-message transaction from mainnet
+// TX: A7075AA154D7D4DCBAB70465EAF85168CED8C76E700CC30142DBA46F1D80E0F2
+// This transaction contains TWO messages:
+// 1. MsgAggregateExchangeRateVote (msg_index: 0)
+// 2. MsgAggregateExchangeRatePrevote (msg_index: 1)
+func TestRealOracleMultiMessageTxLogsReconstruction(t *testing.T) {
+	// Real transaction response from Terra Classic mainnet
+	// This is a multi-message tx with oracle vote and prevote messages
+	realTxResponse := `{
+		"tx": {
+			"@type": "/cosmos.tx.v1beta1.Tx",
+			"body": {
+				"messages": [
+					{
+						"@type": "/terra.oracle.v1beta1.MsgAggregateExchangeRateVote",
+						"feeder": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z",
+						"validator": "terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm",
+						"exchange_rates": "0.000066097941407884uaud,0.000061456692115652ucad,0.00003538288127528uchf,0.00030892650733513ucny,0.000283966498350392udkk,0.00003800111245669ueur,0.000032909024645851ugbp,0.000345525060444445uhkd,0.746825090789225464uidr,0.003995990890723461uinr,0.007034943470680445ujpy,0.065282105991835183ukrw,0.0umnt,0.00017969339697793umyr,0.000446742366801887unok,0.002633155589658828uphp,0.000032429987267087usdr,0.000407127883304437usek,0.00005702359065234usgd,0.001393924629462205uthb,0.0utwd,0.000044286727883801uusd",
+						"salt": "2c52"
+					},
+					{
+						"@type": "/terra.oracle.v1beta1.MsgAggregateExchangeRatePrevote",
+						"feeder": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z",
+						"validator": "terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm",
+						"hash": "0a15e0773b0819d71bcd74e2cf427f92597f85a7"
+					}
+				],
+				"memo": "@classic-terra/oracle-feeder@3.1.5",
+				"timeout_height": "0",
+				"extension_options": [],
+				"non_critical_extension_options": []
+			},
+			"auth_info": {
+				"signer_infos": [
+					{
+						"public_key": {
+							"@type": "/cosmos.crypto.secp256k1.PubKey",
+							"key": "Ag64r5OyRGIi3qMB/OlximK99iOJQ5WLMkP+ZDz4cd19"
+						},
+						"mode_info": {
+							"single": {
+								"mode": "SIGN_MODE_DIRECT"
+							}
+						},
+						"sequence": "165214"
+					}
+				],
+				"fee": {
+					"amount": [],
+					"gas_limit": "300000",
+					"payer": "",
+					"granter": ""
+				}
+			},
+			"signatures": ["gBcq2FcjuBAfXz8Ha5w7c6HCdwuh1eDzKqi4ef7fMN1A77wE9vdJWTclbV0u3xUo3LPwjXR0v/hawghBa6PMZQ=="]
+		},
+		"tx_response": {
+			"height": "26864566",
+			"txhash": "A7075AA154D7D4DCBAB70465EAF85168CED8C76E700CC30142DBA46F1D80E0F2",
+			"codespace": "",
+			"code": 0,
+			"data": "123C0A3A2F74657272612E6F7261636C652E763162657461312E4D736741676772656761746545786368616E676552617465566F7465526573706F6E7365123F0A3D2F74657272612E6F7261636C652E763162657461312E4D736741676772656761746545786368616E676552617465507265766F7465526573706F6E7365",
+			"raw_log": "[{\"msg_index\":0,\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/terra.oracle.v1beta1.MsgAggregateExchangeRateVote\"},{\"key\":\"sender\",\"value\":\"terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z\"}]},{\"type\":\"aggregate_vote\",\"attributes\":[{\"key\":\"voter\",\"value\":\"terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm\"},{\"key\":\"exchange_rates\",\"value\":\"0.000066097941407884uaud,0.000061456692115652ucad,0.00003538288127528uchf,0.00030892650733513ucny,0.000283966498350392udkk,0.00003800111245669ueur,0.000032909024645851ugbp,0.000345525060444445uhkd,0.746825090789225464uidr,0.003995990890723461uinr,0.007034943470680445ujpy,0.065282105991835183ukrw,0.0umnt,0.00017969339697793umyr,0.000446742366801887unok,0.002633155589658828uphp,0.000032429987267087usdr,0.000407127883304437usek,0.00005702359065234usgd,0.001393924629462205uthb,0.0utwd,0.000044286727883801uusd\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"module\",\"value\":\"oracle\"},{\"key\":\"sender\",\"value\":\"terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z\"}]}]},{\"msg_index\":1,\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/terra.oracle.v1beta1.MsgAggregateExchangeRatePrevote\"},{\"key\":\"sender\",\"value\":\"terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z\"}]},{\"type\":\"aggregate_prevote\",\"attributes\":[{\"key\":\"voter\",\"value\":\"terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"module\",\"value\":\"oracle\"},{\"key\":\"sender\",\"value\":\"terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z\"}]}]}]",
+			"logs": [],
+			"info": "",
+			"gas_wanted": "300000",
+			"gas_used": "110287",
+			"timestamp": "2026-01-14T08:09:39Z",
+			"events": [
+				{
+					"type": "tx",
+					"attributes": [
+						{"key": "fee", "value": "", "msg_index": 0},
+						{"key": "fee_payer", "value": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z", "msg_index": 0}
+					]
+				},
+				{
+					"type": "tx",
+					"attributes": [
+						{"key": "acc_seq", "value": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z/165214", "msg_index": 0}
+					]
+				},
+				{
+					"type": "tx",
+					"attributes": [
+						{"key": "signature", "value": "gBcq2FcjuBAfXz8Ha5w7c6HCdwuh1eDzKqi4ef7fMN1A77wE9vdJWTclbV0u3xUo3LPwjXR0v/hawghBa6PMZQ==", "msg_index": 0}
+					]
+				},
+				{
+					"type": "message",
+					"attributes": [
+						{"key": "action", "value": "/terra.oracle.v1beta1.MsgAggregateExchangeRateVote", "msg_index": 0},
+						{"key": "sender", "value": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z", "msg_index": 0}
+					]
+				},
+				{
+					"type": "aggregate_vote",
+					"attributes": [
+						{"key": "voter", "value": "terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm", "msg_index": 0},
+						{"key": "exchange_rates", "value": "0.000066097941407884uaud,0.000061456692115652ucad,0.00003538288127528uchf,0.00030892650733513ucny,0.000283966498350392udkk,0.00003800111245669ueur,0.000032909024645851ugbp,0.000345525060444445uhkd,0.746825090789225464uidr,0.003995990890723461uinr,0.007034943470680445ujpy,0.065282105991835183ukrw,0.0umnt,0.00017969339697793umyr,0.000446742366801887unok,0.002633155589658828uphp,0.000032429987267087usdr,0.000407127883304437usek,0.00005702359065234usgd,0.001393924629462205uthb,0.0utwd,0.000044286727883801uusd", "msg_index": 0}
+					]
+				},
+				{
+					"type": "message",
+					"attributes": [
+						{"key": "module", "value": "oracle", "msg_index": 0},
+						{"key": "sender", "value": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z", "msg_index": 0}
+					]
+				},
+				{
+					"type": "message",
+					"attributes": [
+						{"key": "action", "value": "/terra.oracle.v1beta1.MsgAggregateExchangeRatePrevote", "msg_index": 1},
+						{"key": "sender", "value": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z", "msg_index": 1}
+					]
+				},
+				{
+					"type": "aggregate_prevote",
+					"attributes": [
+						{"key": "voter", "value": "terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm", "msg_index": 1}
+					]
+				},
+				{
+					"type": "message",
+					"attributes": [
+						{"key": "module", "value": "oracle", "msg_index": 1},
+						{"key": "sender", "value": "terra19p69dm52exmhtyklgcpd2jrfwtv0awlp0ve63z", "msg_index": 1}
+					]
+				}
+			]
+		}
+	}`
+
+	// Create a mock handler that returns the real tx response
+	mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(realTxResponse))
+	})
+
+	// Wrap with TxLogsMiddleware
+	handler := TxLogsMiddleware(mockHandler)
+
+	// Create test request for specific tx hash
+	req := httptest.NewRequest(http.MethodGet, "/cosmos/tx/v1beta1/txs/A7075AA154D7D4DCBAB70465EAF85168CED8C76E700CC30142DBA46F1D80E0F2", nil)
+	rec := httptest.NewRecorder()
+
+	// Execute
+	handler.ServeHTTP(rec, req)
+
+	// Parse response
+	var response map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &response)
+	require.NoError(t, err)
+
+	// Verify tx_response exists
+	txResponse, ok := response["tx_response"].(map[string]interface{})
+	require.True(t, ok, "tx_response should exist")
+
+	// Verify basic tx info
+	require.Equal(t, "A7075AA154D7D4DCBAB70465EAF85168CED8C76E700CC30142DBA46F1D80E0F2", txResponse["txhash"])
+	require.Equal(t, "26864566", txResponse["height"])
+	require.Equal(t, float64(0), txResponse["code"])
+
+	// Verify logs were reconstructed for BOTH messages
+	var logs []map[string]interface{}
+	switch l := txResponse["logs"].(type) {
+	case []map[string]interface{}:
+		logs = l
+	case []interface{}:
+		logs = make([]map[string]interface{}, len(l))
+		for i, v := range l {
+			logs[i] = v.(map[string]interface{})
+		}
+	default:
+		t.Fatalf("logs has unexpected type: %T", txResponse["logs"])
+	}
+
+	// Should have exactly 2 log entries for the 2 messages
+	require.Equal(t, 2, len(logs), "should have exactly 2 log entries for multi-message tx")
+
+	// Verify first log (msg_index: 0 - MsgAggregateExchangeRateVote)
+	log0 := logs[0]
+	msgIndex0, _ := log0["msg_index"].(float64)
+	require.Equal(t, 0, int(msgIndex0), "first log should have msg_index 0")
+	require.Equal(t, "", log0["log"])
+
+	var logEvents0 []map[string]interface{}
+	switch e := log0["events"].(type) {
+	case []map[string]interface{}:
+		logEvents0 = e
+	case []interface{}:
+		logEvents0 = make([]map[string]interface{}, len(e))
+		for i, v := range e {
+			logEvents0[i] = v.(map[string]interface{})
+		}
+	}
+
+	// Verify event types for msg_index 0
+	eventTypes0 := make(map[string]bool)
+	for _, event := range logEvents0 {
+		if eventType, ok := event["type"].(string); ok {
+			eventTypes0[eventType] = true
+		}
+	}
+	require.True(t, eventTypes0["message"], "msg_index 0 should have 'message' event type")
+	require.True(t, eventTypes0["aggregate_vote"], "msg_index 0 should have 'aggregate_vote' event type")
+	require.True(t, eventTypes0["tx"], "msg_index 0 should have 'tx' event type")
+
+	// Verify second log (msg_index: 1 - MsgAggregateExchangeRatePrevote)
+	log1 := logs[1]
+	msgIndex1, _ := log1["msg_index"].(float64)
+	require.Equal(t, 1, int(msgIndex1), "second log should have msg_index 1")
+	require.Equal(t, "", log1["log"])
+
+	var logEvents1 []map[string]interface{}
+	switch e := log1["events"].(type) {
+	case []map[string]interface{}:
+		logEvents1 = e
+	case []interface{}:
+		logEvents1 = make([]map[string]interface{}, len(e))
+		for i, v := range e {
+			logEvents1[i] = v.(map[string]interface{})
+		}
+	}
+
+	// Verify event types for msg_index 1
+	eventTypes1 := make(map[string]bool)
+	for _, event := range logEvents1 {
+		if eventType, ok := event["type"].(string); ok {
+			eventTypes1[eventType] = true
+		}
+	}
+	require.True(t, eventTypes1["message"], "msg_index 1 should have 'message' event type")
+	require.True(t, eventTypes1["aggregate_prevote"], "msg_index 1 should have 'aggregate_prevote' event type")
+
+	// Verify aggregate_vote event in msg_index 0 has correct attributes
+	var aggregateVoteEvent map[string]interface{}
+	for _, event := range logEvents0 {
+		if event["type"] == "aggregate_vote" {
+			aggregateVoteEvent = event
+			break
+		}
+	}
+	require.NotNil(t, aggregateVoteEvent, "aggregate_vote event should exist in msg_index 0")
+
+	var voteAttrs []map[string]interface{}
+	switch a := aggregateVoteEvent["attributes"].(type) {
+	case []map[string]interface{}:
+		voteAttrs = a
+	case []interface{}:
+		voteAttrs = make([]map[string]interface{}, len(a))
+		for i, v := range a {
+			voteAttrs[i] = v.(map[string]interface{})
+		}
+	}
+
+	voteAttrMap := make(map[string]string)
+	for _, attr := range voteAttrs {
+		if key, ok := attr["key"].(string); ok {
+			if value, ok := attr["value"].(string); ok {
+				voteAttrMap[key] = value
+			}
+		}
+	}
+
+	require.Equal(t, "terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm", voteAttrMap["voter"])
+	require.Contains(t, voteAttrMap["exchange_rates"], "uaud")
+	require.Contains(t, voteAttrMap["exchange_rates"], "uusd")
+
+	// Verify aggregate_prevote event in msg_index 1
+	var aggregatePrevoteEvent map[string]interface{}
+	for _, event := range logEvents1 {
+		if event["type"] == "aggregate_prevote" {
+			aggregatePrevoteEvent = event
+			break
+		}
+	}
+	require.NotNil(t, aggregatePrevoteEvent, "aggregate_prevote event should exist in msg_index 1")
+
+	var prevoteAttrs []map[string]interface{}
+	switch a := aggregatePrevoteEvent["attributes"].(type) {
+	case []map[string]interface{}:
+		prevoteAttrs = a
+	case []interface{}:
+		prevoteAttrs = make([]map[string]interface{}, len(a))
+		for i, v := range a {
+			prevoteAttrs[i] = v.(map[string]interface{})
+		}
+	}
+
+	prevoteAttrMap := make(map[string]string)
+	for _, attr := range prevoteAttrs {
+		if key, ok := attr["key"].(string); ok {
+			if value, ok := attr["value"].(string); ok {
+				prevoteAttrMap[key] = value
+			}
+		}
+	}
+
+	require.Equal(t, "terravaloper1j5pj3n3m9nxmv9dgl4wnv2yq53k2jf2283j5zm", prevoteAttrMap["voter"])
+}
+
+func TestTxLogsMiddleware_FailedTransaction(t *testing.T) {
+	tests := []struct {
+		name       string
+		statusCode int
+		response   string
+	}{
+		{
+			name:       "400 Bad Request",
+			statusCode: http.StatusBadRequest,
+			response:   `{"error": "invalid request"}`,
+		},
+		{
+			name:       "404 Not Found",
+			statusCode: http.StatusNotFound,
+			response:   `{"error": "tx not found"}`,
+		},
+		{
+			name:       "500 Internal Server Error",
+			statusCode: http.StatusInternalServerError,
+			response:   `{"error": "internal error"}`,
+		},
+		{
+			name:       "503 Service Unavailable",
+			statusCode: http.StatusServiceUnavailable,
+			response:   `{"error": "service unavailable"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tc.statusCode)
+				w.Write([]byte(tc.response))
+			})
+
+			handler := TxLogsMiddleware(mockHandler)
+			req := httptest.NewRequest(http.MethodGet, "/cosmos/tx/v1beta1/txs/ABCD1234", nil)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			// Verify status code is preserved
+			require.Equal(t, tc.statusCode, rec.Code)
+
+			// Verify response is unchanged
+			require.Equal(t, tc.response, rec.Body.String())
+
+			// Verify Content-Type header is preserved
+			require.Equal(t, "application/json", rec.Header().Get("Content-Type"))
+		})
+	}
+}
+
+func TestTxLogsMiddleware_MalformedJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		response string
+	}{
+		{
+			name:     "invalid JSON syntax",
+			response: `{"tx_response": {"height": "100", invalid}`,
+		},
+		{
+			name:     "empty response",
+			response: ``,
+		},
+		{
+			name:     "truncated JSON",
+			response: `{"tx_response":`,
+		},
+		{
+			name:     "non-JSON content",
+			response: `plain text error`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(tc.response))
+			})
+
+			handler := TxLogsMiddleware(mockHandler)
+			req := httptest.NewRequest(http.MethodGet, "/cosmos/tx/v1beta1/txs/ABCD1234", nil)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			// Verify original response is returned unchanged
+			require.Equal(t, tc.response, rec.Body.String())
+			require.Equal(t, http.StatusOK, rec.Code)
+		})
+	}
+}
+
+func TestTxLogsMiddleware_SparseMsgIndex(t *testing.T) {
+	tests := []struct {
+		name           string
+		response       string
+		expectedLogs   int
+		expectedMsgIndices []int
+	}{
+		{
+			name: "sparse msg_index (0 and 5)",
+			response: `{
+				"tx": {},
+				"tx_response": {
+					"height": "100",
+					"txhash": "ABCD1234",
+					"logs": [],
+					"events": [
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "send", "msg_index": 0}
+							]
+						},
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "delegate", "msg_index": 5}
+							]
+						}
+					]
+				}
+			}`,
+			expectedLogs:     2,
+			expectedMsgIndices: []int{0, 5},
+		},
+		{
+			name: "sparse msg_index with large gap (0, 3, 10)",
+			response: `{
+				"tx": {},
+				"tx_response": {
+					"height": "100",
+					"txhash": "ABCD1234",
+					"logs": [],
+					"events": [
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "send", "msg_index": 0}
+							]
+						},
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "vote", "msg_index": 3}
+							]
+						},
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "delegate", "msg_index": 10}
+							]
+						}
+					]
+				}
+			}`,
+			expectedLogs:     3,
+			expectedMsgIndices: []int{0, 3, 10},
+		},
+		{
+			name: "only high msg_index values (7 and 9)",
+			response: `{
+				"tx": {},
+				"tx_response": {
+					"height": "100",
+					"txhash": "ABCD1234",
+					"logs": [],
+					"events": [
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "send", "msg_index": 7}
+							]
+						},
+						{
+							"type": "message",
+							"attributes": [
+								{"key": "action", "value": "delegate", "msg_index": 9}
+							]
+						}
+					]
+				}
+			}`,
+			expectedLogs:     2,
+			expectedMsgIndices: []int{7, 9},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(tc.response))
+			})
+
+			handler := TxLogsMiddleware(mockHandler)
+			req := httptest.NewRequest(http.MethodGet, "/cosmos/tx/v1beta1/txs/ABCD1234", nil)
+			rec := httptest.NewRecorder()
+
+			handler.ServeHTTP(rec, req)
+
+			// Parse response
+			var response map[string]interface{}
+			err := json.Unmarshal(rec.Body.Bytes(), &response)
+			require.NoError(t, err)
+
+			txResponse, ok := response["tx_response"].(map[string]interface{})
+			require.True(t, ok, "tx_response should exist")
+
+			// Verify logs count
+			var logs []map[string]interface{}
+			switch l := txResponse["logs"].(type) {
+			case []map[string]interface{}:
+				logs = l
+			case []interface{}:
+				logs = make([]map[string]interface{}, len(l))
+				for i, v := range l {
+					logs[i] = v.(map[string]interface{})
+				}
+			default:
+				t.Fatalf("logs has unexpected type: %T", txResponse["logs"])
+			}
+
+			require.Equal(t, tc.expectedLogs, len(logs), "should have expected number of log entries")
+
+			// Verify msg_index values match expected (and are in order)
+			actualMsgIndices := make([]int, len(logs))
+			for i, log := range logs {
+				msgIndexFloat, ok := log["msg_index"].(float64)
+				require.True(t, ok, "msg_index should be present and numeric")
+				actualMsgIndices[i] = int(msgIndexFloat)
+			}
+
+			require.Equal(t, tc.expectedMsgIndices, actualMsgIndices, "msg_index values should match expected and be in order")
+		})
+	}
+}

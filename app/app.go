@@ -17,6 +17,7 @@ import (
 	"github.com/classic-terra/core/v4/app/keepers"
 	appmempool "github.com/classic-terra/core/v4/app/mempool"
 	terraappparams "github.com/classic-terra/core/v4/app/params"
+
 	// upgrades
 	"github.com/classic-terra/core/v4/app/upgrades"
 	// v9 had been used by tax2gas and has to be skipped
@@ -40,6 +41,7 @@ import (
 	v8_1 "github.com/classic-terra/core/v4/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v4/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v4/app/upgrades/v8_3"
+
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v4/client/docs/statik"
 	customante "github.com/classic-terra/core/v4/custom/auth/ante"
@@ -486,7 +488,7 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 
 	// Apply custom middleware
 	// TxLogsMiddleware reconstructs the deprecated logs field from events for backwards compatibility
-	apiSvr.Router.Use(customserver.TxLogsMiddleware)
+	// apiSvr.Router.Use(customserver.TxLogsMiddleware)
 	apiSvr.Router.Use(customserver.BlockHeightMiddleware)
 }
 

@@ -1317,9 +1317,9 @@ func TestTxLogsMiddleware_MalformedJSON(t *testing.T) {
 
 func TestTxLogsMiddleware_SparseMsgIndex(t *testing.T) {
 	tests := []struct {
-		name           string
-		response       string
-		expectedLogs   int
+		name               string
+		response           string
+		expectedLogs       int
 		expectedMsgIndices []int
 	}{
 		{
@@ -1346,7 +1346,7 @@ func TestTxLogsMiddleware_SparseMsgIndex(t *testing.T) {
 					]
 				}
 			}`,
-			expectedLogs:     2,
+			expectedLogs:       2,
 			expectedMsgIndices: []int{0, 5},
 		},
 		{
@@ -1379,7 +1379,7 @@ func TestTxLogsMiddleware_SparseMsgIndex(t *testing.T) {
 					]
 				}
 			}`,
-			expectedLogs:     3,
+			expectedLogs:       3,
 			expectedMsgIndices: []int{0, 3, 10},
 		},
 		{
@@ -1406,7 +1406,7 @@ func TestTxLogsMiddleware_SparseMsgIndex(t *testing.T) {
 					]
 				}
 			}`,
-			expectedLogs:     2,
+			expectedLogs:       2,
 			expectedMsgIndices: []int{7, 9},
 		},
 	}

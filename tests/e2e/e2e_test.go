@@ -116,14 +116,14 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	validatorAddr := node.GetWallet(initialization.ValidatorWalletName)
 	s.Require().NotEqual(validatorAddr, "")
 
-	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
-	s.Require().NoError(err)
-
 	test1Addr := node.CreateWallet("test1")
 	s.Require().NotEqual(test1Addr, "")
 
 	// Test 1: banktypes.MsgSend
 	// burn tax with bank send
+	// Query balance right before the send to minimize time window for staking rewards
+	validatorBalance, err := node.QuerySpecificBalance(validatorAddr, initialization.TerraDenom)
+	s.Require().NoError(err)
 	node.BankSend(transferCoin1.String(), validatorAddr, test1Addr)
 
 	decremented := validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, transferAmount1))

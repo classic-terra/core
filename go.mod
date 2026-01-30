@@ -19,7 +19,7 @@ require (
 	github.com/CosmWasm/wasmvm/v3 v3.0.2
 	github.com/cometbft/cometbft v0.38.21
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.53.5
+	github.com/cosmos/cosmos-sdk v0.53.4
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v10 v10.0.0-20250826214904-d53749a559f6
 	github.com/cosmos/ibc-go/v10 v10.3.0

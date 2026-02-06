@@ -164,7 +164,10 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 
 	s.Require().Equal(balanceTest1.Amount, receiveAmount1.Sub(transferAmount2))
 	taxAmount2 := initialization.BurnTaxRate.MulInt(transferAmount2).TruncateInt()
-	s.Require().Equal(newValidatorBalance, validatorBalance.Add(transferCoin2).Sub(sdk.NewCoin(initialization.TerraDenom, taxAmount2)))
+	expectedValidatorBalance := validatorBalance.Add(transferCoin2).Sub(sdk.NewCoin(initialization.TerraDenom, taxAmount2))
+	// Use GreaterOrEqual to account for staking rewards accrued between balance queries
+	s.Require().True(newValidatorBalance.IsGTE(expectedValidatorBalance),
+		"expected validator balance >= %s, got %s", expectedValidatorBalance, newValidatorBalance)
 	s.Require().Equal(balanceTest2.Amount, receiveAmount2)
 
 	// Test 3: banktypes.MsgMultiSend
@@ -179,7 +182,10 @@ func (s *IntegrationTestSuite) TestFeeTax() {
 	totalTransferAmount := transferAmount1.Mul(sdkmath.NewInt(2))
 	taxAmount = initialization.BurnTaxRate.MulInt(transferAmount1).TruncateInt()
 	receiveAmount := transferAmount1.Sub(taxAmount)
-	s.Require().Equal(newValidatorBalance, validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, totalTransferAmount)))
+	expectedValidatorBalance = validatorBalance.Sub(sdk.NewCoin(initialization.TerraDenom, totalTransferAmount))
+	// Use GTE to account for staking rewards accrued between balance queries
+	s.Require().True(newValidatorBalance.IsGTE(expectedValidatorBalance),
+		"expected validator balance >= %s, got %s", expectedValidatorBalance, newValidatorBalance)
 
 	balanceTest1New, err := node.QuerySpecificBalance(test1Addr, initialization.TerraDenom)
 	s.Require().NoError(err)
@@ -218,7 +224,9 @@ func (s *IntegrationTestSuite) TestAuthz() {
 	s.Require().NoError(err)
 
 	s.Require().Equal(transferAmount1.Sub(taxAmount), balanceTest2.Amount)
-	s.Require().Equal(validatorBalance.Amount.Sub(transferAmount1), newValidatorBalance.Amount)
+	// Use GTE to account for staking rewards accrued between balance queries
+	s.Require().True(newValidatorBalance.Amount.GTE(validatorBalance.Amount.Sub(transferAmount1)),
+		"expected validator balance >= %s, got %s", validatorBalance.Amount.Sub(transferAmount1), newValidatorBalance.Amount)
 }
 
 func (s *IntegrationTestSuite) TestFeeTaxWasm() {

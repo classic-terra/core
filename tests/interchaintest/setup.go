@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/icza/dyno"
 
-	oracle "github.com/classic-terra/core/v3/x/oracle/types"
+	oracle "github.com/classic-terra/core/v4/x/oracle/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

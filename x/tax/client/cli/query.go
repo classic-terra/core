@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/classic-terra/core/v3/x/tax/types"
+	"github.com/classic-terra/core/v4/x/tax/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"

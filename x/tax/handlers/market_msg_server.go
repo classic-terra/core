@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
-	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	marketkeeper "github.com/classic-terra/core/v4/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

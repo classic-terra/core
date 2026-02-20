@@ -2,7 +2,7 @@ go 1.24.0
 
 toolchain go1.24.7
 
-module github.com/classic-terra/core/v3
+module github.com/classic-terra/core/v4
 
 require (
 	cosmossdk.io/client/v2 v2.0.0-beta.8

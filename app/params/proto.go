@@ -2,7 +2,7 @@ package params
 
 import (
 	"cosmossdk.io/x/tx/signing"
-	core "github.com/classic-terra/core/v3/types"
+	core "github.com/classic-terra/core/v4/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"

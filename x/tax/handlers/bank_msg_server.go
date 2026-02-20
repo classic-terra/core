@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v4/x/taxexemption/keeper"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

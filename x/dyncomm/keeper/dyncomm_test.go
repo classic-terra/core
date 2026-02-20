@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
+	core "github.com/classic-terra/core/v4/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/stretchr/testify/require"
 )

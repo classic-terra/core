@@ -2,7 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/x/upgrade/types"
-	govtypes "github.com/classic-terra/core/v3/custom/gov/types"
+	govtypes "github.com/classic-terra/core/v4/custom/gov/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 

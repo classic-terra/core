@@ -2,7 +2,7 @@ package feegrant
 
 import (
 	feegrant "cosmossdk.io/x/feegrant/module"
-	customtypes "github.com/classic-terra/core/v3/custom/feegrant/types"
+	customtypes "github.com/classic-terra/core/v4/custom/feegrant/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

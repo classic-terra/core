@@ -1,7 +1,7 @@
 package params
 
 import (
-	customtypes "github.com/classic-terra/core/v3/custom/params/types"
+	customtypes "github.com/classic-terra/core/v4/custom/params/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/params"

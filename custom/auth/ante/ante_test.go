@@ -5,9 +5,9 @@ import (
 
 	"cosmossdk.io/log"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	terraapp "github.com/classic-terra/core/v3/app"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	terraapp "github.com/classic-terra/core/v4/app"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"

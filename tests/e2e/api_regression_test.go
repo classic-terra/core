@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/classic-terra/core/v3/tests/e2e/initialization"
-	"github.com/classic-terra/core/v3/tests/e2e/util"
+	"github.com/classic-terra/core/v4/tests/e2e/initialization"
+	"github.com/classic-terra/core/v4/tests/e2e/util"
 )
 
 // TaxComputeRequest represents the request body for tax computation

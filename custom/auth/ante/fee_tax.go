@@ -2,9 +2,9 @@ package ante
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	marketexported "github.com/classic-terra/core/v4/x/market/exported"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v4/x/taxexemption/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

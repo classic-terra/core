@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasuryexported "github.com/classic-terra/core/v3/x/treasury/exported"
+	marketexported "github.com/classic-terra/core/v4/x/market/exported"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasuryexported "github.com/classic-terra/core/v4/x/treasury/exported"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"

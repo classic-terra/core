@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	vestingtypes "github.com/classic-terra/core/v3/x/vesting/types"
+	vestingtypes "github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

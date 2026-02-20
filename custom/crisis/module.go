@@ -3,8 +3,8 @@ package crisis
 import (
 	"encoding/json"
 
-	customtypes "github.com/classic-terra/core/v3/custom/crisis/types"
-	core "github.com/classic-terra/core/v3/types"
+	customtypes "github.com/classic-terra/core/v4/custom/crisis/types"
+	core "github.com/classic-terra/core/v4/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/crisis"

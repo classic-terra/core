@@ -3,8 +3,8 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v3/x/treasury"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	"github.com/classic-terra/core/v4/x/treasury"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"

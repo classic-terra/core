@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	log "cosmossdk.io/log"
-	"github.com/classic-terra/core/v3/app/helper"
-	appmempool "github.com/classic-terra/core/v3/app/mempool"
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
+	"github.com/classic-terra/core/v4/app/helper"
+	appmempool "github.com/classic-terra/core/v4/app/mempool"
+	oracleexported "github.com/classic-terra/core/v4/x/oracle/exported"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

@@ -1,8 +1,8 @@
 package dyncomm
 
 import (
-	"github.com/classic-terra/core/v3/x/dyncomm/keeper"
-	"github.com/classic-terra/core/v3/x/dyncomm/types"
+	"github.com/classic-terra/core/v4/x/dyncomm/keeper"
+	"github.com/classic-terra/core/v4/x/dyncomm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )

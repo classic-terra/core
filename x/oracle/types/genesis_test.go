@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/classic-terra/core/v3/app"
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/classic-terra/core/v4/app"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/stretchr/testify/require"
 )
 

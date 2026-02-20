@@ -6,8 +6,8 @@ import (
 	"sort"
 
 	"cosmossdk.io/store/prefix"
-	"github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
+	"github.com/classic-terra/core/v4/x/taxexemption/keeper"
+	"github.com/classic-terra/core/v4/x/taxexemption/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

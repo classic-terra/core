@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	terraapp "github.com/classic-terra/core/v3/app"
+	terraapp "github.com/classic-terra/core/v4/app"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 

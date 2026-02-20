@@ -8,7 +8,7 @@ import (
 	"time"
 
 	evtypes "cosmossdk.io/x/evidence/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"

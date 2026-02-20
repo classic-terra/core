@@ -5,7 +5,7 @@ import (
 	"io"
 
 	storetypes "cosmossdk.io/store/types"
-	coretypes "github.com/classic-terra/core/v3/types"
+	coretypes "github.com/classic-terra/core/v4/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

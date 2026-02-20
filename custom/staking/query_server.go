@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	legacytypes "github.com/classic-terra/core/v3/custom/staking/types"
-	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
+	legacytypes "github.com/classic-terra/core/v4/custom/staking/types"
+	legacyupgrade "github.com/classic-terra/core/v4/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"

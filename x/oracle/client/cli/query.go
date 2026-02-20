@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"

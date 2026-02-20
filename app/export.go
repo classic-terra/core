@@ -6,7 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"

@@ -5,14 +5,14 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/wasmbinding/bindings"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/wasmbinding/bindings"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// go test -v -run ^TestQuerySwap$ github.com/classic-terra/core/v3/wasmbinding/test
+// go test -v -run ^TestQuerySwap$ github.com/classic-terra/core/v4/wasmbinding/test
 // oracle rate: 1 uluna = 1.7 usdr
 // 1000 uluna from trader goes to contract
 // 1666 usdr (after 2% tax) is swapped into
@@ -51,7 +51,7 @@ func (s *WasmTestSuite) QuerySwap(contractPath string, queryFunc func(contract s
 	s.Require().Equal(expectedSwappedSDR.TruncateInt().String(), resp.Receive.Amount)
 }
 
-// go test -v -run ^TestQueryExchangeRates$ github.com/classic-terra/core/v3/wasmbinding/test
+// go test -v -run ^TestQueryExchangeRates$ github.com/classic-terra/core/v4/wasmbinding/test
 func (s *WasmTestSuite) QueryExchangeRates(contractPath string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
 	s.SetupTest()
 	actor := s.RandomAccountAddresses(1)[0]
@@ -79,7 +79,7 @@ func (s *WasmTestSuite) QueryExchangeRates(contractPath string, queryFunc func(c
 	s.Require().Equal(lunaPriceInSDR, sdkmath.LegacyMustNewDecFromStr(resp.ExchangeRates[0].ExchangeRate))
 }
 
-// go test -v -run ^TestQueryTaxRate$ github.com/classic-terra/core/v3/wasmbinding/test
+// go test -v -run ^TestQueryTaxRate$ github.com/classic-terra/core/v4/wasmbinding/test
 func (s *WasmTestSuite) QueryTaxRate(contractPath string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
 	s.SetupTest()
 	actor := s.RandomAccountAddresses(1)[0]
@@ -101,7 +101,7 @@ func (s *WasmTestSuite) QueryTaxRate(contractPath string, queryFunc func(contrac
 	s.Require().Equal(treasurytypes.DefaultTaxRate, sdkmath.LegacyMustNewDecFromStr(resp.Rate))
 }
 
-// go test -v -run ^TestQueryTaxCap$ github.com/classic-terra/core/v3/wasmbinding/test
+// go test -v -run ^TestQueryTaxCap$ github.com/classic-terra/core/v4/wasmbinding/test
 func (s *WasmTestSuite) QueryTaxCap(contractPath string, queryFunc func(contract sdk.AccAddress, request bindings.TerraQuery, response interface{})) {
 	s.SetupTest()
 	actor := s.RandomAccountAddresses(1)[0]

@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/x/dyncomm/types"
+	"github.com/classic-terra/core/v4/x/dyncomm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -1,7 +1,7 @@
 package slashing
 
 import (
-	customtypes "github.com/classic-terra/core/v3/custom/slashing/types"
+	customtypes "github.com/classic-terra/core/v4/custom/slashing/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/slashing"

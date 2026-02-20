@@ -6,7 +6,7 @@ toolchain go1.24.7
 
 require (
 	cosmossdk.io/math v1.5.3
-	github.com/classic-terra/core/v3 v3.0.0-00010101000000-000000000000
+	github.com/classic-terra/core/v4 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.53.4
 	github.com/cosmos/ibc-go/v10 v10.3.0
 	github.com/cosmos/interchaintest/v10 v10.0.0
@@ -273,7 +273,7 @@ replace (
 )
 
 replace (
-	github.com/classic-terra/core/v3 => ../../
+	github.com/classic-terra/core/v4 => ../../
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
 	github.com/creachadair/taskgroup => github.com/creachadair/taskgroup v0.6.0
 	// replace goleveldb to optimized one

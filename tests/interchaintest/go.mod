@@ -1,4 +1,4 @@
-module github.com/classic-terra/core/v3/test/interchaintest
+module github.com/classic-terra/core/v4/test/interchaintest
 
 go 1.24.0
 

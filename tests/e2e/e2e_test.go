@@ -6,8 +6,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/tests/e2e/initialization"
-	coreassets "github.com/classic-terra/core/v3/types/assets"
+	"github.com/classic-terra/core/v4/tests/e2e/initialization"
+	coreassets "github.com/classic-terra/core/v4/types/assets"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

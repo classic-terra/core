@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	core "github.com/classic-terra/core/v3/types"
+	core "github.com/classic-terra/core/v4/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
 )

@@ -5,9 +5,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/classic-terra/core/v3/app/keepers"
-	"github.com/classic-terra/core/v3/app/upgrades"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
+	"github.com/classic-terra/core/v4/app/keepers"
+	"github.com/classic-terra/core/v4/app/upgrades"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

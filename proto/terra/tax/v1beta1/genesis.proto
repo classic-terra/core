@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/classic-terra/core/v3/x/tax/types";
+option go_package = "github.com/classic-terra/core/v4/x/tax/types";
 
 message Params {
   option (gogoproto.goproto_stringer) = true;

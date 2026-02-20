@@ -2,10 +2,10 @@ package keeper
 
 import (
 	sdkmath "cosmossdk.io/math"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

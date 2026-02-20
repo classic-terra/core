@@ -73,8 +73,8 @@ func GetTobinTaxKey(d string) []byte {
 	return append(TobinTaxKey, []byte(d)...)
 }
 
-// ExtractDenomFromTobinTaxKey - split denom from the tobin tax key
+// ExtractDenomFromTobinTaxKey extracts the denom from the Tobin tax key by removing the first byte prefix.
 func ExtractDenomFromTobinTaxKey(key []byte) (denom string) {
 	denom = string(key[1:])
-	return
+	return denom
 }

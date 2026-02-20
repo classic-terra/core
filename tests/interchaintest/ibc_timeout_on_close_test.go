@@ -3,8 +3,8 @@ package interchaintest
 import (
 	"context"
 	"fmt"
-	"time"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
@@ -42,9 +42,10 @@ func TestIBCv2TimeoutOnClose(t *testing.T) {
 		},
 		{
 			Name:          "gaia",
-			Version:       "v12.0.0",
+			Version:       "v25.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
+			ChainConfig:   createGaiaConfig(),
 		},
 	})
 

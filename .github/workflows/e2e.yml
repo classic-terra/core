@@ -1,42 +1,145 @@
 name: Run End-To-End Tests
 
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - frag/foundation
+    workflow_dispatch:
+    pull_request:
+    push:
+        branches:
+            - frag/foundation
+
 permissions:
-  contents: read
-  packages: write
-  
+    contents: read
+    packages: write
+
 jobs:
-  e2e:
-    name: Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      -
-        name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
-      -
-        name: Check out repository code
-        uses: actions/checkout@v4
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Build e2e image
-        uses: docker/build-push-action@v5
-        with:
-          file: ./tests/e2e/e2e.Dockerfile
-          context: .
-          platforms: linux/amd64
-          tags: terra:debug
-          build-args: |
-            BASE_IMG_TAG=debug
-      -
-        name: Testing
-        run: make test-e2e
+    build-e2e-image:
+        name: Build E2E Image
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            # 1. Checkout
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            # 2. Setup Go
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  cache: false
+
+            # 3. Cache Go modules + build cache
+            - name: Cache Go modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/go/pkg/mod
+                      ~/.cache/go-build
+                  key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+                  restore-keys: |
+                      ${{ runner.os }}-go-
+
+            # 4. Pre-download deps (cached on host)
+            - name: Download Go dependencies
+              run: go mod download
+
+            # 5. Setup Docker Buildx with docker-container driver for cache mount support
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+              with:
+                  driver: docker-container
+                  driver-opts: |
+                      network=host
+
+            # 6. Prepare Go module cache for Docker build
+            - name: Prepare Go module cache
+              run: |
+                  mkdir -p .cache/go-mod
+                  cp -r ~/go/pkg/mod/. .cache/go-mod/ 2>/dev/null || true
+                  touch .cache/go-mod/.keep
+
+            # 7. Build E2E Docker image and push to registry
+            - name: Build and push e2e image
+              uses: docker/build-push-action@v5
+              with:
+                  file: ./tests/e2e/e2e.Dockerfile
+                  context: .
+                  platforms: linux/amd64
+                  tags: terra:debug
+                  outputs: type=docker,dest=/tmp/terra-e2e-image.tar
+                  build-args: |
+                      BASE_IMG_TAG=debug
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            # 8. Upload Docker image as artifact
+            - name: Upload Docker image artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: terra-e2e-image
+                  path: /tmp/terra-e2e-image.tar
+                  retention-days: 1
+
+    e2e:
+        name: ${{ matrix.test }}
+        runs-on: ubuntu-latest
+        needs: build-e2e-image
+        timeout-minutes: 20
+        strategy:
+            fail-fast: false
+            matrix:
+                test:
+                    - TestIBCWasmHooks
+                    - TestAddBurnTaxExemptionAddress
+                    - TestFeeTax
+                    - TestAuthz
+                    - TestFeeTaxWasm
+                    - TestAPIRegression
+
+        steps:
+            # 1. Checkout
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            # 2. Setup Go
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  cache: false
+
+            # 3. Cache Go modules + build cache
+            - name: Cache Go modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/go/pkg/mod
+                      ~/.cache/go-build
+                  key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+                  restore-keys: |
+                      ${{ runner.os }}-go-
+
+            # 4. Pre-download deps (cached on host)
+            - name: Download Go dependencies
+              run: go mod download
+
+            # 5. Download Docker image artifact
+            - name: Download Docker image artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: terra-e2e-image
+                  path: /tmp
+
+            # 6. Load Docker image
+            - name: Load Docker image
+              run: docker load -i /tmp/terra-e2e-image.tar
+
+            # 7. Run specific E2E test
+            - name: Run ${{ matrix.test }}
+              run: |
+                  VERSION=$(git describe --tags --always) TERRA_E2E=True TERRA_E2E_DEBUG_LOG=True go test -mod=readonly -timeout=20m -v ./tests/e2e/... -run TestIntegrationTestSuite/${{ matrix.test }}

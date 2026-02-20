@@ -57,6 +57,24 @@ func createConfig() (ibc.ChainConfig, error) {
 		nil
 }
 
+func createGaiaConfig() ibc.ChainConfig {
+	fixedChainGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", votingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", maxDepositPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "uatom"),
+		// configure the feemarket module
+		cosmos.NewGenesisKV("app_state.feemarket.params.enabled", false),
+		cosmos.NewGenesisKV("app_state.feemarket.params.min_base_gas_price", "0.001"),
+		cosmos.NewGenesisKV("app_state.feemarket.params.max_block_utilization", "50000000"),
+		cosmos.NewGenesisKV("app_state.feemarket.state.base_gas_price", "0.001"),
+	}
+	fixedChainGasPrices := "0.001uatom"
+	return ibc.ChainConfig{
+		GasPrices:     fixedChainGasPrices,
+		ModifyGenesis: cosmos.ModifyGenesis(fixedChainGenesis),
+	}
+}
+
 // coreEncoding registers the Terra Classic specific module codecs so that the associated types and msgs
 // will be supported when writing to the blocksdb sqlite database.
 func coreEncoding() *testutil.TestEncodingConfig {

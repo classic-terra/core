@@ -17,18 +17,18 @@ import (
 
 // Local IBC event types (avoid depending on other test files)
 type IBCEventTx struct {
-    Data   []byte
-    Events []IBCEvent
+	Data   []byte
+	Events []IBCEvent
 }
 
 type IBCEvent struct {
-    Type       string
-    Attributes []IBCEventAttribute
+	Type       string
+	Attributes []IBCEventAttribute
 }
 
 type IBCEventAttribute struct {
-    Key   string
-    Value string
+	Key   string
+	Value string
 }
 
 // scanBlockEvents converts txs for a given height from a node into the local Tx representation used in oracle_test.go
@@ -99,7 +99,8 @@ func TestIBCv2HandshakeEvents(t *testing.T) {
 		},
 		{
 			Name:          "gaia",
-			Version:       "v12.0.0",
+			Version:       "v25.1.0",
+			ChainConfig:   createGaiaConfig(),
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 		},
@@ -132,9 +133,13 @@ func TestIBCv2HandshakeEvents(t *testing.T) {
 	require.NoError(t, err)
 
 	startTerra := terraH - 50
-	if startTerra < 1 { startTerra = 1 }
+	if startTerra < 1 {
+		startTerra = 1
+	}
 	startGaia := gaiaH - 50
-	if startGaia < 1 { startGaia = 1 }
+	if startGaia < 1 {
+		startGaia = 1
+	}
 
 	// Expected IBC v2 handshake events
 	handshakeEvents := []string{
@@ -181,9 +186,10 @@ func TestIBCv2TransferEvents(t *testing.T) {
 		},
 		{
 			Name:          "gaia",
-			Version:       "v12.0.0",
+			Version:       "v25.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
+			ChainConfig:   createGaiaConfig(),
 		},
 	})
 
@@ -229,9 +235,13 @@ func TestIBCv2TransferEvents(t *testing.T) {
 	terraH2, _ := terra.Height(ctx)
 	gaiaH2, _ := gaia.Height(ctx)
 	startTerra := terraH - 10
-	if startTerra < 1 { startTerra = 1 }
+	if startTerra < 1 {
+		startTerra = 1
+	}
 	startGaia := gaiaH2 - 30
-	if startGaia < 1 { startGaia = 1 }
+	if startGaia < 1 {
+		startGaia = 1
+	}
 
 	require.True(t, containsAnyEventInWindow(t, ctx, terra, startTerra, terraH2, "send_packet"))
 	// recv and write_ack occur on destination

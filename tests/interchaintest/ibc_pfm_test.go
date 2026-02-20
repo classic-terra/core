@@ -69,9 +69,10 @@ func TestTerraGaiaOsmoPFM(t *testing.T) {
 		},
 		{
 			Name:          "gaia",
-			Version:       "v12.0.0",
+			Version:       "v25.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
+			ChainConfig:   createGaiaConfig(),
 		},
 	})
 

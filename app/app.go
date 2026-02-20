@@ -27,6 +27,7 @@ import (
 	v11_2 "github.com/classic-terra/core/v4/app/upgrades/v11_2"
 	v12 "github.com/classic-terra/core/v4/app/upgrades/v12"
 	v13 "github.com/classic-terra/core/v4/app/upgrades/v13"
+	v13_1 "github.com/classic-terra/core/v4/app/upgrades/v13_1"
 	v14 "github.com/classic-terra/core/v4/app/upgrades/v14"
 	v15 "github.com/classic-terra/core/v4/app/upgrades/v15"
 	v2 "github.com/classic-terra/core/v4/app/upgrades/v2"
@@ -41,13 +42,13 @@ import (
 	v8_1 "github.com/classic-terra/core/v4/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v4/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v4/app/upgrades/v8_3"
+
+	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v4/client/docs/statik"
 	customante "github.com/classic-terra/core/v4/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v4/custom/auth/post"
 	customauthtx "github.com/classic-terra/core/v4/custom/auth/tx"
 	customserver "github.com/classic-terra/core/v4/server"
-
-	// unnamed import of statik for swagger UI support
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmos "github.com/cometbft/cometbft/libs/os"
@@ -69,7 +70,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
@@ -104,6 +104,7 @@ var (
 		v11_2.Upgrade,
 		v12.Upgrade,
 		v13.Upgrade,
+		v13_1.Upgrade,
 		v14.Upgrade,
 		v15.Upgrade,
 	}
@@ -213,12 +214,9 @@ func NewTerraApp(
 		appOpts,
 	)
 
-	/****  Module Options ****/
-	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
-
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.mm = module.NewManager(appModules(app, encodingConfig)...)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -255,7 +253,7 @@ func NewTerraApp(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
 
 	app.sm.RegisterStoreDecoders()
 
@@ -491,6 +489,8 @@ func (app *TerraApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIC
 	}
 
 	// Apply custom middleware
+	// TxLogsMiddleware reconstructs the deprecated logs field from events for backwards compatibility
+	apiSvr.Router.Use(customserver.TxLogsMiddleware)
 	apiSvr.Router.Use(customserver.BlockHeightMiddleware)
 }
 

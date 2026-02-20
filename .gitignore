@@ -55,3 +55,7 @@ dependency-graph.png
 
 # AI-assisted tools
 .claude/
+CLAUDE.md
+
+# CI cache (populated during Docker builds)
+.cache/

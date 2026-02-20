@@ -246,17 +246,11 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, oracleAccI.(authtypes.ModuleAccountI))
 	marketAccI := accountKeeper.NewAccount(ctx, marketAcc)
 	accountKeeper.SetModuleAccount(ctx, marketAccI.(authtypes.ModuleAccountI))
+	marketAccumAccI := accountKeeper.NewAccount(ctx, marketAccumAcc)
+	accountKeeper.SetModuleAccount(ctx, marketAccumAccI.(authtypes.ModuleAccountI))
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs))))))
 	require.NoError(t, err)
-
-	accountKeeper.SetModuleAccount(ctx, feeCollectorAcc)
-	accountKeeper.SetModuleAccount(ctx, bondPool)
-	accountKeeper.SetModuleAccount(ctx, notBondedPool)
-	accountKeeper.SetModuleAccount(ctx, distrAcc)
-	accountKeeper.SetModuleAccount(ctx, oracleAcc)
-	accountKeeper.SetModuleAccount(ctx, marketAcc)
-	accountKeeper.SetModuleAccount(ctx, marketAccumAcc)
 
 	for _, addr := range Addrs {
 		baseAcc := authtypes.NewBaseAccountWithAddress(addr)

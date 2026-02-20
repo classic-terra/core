@@ -48,7 +48,7 @@ func (k Keeper) UpdateTaxPolicy(ctx sdk.Context) (newTaxRate sdkmath.LegacyDec) 
 
 	// Set the new tax rate to the store
 	k.SetTaxRate(ctx, newTaxRate)
-	return
+	return newTaxRate
 }
 
 // UpdateRewardPolicy updates reward-weight with w(t+1) = w(t)*SB_target/SB_rolling(t)
@@ -74,5 +74,5 @@ func (k Keeper) UpdateRewardPolicy(ctx sdk.Context) (newRewardWeight sdkmath.Leg
 
 	// Set the new reward weight
 	k.SetRewardWeight(ctx, newRewardWeight)
-	return
+	return newRewardWeight
 }

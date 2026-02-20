@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"cosmossdk.io/client/v2/autocli"
 	log "cosmossdk.io/log"
@@ -45,7 +46,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	genutil "github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cast"
@@ -153,7 +154,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		sc := encodingConfig.InterfaceRegistry.SigningContext()
 		modOpts := services.ExtractAutoCLIOptions(tempApp.Modules())
 		// Only enhance Query via AutoCLI to avoid conflicting/duplicate TX flags and commands
-		for _, opt := range modOpts {
+		// Iterate deterministically to ensure consistent behavior across runs
+		moduleNames := make([]string, 0, len(modOpts))
+		for moduleName := range modOpts {
+			moduleNames = append(moduleNames, moduleName)
+		}
+		sort.Strings(moduleNames)
+
+		for _, moduleName := range moduleNames {
+			opt := modOpts[moduleName]
 			if opt != nil {
 				opt.Tx = nil
 			}

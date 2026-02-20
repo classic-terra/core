@@ -62,7 +62,7 @@ func (pb ExchangeRateBallot) ToCrossRate(bases map[string]math.LegacyDec) (cb Ex
 		cb = append(cb, vote)
 	}
 
-	return
+	return cb
 }
 
 // ToCrossRateWithSort return cross_rate(base/exchange_rate) ballot
@@ -82,7 +82,7 @@ func (pb ExchangeRateBallot) ToCrossRateWithSort(bases map[string]math.LegacyDec
 	}
 
 	sort.Sort(cb)
-	return
+	return cb
 }
 
 // Power returns the total amount of voting power in the ballot
@@ -137,7 +137,7 @@ func (pb ExchangeRateBallot) StandardDeviation(median math.LegacyDec) (standardD
 	floatNum = mathstd.Sqrt(floatNum)
 	standardDeviation, _ = math.LegacyNewDecFromStr(fmt.Sprintf("%f", floatNum))
 
-	return
+	return standardDeviation
 }
 
 // Len implements sort.Interface

@@ -9,6 +9,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const MaxOracleGasLimit = 1_000_000
+
 // SpammingPreventionDecorator will check if the transaction's gas is smaller than
 // configured hard cap
 type SpammingPreventionDecorator struct {
@@ -34,12 +36,22 @@ func (spd SpammingPreventionDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
 		return next(ctx, tx, simulate)
 	}
 
-	if !simulate {
-		if ctx.IsCheckTx() {
-			err := spd.CheckOracleSpamming(ctx, tx.GetMsgs())
-			if err != nil {
-				return ctx, err
+	if !simulate && ctx.IsCheckTx() {
+		msgs := tx.GetMsgs()
+		if containsOracleMsg(msgs) {
+			feeTx, ok := tx.(sdk.FeeTx)
+			if !ok {
+				return ctx, sdkerrors.ErrTxDecode.Wrap("oracle tx must be a FeeTx")
 			}
+
+			if feeTx.GetGas() > MaxOracleGasLimit {
+				return ctx, sdkerrors.ErrInvalidGasLimit.Wrapf("oracle tx gas limit %d exceeds maximum %d", feeTx.GetGas(), MaxOracleGasLimit)
+			}
+		}
+
+		err := spd.CheckOracleSpamming(ctx, msgs)
+		if err != nil {
+			return ctx, err
 		}
 	}
 
@@ -104,4 +116,15 @@ func (spd SpammingPreventionDecorator) CheckOracleSpamming(ctx sdk.Context, msgs
 	}
 
 	return nil
+}
+
+func containsOracleMsg(msgs []sdk.Msg) bool {
+	for _, msg := range msgs {
+		switch msg.(type) {
+		case *oracleexported.MsgAggregateExchangeRatePrevote, *oracleexported.MsgAggregateExchangeRateVote:
+			return true
+		}
+	}
+
+	return false
 }

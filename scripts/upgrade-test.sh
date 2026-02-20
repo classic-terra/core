@@ -5,7 +5,7 @@ FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
 
-OLD_VERSION=v3.6.0
+OLD_VERSION=v3.6.1
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
@@ -16,7 +16,7 @@ ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
 
 if [[ "$FORK" == "true" ]]; then
-    export TERRAD_HALT_HEIGHT=100
+    export TERRAD_HALT_HEIGHT=20
 fi
 
 # underscore so that go tool will not take gocache into account
@@ -91,7 +91,7 @@ run_upgrade () {
     echo "upgrading"
 
     STATUS_INFO=($(./_build/old/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 40))
+    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 100))
     echo "UPGRADE_HEIGHT = $UPGRADE_HEIGHT"
 
     tar -cf ./_build/new/terrad.tar -C ./_build/new terrad

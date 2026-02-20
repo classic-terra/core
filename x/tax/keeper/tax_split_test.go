@@ -21,7 +21,7 @@ func TestProcessTaxSplits_RedirectToMarketAccumulator(t *testing.T) {
 	// Setup app and context
 	chainID := "tax-redirect-test"
 	app := apphelpers.SetupApp(t, chainID)
-	ctx := app.BaseApp.NewContext(false).WithBlockHeader(tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
+	ctx := app.NewUncachedContext(false, tmproto.Header{Height: 1, ChainID: chainID, Time: time.Now().UTC()})
 
 	// Configure distribution params: community tax = 0 to simplify
 	distrParams := distrtypes.DefaultParams()

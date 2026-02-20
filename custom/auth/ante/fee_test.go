@@ -1460,10 +1460,12 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdkmath.LegacyDec, ora
 	antehandler := sdk.ChainAnteDecorators(mfd)
 	postHandler := sdk.ChainPostDecorators(pd)
 
-	// Set burn split tax and redirect
-	tk.SetBurnSplitRate(s.ctx, burnSplitRate)
-	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
-	tk.SetTaxRedirectRate(s.ctx, marketRedirectRate)
+	// Set burn split, oracle split and market redirect atomically
+	tParams := tk.GetParams(s.ctx)
+	tParams.BurnTaxSplit = burnSplitRate
+	tParams.OracleSplit = oracleSplitRate
+	tParams.TaxRedirectRate = marketRedirectRate
+	tk.SetParams(s.ctx, tParams)
 
 	// Set community tax
 	dkParams, err := dk.Params.Get(s.ctx)
@@ -1510,6 +1512,9 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdkmath.LegacyDec, ora
 	require.NoError(err)
 	_, err = postHandler(newCtx, tx, false, true)
 	require.NoError(err)
+
+	// Read post-handler state from execution context
+	s.ctx = newCtx
 
 	// burn the burn account
 	tk.BurnCoinsFromBurnAccount(s.ctx)

@@ -8,6 +8,7 @@ import (
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
@@ -75,11 +76,6 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 		); err != nil {
 			return err
 		}
-
-		// Add to community pool
-		feePool, _ := k.distributionKeeper.FeePool.Get(ctx)
-		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(communityTaxCoins...)...)
-		k.distributionKeeper.FeePool.Set(ctx, feePool)
 
 		// Emit event for community tax transfer
 		ctx.EventManager().EmitEvent(

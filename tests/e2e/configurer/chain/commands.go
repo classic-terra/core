@@ -544,6 +544,14 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 	return result, nil
 }
 
+func (n *NodeConfig) DelegateFeedConsent(feederAddr string, walletName string) {
+	n.LogActionF("delegating feed consent to %s from wallet %s", feederAddr, walletName)
+	cmd := []string{"terrad", "tx", "oracle", "set-feeder", feederAddr, fmt.Sprintf("--from=%s", walletName)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully delegated feed consent to %s", feederAddr)
+}
+
 func (n *NodeConfig) SubmitOracleAggregatePrevote(salt string, amount string) {
 	n.LogActionF("submitting oracle aggregate prevote")
 	cmd := []string{"terrad", "tx", "oracle", "aggregate-prevote", salt, amount, fmt.Sprintf("--from=%s", "val")}

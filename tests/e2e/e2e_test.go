@@ -273,3 +273,28 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	// no longer taxed
 	s.Require().Equal(balance3.Amount, balance2.Amount.Sub(transferAmount))
 }
+
+// TestOracleDelegateFeedConsent verifies that MsgDelegateFeedConsent can be
+// simulated and broadcast without the bech32 prefix mismatch error:
+// "hrp does not match bech32 prefix: expected 'terra' got 'terravaloper'"
+func (s *IntegrationTestSuite) TestOracleDelegateFeedConsent() {
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	// The validator's operator address (terravaloper...) is the signer of MsgDelegateFeedConsent.
+	// Before the fix, x/tx signer extraction would fail to decode it using the account codec.
+	operatorAddr := node.OperatorAddress
+	s.Require().NotEmpty(operatorAddr, "validator operator address must be set")
+
+	// Create a new feeder wallet to delegate oracle voting rights to.
+	feederAddr := node.CreateWallet("oracleFeeder")
+
+	// Submit the tx — this would previously fail with code 2 (internal logic error).
+	node.DelegateFeedConsent(feederAddr, initialization.ValidatorWalletName)
+
+	// Verify the delegation was recorded on-chain.
+	delegated, err := node.QueryFeederDelegation(operatorAddr)
+	s.Require().NoError(err)
+	s.Require().Equal(feederAddr, delegated)
+}

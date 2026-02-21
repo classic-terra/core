@@ -13,6 +13,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/classic-terra/core/v4/tests/e2e/initialization"
 	"github.com/classic-terra/core/v4/tests/e2e/util"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
 	taxexemptiontypes "github.com/classic-terra/core/v4/x/taxexemption/types"
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
@@ -143,6 +144,18 @@ func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {
 	}
 
 	return taxRateResp.Addresses, nil
+}
+
+func (n *NodeConfig) QueryFeederDelegation(validatorAddr string) (string, error) {
+	path := fmt.Sprintf("terra/oracle/v1beta1/validators/%s/feeder", validatorAddr)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var resp oracletypes.QueryFeederDelegationResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &resp); err != nil {
+		return "", err
+	}
+	return resp.FeederAddr, nil
 }
 
 // QueryTaxExemptionZones returns the list of tax exemption zones.

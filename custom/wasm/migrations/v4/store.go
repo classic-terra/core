@@ -5,12 +5,10 @@ import (
 
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
-
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // StoreContractInfoFn stores contract info

@@ -1,4 +1,4 @@
-package v15
+package v14rc4
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// CreateV15UpgradeHandler creates the upgrade handler for v15.
+// CreateV14RC4UpgradeHandler creates the upgrade handler for v14rc4.
 // This upgrade triggers the wasm module migration from consensus version 4 to 5,
 // which fixes the ContractInfo protobuf field order swap between wasmd v0.61.4 and v0.61.5.
-func CreateV15UpgradeHandler(
+func CreateV14RC4UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
 	_ upgrades.BaseAppParamManager,

@@ -10,6 +10,22 @@ CHAIN_ID=localterra
 TXHASH=()
 CONTRACT_ADDRESSES=()
 
+# Wait for a tx to be included in a block, then return its JSON result
+wait_for_tx() {
+	local hash=$1
+	local max_retries=10
+	for i in $(seq 1 $max_retries); do
+		result=$($BINARY q tx $hash -o json 2>/dev/null) && {
+			echo "$result"
+			return 0
+		}
+		echo "... waiting for tx $hash (attempt $i/$max_retries)" >&2
+		sleep 3
+	done
+	echo "... tx $hash not found after $max_retries attempts" >&2
+	return 1
+}
+
 echo "SETTING UP SMART CONTRACT INTERACTION"
 
 # create two contracts only
@@ -27,25 +43,56 @@ for j in $(seq 0 1); do
 		echo $out >&2
 		exit $code
 	fi
-	sleep 5
 	txhash=$(echo $out | jq -r '.txhash')
 	TXHASH+=($txhash)
-	id=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[1].value')
+	tx_result=$(wait_for_tx $txhash)
+	if [ $? -ne 0 ]; then
+		echo "... Could not find store tx $txhash" >&2
+		exit 1
+	fi
+	id=$(echo "$tx_result" | jq -r '
+		(.events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value) //
+		(.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value) //
+		empty
+	')
+	if [ -z "$id" ]; then
+		echo "... Could not extract code_id from store tx $txhash" >&2
+		echo "$tx_result" | jq '.events' >&2
+		exit 1
+	fi
+	echo "... code_id = $id"
 
 	# instantiates contract
 	echo "... instantiates contract"
 	msg='{"name":"BaseNFT","symbol":"BASE","minter":"'$addr'"}'
-	out=$($BINARY tx wasm instantiate $id "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --label mynft --admin $addr)
+	CMD=($BINARY tx wasm instantiate $id "$msg" --from test$j --output json --gas auto --gas-adjustment 2.3 --fees 20000000uluna --chain-id $CHAIN_ID --home $HOME --keyring-backend $KEYRING_BACKEND -y --admin $addr)
+	if $BINARY tx wasm instantiate --help 2>&1 | grep -q -- "--label"; then
+		CMD+=(--label mynft)
+	fi
+	out=$("${CMD[@]}")
 	code=$(echo $out | jq -r '.code')
 	if [ "$code" != "0" ]; then
 		echo "... Could not instantiate NFT contract" >&2
 		echo $out >&2
 		exit $code
 	fi
-	sleep 5
 	txhash=$(echo $out | jq -r '.txhash')
 	TXHASH+=("$txhash")
-	contract_addr=$($BINARY q tx $txhash -o json | jq -r '.raw_log' | jq -r '.[0].events[1].attributes[0].value')
+	tx_result=$(wait_for_tx $txhash)
+	if [ $? -ne 0 ]; then
+		echo "... Could not find instantiate tx $txhash" >&2
+		exit 1
+	fi
+	contract_addr=$(echo "$tx_result" | jq -r '
+		(.events[] | select(.type=="instantiate") | .attributes[] | select(.key=="_contract_address") | .value) //
+		(.logs[0].events[] | select(.type=="instantiate") | .attributes[] | select(.key=="_contract_address") | .value) //
+		empty
+	')
+	if [ -z "$contract_addr" ]; then
+		echo "... Could not extract contract_address from instantiate tx $txhash" >&2
+		echo "$tx_result" | jq '.events' >&2
+		exit 1
+	fi
 	CONTRACT_ADDRESSES+=("$contract_addr")
 	echo $($BINARY q tx $txhash -o json | jq -r '.raw_log')
 	echo "contract_addr = $contract_addr"

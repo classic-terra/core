@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
 	log "cosmossdk.io/log"
 	sdklog "cosmossdk.io/log"
@@ -154,17 +154,28 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	{
 		sc := encodingConfig.InterfaceRegistry.SigningContext()
 		modOpts := services.ExtractAutoCLIOptions(tempApp.Modules())
-		// Only enhance Query via AutoCLI to avoid conflicting/duplicate TX flags and commands
-		// Iterate deterministically to ensure consistent behavior across runs
-		moduleNames := make([]string, 0, len(modOpts))
-		for moduleName := range modOpts {
-			moduleNames = append(moduleNames, moduleName)
-		}
-		sort.Strings(moduleNames)
-
-		for _, moduleName := range moduleNames {
-			opt := modOpts[moduleName]
-			if opt != nil {
+		// ExtractAutoCLIOptions populates two categories of modules:
+		//   1. Explicit: module implements AutoCLIOptions() — intentionally curated tx
+		//      commands (e.g. slashing exposes unjail only through AutoCLI).
+		//   2. Auto-discovered: module calls RegisterServices but has no AutoCLIOptions() —
+		//      tx options are inferred from the gRPC service. These can conflict with SDK
+		//      standard tx flags (e.g. ibc transfer's MsgTransfer.timeout_height proto field
+		//      clashes with AddTxFlagsToCmd's --timeout-height flag → panic).
+		// Keep opt.Tx only for explicitly-declared AutoCLI modules; suppress the rest.
+		appModules := tempApp.Modules()
+		for moduleName, opt := range modOpts {
+			if opt == nil {
+				continue
+			}
+			mod, ok := appModules[moduleName]
+			if !ok {
+				opt.Tx = nil
+				continue
+			}
+			_, hasExplicitAutoCLI := mod.(interface {
+				AutoCLIOptions() *autocliv1.ModuleOptions
+			})
+			if !hasExplicitAutoCLI {
 				opt.Tx = nil
 			}
 		}

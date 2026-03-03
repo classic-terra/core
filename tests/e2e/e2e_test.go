@@ -298,3 +298,50 @@ func (s *IntegrationTestSuite) TestOracleDelegateFeedConsent() {
 	s.Require().NoError(err)
 	s.Require().Equal(feederAddr, delegated)
 }
+
+// TestSlashingUnjail verifies that a jailed validator can be unjailed via
+// "tx slashing unjail", which is only exposed through AutoCLI in SDK v0.53+.
+// The test stops a non-default validator to trigger downtime jailing, then
+// restarts it and submits the unjail transaction, confirming that
+// jailed_until is cleared.
+func (s *IntegrationTestSuite) TestSlashingUnjail() {
+	chain := s.configurer.GetChainConfig(0)
+
+	// nodeToJail is the second validator; stopping it keeps chain consensus
+	// alive (3 of 4 validators remain, well above the 2/3 threshold).
+	nodeToJail := chain.NodeConfigs[1]
+	// defaultNode stays running and is used for signing-info queries.
+	defaultNode, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	s.Require().NotEmpty(nodeToJail.ConsensusAddress,
+		"consensus address must be extracted at startup")
+
+	// --- jail phase ---
+	s.T().Log("stopping validator to trigger downtime jailing")
+	s.Require().NoError(nodeToJail.Stop())
+
+	// Wait until the signing info shows jailed_until in the future, meaning
+	// the slashing module has processed the downtime and jailed the validator.
+	const notJailed = "0001-01-01T00:00:00Z"
+	s.Require().Eventually(func() bool {
+		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
+		if err != nil {
+			return false
+		}
+		return jailedUntil != notJailed
+	}, initialization.FiveMin, 5*time.Second,
+		"validator was not jailed within the timeout")
+
+	// --- unjail phase ---
+	s.T().Log("restarting validator and submitting unjail tx")
+	s.Require().NoError(nodeToJail.Run())
+
+	nodeToJail.Unjail(initialization.ValidatorWalletName)
+
+	// Verify the signing info shows jailed_until is cleared.
+	jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
+	s.Require().NoError(err)
+	s.Require().Equal(notJailed, jailedUntil,
+		"jailed_until should be cleared after unjail")
+}

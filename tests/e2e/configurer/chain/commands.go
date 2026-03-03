@@ -544,6 +544,14 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 	return result, nil
 }
 
+func (n *NodeConfig) Unjail(walletName string) {
+	n.LogActionF("unjailing validator using wallet %s", walletName)
+	cmd := []string{"terrad", "tx", "slashing", "unjail", fmt.Sprintf("--from=%s", walletName)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted unjail tx from wallet %s", walletName)
+}
+
 func (n *NodeConfig) DelegateFeedConsent(feederAddr string, walletName string) {
 	n.LogActionF("delegating feed consent to %s from wallet %s", feederAddr, walletName)
 	cmd := []string{"terrad", "tx", "oracle", "set-feeder", feederAddr, fmt.Sprintf("--from=%s", walletName)}

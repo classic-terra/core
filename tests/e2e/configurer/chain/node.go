@@ -19,6 +19,7 @@ type NodeConfig struct {
 	initialization.Node
 
 	OperatorAddress  string
+	ConsensusAddress string // bech32 terravalcons... format
 	SnapshotInterval uint64
 	chainID          string
 	rpcClient        *rpchttp.HTTP
@@ -118,9 +119,16 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 	if err != nil {
 		return err
 	}
-	re := regexp.MustCompile("terravaloper(.{39})")
-	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
+	out := errBuf.String()
+
+	reOper := regexp.MustCompile("terravaloper(.{39})")
+	operAddr := fmt.Sprintf("%s\n", reOper.FindString(out))
 	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+
+	reCons := regexp.MustCompile("terravalcons(.{39})")
+	consAddr := fmt.Sprintf("%s\n", reCons.FindString(out))
+	n.ConsensusAddress = strings.TrimSuffix(consAddr, "\n")
+
 	return nil
 }
 

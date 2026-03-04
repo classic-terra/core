@@ -334,9 +334,28 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 		"validator was not jailed within the timeout")
 
 	// --- unjail phase ---
-	s.T().Log("restarting validator and submitting unjail tx")
+	s.T().Log("restarting validator")
 	s.Require().NoError(nodeToJail.Run())
 
+	// Wait until the real clock has passed jailed_until. Submitting the unjail
+	// tx while jailed_until is still in the future causes DeliverTx to fail even
+	// though CheckTx (mempool) accepts it, leaving the validator permanently jailed.
+	s.Require().Eventually(func() bool {
+		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
+		if err != nil || jailedUntil == notJailed {
+			return false
+		}
+		jailTime, err := time.Parse(time.RFC3339Nano, jailedUntil)
+		if err != nil {
+			jailTime, err = time.Parse(time.RFC3339, jailedUntil)
+			if err != nil {
+				return false
+			}
+		}
+		return time.Now().UTC().After(jailTime)
+	}, initialization.TwoMin, time.Second, "jail period did not expire within timeout")
+
+	s.T().Log("jail period expired, submitting unjail tx")
 	nodeToJail.Unjail(initialization.ValidatorWalletName)
 
 	// Verify the signing info shows jailed_until is cleared.

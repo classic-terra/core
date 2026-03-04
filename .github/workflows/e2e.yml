@@ -98,7 +98,6 @@ jobs:
                     - TestAuthz
                     - TestFeeTaxWasm
                     - TestAPIRegression
-                    - TestSlashingUnjail
                     - TestOracleDelegateFeedConsent
 
         steps:

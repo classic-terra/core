@@ -19,6 +19,7 @@ type NodeConfig struct {
 	initialization.Node
 
 	OperatorAddress  string
+	ConsensusAddress string // bech32 terravalcons... format
 	SnapshotInterval uint64
 	chainID          string
 	rpcClient        *rpchttp.HTTP
@@ -75,6 +76,23 @@ func (n *NodeConfig) Run() error {
 		"Terra node failed to produce blocks",
 	)
 
+	// Wait for 2 more blocks to confirm p2p connections are established.
+	// Without this, a just-restarted node may not yet have peers and any
+	// tx broadcast to it would sit in the local mempool and never be committed.
+	firstHeight, _ := n.QueryCurrentHeight()
+	if firstHeight > 0 {
+		require.Eventually(
+			n.t,
+			func() bool {
+				h, err := n.QueryCurrentHeight()
+				return err == nil && h >= firstHeight+2
+			},
+			initialization.TwoMin,
+			time.Second,
+			"Terra node failed to advance blocks after start",
+		)
+	}
+
 	return n.extractOperatorAddressIfValidator()
 }
 
@@ -114,13 +132,26 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 
 	cmd := []string{"terrad", "debug", "addr", n.PublicKey}
 	n.t.Logf("extracting validator operator addresses for validator: %s", n.Name)
-	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	if err != nil {
 		return err
 	}
-	re := regexp.MustCompile("terravaloper(.{39})")
-	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
+	out := outBuf.String()
+
+	reOper := regexp.MustCompile("terravaloper(.{39})")
+	operAddr := fmt.Sprintf("%s\n", reOper.FindString(out))
 	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+
+	// The consensus address is derived from the ed25519 consensus key, which is
+	// different from the secp256k1 account/operator key fed to "debug addr".
+	// Use "comet show-address" to read it directly from the node's local keyfiles.
+	showAddrCmd := []string{"terrad", "comet", "show-address"}
+	showAddrBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, showAddrCmd, "", false)
+	if err != nil {
+		return err
+	}
+	n.ConsensusAddress = strings.TrimSpace(showAddrBuf.String())
+
 	return nil
 }
 

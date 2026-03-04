@@ -146,6 +146,26 @@ func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {
 	return taxRateResp.Addresses, nil
 }
 
+// QuerySigningInfo returns the jailed_until timestamp string for the given
+// consensus address (terravalcons... format). When the validator is not jailed
+// the REST API returns the protobuf zero Timestamp as "1970-01-01T00:00:00Z".
+func (n *NodeConfig) QuerySigningInfo(consAddress string) (string, error) {
+	path := fmt.Sprintf("cosmos/slashing/v1beta1/signing_infos/%s", consAddress)
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return "", err
+	}
+	var resp struct {
+		ValSigningInfo struct {
+			JailedUntil string `json:"jailed_until"`
+		} `json:"val_signing_info"`
+	}
+	if err := json.Unmarshal(bz, &resp); err != nil {
+		return "", err
+	}
+	return resp.ValSigningInfo.JailedUntil, nil
+}
+
 func (n *NodeConfig) QueryFeederDelegation(validatorAddr string) (string, error) {
 	path := fmt.Sprintf("terra/oracle/v1beta1/validators/%s/feeder", validatorAddr)
 	bz, err := n.QueryGRPCGateway(path)

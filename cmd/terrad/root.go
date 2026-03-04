@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 
 	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	log "cosmossdk.io/log"
 	sdklog "cosmossdk.io/log"
 	store "cosmossdk.io/store"
@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	snapshot "github.com/cosmos/cosmos-sdk/client/snapshot"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -153,23 +152,18 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	// This adds missing upstream module commands (e.g., staking, distribution, gov) under query/tx.
 	{
 		sc := encodingConfig.InterfaceRegistry.SigningContext()
-		modOpts := services.ExtractAutoCLIOptions(tempApp.Modules())
-		// Only enhance Query via AutoCLI to avoid conflicting/duplicate TX flags and commands
-		// Iterate deterministically to ensure consistent behavior across runs
-		moduleNames := make([]string, 0, len(modOpts))
-		for moduleName := range modOpts {
-			moduleNames = append(moduleNames, moduleName)
-		}
-		sort.Strings(moduleNames)
+		modules := make(map[string]appmodule.AppModule)
 
-		for _, moduleName := range moduleNames {
-			opt := modOpts[moduleName]
-			if opt != nil {
-				opt.Tx = nil
+		for _, m := range tempApp.Modules() {
+			if moduleWithName, ok := m.(module.HasName); ok {
+				moduleName := moduleWithName.Name()
+				if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+					modules[moduleName] = appModule
+				}
 			}
 		}
 		autoOpts := autocli.AppOptions{
-			ModuleOptions:         modOpts,
+			Modules:               modules,
 			AddressCodec:          sc.AddressCodec(),
 			ValidatorAddressCodec: sc.ValidatorAddressCodec(),
 			ConsensusAddressCodec: addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),

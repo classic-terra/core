@@ -11,6 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	app "github.com/classic-terra/core/v4/app"
+	"github.com/classic-terra/core/v4/tests/e2e/containers"
 	"github.com/classic-terra/core/v4/tests/e2e/initialization"
 	"github.com/classic-terra/core/v4/types/assets"
 	"github.com/cometbft/cometbft/libs/bytes"
@@ -542,6 +543,26 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 		return resultStatus{}, err
 	}
 	return result, nil
+}
+
+// Unjail broadcasts an unjail tx and returns any broadcast-level error.
+// It does NOT assert on-chain delivery; callers must verify via QuerySigningInfo.
+// Returning an error (rather than panicking) lets callers retry inside Eventually.
+func (n *NodeConfig) Unjail(walletName string) error {
+	n.LogActionF("unjailing validator using wallet %s", walletName)
+	cmd := []string{
+		"terrad", "tx", "slashing", "unjail",
+		fmt.Sprintf("--from=%s", walletName),
+		fmt.Sprintf("--chain-id=%s", n.chainID),
+		"--yes", "--keyring-backend=test", "--log_format=json",
+		fmt.Sprintf("--gas=%d", containers.GasLimit), "--fees=0uluna",
+	}
+	_, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "txhash", false)
+	if err != nil {
+		return err
+	}
+	n.LogActionF("successfully broadcast unjail tx from wallet %s", walletName)
+	return nil
 }
 
 func (n *NodeConfig) DelegateFeedConsent(feederAddr string, walletName string) {

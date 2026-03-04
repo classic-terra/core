@@ -359,14 +359,20 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 		return time.Now().UTC().After(jailTime.Add(5 * time.Second))
 	}, initialization.TwoMin, time.Second, "jail period did not expire within timeout")
 
-	s.T().Log("jail period expired, submitting unjail tx")
-	nodeToJail.Unjail(initialization.ValidatorWalletName)
-
-	// Verify the signing info shows jailed_until is cleared.
-	// Use Eventually because the unjail tx may take up to one block to commit.
+	// Retry the unjail tx every poll interval until signing info confirms success.
+	// A single broadcast is insufficient: if the committed block's BFT timestamp
+	// is still before jailed_until (BFT clock can lag real time in CI), DeliverTx
+	// returns a non-zero code and the validator stays jailed. Re-broadcasting every
+	// 5 seconds lets BFT time catch up without manual timing tuning.
+	s.T().Log("jail period expired, entering unjail retry loop")
 	s.Require().Eventually(func() bool {
 		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
-		return err == nil && jailedUntil == notJailed
-	}, initialization.TwoMin, 5*time.Second,
+		if err == nil && jailedUntil == notJailed {
+			return true
+		}
+		// Ignore broadcast errors; on-chain delivery is checked via signing info.
+		_ = nodeToJail.Unjail(initialization.ValidatorWalletName)
+		return false
+	}, initialization.FiveMin, 5*time.Second,
 		"jailed_until should be cleared after unjail")
 }

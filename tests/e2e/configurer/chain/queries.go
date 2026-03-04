@@ -155,6 +155,7 @@ func (n *NodeConfig) QuerySigningInfo(consAddress string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	n.t.Logf("QuerySigningInfo raw response: %s", string(bz))
 	var resp struct {
 		ValSigningInfo struct {
 			JailedUntil string `json:"jailed_until"`

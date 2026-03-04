@@ -76,6 +76,23 @@ func (n *NodeConfig) Run() error {
 		"Terra node failed to produce blocks",
 	)
 
+	// Wait for 2 more blocks to confirm p2p connections are established.
+	// Without this, a just-restarted node may not yet have peers and any
+	// tx broadcast to it would sit in the local mempool and never be committed.
+	firstHeight, _ := n.QueryCurrentHeight()
+	if firstHeight > 0 {
+		require.Eventually(
+			n.t,
+			func() bool {
+				h, err := n.QueryCurrentHeight()
+				return err == nil && h >= firstHeight+2
+			},
+			initialization.TwoMin,
+			time.Second,
+			"Terra node failed to advance blocks after start",
+		)
+	}
+
 	return n.extractOperatorAddressIfValidator()
 }
 

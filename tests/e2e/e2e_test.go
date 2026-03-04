@@ -323,7 +323,9 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 
 	// Wait until the signing info shows jailed_until in the future, meaning
 	// the slashing module has processed the downtime and jailed the validator.
-	const notJailed = "0001-01-01T00:00:00Z"
+	// The REST API serialises the zero protobuf Timestamp as Unix epoch
+	// ("1970-01-01T00:00:00Z"), not Go's zero time ("0001-01-01T00:00:00Z").
+	const notJailed = "1970-01-01T00:00:00Z"
 	s.Require().Eventually(func() bool {
 		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
 		if err != nil {
@@ -367,15 +369,11 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 	s.T().Log("jail period expired, entering unjail retry loop")
 	s.Require().Eventually(func() bool {
 		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
-		s.T().Logf("QuerySigningInfo: jailed_until=%q err=%v", jailedUntil, err)
 		if err == nil && jailedUntil == notJailed {
 			return true
 		}
 		// Ignore broadcast errors; on-chain delivery is checked via signing info.
-		unjailErr := nodeToJail.Unjail(initialization.ValidatorWalletName)
-		if unjailErr != nil {
-			s.T().Logf("Unjail broadcast error: %v", unjailErr)
-		}
+		_ = nodeToJail.Unjail(initialization.ValidatorWalletName)
 		return false
 	}, initialization.FiveMin, 5*time.Second,
 		"jailed_until should be cleared after unjail")

@@ -367,11 +367,15 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 	s.T().Log("jail period expired, entering unjail retry loop")
 	s.Require().Eventually(func() bool {
 		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
+		s.T().Logf("QuerySigningInfo: jailed_until=%q err=%v", jailedUntil, err)
 		if err == nil && jailedUntil == notJailed {
 			return true
 		}
 		// Ignore broadcast errors; on-chain delivery is checked via signing info.
-		_ = nodeToJail.Unjail(initialization.ValidatorWalletName)
+		unjailErr := nodeToJail.Unjail(initialization.ValidatorWalletName)
+		if unjailErr != nil {
+			s.T().Logf("Unjail broadcast error: %v", unjailErr)
+		}
 		return false
 	}, initialization.FiveMin, 5*time.Second,
 		"jailed_until should be cleared after unjail")

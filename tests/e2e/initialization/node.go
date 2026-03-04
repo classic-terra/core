@@ -280,6 +280,8 @@ func (n *internalNode) init() error {
 	// Override slashing params so TestSlashingUnjail completes in reasonable time.
 	// Defaults (signed_blocks_window=100, downtime_jail_duration=600s) would require
 	// the test to wait >10 min before unjailing is possible.
+	// 60s jail duration gives enough margin so BFT block time is well past
+	// jailed_until by the time the unjail tx is submitted.
 	{
 		var rawState map[string]json.RawMessage
 		if err = json.Unmarshal(appState, &rawState); err != nil {
@@ -290,7 +292,7 @@ func (n *internalNode) init() error {
 			return fmt.Errorf("failed to unmarshal slashing genesis: %w", err)
 		}
 		slashGenState.Params.SignedBlocksWindow = 10
-		slashGenState.Params.DowntimeJailDuration = 10 * time.Second
+		slashGenState.Params.DowntimeJailDuration = 60 * time.Second
 		if rawState[slashingtypes.ModuleName], err = util.Cdc.MarshalJSON(&slashGenState); err != nil {
 			return fmt.Errorf("failed to marshal slashing genesis: %w", err)
 		}

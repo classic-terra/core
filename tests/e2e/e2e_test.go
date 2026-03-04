@@ -337,9 +337,13 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 	s.T().Log("restarting validator")
 	s.Require().NoError(nodeToJail.Run())
 
-	// Wait until the real clock has passed jailed_until. Submitting the unjail
-	// tx while jailed_until is still in the future causes DeliverTx to fail even
-	// though CheckTx (mempool) accepts it, leaving the validator permanently jailed.
+	// Wait until the real clock has passed jailed_until by at least 5 seconds.
+	// Submitting the unjail tx while jailed_until is still in the future causes
+	// DeliverTx to fail even though CheckTx (mempool) accepts it, leaving the
+	// validator permanently jailed. The 5-second buffer accounts for BFT clock
+	// drift: the block's BFT timestamp can be a few seconds behind real time,
+	// so waiting until time.Now() > jailed_until+5s ensures the next committed
+	// block's BFT time is also definitively past jailed_until.
 	s.Require().Eventually(func() bool {
 		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
 		if err != nil || jailedUntil == notJailed {
@@ -352,7 +356,7 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 				return false
 			}
 		}
-		return time.Now().UTC().After(jailTime)
+		return time.Now().UTC().After(jailTime.Add(5 * time.Second))
 	}, initialization.TwoMin, time.Second, "jail period did not expire within timeout")
 
 	s.T().Log("jail period expired, submitting unjail tx")

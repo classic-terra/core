@@ -340,8 +340,10 @@ func (s *IntegrationTestSuite) TestSlashingUnjail() {
 	nodeToJail.Unjail(initialization.ValidatorWalletName)
 
 	// Verify the signing info shows jailed_until is cleared.
-	jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
-	s.Require().NoError(err)
-	s.Require().Equal(notJailed, jailedUntil,
+	// Use Eventually because the unjail tx may take up to one block to commit.
+	s.Require().Eventually(func() bool {
+		jailedUntil, err := defaultNode.QuerySigningInfo(nodeToJail.ConsensusAddress)
+		return err == nil && jailedUntil == notJailed
+	}, initialization.TwoMin, 5*time.Second,
 		"jailed_until should be cleared after unjail")
 }

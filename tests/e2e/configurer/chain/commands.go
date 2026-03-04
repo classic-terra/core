@@ -11,6 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	app "github.com/classic-terra/core/v4/app"
+	"github.com/classic-terra/core/v4/tests/e2e/containers"
 	"github.com/classic-terra/core/v4/tests/e2e/initialization"
 	"github.com/classic-terra/core/v4/types/assets"
 	"github.com/cometbft/cometbft/libs/bytes"
@@ -546,10 +547,20 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 
 func (n *NodeConfig) Unjail(walletName string) {
 	n.LogActionF("unjailing validator using wallet %s", walletName)
-	cmd := []string{"terrad", "tx", "slashing", "unjail", fmt.Sprintf("--from=%s", walletName)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	// Broadcast without waiting for the tx hash query. ExecQueryTxHash has a
+	// hardcoded 5-second polling window which is shorter than typical CI block
+	// times, causing spurious failures. The caller should verify unjailing via
+	// QuerySigningInfo instead.
+	cmd := []string{
+		"terrad", "tx", "slashing", "unjail",
+		fmt.Sprintf("--from=%s", walletName),
+		fmt.Sprintf("--chain-id=%s", n.chainID),
+		"--yes", "--keyring-backend=test", "--log_format=json",
+		fmt.Sprintf("--gas=%d", containers.GasLimit), "--fees=0uluna",
+	}
+	_, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "txhash", false)
 	require.NoError(n.t, err)
-	n.LogActionF("successfully submitted unjail tx from wallet %s", walletName)
+	n.LogActionF("successfully broadcast unjail tx from wallet %s", walletName)
 }
 
 func (n *NodeConfig) DelegateFeedConsent(feederAddr string, walletName string) {

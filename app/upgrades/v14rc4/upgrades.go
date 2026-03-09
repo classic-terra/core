@@ -2,7 +2,6 @@ package v14rc4
 
 import (
 	"context"
-	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/classic-terra/core/v4/app/keepers"
@@ -26,7 +25,6 @@ func CreateV14RC4UpgradeHandler(
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 		if sdkCtx.ChainID() != core.RebelChainID {
-			fmt.Printf("[v14rc4] skipping wasm migration on chain %s (only runs on %s)\n", sdkCtx.ChainID(), core.RebelChainID)
 			sdkCtx.Logger().Info("v14rc4: skipping wasm migration on chain", "chainID", sdkCtx.ChainID())
 			return fromVM, nil
 		}

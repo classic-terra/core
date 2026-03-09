@@ -67,8 +67,12 @@ update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
 # Support both legacy and newer gov param layouts across old/new binaries.
 update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
 update_test_genesis '.app_state["gov"]["params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
-update_test_genesis '.app_state["gov"]["params"]["expedited_voting_period"]="4s"'
 update_test_genesis '.app_state["gov"]["params"]["voting_period"]="30s"'
+# Only set expedited_voting_period if the binary's genesis already includes it.
+# Older binaries (e.g. v3.x on SDK v0.47) don't have this field and will panic.
+if jq -e '.app_state["gov"]["params"] | has("expedited_voting_period")' $HOME_DIR/config/genesis.json > /dev/null 2>&1; then
+    update_test_genesis '.app_state["gov"]["params"]["expedited_voting_period"]="4s"'
+fi
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 

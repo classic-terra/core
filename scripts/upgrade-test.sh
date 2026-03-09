@@ -5,12 +5,12 @@ FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
 
-OLD_VERSION=${OLD_VERSION:-v3.6.1}
+OLD_VERSION=${OLD_VERSION:-v3.6.2}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
-SOFTWARE_UPGRADE_NAME=${SOFTWARE_UPGRADE_NAME:-"v14"}
+SOFTWARE_UPGRADE_NAME=${SOFTWARE_UPGRADE_NAME:-"v14rc4"}
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
@@ -58,9 +58,9 @@ fi
 
 # install new binary
 if [ ! -x "_build/new/terrad" ]; then
+    echo "installing new binary"
     mkdir -p ./_build/new
-    GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
-    cd ../..
+    GOBIN="$ROOT/_build/new" make install
 fi
 
 if [[ "$FORK" != "true" ]]; then

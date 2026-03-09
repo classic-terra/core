@@ -234,6 +234,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
+	startCmd.Flags().String(
+		terraapp.FlagUnsafeForceUpgrade,
+		"",
+		"Force a named upgrade handler to run locally on startup by executing one synthetic empty block. Unsafe: only use on isolated nodes.",
+	)
 }
 
 func queryCommand(basicMgr module.BasicManager) *cobra.Command {

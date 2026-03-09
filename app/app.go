@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	sdklog "cosmossdk.io/log"
@@ -78,6 +81,8 @@ import (
 )
 
 const appName = "TerraApp"
+
+const FlagUnsafeForceUpgrade = "unsafe-force-upgrade"
 
 var (
 	// DefaultNodeHome defines default home directories for terrad
@@ -248,7 +253,8 @@ func NewTerraApp(
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
 	app.setupUpgradeHandlers()
-	app.setupUpgradeStoreLoaders()
+	forcedUpgradeName := cast.ToString(appOpts.Get(FlagUnsafeForceUpgrade))
+	app.setupUpgradeStoreLoaders(forcedUpgradeName)
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -349,6 +355,10 @@ func NewTerraApp(
 				app.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
 				// no explicit commit needed; BaseApp will persist on next commit
 			}
+		}
+
+		if err := app.runForcedUpgrade(forcedUpgradeName); err != nil {
+			tmos.Exit(err.Error())
 		}
 
 		ctx := app.NewUncachedContext(true, tmproto.Header{})
@@ -535,10 +545,27 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
-func (app *TerraApp) setupUpgradeStoreLoaders() {
+
+func (app *TerraApp) setupUpgradeStoreLoaders(forcedUpgradeName string) {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if forcedUpgradeName != "" {
+		upgrade, ok := app.lookupUpgrade(forcedUpgradeName)
+		if !ok {
+			panic(fmt.Sprintf("unknown forced upgrade %q", forcedUpgradeName))
+		}
+
+		if upgradeInfo.Name != "" && upgradeInfo.Name != upgrade.UpgradeName {
+			panic(fmt.Sprintf("forced upgrade %q conflicts with on-disk upgrade %q at height %d", upgrade.UpgradeName, upgradeInfo.Name, upgradeInfo.Height))
+		}
+
+		forcedHeight := app.CommitMultiStore().LatestVersion() + 1
+		storeUpgrades := upgrade.StoreUpgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(forcedHeight, &storeUpgrades))
+		return
 	}
 
 	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
@@ -551,6 +578,80 @@ func (app *TerraApp) setupUpgradeStoreLoaders() {
 			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 		}
 	}
+}
+
+func (app *TerraApp) lookupUpgrade(name string) (upgrades.Upgrade, bool) {
+	for _, upgrade := range Upgrades {
+		if upgrade.UpgradeName == name {
+			return upgrade, true
+		}
+	}
+
+	return upgrades.Upgrade{}, false
+}
+
+func (app *TerraApp) runForcedUpgrade(rawUpgradeName string) error {
+	upgradeName := strings.TrimSpace(rawUpgradeName)
+	if upgradeName == "" {
+		return nil
+	}
+
+	upgrade, ok := app.lookupUpgrade(upgradeName)
+	if !ok {
+		return fmt.Errorf("unknown forced upgrade %q", upgradeName)
+	}
+
+	currentHeight := app.LastBlockHeight()
+	ctx := app.NewUncachedContext(false, tmproto.Header{
+		Height:  currentHeight,
+		ChainID: app.ChainID(),
+		Time:    time.Now().UTC(),
+	})
+
+	doneHeight, err := app.UpgradeKeeper.GetDoneHeight(ctx, upgradeName)
+	if err != nil {
+		return err
+	}
+	if doneHeight != 0 {
+		ctx.Logger().Info("forced upgrade already applied; skipping", "name", upgradeName, "done_height", doneHeight)
+		return nil
+	}
+
+	pendingPlan, err := app.UpgradeKeeper.GetUpgradePlan(ctx)
+	if err == nil {
+		if pendingPlan.Name != upgradeName {
+			return fmt.Errorf("cannot force upgrade %q: upgrade %q is already scheduled at height %d", upgradeName, pendingPlan.Name, pendingPlan.Height)
+		}
+
+		if err := app.UpgradeKeeper.ClearUpgradePlan(ctx); err != nil {
+			return err
+		}
+	} else if !errors.Is(err, upgradetypes.ErrNoUpgradePlanFound) {
+		return err
+	}
+
+	plan := upgradetypes.Plan{
+		Name:   upgrade.UpgradeName,
+		Height: currentHeight + 1,
+		Info:   "forced on startup",
+	}
+
+	if err := app.UpgradeKeeper.ScheduleUpgrade(ctx, plan); err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("forcing upgrade on startup", "name", plan.Name, "height", plan.Height)
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: plan.Height,
+		Time:   time.Now().UTC(),
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = app.Commit()
+	return err
 }
 
 func (app *TerraApp) setupUpgradeHandlers() {

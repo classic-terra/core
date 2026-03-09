@@ -13,6 +13,7 @@ import (
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	storetypes "cosmossdk.io/store/types"
 	sdklog "cosmossdk.io/log"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -625,36 +626,20 @@ func (app *TerraApp) runForcedUpgrade(rawUpgradeName string) error {
 		if pendingPlan.Name != upgradeName {
 			return fmt.Errorf("cannot force upgrade %q: upgrade %q is already scheduled at height %d", upgradeName, pendingPlan.Name, pendingPlan.Height)
 		}
-
-		if err := app.UpgradeKeeper.ClearUpgradePlan(ctx); err != nil {
-			return err
-		}
 	} else if !errors.Is(err, upgradetypes.ErrNoUpgradePlanFound) {
 		return err
 	}
 
 	plan := upgradetypes.Plan{
 		Name:   upgrade.UpgradeName,
-		Height: currentHeight + 1,
+		Height: currentHeight,
 		Info:   "forced on startup",
 	}
 
-	if err := app.UpgradeKeeper.ScheduleUpgrade(ctx, plan); err != nil {
-		return err
-	}
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	ctx.Logger().Info("forcing upgrade on startup without synthetic block commit", "name", plan.Name, "height", plan.Height)
 
-	ctx.Logger().Info("forcing upgrade on startup", "name", plan.Name, "height", plan.Height)
-
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: plan.Height,
-		Time:   time.Now().UTC(),
-	})
-	if err != nil {
-		return err
-	}
-
-	_, err = app.Commit()
-	return err
+	return app.UpgradeKeeper.ApplyUpgrade(ctx, plan)
 }
 
 func (app *TerraApp) setupUpgradeHandlers() {

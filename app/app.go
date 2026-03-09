@@ -558,11 +558,14 @@ func (app *TerraApp) setupUpgradeStoreLoaders(forcedUpgradeName string) {
 			panic(fmt.Sprintf("unknown forced upgrade %q", forcedUpgradeName))
 		}
 
-		if upgradeInfo.Name != "" && upgradeInfo.Name != upgrade.UpgradeName {
+		forcedHeight := app.CommitMultiStore().LatestVersion() + 1
+		if upgradeInfo.Name != "" &&
+			upgradeInfo.Name != upgrade.UpgradeName &&
+			upgradeInfo.Height >= forcedHeight &&
+			!app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 			panic(fmt.Sprintf("forced upgrade %q conflicts with on-disk upgrade %q at height %d", upgrade.UpgradeName, upgradeInfo.Name, upgradeInfo.Height))
 		}
 
-		forcedHeight := app.CommitMultiStore().LatestVersion() + 1
 		storeUpgrades := upgrade.StoreUpgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(forcedHeight, &storeUpgrades))
 		return

@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/icza/dyno"
-
 	oracle "github.com/classic-terra/core/v4/x/oracle/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 	"github.com/cosmos/interchaintest/v10/ibc"
+	"github.com/icza/dyno"
 )
 
 var (

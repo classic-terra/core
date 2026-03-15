@@ -5,20 +5,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/classic-terra/core/v4/test/interchaintest/helpers"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-
 	"github.com/cosmos/interchaintest/v10"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 	"github.com/cosmos/interchaintest/v10/testreporter"
 	"github.com/cosmos/interchaintest/v10/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-
-	"github.com/classic-terra/core/v4/test/interchaintest/helpers"
 )
 
 // TestValidator is a basic test to accrue enough token to join active validator set,

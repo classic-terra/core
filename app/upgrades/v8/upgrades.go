@@ -17,7 +17,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -45,8 +44,6 @@ func CreateV8UpgradeHandler(
 				keyTable = banktypes.ParamKeyTable()
 			case stakingtypes.ModuleName:
 				keyTable = stakingtypes.ParamKeyTable()
-			case minttypes.ModuleName:
-				keyTable = minttypes.ParamKeyTable()
 			case distrtypes.ModuleName:
 				keyTable = distrtypes.ParamKeyTable()
 			case slashingtypes.ModuleName:

@@ -3,8 +3,8 @@ package wasm
 import (
 	"testing"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	legacytypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
 	coretypes "github.com/classic-terra/core/v3/types"

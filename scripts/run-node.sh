@@ -68,6 +68,7 @@ update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
 update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
 update_test_genesis '.app_state["gov"]["params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
 update_test_genesis '.app_state["gov"]["params"]["voting_period"]="30s"'
+update_test_genesis '.app_state["gov"]["voting_params"]["voting_period"]="30s"'
 # Only set expedited_voting_period if the binary's genesis schema supports it
 if cat $HOME_DIR/config/genesis.json | jq -e '.app_state["gov"]["params"]["expedited_voting_period"]' > /dev/null 2>&1; then
     update_test_genesis '.app_state["gov"]["params"]["expedited_voting_period"]="4s"'

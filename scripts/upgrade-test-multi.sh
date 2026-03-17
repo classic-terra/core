@@ -8,8 +8,8 @@ FORK=${FORK:-"false"}
 # Each element in OLD_VERSIONS represents a version to upgrade from,
 # and the corresponding element in UPGRADE_NAMES is the upgrade name applied to that version.
 # For example, OLD_VERSIONS[0] is upgraded using UPGRADE_NAMES[0], and so on.
-OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v3.6.0-rc.0,v4.0.0-rc.6"}
-UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v14,v14_1"}
+OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v3.6.2,v4.0.0-rc.3,v4.0.0-rc.6"}
+UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v14,v14rc4,v14_1"}
 
 # Parse comma-separated lists into arrays
 IFS=',' read -r -a OLD_VERSIONS <<< "$OLD_VERSIONS_STRING"

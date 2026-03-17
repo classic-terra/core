@@ -4,12 +4,11 @@ import (
 	"math/rand"
 	"testing"
 
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMsgFeederDelegation(t *testing.T) {
@@ -44,7 +43,10 @@ func TestMsgAggregateExchangeRatePrevote(t *testing.T) {
 		sdk.AccAddress([]byte("addr1_______________")),
 	}
 
-	exchangeRates := sdk.DecCoins{sdk.NewDecCoinFromDec(core.MicroSDRDenom, sdk.OneDec()), sdk.NewDecCoinFromDec(core.MicroKRWDenom, sdk.NewDecWithPrec(32121, 1))}
+	exchangeRates := sdk.DecCoins{
+		sdk.NewDecCoinFromDec(core.MicroSDRDenom, sdkmath.LegacyOneDec()),
+		sdk.NewDecCoinFromDec(core.MicroKRWDenom, sdkmath.LegacyNewDecWithPrec(32121, 1)),
+	}
 	bz := types.GetAggregateVoteHash("1", exchangeRates.String(), sdk.ValAddress(addrs[0]))
 
 	tests := []struct {

@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals

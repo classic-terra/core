@@ -4,11 +4,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/keeper"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/keeper"
-	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // InitGenesis initializes default parameters

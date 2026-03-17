@@ -1,15 +1,18 @@
 package ante_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
-	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/app"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/suite"
-
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/app"
+	appparams "github.com/classic-terra/core/v4/app/params"
+	apptesting "github.com/classic-terra/core/v4/app/testing"
+	core "github.com/classic-terra/core/v4/types"
+	dyncommante "github.com/classic-terra/core/v4/x/dyncomm/ante"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,18 +20,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	appparams "github.com/classic-terra/core/v3/app/params"
-	apptesting "github.com/classic-terra/core/v3/app/testing"
-	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-
-	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	"github.com/stretchr/testify/suite"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -67,7 +66,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  signing.SignMode(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode()),
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -89,7 +88,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			context.Background(), signing.SignMode(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode()), signerData,
 			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
@@ -106,42 +105,37 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 }
 
 func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, cryptotypes.PubKey, stakingtypes.Validator, authtypes.AccountI) {
-	suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
-	suite.App.BeginBlock(abci.RequestBeginBlock{Header: suite.Ctx.BlockHeader()})
-	// at the end of commit, deliverTx is set to nil, which is why we need to get newest instance of deliverTx ctx here after committing
-	// update ctx to new deliver tx context
-	suite.Ctx = suite.App.NewContext(false, suite.Ctx.BlockHeader())
-
+	// Create a new account and fund it
 	priv, pub, addr := testdata.KeyTestPubAddr()
 	_, valPub, _ := suite.Ed25519PubAddr()
 	valAddr := sdk.ValAddress(addr)
 
-	sendCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(2*tokens)))
+	account := suite.App.AccountKeeper.GetAccount(suite.Ctx, addr)
+	if account == nil {
+		base := authtypes.NewBaseAccountWithAddress(addr)
+		base.SetPubKey(pub)
+		account = suite.App.AccountKeeper.NewAccount(suite.Ctx, base)
+		suite.App.AccountKeeper.SetAccount(suite.Ctx, account)
+	}
+
+	// Fund after account creation to avoid implicit zero account numbers
+	sendCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(2*tokens)))
 	suite.FundAcc(addr, sendCoins)
 
-	// set account in account keeper
-	account := authtypes.NewBaseAccountWithAddress(addr)
-	account.SetPubKey(pub)
-	account.SetAccountNumber(0)
-	account.SetSequence(0)
-	// set account in deliver tx context
-	suite.App.AccountKeeper.SetAccount(suite.Ctx, account)
-
+	// Build MsgCreateValidator
 	commissionRates := stakingtypes.NewCommissionRates(
-		sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(1, 0),
-		sdk.NewDecWithPrec(1, 0),
+		sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyNewDecWithPrec(1, 0),
+		sdkmath.LegacyNewDecWithPrec(1, 0),
 	)
-
-	delegationCoin := sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(tokens))
+	delegationCoin := sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(tokens))
 	desc := stakingtypes.NewDescription("moniker", "", "", "", "")
-
 	msgCreateValidator, err := stakingtypes.NewMsgCreateValidator(
-		valAddr,
+		valAddr.String(),
 		valPub,
 		delegationCoin,
 		desc,
 		commissionRates,
-		math.NewInt(tokens),
+		sdkmath.NewInt(tokens),
 	)
 	suite.Require().NoError(err)
 
@@ -149,15 +143,33 @@ func (suite *AnteTestSuite) CreateValidator(tokens int64) (cryptotypes.PrivKey, 
 	suite.Require().NoError(err)
 	tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv}, []uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, suite.Ctx.ChainID())
 	suite.Require().NoError(err)
-	_, _, err = suite.App.SimDeliver(suite.clientCtx.TxConfig.TxEncoder(), tx)
+
+	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
 	suite.Require().NoError(err)
 
-	// turn block for validator updates
-	suite.App.EndBlock(abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
+	// advance height/time
+	nextHeight := suite.App.LastBlockHeight() + 1
+	now := suite.Ctx.BlockTime()
+	if now.IsZero() {
+		now = time.Now()
+	}
+	suite.Ctx = suite.Ctx.WithBlockHeight(nextHeight).WithBlockTime(now)
+
+	// run FinalizeBlock with the tx
+	fb, _ := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: nextHeight,
+		Txs:    [][]byte{txBytes},
+		Time:   now,
+		// BlockTime is not a field in abci.RequestFinalizeBlock; set block time in context if needed
+	})
+	suite.Require().Len(fb.TxResults, 1)
+	suite.Require().Equal(uint32(0), fb.TxResults[0].Code, fb.TxResults[0].Log)
+
+	// commit
 	suite.App.Commit()
 
-	retval, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddr)
-	suite.Require().Equal(true, found)
+	retval, err := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddr)
+	suite.Require().NoError(err)
 
 	updatedAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, addr)
 
@@ -182,8 +194,8 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinComm() {
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
-	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
-	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+	invalidtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(9, 1))
+	validtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(11, 1))
 
 	// invalid tx fails
 	editmsg := stakingtypes.NewMsgEditValidator(
@@ -225,8 +237,8 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommAuthz() {
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
-	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
-	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+	invalidtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(9, 1))
+	validtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(11, 1))
 
 	// invalid tx fails
 	editmsg := stakingtypes.NewMsgEditValidator(
@@ -273,15 +285,15 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
-	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
-	validtarget := dyncomm.Mul(sdk.NewDecWithPrec(11, 1))
+	invalidtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(9, 1))
+	validtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(11, 1))
 
 	// prepare invalid tx -> expect it fails
 	editmsg := stakingtypes.NewMsgEditValidator(
 		val1.GetOperator(),
 		val1.Description, &invalidtarget, &val1.MinSelfDelegation,
 	)
-	data, err := icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg})
+	data, err := icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg}, "proto3")
 	suite.Require().NoError(err)
 	icaPacketData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
@@ -309,7 +321,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 		val1.GetOperator(),
 		val1.Description, &validtarget, &val1.MinSelfDelegation,
 	)
-	data, err = icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg})
+	data, err = icatypes.SerializeCosmosTx(suite.App.AppCodec(), []proto.Message{editmsg}, "proto3")
 	suite.Require().NoError(err)
 	icaPacketData = icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
@@ -333,7 +345,7 @@ func (suite *AnteTestSuite) TestAnte_EnsureDynCommissionIsMinCommICA() {
 	suite.Require().NoError(err)
 }
 
-// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v3/x/dyncomm/ante
+// go test -v -run ^TestAnteTestSuite/TestAnte_EditValidatorAccountSequence$ github.com/classic-terra/core/v4/x/dyncomm/ante
 // check that account keeper sequence no longer increases when editing validator unsuccessfully
 func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	suite.SetupTest() // setup
@@ -343,21 +355,22 @@ func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	priv1, _, val1, acc := suite.CreateValidator(50_000_000_000)
 	suite.CreateValidator(50_000_000_000)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
-	suite.App.BeginBlock(abci.RequestBeginBlock{Header: suite.Ctx.BlockHeader()})
-	// update ctx to new deliver tx context
-	suite.Ctx = suite.App.NewContext(false, suite.Ctx.BlockHeader())
+	// Advance time by more than 24 hours to avoid commission change restriction
+	suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1).WithBlockTime(suite.Ctx.BlockTime().Add(25 * time.Hour))
+	_, _ = suite.App.BeginBlocker(suite.Ctx)
+	// refresh deliver ctx for this height
+	suite.Ctx = suite.App.NewUncachedContext(false, suite.Ctx.BlockHeader())
+
+	// Update validator rates after time advancement
 	suite.App.DyncommKeeper.UpdateAllBondedValidatorRates(suite.Ctx)
-	suite.App.EndBlock(abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
-	suite.App.Commit()
 
 	dyncomm := suite.App.DyncommKeeper.CalculateDynCommission(suite.Ctx, val1)
-	invalidtarget := dyncomm.Mul(sdk.NewDecWithPrec(9, 1))
+	invalidtarget := dyncomm.Mul(sdkmath.LegacyNewDecWithPrec(9, 1))
 
 	// invalid tx fails, not updating account sequence in account keeper
 	editmsg := stakingtypes.NewMsgEditValidator(
 		val1.GetOperator(),
-		val1.Description, &invalidtarget, &val1.MinSelfDelegation,
+		val1.Description, &invalidtarget, nil, // Set MinSelfDelegation to nil to avoid changing it
 	)
 
 	err := suite.txBuilder.SetMsgs(editmsg)
@@ -366,9 +379,9 @@ func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 	// due to submitting a create validator tx before, thus account sequence is now 1
 	for i := 0; i < 5; i++ {
 		suite.Ctx = suite.Ctx.WithBlockHeight(suite.Ctx.BlockHeight() + 1)
-		suite.App.BeginBlock(abci.RequestBeginBlock{Header: suite.Ctx.BlockHeader()})
-		// update ctx to new deliver tx context
-		suite.Ctx = suite.App.NewContext(false, suite.Ctx.BlockHeader())
+		_, _ = suite.App.BeginBlocker(suite.Ctx)
+		// refresh deliver ctx for this height
+		suite.Ctx = suite.App.NewUncachedContext(false, suite.Ctx.BlockHeader())
 
 		tx, err := suite.CreateTestTx([]cryptotypes.PrivKey{priv1}, []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}, suite.Ctx.ChainID())
 		suite.Require().NoError(err)
@@ -376,9 +389,30 @@ func (suite *AnteTestSuite) TestAnte_EditValidatorAccountSequence() {
 		_, checkRes, err := suite.App.SimCheck(suite.clientCtx.TxConfig.TxEncoder(), tx)
 		fmt.Printf("check response: %+v, error = %v \n", checkRes, err)
 		suite.Ctx = suite.Ctx.WithIsCheckTx(false)
-		_, deliverRes, err := suite.App.SimDeliver(suite.clientCtx.TxConfig.TxEncoder(), tx)
-		fmt.Printf("deliver response: %+v, error = %v \n", deliverRes, err)
-		suite.App.EndBlock(abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
+
+		txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
+		suite.Require().NoError(err)
+
+		// advance height/time
+		nextHeight := suite.App.LastBlockHeight() + 1
+		now := suite.Ctx.BlockTime()
+		if now.IsZero() {
+			now = time.Now()
+		}
+		suite.Ctx = suite.Ctx.WithBlockHeight(nextHeight).WithBlockTime(now)
+
+		// run FinalizeBlock with the tx
+		fb, _ := suite.App.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: nextHeight,
+			Txs:    [][]byte{txBytes},
+			Time:   now,
+			// BlockTime is not a field in abci.RequestFinalizeBlock; set block time in context if needed
+		})
+		suite.Require().Len(fb.TxResults, 1)
+		suite.Require().NotEqual(uint32(0), fb.TxResults[0].Code, "Transaction should fail due to commission validation")
+		suite.Require().Contains(fb.TxResults[0].Log, "commission for")
+
+		// commit
 		suite.App.Commit()
 
 		// check and update account keeper

@@ -1,11 +1,10 @@
 package upgrade
 
 import (
+	"cosmossdk.io/x/upgrade"
+	customtypes "github.com/classic-terra/core/v4/custom/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-
-	customtypes "github.com/classic-terra/core/v3/custom/upgrade/types"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

@@ -2,11 +2,12 @@
 package v11_2
 
 import (
-	"github.com/classic-terra/core/v3/app/keepers"
-	"github.com/classic-terra/core/v3/app/upgrades"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/classic-terra/core/v4/app/keepers"
+	"github.com/classic-terra/core/v4/app/upgrades"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func CreateV112UpgradeHandler(
@@ -15,7 +16,7 @@ func CreateV112UpgradeHandler(
 	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

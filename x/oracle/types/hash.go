@@ -6,11 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"gopkg.in/yaml.v2"
 )
 
 var _ yaml.Marshaler = AggregateVoteHash{}
@@ -73,9 +71,9 @@ func (h AggregateVoteHash) Format(s fmt.State, verb rune) {
 	case 's':
 		_, _ = s.Write([]byte(h.String()))
 	case 'p':
-		_, _ = s.Write([]byte(fmt.Sprintf("%p", h)))
+		_, _ = fmt.Fprintf(s, "%p", h)
 	default:
-		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(h))))
+		_, _ = fmt.Fprintf(s, "%X", []byte(h))
 	}
 }
 

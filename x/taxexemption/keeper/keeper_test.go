@@ -3,15 +3,12 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"cosmossdk.io/store/prefix"
+	"github.com/classic-terra/core/v4/x/taxexemption/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkquery "github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTaxExemptionList(t *testing.T) {

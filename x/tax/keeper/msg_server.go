@@ -4,10 +4,9 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v4/x/tax/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"github.com/classic-terra/core/v3/x/tax/types"
 )
 
 type msgServer struct {

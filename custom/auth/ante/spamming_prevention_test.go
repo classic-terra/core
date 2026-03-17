@@ -2,13 +2,12 @@ package ante_test
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v4/custom/auth/ante"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/classic-terra/core/v3/custom/auth/ante"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 func (suite *AnteTestSuite) TestOracleSpamming() {

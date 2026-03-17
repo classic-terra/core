@@ -72,6 +72,10 @@ update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 $SED_BINARY -i '0,/enable = false/s//enable = true/' $HOME_DIR/config/app.toml
 $SED_BINARY -i 's/swagger = false/swagger = true/' $HOME_DIR/config/app.toml
 
+# keep all historical states to allow reliable historic queries across multiple upgrades
+# default pruning keeps only the last 100 heights which would prune early heights (e.g., 35)
+$SED_BINARY -i 's/^pruning = ".*"/pruning = "nothing"/' $HOME_DIR/config/app.toml
+
 # speed up consensus by reducing timeouts (faster blocks)
 $SED_BINARY -i 's/^timeout_propose = ".*"/timeout_propose = "500ms"/' $HOME_DIR/config/config.toml
 $SED_BINARY -i 's/^timeout_propose_delta = ".*"/timeout_propose_delta = "500ms"/' $HOME_DIR/config/config.toml

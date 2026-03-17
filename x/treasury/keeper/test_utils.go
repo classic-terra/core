@@ -1,61 +1,172 @@
 package keeper
 
 import (
+	"context"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	customauth "github.com/classic-terra/core/v3/custom/auth"
-	custombank "github.com/classic-terra/core/v3/custom/bank"
-	customdistr "github.com/classic-terra/core/v3/custom/distribution"
-	customparams "github.com/classic-terra/core/v3/custom/params"
-	customstaking "github.com/classic-terra/core/v3/custom/staking"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/market"
-	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	"github.com/classic-terra/core/v3/x/oracle"
-	oraclekeeper "github.com/classic-terra/core/v3/x/oracle/keeper"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	"github.com/classic-terra/core/v3/x/treasury/types"
-
-	dbm "github.com/cometbft/cometbft-db"
+	sdklog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	store "cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
+	customauth "github.com/classic-terra/core/v4/custom/auth"
+	custombank "github.com/classic-terra/core/v4/custom/bank"
+	customdistr "github.com/classic-terra/core/v4/custom/distribution"
+	customparams "github.com/classic-terra/core/v4/custom/params"
+	customstaking "github.com/classic-terra/core/v4/custom/staking"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/market"
+	marketkeeper "github.com/classic-terra/core/v4/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	"github.com/classic-terra/core/v4/x/oracle"
+	oraclekeeper "github.com/classic-terra/core/v4/x/oracle/keeper"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	"cosmossdk.io/math"
-	simparams "cosmossdk.io/simapp/params"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
+
+type oracleStakingAdapter struct{ sk *stakingkeeper.Keeper }
+
+func (a oracleStakingAdapter) Validator(ctx context.Context, address sdk.ValAddress) (stakingtypes.ValidatorI, error) {
+	v, _ := a.sk.Validator(ctx, address)
+	return v, nil
+}
+
+func (a oracleStakingAdapter) TotalBondedTokens(_ context.Context) (sdkmath.Int, error) {
+	p, _ := a.sk.TotalBondedTokens(context.Background())
+	return p, nil
+}
+
+func (a oracleStakingAdapter) Slash(ctx context.Context, cons sdk.ConsAddress, height int64, power int64, frac sdkmath.LegacyDec) (sdkmath.Int, error) {
+	return a.sk.Slash(ctx, cons, height, power, frac)
+}
+
+func (a oracleStakingAdapter) Jail(ctx context.Context, cons sdk.ConsAddress) error {
+	return a.sk.Jail(ctx, cons)
+}
+
+func (a oracleStakingAdapter) ValidatorsPowerStoreIterator(ctx context.Context) (storetypes.Iterator, error) {
+	return nil, nil
+}
+
+func (a oracleStakingAdapter) MaxValidators(ctx context.Context) (uint32, error) {
+	mv, _ := a.sk.MaxValidators(ctx)
+	return mv, nil
+}
+
+func (a oracleStakingAdapter) PowerReduction(ctx context.Context) (res sdkmath.Int) {
+	return a.sk.PowerReduction(ctx)
+}
+
+type treasuryAccountAdapter struct{ ak authkeeper.AccountKeeper }
+
+func (a treasuryAccountAdapter) GetModuleAddress(name string) sdk.AccAddress {
+	return a.ak.GetModuleAddress(name)
+}
+
+func (a treasuryAccountAdapter) GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI {
+	return a.ak.GetModuleAccount(ctx, moduleName)
+}
+
+func (a treasuryAccountAdapter) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
+	return a.ak.GetAccount(ctx, addr)
+}
+
+type treasuryBankAdapter struct{ bk bankkeeper.BaseKeeper }
+
+func (a treasuryBankAdapter) MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
+	return a.bk.MintCoins(ctx, moduleName, amt)
+}
+
+func (a treasuryBankAdapter) BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
+	return a.bk.BurnCoins(ctx, moduleName, amt)
+}
+
+func (a treasuryBankAdapter) SendCoinsFromModuleToAccount(ctx context.Context, s string, r sdk.AccAddress, amt sdk.Coins) error {
+	return a.bk.SendCoinsFromModuleToAccount(ctx, s, r, amt)
+}
+
+func (a treasuryBankAdapter) SendCoinsFromAccountToModule(ctx context.Context, s sdk.AccAddress, r string, amt sdk.Coins) error {
+	return a.bk.SendCoinsFromAccountToModule(ctx, s, r, amt)
+}
+
+func (a treasuryBankAdapter) SendCoinsFromModuleToModule(ctx context.Context, s, r string, amt sdk.Coins) error {
+	return a.bk.SendCoinsFromModuleToModule(ctx, s, r, amt)
+}
+
+func (a treasuryBankAdapter) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	return a.bk.GetAllBalances(ctx, addr)
+}
+
+func (a treasuryBankAdapter) GetSupply(ctx context.Context, denom string) sdk.Coin {
+	return a.bk.GetSupply(ctx, denom)
+}
+
+func (a treasuryBankAdapter) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	return a.bk.GetBalance(ctx, addr, denom)
+}
+
+func (a treasuryBankAdapter) GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool) {
+	return a.bk.GetDenomMetaData(ctx, denom)
+}
+
+func (a treasuryBankAdapter) SetDenomMetaData(ctx context.Context, md banktypes.Metadata) {
+	a.bk.SetDenomMetaData(ctx, md)
+}
+
+func (a treasuryBankAdapter) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	return a.bk.SpendableCoins(ctx, addr)
+}
+
+func (a treasuryBankAdapter) IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bool {
+	return a.bk.IsSendEnabledCoin(ctx, coin)
+}
+
+type treasuryDistrAdapter struct {
+	dk   distrkeeper.Keeper
+	pool distrtypes.FeePool
+}
+
+func (a *treasuryDistrAdapter) GetFeePool(_ sdk.Context) (feePool distrtypes.FeePool) {
+	return a.pool
+}
+
+func (a *treasuryDistrAdapter) SetFeePool(_ sdk.Context, feePool distrtypes.FeePool) {
+	a.pool = feePool
+}
+
+func (a *treasuryDistrAdapter) AllocateTokensToValidator(ctx context.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) error {
+	return a.dk.AllocateTokensToValidator(ctx, val, tokens)
+}
+
+func (a *treasuryDistrAdapter) GetValidatorOutstandingRewardsCoins(_ context.Context, _ sdk.ValAddress) (sdk.DecCoins, error) {
+	return sdk.DecCoins{}, nil
+}
 
 const faucetAccountName = "faucet"
 
@@ -69,15 +180,21 @@ var ModuleBasics = module.NewBasicManager(
 	market.AppModuleBasic{},
 )
 
+// EncodingConfig mirrors the fields needed in tests; avoids importing simapp.
+type EncodingConfig struct {
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Codec             codec.Codec
+	Amino             *codec.LegacyAmino
+}
+
 func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
-func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
+func MakeEncodingConfig(_ *testing.T) EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
 
 	std.RegisterInterfaces(interfaceRegistry)
 	std.RegisterLegacyAminoCodec(amino)
@@ -85,10 +202,9 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	ModuleBasics.RegisterLegacyAminoCodec(amino)
 	ModuleBasics.RegisterInterfaces(interfaceRegistry)
 
-	return simparams.EncodingConfig{
+	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
-		TxConfig:          txCfg,
 		Amino:             amino,
 	}
 }
@@ -132,25 +248,22 @@ type TestInput struct {
 
 func CreateTestInput(t *testing.T) TestInput {
 	sdk.GetConfig().SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
+	sdk.GetConfig().SetBech32PrefixForValidator(core.Bech32PrefixValAddr, core.Bech32PrefixValPub)
+	sdk.GetConfig().SetBech32PrefixForConsensusNode(core.Bech32PrefixConsAddr, core.Bech32PrefixConsPub)
 
-	keyAcc := sdk.NewKVStoreKey(authtypes.StoreKey)
-	keyBank := sdk.NewKVStoreKey(banktypes.StoreKey)
-	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tKeyParams := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
-	keyOracle := sdk.NewKVStoreKey(oracletypes.StoreKey)
-	keyStaking := sdk.NewKVStoreKey(stakingtypes.StoreKey)
-	keyDistr := sdk.NewKVStoreKey(distrtypes.StoreKey)
-	keyMarket := sdk.NewKVStoreKey(markettypes.StoreKey)
-	keyTreasury := sdk.NewKVStoreKey(types.StoreKey)
-	keyWasm := sdk.NewKVStoreKey(wasmtypes.StoreKey)
-	// keyIbcHost := sdk.NewKVStoreKey(ibchost.StoreKey)
-	keyCapability := sdk.NewKVStoreKey(capabilitytypes.StoreKey)
-	// keyUpgrade := sdk.NewKVStoreKey(upgradetypes.StoreKey)
-	memKeyCapability := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	keyAcc := storetypes.NewKVStoreKey(authtypes.StoreKey)
+	keyBank := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	keyParams := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tKeyParams := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
+	keyOracle := storetypes.NewKVStoreKey(oracletypes.StoreKey)
+	keyStaking := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	keyDistr := storetypes.NewKVStoreKey(distrtypes.StoreKey)
+	keyMarket := storetypes.NewKVStoreKey(markettypes.StoreKey)
+	keyTreasury := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, log.NewNopLogger())
+	ms := store.NewCommitMultiStore(db, sdklog.NewNopLogger(), storemetrics.NewNoOpMetrics())
+	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, sdklog.NewNopLogger())
 	encodingConfig := MakeEncodingConfig(t)
 	appCodec, legacyAmino := encodingConfig.Codec, encodingConfig.Amino
 
@@ -188,37 +301,26 @@ func CreateTestInput(t *testing.T) TestInput {
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, keyAcc, authtypes.ProtoBaseAccount, maccPerms, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, keyBank, accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	accAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+	valAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+	accountKeeper := authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keyAcc), authtypes.ProtoBaseAccount, maccPerms, accAddrCodec, sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bankKeeper := bankkeeper.NewBaseKeeper(appCodec, runtime.NewKVStoreService(keyBank), accountKeeper, blackListAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(), sdklog.NewNopLogger())
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)*10))))
-	bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
 
-	stakingKeeper := stakingkeeper.NewKeeper(
-		appCodec,
-		keyStaking,
-		accountKeeper,
-		bankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
+	stakingKeeper := stakingkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keyStaking), accountKeeper, bankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), accAddrCodec, valAddrCodec)
 
 	stakingParams := stakingtypes.DefaultParams()
 	stakingParams.BondDenom = core.MicroLunaDenom
 	stakingKeeper.SetParams(ctx, stakingParams)
 
-	distrKeeper := distrkeeper.NewKeeper(
-		appCodec, keyDistr,
-		accountKeeper, bankKeeper, stakingKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
+	distrKeeper := distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keyDistr), accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	distrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool())
 
-	distrKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
-	distrParams := distrtypes.DefaultParams()
-	distrParams.CommunityTax = sdk.NewDecWithPrec(2, 2)
-	distrKeeper.SetParams(ctx, distrParams)
+	// Note: default params are set; adjust in tests as needed.
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distrKeeper.Hooks()))
 
+	faucetAcc := authtypes.NewEmptyModuleAccount(faucetAccountName, authtypes.Minter, authtypes.Burner)
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
 	notBondedPool := authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, authtypes.Staking)
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
@@ -228,20 +330,34 @@ func CreateTestInput(t *testing.T) TestInput {
 	treasuryAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner, authtypes.Minter)
 	burnAcc := authtypes.NewEmptyModuleAccount(types.BurnModuleName, authtypes.Burner)
 
-	// + 1 for burn account
-	bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)+1)))))
+	// create module accounts with unique account numbers
+	faucetAccI := accountKeeper.NewAccount(ctx, faucetAcc)
+	accountKeeper.SetModuleAccount(ctx, faucetAccI.(authtypes.ModuleAccountI))
+	feeCollectorAccI := accountKeeper.NewAccount(ctx, feeCollectorAcc)
+	accountKeeper.SetModuleAccount(ctx, feeCollectorAccI.(authtypes.ModuleAccountI))
+	bondPoolI := accountKeeper.NewAccount(ctx, bondPool)
+	accountKeeper.SetModuleAccount(ctx, bondPoolI.(authtypes.ModuleAccountI))
+	notBondedPoolI := accountKeeper.NewAccount(ctx, notBondedPool)
+	accountKeeper.SetModuleAccount(ctx, notBondedPoolI.(authtypes.ModuleAccountI))
+	distrAccI := accountKeeper.NewAccount(ctx, distrAcc)
+	accountKeeper.SetModuleAccount(ctx, distrAccI.(authtypes.ModuleAccountI))
+	oracleAccI := accountKeeper.NewAccount(ctx, oracleAcc)
+	accountKeeper.SetModuleAccount(ctx, oracleAccI.(authtypes.ModuleAccountI))
+	marketAccI := accountKeeper.NewAccount(ctx, marketAcc)
+	accountKeeper.SetModuleAccount(ctx, marketAccI.(authtypes.ModuleAccountI))
+	treasuryAccI := accountKeeper.NewAccount(ctx, treasuryAcc)
+	accountKeeper.SetModuleAccount(ctx, treasuryAccI.(authtypes.ModuleAccountI))
+	burnAccI := accountKeeper.NewAccount(ctx, burnAcc)
+	accountKeeper.SetModuleAccount(ctx, burnAccI.(authtypes.ModuleAccountI))
 
-	accountKeeper.SetModuleAccount(ctx, feeCollectorAcc)
-	accountKeeper.SetModuleAccount(ctx, bondPool)
-	accountKeeper.SetModuleAccount(ctx, notBondedPool)
-	accountKeeper.SetModuleAccount(ctx, distrAcc)
-	accountKeeper.SetModuleAccount(ctx, oracleAcc)
-	accountKeeper.SetModuleAccount(ctx, marketAcc)
-	accountKeeper.SetModuleAccount(ctx, treasuryAcc)
-	accountKeeper.SetModuleAccount(ctx, burnAcc)
+	// now mint faucet supply and seed staking not bonded pool
+	require.NoError(t, bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply))
+	require.NoError(t, bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs)+1))))))
 
 	for _, addr := range Addrs {
-		accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
+		base := authtypes.NewBaseAccountWithAddress(addr)
+		acc := accountKeeper.NewAccount(ctx, base)
+		accountKeeper.SetAccount(ctx, acc)
 		err := bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, InitCoins)
 		require.NoError(t, err)
 	}
@@ -250,43 +366,16 @@ func CreateTestInput(t *testing.T) TestInput {
 	err := bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, types.BurnModuleName, InitCoins)
 	require.NoError(t, err)
 
-	capabilityKeeper := capabilitykeeper.NewKeeper(
-		appCodec, keyCapability, memKeyCapability[capabilitytypes.MemStoreKey],
-	)
-
-	// mock wasm
-	scopedWasmKeeper := capabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
-	wasmConfig := wasmtypes.DefaultWasmConfig()
-	supportedFeatures := "iterator,staking,stargate,terra,cosmwasm_1_1"
-	wasmOpts := []wasmkeeper.Option{}
-	wasmKeeper := wasmkeeper.NewKeeper(
-		appCodec, keyWasm,
-		accountKeeper,
-		bankKeeper,
-		stakingKeeper,
-		distrkeeper.NewQuerier(distrKeeper),
-		nil,
-		nil,
-		nil,
-		scopedWasmKeeper,
-		nil,
-		nil,
-		nil,
-		"",
-		wasmConfig,
-		supportedFeatures,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		wasmOpts...,
-	)
+	// wasm not required for these unit tests; pass nil into treasury keeper
 
 	oracleKeeper := oraclekeeper.NewKeeper(
 		appCodec,
 		keyOracle,
 		paramsKeeper.Subspace(oracletypes.ModuleName),
-		accountKeeper,
-		bankKeeper,
-		distrKeeper,
-		stakingKeeper,
+		treasuryAccountAdapter{accountKeeper},
+		treasuryBankAdapter{bankKeeper},
+		&treasuryDistrAdapter{dk: distrKeeper},
+		oracleStakingAdapter{stakingKeeper},
 		distrtypes.ModuleName,
 	)
 	oracleDefaultParams := oracletypes.DefaultParams()
@@ -299,8 +388,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	marketKeeper := marketkeeper.NewKeeper(
 		appCodec,
 		keyMarket, paramsKeeper.Subspace(markettypes.ModuleName),
-		accountKeeper,
-		bankKeeper,
+		treasuryAccountAdapter{accountKeeper},
+		treasuryBankAdapter{bankKeeper},
 		oracleKeeper,
 	)
 	marketKeeper.SetParams(ctx, markettypes.DefaultParams())
@@ -308,13 +397,13 @@ func CreateTestInput(t *testing.T) TestInput {
 	treasuryKeeper := NewKeeper(
 		appCodec,
 		keyTreasury, paramsKeeper.Subspace(types.ModuleName),
-		accountKeeper,
-		bankKeeper,
+		treasuryAccountAdapter{accountKeeper},
+		treasuryBankAdapter{bankKeeper},
 		marketKeeper,
 		oracleKeeper,
 		stakingKeeper,
 		distrKeeper,
-		&wasmKeeper,
+		nil,
 		distrtypes.ModuleName,
 	)
 
@@ -324,11 +413,11 @@ func CreateTestInput(t *testing.T) TestInput {
 }
 
 // NewTestMsgCreateValidator test msg creator
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt math.Int) *stakingtypes.MsgCreateValidator {
-	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey cryptotypes.PubKey, amt sdkmath.Int) *stakingtypes.MsgCreateValidator {
+	commission := stakingtypes.NewCommissionRates(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec())
 	msg, _ := stakingtypes.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(core.MicroLunaDenom, amt),
-		stakingtypes.Description{}, commission, sdk.OneInt(),
+		sdk.AccAddress(address).String(), pubKey, sdk.NewCoin(core.MicroLunaDenom, amt),
+		stakingtypes.Description{Moniker: "TestValidator"}, commission, sdkmath.NewInt(1),
 	)
 
 	return msg
@@ -348,18 +437,5 @@ func setupValidators(t *testing.T) (TestInput, stakingtypes.MsgServer) {
 	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, amt))
 	require.NoError(t, err)
 
-	staking.EndBlocker(input.Ctx, input.StakingKeeper)
-
 	return input, stakingMsgSvr
-}
-
-// FundAccount is a utility function that funds an account by minting and
-// sending the coins to the address. This should be used for testing purposes
-// only!
-func FundAccount(input TestInput, addr sdk.AccAddress, amounts sdk.Coins) error {
-	if err := input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, amounts); err != nil {
-		return err
-	}
-
-	return input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, faucetAccountName, addr, amounts)
 }

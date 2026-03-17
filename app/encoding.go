@@ -1,10 +1,9 @@
 package app
 
 import (
+	"github.com/classic-terra/core/v4/app/params"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/std"
-
-	"github.com/classic-terra/core/v3/app/params"
 )
 
 var legacyCodecRegistered = false

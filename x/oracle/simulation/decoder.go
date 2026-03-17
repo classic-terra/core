@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	gogotypes "github.com/gogo/protobuf/types"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

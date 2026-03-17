@@ -1,39 +1,39 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
+	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // VotePeriod returns the number of blocks during which voting takes place.
 func (k Keeper) VotePeriod(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyVotePeriod, &res)
-	return
+	return res
 }
 
 // VoteThreshold returns the minimum percentage of votes that must be received for a ballot to pass.
-func (k Keeper) VoteThreshold(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) VoteThreshold(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyVoteThreshold, &res)
-	return
+	return res
 }
 
 // RewardBand returns the ratio of allowable exchange rate error that a validator can be rewared
-func (k Keeper) RewardBand(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) RewardBand(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyRewardBand, &res)
-	return
+	return res
 }
 
 // RewardDistributionWindow returns the number of vote periods during which seigiornage reward comes in and then is distributed.
 func (k Keeper) RewardDistributionWindow(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyRewardDistributionWindow, &res)
-	return
+	return res
 }
 
 // Whitelist returns the denom list that can be activated
 func (k Keeper) Whitelist(ctx sdk.Context) (res types.DenomList) {
 	k.paramSpace.Get(ctx, types.KeyWhitelist, &res)
-	return
+	return res
 }
 
 // SetWhitelist store new whitelist to param store
@@ -43,21 +43,21 @@ func (k Keeper) SetWhitelist(ctx sdk.Context, whitelist types.DenomList) {
 }
 
 // SlashFraction returns oracle voting penalty rate
-func (k Keeper) SlashFraction(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SlashFraction(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySlashFraction, &res)
-	return
+	return res
 }
 
 // SlashWindow returns # of vote period for oracle slashing
 func (k Keeper) SlashWindow(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeySlashWindow, &res)
-	return
+	return res
 }
 
 // MinValidPerWindow returns oracle slashing threshold
-func (k Keeper) MinValidPerWindow(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MinValidPerWindow(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMinValidPerWindow, &res)
-	return
+	return res
 }
 
 // GetParams returns the total set of oracle parameters.

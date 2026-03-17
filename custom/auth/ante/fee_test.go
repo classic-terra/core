@@ -5,6 +5,16 @@ import (
 	"os"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v4/custom/auth/ante"
+	core "github.com/classic-terra/core/v4/types"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	"github.com/classic-terra/core/v4/x/tax/post"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	"github.com/classic-terra/core/v4/x/taxexemption/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,16 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v3/custom/auth/ante"
-	core "github.com/classic-terra/core/v3/types"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	"github.com/classic-terra/core/v3/x/tax/post"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
 )
 
 func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
@@ -35,8 +35,8 @@ func (s *AnteTestSuite) TestDeductFeeDecorator_ZeroGas() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(300)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -69,8 +69,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(300)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(300)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -85,7 +85,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	s.Require().NoError(err)
 
 	// Set high gas price so standard test fee fails
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(20))
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.LegacyNewDec(20))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
@@ -111,7 +111,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFees() {
 	// Set IsCheckTx back to true for testing sufficient mempool fee
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
+	atomPrice = sdk.NewDecCoinFromDec("atom", sdkmath.LegacyNewDec(0).Quo(sdkmath.LegacyNewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 
@@ -144,8 +144,8 @@ func (s *AnteTestSuite) TestDeductFees() {
 	// Set account with insufficient funds
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10)))
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(10)))
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 	s.Require().NoError(err)
 
 	dfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
@@ -157,7 +157,7 @@ func (s *AnteTestSuite) TestDeductFees() {
 
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200))))
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(200))))
 	s.Require().NoError(err)
 
 	_, err = antehandler(s.ctx, tx, false)
@@ -174,8 +174,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSend() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -229,8 +229,13 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesSwapSend() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+
+	// SDK 0.50: Explicitly create account before funding
+	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -283,16 +288,16 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesMultiSend() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, sendAmount))
 	msg := banktypes.NewMsgMultiSend(
-		[]banktypes.Input{
-			banktypes.NewInput(addr1, sendCoins),
-			banktypes.NewInput(addr1, sendCoins),
+		banktypes.Input{
+			Address: addr1.String(),
+			Coins:   sendCoins.MulInt(sdkmath.NewInt(2)),
 		},
 		[]banktypes.Output{
 			banktypes.NewOutput(addr1, sendCoins),
@@ -353,8 +358,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesInstantiateContract() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -413,8 +418,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesExecuteContract() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -472,8 +477,8 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -517,7 +522,7 @@ func (s *AnteTestSuite) TestEnsureMempoolFeesAuthzExec() {
 	s.Require().NoError(err, "Decorator should not have errored on fee higher than local gasPrice")
 }
 
-// go test -v -run ^TestAnteTestSuite/TestTaxExemption$ github.com/classic-terra/core/v3/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestTaxExemption$ github.com/classic-terra/core/v4/custom/auth/ante
 func (s *AnteTestSuite) TestTaxExemption() {
 	// keys and addresses
 	var privs []cryptotypes.PrivKey
@@ -808,15 +813,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				msg1 := banktypes.NewMsgSend(addrs[0], addrs[1], sdk.NewCoins(sendCoin))
 				msgs = append(msgs, msg1)
 				msg2 := banktypes.NewMsgMultiSend(
-					[]banktypes.Input{
-						{
-							Address: addrs[0].String(),
-							Coins:   sdk.NewCoins(sendCoin),
-						},
-						{
-							Address: addrs[0].String(),
-							Coins:   sdk.NewCoins(sendCoin),
-						},
+					banktypes.Input{
+						Address: addrs[0].String(),
+						Coins:   sdk.NewCoins(sendCoin).MulInt(sdkmath.NewInt(2)),
 					},
 					[]banktypes.Output{
 						{
@@ -951,9 +950,9 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			te := s.app.TaxExemptionKeeper
 			ak := s.app.AccountKeeper
 			bk := s.app.BankKeeper
-			burnTaxRate := sdk.NewDecWithPrec(5, 3)
-			burnSplitRate := sdk.NewDecWithPrec(5, 1)
-			oracleSplitRate := sdk.ZeroDec()
+			burnTaxRate := sdkmath.LegacyNewDecWithPrec(5, 3)
+			burnSplitRate := sdkmath.LegacyNewDecWithPrec(5, 1)
+			oracleSplitRate := sdkmath.LegacyZeroDec()
 
 			// normal test as for prior handling
 			if c.zoneA != zoneNone {
@@ -986,8 +985,8 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			posthandler := sdk.ChainPostDecorators(pd)
 
 			for i := 0; i < 4; i++ {
-				coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(10000000)))
-				testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+				coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(10000000)))
+				testutil.FundAccount(s.ctx, s.app.BankKeeper, addrs[i], coins)
 			}
 
 			// msg and signatures
@@ -1016,14 +1015,14 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			amountFee := bk.GetBalance(s.ctx, feeCollector.GetAddress(), core.MicroSDRDenom)
 			if c.expectReverseCharge {
 				// tax is NOT split in this case in the ante handler
-				require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.minFeeAmount)))
+				require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(c.minFeeAmount)))
 			} else {
-				require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdk.NewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
+				require.Equal(amountFee, sdk.NewCoin(core.MicroSDRDenom, sdkmath.LegacyNewDec(c.minFeeAmount).Mul(burnSplitRate).TruncateInt()))
 			}
 
 			// check tax proceeds
 			taxProceeds := s.app.TreasuryKeeper.PeekEpochTaxProceeds(s.ctx)
-			require.Equal(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(c.expectProceeds))), taxProceeds)
+			require.Equal(sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(c.expectProceeds))), taxProceeds)
 		})
 	}
 }
@@ -1150,9 +1149,9 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 			ak := s.app.AccountKeeper
 			bk := s.app.BankKeeper
 
-			burnTaxRate := sdk.NewDecWithPrec(5, 3)
-			burnSplitRate := sdk.NewDecWithPrec(5, 1)
-			oracleSplitRate := sdk.ZeroDec()
+			burnTaxRate := sdkmath.LegacyNewDecWithPrec(5, 3)
+			burnSplitRate := sdkmath.LegacyNewDecWithPrec(5, 1)
+			oracleSplitRate := sdkmath.LegacyZeroDec()
 
 			// normal test as for prior handling
 			if c.zoneA != zoneNone {
@@ -1186,10 +1185,10 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 			// Fund accounts with both denoms
 			for i := 0; i < 4; i++ {
 				coins := sdk.NewCoins(
-					sdk.NewCoin(denom1, sdk.NewInt(10000000)),
-					sdk.NewCoin(denom2, sdk.NewInt(10000000)),
+					sdk.NewCoin(denom1, sdkmath.NewInt(10000000)),
+					sdk.NewCoin(denom2, sdkmath.NewInt(10000000)),
 				)
-				testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+				testutil.FundAccount(s.ctx, s.app.BankKeeper, addrs[i], coins)
 			}
 
 			// Set up transaction with multiple fee denoms
@@ -1222,7 +1221,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 				} else {
 					expectedFee := sdk.NewCoin(
 						feeCoin.Denom,
-						sdk.NewDec(feeCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
+						sdkmath.LegacyNewDec(feeCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
 					)
 					require.Equal(expectedFee, amountFee)
 				}
@@ -1256,8 +1255,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 	sendAmt := int64(1000000)
 	sendCoin := sdk.NewInt64Coin(denom1, sendAmt)
 	anotherSendCoin := sdk.NewInt64Coin(denom2, sendAmt)
-	denom1Price := sdk.NewDecCoinFromDec(denom1, sdk.NewDecWithPrec(10, 1))
-	denom2Price := sdk.NewDecCoinFromDec(denom2, sdk.NewDecWithPrec(10, 1))
+	denom1Price := sdk.NewDecCoinFromDec(denom1, sdkmath.LegacyNewDecWithPrec(10, 1))
+	denom2Price := sdk.NewDecCoinFromDec(denom2, sdkmath.LegacyNewDecWithPrec(10, 1))
 	customGasPrices := []sdk.DecCoin{denom1Price, denom2Price}
 
 	requiredFees := []sdk.Coin{sdk.NewInt64Coin(denom1, 0), sdk.NewInt64Coin(denom2, 200000)}
@@ -1341,9 +1340,9 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			ak := s.app.AccountKeeper
 			bk := s.app.BankKeeper
 
-			burnTaxRate := sdk.NewDecWithPrec(5, 3)
-			burnSplitRate := sdk.NewDecWithPrec(5, 1)
-			oracleSplitRate := sdk.ZeroDec()
+			burnTaxRate := sdkmath.LegacyNewDecWithPrec(5, 3)
+			burnSplitRate := sdkmath.LegacyNewDecWithPrec(5, 1)
+			oracleSplitRate := sdkmath.LegacyZeroDec()
 
 			// Set burn split rate to 50%
 			tk.SetBurnSplitRate(s.ctx, burnSplitRate)
@@ -1362,10 +1361,10 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			// Fund accounts with both denoms
 			for i := 0; i < 4; i++ {
 				coins := sdk.NewCoins(
-					sdk.NewCoin(denom1, sdk.NewInt(10000000)),
-					sdk.NewCoin(denom2, sdk.NewInt(10000000)),
+					sdk.NewCoin(denom1, sdkmath.NewInt(10000000)),
+					sdk.NewCoin(denom2, sdkmath.NewInt(10000000)),
 				)
-				testutil.FundAccount(s.app.BankKeeper, s.ctx, addrs[i], coins)
+				testutil.FundAccount(s.ctx, s.app.BankKeeper, addrs[i], coins)
 			}
 
 			// Set up transaction with multiple fee denoms
@@ -1403,7 +1402,7 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 				} else {
 					expectedFee := sdk.NewCoin(
 						feeCoin.Denom,
-						sdk.NewDec(taxCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
+						sdkmath.LegacyNewDec(taxCoin.Amount.Int64()).Mul(burnSplitRate).TruncateInt(),
 					).Add(feeCoin)
 					require.Equal(expectedFee, amountFee)
 				}
@@ -1416,32 +1415,32 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 	}
 }
 
-// go test -v -run ^TestAnteTestSuite/TestBurnSplitTax$ github.com/classic-terra/core/v3/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestBurnSplitTax$ github.com/classic-terra/core/v4/custom/auth/ante
 func (s *AnteTestSuite) TestBurnSplitTax() {
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 100% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 10% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0.1% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 100% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 10% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 0.1% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1)) // 0% distribute, 50% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 100% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 10% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0.1% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))            // 0% distribute, 0% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 100% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 1), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 10% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 0.1% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 1))             // 0% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.OneDec(), sdk.NewDecWithPrec(5, 2))             // 0.1% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.OneDec(), sdk.NewDecWithPrec(5, 2))             // 0% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(1, 2), sdk.OneDec(), sdk.NewDecWithPrec(1, 1))             // 0.1% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(0, 0), sdk.OneDec(), sdk.NewDecWithPrec(1, 2))             // 0% distribute, 100% to oracle
-	s.runBurnSplitTaxTest(sdk.NewDecWithPrec(-1, 1), sdk.ZeroDec(), sdk.NewDecWithPrec(5, 1))           // -10% distribute - invalid rate
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 100% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 1), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 10% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 0.1% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(0, 0), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 0% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDecWithPrec(5, 1)) // 100% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 1), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDecWithPrec(5, 1)) // 10% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDecWithPrec(5, 1)) // 0.1% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(0, 0), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDecWithPrec(5, 1)) // 0% distribute, 50% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 100% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 1), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 10% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 0.1% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(0, 0), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))            // 0% distribute, 0% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 1))             // 100% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 1), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 1))             // 10% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 1))             // 0.1% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(0, 0), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 1))             // 0% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 2))             // 0.1% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(0, 0), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 2))             // 0% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 2), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(1, 1))             // 0.1% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(0, 0), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(1, 2))             // 0% distribute, 100% to oracle
+	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(-1, 1), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1))           // -10% distribute - invalid rate
 }
 
-func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRate sdk.Dec, communityTax sdk.Dec) {
+func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdkmath.LegacyDec, oracleSplitRate sdkmath.LegacyDec, communityTax sdkmath.LegacyDec) {
 	s.SetupTest(true) // setup
 	require := s.Require()
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1462,14 +1461,15 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 	// Set community tax
-	dkParams := dk.GetParams(s.ctx)
+	dkParams, err := dk.Params.Get(s.ctx)
+	require.NoError(err)
 	dkParams.CommunityTax = communityTax
-	dk.SetParams(s.ctx, dkParams)
+	dk.Params.Set(s.ctx, dkParams)
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
-	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.NewInt(1000000)))
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.NewInt(1000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 
 	// msg and signatures
 	sendAmount := int64(1000000)
@@ -1521,9 +1521,10 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	feeCollectorAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(authtypes.FeeCollectorName))
 	oracleAfter := bk.GetAllBalances(s.ctx, ak.GetModuleAddress(oracletypes.ModuleName))
 	taxes, _ := ante.FilterMsgAndComputeTax(s.ctx, te, tk, th, false, msg)
-	communityPoolAfter, _ := dk.GetFeePoolCommunityCoins(s.ctx).TruncateDecimal()
+	feePool, _ := dk.FeePool.Get(s.ctx)
+	communityPoolAfter, _ := feePool.CommunityPool.TruncateDecimal()
 	if communityPoolAfter.IsZero() {
-		communityPoolAfter = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdk.ZeroInt()))
+		communityPoolAfter = sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, sdkmath.ZeroInt()))
 	}
 
 	// burnTax := sdk.NewDecCoinsFromCoins(taxes...)
@@ -1533,7 +1534,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 
 	if burnSplitRate.IsPositive() {
 		distributionDeltaCoins := burnSplitRate.MulInt(burnTax.AmountOf(core.MicroSDRDenom)).RoundInt()
-		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Sub(communityTax).Add(sdk.OneDec())))
+		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Sub(communityTax).Add(sdkmath.LegacyOneDec())))
 
 		expectedCommunityCoins := applyCommunityTax.MulInt(distributionDeltaCoins).RoundInt()
 		distributionDeltaCoins = distributionDeltaCoins.Sub(expectedCommunityCoins)
@@ -1553,19 +1554,19 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	// as end blocker has not been run here, we need to calculate it from the fee collector
 	addTaxFromFees := feeCollectorAfter.AmountOf(core.MicroSDRDenom)
 	if communityTax.IsPositive() {
-		addTaxFromFees = communityTax.Mul(sdk.NewDecFromInt(addTaxFromFees)).RoundInt()
+		addTaxFromFees = communityTax.Mul(sdkmath.LegacyNewDecFromInt(addTaxFromFees)).RoundInt()
 	}
 	expectedTaxProceeds := communityPoolAfter.AmountOf(core.MicroSDRDenom).Add(addTaxFromFees)
-	originalDistribution := sdk.ZeroDec()
+	originalDistribution := sdkmath.LegacyZeroDec()
 	if burnSplitRate.IsPositive() {
-		originalDistribution = burnSplitRate.Mul(sdk.NewDecFromInt(taxes.AmountOf(core.MicroSDRDenom)))
+		originalDistribution = burnSplitRate.Mul(sdkmath.LegacyNewDecFromInt(taxes.AmountOf(core.MicroSDRDenom)))
 	}
-	originalTaxProceeds := sdk.ZeroInt()
+	originalTaxProceeds := sdkmath.ZeroInt()
 	if communityTax.IsPositive() {
 		originalTaxProceeds = communityTax.Mul(originalDistribution).RoundInt()
 	}
 	// due to precision (roundInt) this can deviate up to 1 from the expected value
-	require.LessOrEqual(expectedTaxProceeds.Sub(originalTaxProceeds).Int64(), sdk.OneInt().Int64())
+	require.LessOrEqual(expectedTaxProceeds.Sub(originalTaxProceeds).Int64(), sdkmath.OneInt().Int64())
 
 	totalSupplyAfter, _, err := bk.GetPaginatedTotalSupply(s.ctx, &query.PageRequest{})
 	require.NoError(err)
@@ -1584,7 +1585,7 @@ func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdk.Dec, oracleSplitRa
 	)*/
 }
 
-// go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v3/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestEnsureIBCUntaxed$ github.com/classic-terra/core/v4/custom/auth/ante
 // TestEnsureIBCUntaxed tests that IBC transactions are not taxed, but fee is still deducted
 func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	s.SetupTest(true) // setup
@@ -1605,7 +1606,7 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	account := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, account)
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000)))
 
 	// msg and signatures
 	sendAmount := int64(1_000_000)
@@ -1637,7 +1638,7 @@ func (s *AnteTestSuite) TestEnsureIBCUntaxed() {
 	s.Require().True(taxProceeds.Empty())
 }
 
-// go test -v -run ^TestAnteTestSuite/TestOracleZeroFee$ github.com/classic-terra/core/v3/custom/auth/ante
+// go test -v -run ^TestAnteTestSuite/TestOracleZeroFee$ github.com/classic-terra/core/v4/custom/auth/ante
 func (s *AnteTestSuite) TestOracleZeroFee() {
 	s.SetupTest(true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -1657,17 +1658,17 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	account := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, account)
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 1_000_000_000)))
 
 	// new val
-	val, err := stakingtypes.NewValidator(sdk.ValAddress(addr1), priv1.PubKey(), stakingtypes.Description{})
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(addr1).String(), priv1.PubKey(), stakingtypes.Description{})
 	s.Require().NoError(err)
 	s.app.StakingKeeper.SetValidator(s.ctx, val)
 
 	// msg and signatures
 
 	// MsgAggregateExchangeRatePrevote
-	msg := oracletypes.NewMsgAggregateExchangeRatePrevote(oracletypes.GetAggregateVoteHash("salt", "exchange rates", val.GetOperator()), addr1, val.GetOperator())
+	msg := oracletypes.NewMsgAggregateExchangeRatePrevote(oracletypes.GetAggregateVoteHash("salt", "exchange rates", sdk.ValAddress(val.GetOperator())), addr1, sdk.ValAddress(val.GetOperator()))
 	s.txBuilder.SetMsgs(msg)
 	s.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 	s.txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin(core.MicroSDRDenom, 0)))
@@ -1683,7 +1684,7 @@ func (s *AnteTestSuite) TestOracleZeroFee() {
 	s.Require().Equal(sdk.Coins{}, balances)
 
 	// MsgAggregateExchangeRateVote
-	msg1 := oracletypes.NewMsgAggregateExchangeRateVote("salt", "exchange rates", addr1, val.GetOperator())
+	msg1 := oracletypes.NewMsgAggregateExchangeRateVote("salt", "exchange rates", addr1, sdk.ValAddress(val.GetOperator()))
 	s.txBuilder.SetMsgs(msg1)
 	tx, err = s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err)

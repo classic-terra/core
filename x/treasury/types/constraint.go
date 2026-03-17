@@ -1,9 +1,8 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"gopkg.in/yaml.v2"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // String implements fmt.Stringer interface
@@ -13,7 +12,7 @@ func (pc PolicyConstraints) String() string {
 }
 
 // Clamp constrains a policy variable update within the policy constraints
-func (pc PolicyConstraints) Clamp(prevRate sdk.Dec, newRate sdk.Dec) (clampedRate sdk.Dec) {
+func (pc PolicyConstraints) Clamp(prevRate sdkmath.LegacyDec, newRate sdkmath.LegacyDec) (clampedRate sdkmath.LegacyDec) {
 	delta := newRate.Sub(prevRate)
 	if newRate.GT(prevRate) {
 		if delta.GT(pc.ChangeRateMax) {

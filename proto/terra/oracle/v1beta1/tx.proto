@@ -1,9 +1,11 @@
 syntax = "proto3";
 package terra.oracle.v1beta1;
 
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/classic-terra/core/v3/x/oracle/types";
+option go_package = "github.com/classic-terra/core/v4/x/oracle/types";
 
 // Msg defines the oracle Msg service.
 service Msg {
@@ -22,6 +24,7 @@ service Msg {
 // MsgAggregateExchangeRatePrevote represents a message to submit
 // aggregate exchange rate prevote.
 message MsgAggregateExchangeRatePrevote {
+  option (cosmos.msg.v1.signer)      = "feeder";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -36,6 +39,7 @@ message MsgAggregateExchangeRatePrevoteResponse {}
 // MsgAggregateExchangeRateVote represents a message to submit
 // aggregate exchange rate vote.
 message MsgAggregateExchangeRateVote {
+  option (cosmos.msg.v1.signer)      = "feeder";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -51,10 +55,14 @@ message MsgAggregateExchangeRateVoteResponse {}
 // MsgDelegateFeedConsent represents a message to
 // delegate oracle voting rights to another address.
 message MsgDelegateFeedConsent {
+  option (cosmos.msg.v1.signer)      = "operator";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string operator = 1 [(gogoproto.moretags) = "yaml:\"operator\""];
+  string operator = 1 [
+    (gogoproto.moretags)   = "yaml:\"operator\"",
+    (cosmos_proto.scalar)  = "cosmos.ValidatorAddressString"
+  ];
   string delegate = 2 [(gogoproto.moretags) = "yaml:\"delegate\""];
 }
 

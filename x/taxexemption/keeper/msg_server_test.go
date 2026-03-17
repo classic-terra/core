@@ -3,11 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	ultil "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
+	ultil "github.com/classic-terra/core/v4/x/taxexemption/keeper"
+	"github.com/classic-terra/core/v4/x/taxexemption/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 

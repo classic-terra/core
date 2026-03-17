@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	sdkmath "cosmossdk.io/math"
+	vestingtypes "github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,8 +20,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
-	vestingtypes "github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -141,7 +140,7 @@ $ terrad add-genesis-account acc1 '10000000000uluna,1000000ukrw'
 					if err != nil {
 						return err
 					}
-					ratio, err := sdk.NewDecFromStr(items[3])
+					ratio, err := sdkmath.LegacyNewDecFromStr(items[3])
 					if err != nil {
 						return err
 					}
@@ -166,7 +165,10 @@ $ terrad add-genesis-account acc1 '10000000000uluna,1000000ukrw'
 					vestingSchedules = append(vestingSchedules, *schedule)
 				}
 
-				baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), 0)
+				baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), 0)
+				if err != nil {
+					return err
+				}
 
 				for _, coin := range vestingAmt {
 					if _, ok := vestingSchedulesDenomMap[coin.Denom]; !ok {

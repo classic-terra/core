@@ -3,10 +3,10 @@ package oracle
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/oracle/keeper"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v3/x/oracle/keeper"
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // InitGenesis initialize default parameters
@@ -91,7 +91,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	})
 
 	exchangeRates := []types.ExchangeRateTuple{}
-	keeper.IterateLunaExchangeRates(ctx, func(denom string, rate sdk.Dec) (stop bool) {
+	keeper.IterateLunaExchangeRates(ctx, func(denom string, rate math.LegacyDec) (stop bool) {
 		exchangeRates = append(exchangeRates, types.ExchangeRateTuple{Denom: denom, ExchangeRate: rate})
 		return false
 	})
@@ -118,7 +118,7 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	})
 
 	tobinTaxes := []types.TobinTax{}
-	keeper.IterateTobinTaxes(ctx, func(denom string, tobinTax sdk.Dec) (stop bool) {
+	keeper.IterateTobinTaxes(ctx, func(denom string, tobinTax math.LegacyDec) (stop bool) {
 		tobinTaxes = append(tobinTaxes, types.TobinTax{Denom: denom, TobinTax: tobinTax})
 		return false
 	})

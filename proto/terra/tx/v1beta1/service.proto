@@ -7,7 +7,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
 option (gogoproto.goproto_registration) = true;
-option go_package                       = "github.com/classic-terra/core/v3/custom/auth/tx";
+option go_package                       = "github.com/classic-terra/core/v4/custom/auth/tx";
 
 // Service defines a gRPC service for interacting with transactions.
 service Service {

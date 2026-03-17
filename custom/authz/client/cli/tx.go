@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	feeutils "github.com/classic-terra/core/v4/custom/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	"github.com/spf13/cobra"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -29,9 +29,12 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	// Create an address codec using the SDK configuration
+	addressCodec := codecaddress.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+
 	AuthorizationTxCmd.AddCommand(
-		cli.NewCmdGrantAuthorization(),
-		cli.NewCmdRevokeAuthorization(),
+		cli.NewCmdGrantAuthorization(addressCodec),
+		cli.NewCmdRevokeAuthorization(addressCodec),
 		NewCmdExecAuthorization(),
 	)
 
@@ -73,9 +76,6 @@ Example:
 				return err
 			}
 			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 				// estimate tax and gas

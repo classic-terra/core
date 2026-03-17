@@ -3,12 +3,12 @@ package ante_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
+	"cosmossdk.io/log"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	terraapp "github.com/classic-terra/core/v4/app"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -20,12 +20,7 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	terraapp "github.com/classic-terra/core/v3/app"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/stretchr/testify/suite"
 )
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
@@ -48,15 +43,16 @@ func createTestApp(isCheckTx bool, tempDir string) (*terraapp.TerraApp, sdk.Cont
 		tempDir, terraapp.MakeEncodingConfig(),
 		simtestutil.EmptyAppOptions{}, wasmOpts,
 	)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	ctx := app.NewContext(isCheckTx)
+	app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 	app.TreasuryKeeper.SetParams(ctx, treasurytypes.DefaultParams())
-	app.DistrKeeper.SetParams(ctx, distributiontypes.DefaultParams())
-	app.DistrKeeper.SetFeePool(ctx, distributiontypes.InitialFeePool())
+	app.DistrKeeper.Params.Set(ctx, distributiontypes.DefaultParams())
+	app.DistrKeeper.FeePool.Set(ctx, distributiontypes.InitialFeePool())
 
 	taxParams := taxtypes.DefaultParams()
 	taxParams.GasPrices = sdk.NewDecCoins() // tests normally rely on zero gas price, so we are setting it here and fall back to the normal ctx.MinGasPrices
 	app.TaxKeeper.SetParams(ctx, taxParams)
+
 	return app, ctx
 }
 
@@ -91,7 +87,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  signing.SignMode(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode()),
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -112,8 +108,8 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		sigV2, err := tx.SignWithPrivKey(
-			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+		sigV2, err := tx.SignWithPrivKey(suite.ctx,
+			signing.SignMode(suite.clientCtx.TxConfig.SignModeHandler().DefaultMode()), signerData,
 			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
@@ -132,40 +128,3 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 func TestAnteTestSuite(t *testing.T) {
 	suite.Run(t, new(AnteTestSuite))
 }
-
-// func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptotypes.PubKey, signatures [][]byte) {
-// 	pubkeys = make([]cryptotypes.PubKey, n)
-// 	signatures = make([][]byte, n)
-// 	for i := 0; i < n; i++ {
-// 		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
-
-// 		// TODO: also generate ed25519 keys as below when ed25519 keys are
-// 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
-// 		// for now this fails:
-// 		// if rand.Int63()%2 == 0 {
-// 		//	privkey = ed25519.GenPrivKey()
-// 		// } else {
-// 		//	privkey = secp256k1.GenPrivKey()
-// 		// }
-
-// 		pubkeys[i] = privkey.PubKey()
-// 		signatures[i], _ = privkey.Sign(msg)
-// 	}
-// 	return
-// }
-
-// func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
-// 	cost := uint64(0)
-// 	for _, pubkey := range pubkeys {
-// 		pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
-// 		switch {
-// 		case strings.Contains(pubkeyType, "ed25519"):
-// 			cost += authtypes.DefaultParams().SigVerifyCostED25519
-// 		case strings.Contains(pubkeyType, "secp256k1"):
-// 			cost += authtypes.DefaultParams().SigVerifyCostSecp256k1
-// 		default:
-// 			panic("unexpected key type")
-// 		}
-// 	}
-// 	return cost
-// }

@@ -1,17 +1,20 @@
 package ante
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/classic-terra/core/v3/app/helper"
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/app/helper"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	taxexemptionkeeper "github.com/classic-terra/core/v4/x/taxexemption/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -101,6 +104,23 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
+
+	// SDK 0.50 fix: if no fee payer is set, default to first signer
+	if len(feePayer) == 0 {
+		if sigTx, ok := feeTx.(authsigning.SigVerifiableTx); ok {
+			signers, err := sigTx.GetSigners()
+			if err != nil {
+				return ctx, fmt.Errorf("fee payer address not found and cannot get signers: %v", err)
+			}
+			if len(signers) == 0 {
+				return ctx, fmt.Errorf("fee payer address not found and no signers available")
+			}
+			feePayer = signers[0]
+		} else {
+			return ctx, fmt.Errorf("fee payer address not found and cannot cast to SigVerifiableTx")
+		}
+	}
+
 	deductFeesFrom := feePayer
 
 	// if feegranter set deduct fee from feegranter account.
@@ -108,7 +128,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 	if feeGranter != nil {
 		if fd.feegrantKeeper == nil {
 			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
+		} else if !bytes.Equal(feeGranter, feePayer) {
 			err := fd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, feeTx.GetMsgs())
 			if err != nil {
 				return ctx, errorsmod.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
@@ -153,14 +173,12 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		if !feesOrTax.IsZero() {
 			needMint := feesOrTax.Sort().Sub(fee.Sort()...)
 			if !needMint.IsZero() {
-				err := fd.bankKeeper.MintCoins(ctx, minttypes.ModuleName, needMint)
-				if err != nil {
+				if err := fd.bankKeeper.MintCoins(sdk.WrapSDKContext(ctx), minttypes.ModuleName, needMint); err != nil {
 					return ctx, err
 				}
 
 				// we need to add the fees to the account balance to avoid deduction errors
-				err = fd.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, deductFeesFromAcc.GetAddress(), needMint)
-				if err != nil {
+				if err := fd.bankKeeper.SendCoinsFromModuleToAccount(sdk.WrapSDKContext(ctx), minttypes.ModuleName, deductFeesFromAcc.GetAddress(), needMint); err != nil {
 					return ctx, err
 				}
 			}
@@ -171,7 +189,7 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 		sdk.NewEvent(
 			sdk.EventTypeTx,
 			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
 		),
 	}
 
@@ -195,11 +213,10 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 			}
 		}
 
-		ctx = ctx.WithValue(taxtypes.ContextKeyTaxDue, taxes).WithValue(taxtypes.ContextKeyTaxPayer, deductFeesFrom.String())
+		ctx = ctx.WithValue(taxtypes.ContextKeyTaxDue, taxes).WithValue(taxtypes.ContextKeyTaxPayer, sdk.AccAddress(deductFeesFrom).String())
 
 		if !deductFees.IsZero() {
-			err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, deductFees)
-			if err != nil {
+			if err := DeductFees(fd.bankKeeper, ctx, deductFeesFromAcc, deductFees); err != nil {
 				return ctx, err
 			}
 		}
@@ -211,14 +228,14 @@ func (fd FeeDecorator) checkDeductFee(ctx sdk.Context, feeTx sdk.FeeTx, taxes sd
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
+func DeductFees(bankKeeper BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(sdk.WrapSDKContext(ctx), acc.GetAddress(), types.FeeCollectorName, fees)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s", err.Error())
 	}
 
 	return nil
@@ -249,7 +266,7 @@ func (fd FeeDecorator) checkTxFee(ctx sdk.Context, tx sdk.Tx, taxes sdk.Coins, n
 		if !minGasPrices.IsZero() {
 			// Determine the required fees by multiplying each required minimum gas
 			// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-			glDec := sdk.NewDec(int64(gas))
+			glDec := sdkmath.LegacyNewDec(int64(gas))
 			minRequiredGasFees = make(sdk.Coins, len(minGasPrices))
 			for i, gasPrice := range minGasPrices {
 				fee := gasPrice.Amount.Mul(glDec)

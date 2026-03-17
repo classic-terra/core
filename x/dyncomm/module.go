@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/classic-terra/core/v3/x/dyncomm/client/cli"
-	"github.com/classic-terra/core/v3/x/dyncomm/keeper"
-	"github.com/classic-terra/core/v3/x/dyncomm/types"
-	"github.com/classic-terra/core/v3/x/market/simulation"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
+	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/dyncomm/client/cli"
+	"github.com/classic-terra/core/v4/x/dyncomm/keeper"
+	"github.com/classic-terra/core/v4/x/dyncomm/types"
+	"github.com/classic-terra/core/v4/x/market/simulation"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,12 +18,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the dyncomm module.
@@ -97,6 +96,12 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (AppModule) IsOnePerModuleType() {}
+
 // ExportGenesis returns the exported genesis state as raw bytes for the dyncomm
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
@@ -128,9 +133,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // NewHandler returns an sdk.Handler for the dyncomm module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
+// Deprecated in SDK 0.50 - handlers are now registered via RegisterServices
+// func (am AppModule) NewHandler() sdk.Handler {
+// 	return nil
+// }
 
 // GenerateGenesisState creates a randomized GenState of the dyncomm module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
@@ -138,7 +144,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	// simulation would not fail
 	dyncommGenesis := types.DefaultGenesisState()
 	params := types.DefaultParams()
-	params.Cap = sdk.ZeroDec()
+	params.Cap = math.LegacyZeroDec()
 	dyncommGenesis.Params = params
 	bz, err := json.MarshalIndent(&dyncommGenesis, "", " ")
 	if err != nil {
@@ -162,7 +168,7 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for dyncomm module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -172,7 +178,8 @@ func (am AppModule) WeightedOperations(module.SimulationState) []simtypes.Weight
 }
 
 // EndBlock returns the end blocker for the dyncomm module.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	EndBlocker(sdkCtx, am.keeper)
+	return []abci.ValidatorUpdate{}, nil
 }

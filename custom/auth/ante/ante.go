@@ -1,27 +1,24 @@
 package ante
 
 import (
+	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	dyncommante "github.com/classic-terra/core/v4/x/dyncomm/ante"
+	dyncommkeeper "github.com/classic-terra/core/v4/x/dyncomm/keeper"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v4/x/taxexemption/keeper"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-
-	dyncommante "github.com/classic-terra/core/v3/x/dyncomm/ante"
-	dyncommkeeper "github.com/classic-terra/core/v3/x/dyncomm/keeper"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-	"github.com/cosmos/cosmos-sdk/codec"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	ibcante "github.com/cosmos/ibc-go/v10/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -33,15 +30,15 @@ type HandlerOptions struct {
 	OracleKeeper           OracleKeeper
 	TreasuryKeeper         TreasuryKeeper
 	TaxExemptionKeeper     taxexemptionkeeper.Keeper
-	SignModeHandler        signing.SignModeHandler
+	SignModeHandler        *txsigning.HandlerMap
 	SigGasConsumer         ante.SignatureVerificationGasConsumer
 	TxFeeChecker           ante.TxFeeChecker
 	IBCKeeper              ibckeeper.Keeper
 	WasmKeeper             *wasmkeeper.Keeper
 	DistributionKeeper     distributionkeeper.Keeper
 	GovKeeper              govkeeper.Keeper
-	WasmConfig             *wasmtypes.WasmConfig
-	TXCounterStoreKey      storetypes.StoreKey
+	WasmConfig             *wasmtypes.NodeConfig
+	TXCounterStore         corestoretypes.KVStoreService
 	DyncommKeeper          dyncommkeeper.Keeper
 	StakingKeeper          *stakingkeeper.Keeper
 	TaxKeeper              *taxkeeper.Keeper
@@ -76,8 +73,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "wasm config is required for ante builder")
 	}
 
-	if options.TXCounterStoreKey == nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx counter key is required for ante builder")
+	if options.TXCounterStore == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tx counter store service is required for ante builder")
 	}
 
 	if options.TaxKeeper == nil {
@@ -87,7 +84,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
-		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
+		wasmkeeper.NewCountTXDecorator(options.TXCounterStore),
 		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),

@@ -3,10 +3,10 @@ package oracle
 import (
 	"time"
 
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/keeper"
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
+	"cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/oracle/keeper"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,33 +21,47 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// Build claim map over all validators in active set
 		validatorClaimMap := make(map[string]types.Claim)
 
-		maxValidators := k.StakingKeeper.MaxValidators(ctx)
-		iterator := k.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+		maxValidators, err := k.StakingKeeper.MaxValidators(ctx)
+		if err != nil {
+			return
+		}
+
+		iterator, err := k.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
+		if err != nil {
+			return
+		}
 		defer iterator.Close()
 
 		powerReduction := k.StakingKeeper.PowerReduction(ctx)
 
 		i := 0
 		for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
-			validator := k.StakingKeeper.Validator(ctx, iterator.Value())
+			validator, err := k.StakingKeeper.Validator(ctx, iterator.Value())
+			if err != nil {
+				continue
+			}
 
 			// Exclude not bonded validator
 			if validator.IsBonded() {
-				valAddr := validator.GetOperator()
-				validatorClaimMap[valAddr.String()] = types.NewClaim(validator.GetConsensusPower(powerReduction), 0, 0, valAddr)
+				valAddrStr := validator.GetOperator()
+				valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
+				if err != nil {
+					continue
+				}
+				validatorClaimMap[valAddrStr] = types.NewClaim(validator.GetConsensusPower(powerReduction), 0, 0, valAddr)
 				i++
 			}
 		}
 
 		// Denom-TobinTax map
-		voteTargets := make(map[string]sdk.Dec)
-		k.IterateTobinTaxes(ctx, func(denom string, tobinTax sdk.Dec) bool {
+		voteTargets := make(map[string]math.LegacyDec)
+		k.IterateTobinTaxes(ctx, func(denom string, tobinTax math.LegacyDec) bool {
 			voteTargets[denom] = tobinTax
 			return false
 		})
 
 		// Clear all exchange rates
-		k.IterateLunaExchangeRates(ctx, func(denom string, _ sdk.Dec) (stop bool) {
+		k.IterateLunaExchangeRates(ctx, func(denom string, _ math.LegacyDec) (stop bool) {
 			k.DeleteLunaExchangeRate(ctx, denom)
 			return false
 		})

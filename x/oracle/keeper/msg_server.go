@@ -4,11 +4,10 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 type msgServer struct {
@@ -143,7 +142,10 @@ func (ms msgServer) DelegateFeedConsent(goCtx context.Context, msg *types.MsgDel
 	}
 
 	// Check the delegator is a validator
-	val := ms.StakingKeeper.Validator(ctx, operatorAddr)
+	val, err := ms.StakingKeeper.Validator(ctx, operatorAddr)
+	if err != nil {
+		return nil, err
+	}
 	if val == nil {
 		return nil, errorsmod.Wrap(stakingtypes.ErrNoValidatorFound, msg.Operator)
 	}

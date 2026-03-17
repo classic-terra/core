@@ -8,8 +8,8 @@ import (
 	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	terraapp "github.com/classic-terra/core/v3/app"
-	helpers "github.com/classic-terra/core/v3/app/testing"
+	terraapp "github.com/classic-terra/core/v4/app"
+	helpers "github.com/classic-terra/core/v4/app/testing"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -17,9 +17,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
+	store "cosmossdk.io/store"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

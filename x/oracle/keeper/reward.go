@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // RewardBallotWinners implements
@@ -17,7 +17,7 @@ func (k Keeper) RewardBallotWinners(
 	ctx sdk.Context,
 	votePeriod int64,
 	rewardDistributionWindow int64,
-	voteTargets map[string]sdk.Dec,
+	voteTargets map[string]math.LegacyDec,
 	ballotWinners map[string]types.Claim,
 ) {
 	// Add Luna explicitly for oracle account balance coming from the market swap fee
@@ -42,7 +42,7 @@ func (k Keeper) RewardBallotWinners(
 	}
 
 	// The Reward distributionRatio = votePeriod/rewardDistributionWindow
-	distributionRatio := sdk.NewDec(votePeriod).QuoInt64(rewardDistributionWindow)
+	distributionRatio := math.LegacyNewDec(votePeriod).QuoInt64(rewardDistributionWindow)
 
 	var periodRewards sdk.DecCoins
 	for _, denom := range rewardDenoms {
@@ -55,7 +55,7 @@ func (k Keeper) RewardBallotWinners(
 
 		periodRewards = periodRewards.Add(sdk.NewDecCoinFromDec(
 			denom,
-			sdk.NewDecFromInt(rewardPool.Amount).Mul(distributionRatio),
+			math.LegacyNewDecFromInt(rewardPool.Amount).Mul(distributionRatio),
 		))
 	}
 
@@ -65,20 +65,28 @@ func (k Keeper) RewardBallotWinners(
 	// Dole out rewards
 	var distributedReward sdk.Coins
 	for _, winner := range ballotWinners {
-		receiverVal := k.StakingKeeper.Validator(ctx, winner.Recipient)
+		receiverVal, err := k.StakingKeeper.Validator(ctx, winner.Recipient)
+		if err != nil || receiverVal == nil {
+			continue
+		}
 
 		// Reflects contribution
-		rewardCoins, _ := periodRewards.MulDec(sdk.NewDec(winner.Weight).QuoInt64(ballotPowerSum)).TruncateDecimal()
+		rewardCoins, _ := periodRewards.MulDec(math.LegacyNewDec(winner.Weight).QuoInt64(ballotPowerSum)).TruncateDecimal()
 
 		// In case absence of the validator, we just skip distribution
-		if receiverVal != nil && !rewardCoins.IsZero() {
+		if !rewardCoins.IsZero() {
 			k.distrKeeper.AllocateTokensToValidator(ctx, receiverVal, sdk.NewDecCoinsFromCoins(rewardCoins...))
 			distributedReward = distributedReward.Add(rewardCoins...)
 		} else {
+			valAddr, err := sdk.ValAddressFromBech32(receiverVal.GetOperator())
+			if err != nil {
+				logger.Error("failed to parse validator address", "error", err)
+				continue
+			}
 			logger.Debug(fmt.Sprintf("no reward %s(%s)",
 				receiverVal.GetMoniker(),
-				receiverVal.GetOperator().String()),
-				"miss", k.GetMissCounter(ctx, receiverVal.GetOperator()),
+				receiverVal.GetOperator()),
+				"miss", k.GetMissCounter(ctx, valAddr),
 				"wincount", winner.WinCount)
 		}
 	}

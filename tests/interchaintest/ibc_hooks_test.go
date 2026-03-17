@@ -7,16 +7,16 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/classic-terra/core/v3/test/interchaintest/helpers"
-	"github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/test/interchaintest/helpers"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	"github.com/cosmos/interchaintest/v10"
+	"github.com/cosmos/interchaintest/v10/chain/cosmos"
+	"github.com/cosmos/interchaintest/v10/ibc"
+	"github.com/cosmos/interchaintest/v10/testreporter"
+	"github.com/cosmos/interchaintest/v10/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
 
 // TestIBCHooks ensures the ibc-hooks middleware from osmosis works.
@@ -109,7 +109,7 @@ func TestTerraIBCHooks(t *testing.T) {
 	)
 
 	// Create and Fund User Wallets
-	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", genesisWalletAmount, terra, terra2)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", sdkmath.NewInt(genesisWalletAmount), terra, terra2)
 	terraUser, terra2User := users[0], users[1]
 
 	terraUserAddr := terraUser.FormattedAddress()

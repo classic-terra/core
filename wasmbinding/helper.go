@@ -1,7 +1,7 @@
 package wasmbinding
 
 import (
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,8 +27,8 @@ func ConvertProtoToJSONMarshal(protoResponseType codec.ProtoMarshaler, bz []byte
 }
 
 // ConvertSdkCoinsToWasmCoins converts sdk type coins to wasm vm type coins
-func ConvertSdkCoinsToWasmCoins(coins []sdk.Coin) wasmvmtypes.Coins {
-	var toSend wasmvmtypes.Coins
+func ConvertSdkCoinsToWasmCoins(coins []sdk.Coin) []wasmvmtypes.Coin {
+	var toSend []wasmvmtypes.Coin
 	for _, coin := range coins {
 		c := ConvertSdkCoinToWasmCoin(coin)
 		toSend = append(toSend, c)

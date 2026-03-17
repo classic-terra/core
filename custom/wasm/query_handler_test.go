@@ -3,16 +3,19 @@ package wasm
 import (
 	"testing"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	legacytypes "github.com/classic-terra/core/v3/custom/wasm/types/legacy"
-	coretypes "github.com/classic-terra/core/v3/types"
+	legacytypes "github.com/classic-terra/core/v4/custom/wasm/types/legacy"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	coretypes "github.com/classic-terra/core/v4/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -78,8 +81,8 @@ func TestLegacyQueryHandlerTestSuite(t *testing.T) {
 func (suite *LegacyQueryHandlerTestSuite) SetupTest() {
 	// Create test context with store
 	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	suite.storeKey = sdk.NewKVStoreKey("wasm")
+	ms := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
+	suite.storeKey = storetypes.NewKVStoreKey(wasmtypes.StoreKey)
 	ms.MountStoreWithDB(suite.storeKey, storetypes.StoreTypeIAVL, db)
 	require.NoError(suite.T(), ms.LoadLatestVersion())
 

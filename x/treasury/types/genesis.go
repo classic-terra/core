@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(params Params, taxRate sdk.Dec, rewardWeight sdk.Dec,
+func NewGenesisState(params Params, taxRate sdkmath.LegacyDec, rewardWeight sdkmath.LegacyDec,
 	taxCaps []TaxCap, taxProceeds sdk.Coins, epochInitialIssuance sdk.Coins,
 	epochStates []EpochState,
 ) *GenesisState {

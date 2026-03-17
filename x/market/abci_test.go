@@ -3,16 +3,15 @@ package market
 import (
 	"testing"
 
-	"github.com/classic-terra/core/v3/x/market/keeper"
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/market/keeper"
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestReplenishPools(t *testing.T) {
 	input := keeper.CreateTestInput(t)
 
-	terraDelta := sdk.NewDecWithPrec(17987573223725367, 3)
+	terraDelta := sdkmath.LegacyNewDecWithPrec(17987573223725367, 3)
 	input.MarketKeeper.SetTerraPoolDelta(input.Ctx, terraDelta)
 
 	for i := 0; i < 100; i++ {

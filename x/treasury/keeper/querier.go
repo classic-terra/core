@@ -4,16 +4,14 @@ import (
 	"context"
 	"math"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over q
@@ -94,7 +92,10 @@ func (q querier) Indicators(c context.Context, _ *types.QueryIndicatorsRequest) 
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Compute Total Staked Luna (TSL)
-	TSL := q.stakingKeeper.TotalBondedTokens(ctx)
+	TSL, err := q.stakingKeeper.TotalBondedTokens(sdk.WrapSDKContext(ctx))
+	if err != nil {
+		TSL = sdkmath.ZeroInt()
+	}
 
 	// Compute Tax Rewards (TR)
 	taxRewards := sdk.NewDecCoinsFromCoins(q.PeekEpochTaxProceeds(ctx)...)

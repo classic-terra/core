@@ -5,13 +5,13 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/icza/dyno"
-
-	oracle "github.com/classic-terra/core/v3/x/oracle/types"
+	oracle "github.com/classic-terra/core/v4/x/oracle/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/cosmos/interchaintest/v10/chain/cosmos"
+	"github.com/cosmos/interchaintest/v10/ibc"
+	"github.com/icza/dyno"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 	TerraClassicImage = ibc.DockerImage{
 		Repository: repo,
 		Version:    version,
-		UidGid:     "1025:1025",
+		UIDGID:     "1025:1025",
 	}
 
 	pathTerraGaia        = "terra-gaia"
@@ -46,7 +46,7 @@ func createConfig() (ibc.ChainConfig, error) {
 			Bech32Prefix:        "terra",
 			Denom:               "uluna",
 			GasPrices:           "28.325uluna",
-			GasAdjustment:       1.1,
+			GasAdjustment:       2.5,
 			TrustingPeriod:      "112h",
 			NoHostMount:         false,
 			ModifyGenesis:       ModifyGenesis(),
@@ -56,12 +56,32 @@ func createConfig() (ibc.ChainConfig, error) {
 		nil
 }
 
+func createGaiaConfig() ibc.ChainConfig {
+	fixedChainGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", votingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", maxDepositPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "uatom"),
+		// configure the feemarket module
+		cosmos.NewGenesisKV("app_state.feemarket.params.enabled", false),
+		cosmos.NewGenesisKV("app_state.feemarket.params.min_base_gas_price", "0.001"),
+		cosmos.NewGenesisKV("app_state.feemarket.params.max_block_utilization", "50000000"),
+		cosmos.NewGenesisKV("app_state.feemarket.state.base_gas_price", "0.001"),
+	}
+	fixedChainGasPrices := "0.001uatom"
+	return ibc.ChainConfig{
+		GasPrices:     fixedChainGasPrices,
+		ModifyGenesis: cosmos.ModifyGenesis(fixedChainGenesis),
+	}
+}
+
 // coreEncoding registers the Terra Classic specific module codecs so that the associated types and msgs
 // will be supported when writing to the blocksdb sqlite database.
 func coreEncoding() *testutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
 
 	// register custom types
+	// crypto keys (ed25519/secp256k1) so Any-encoded consensus_pubkey can be unpacked
+	cryptocodec.RegisterInterfaces(cfg.InterfaceRegistry)
 	govv1.RegisterInterfaces(cfg.InterfaceRegistry)
 	oracle.RegisterInterfaces(cfg.InterfaceRegistry)
 	return &cfg
@@ -86,6 +106,14 @@ func ModifyGenesis() func(ibc.ChainConfig, []byte) ([]byte, error) {
 		// Modify signed blocks window
 		if err := dyno.Set(g, signedBlocksWindow, "app_state", "slashing", "params", "signed_blocks_window"); err != nil {
 			return nil, fmt.Errorf("failed to set signed blocks window in genesis json: %w", err)
+		}
+		// Explicitly set min_signed_per_window to 50% to avoid mass jailing on transient stalls
+		if err := dyno.Set(g, "0.500000000000000000", "app_state", "slashing", "params", "min_signed_per_window"); err != nil {
+			return nil, fmt.Errorf("failed to set min_signed_per_window in genesis json: %w", err)
+		}
+		// Shorten downtime jail duration to make the test deterministic in case of brief stalls
+		if err := dyno.Set(g, "60s", "app_state", "slashing", "params", "downtime_jail_duration"); err != nil {
+			return nil, fmt.Errorf("failed to set downtime_jail_duration in genesis json: %w", err)
 		}
 		out, err := json.Marshal(g)
 		if err != nil {

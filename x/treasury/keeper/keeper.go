@@ -3,20 +3,18 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	core "github.com/classic-terra/core/v3/types"
-
-	"github.com/cometbft/cometbft/libs/log"
-
-	"github.com/classic-terra/core/v3/x/treasury/types"
-
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper of the treasury store
@@ -29,7 +27,7 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	marketKeeper  types.MarketKeeper
 	stakingKeeper types.StakingKeeper
-	distrKeeper   types.DistributionKeeper
+	distrKeeper   distrkeeper.Keeper
 	oracleKeeper  types.OracleKeeper
 	wasmKeeper    *wasmkeeper.Keeper
 
@@ -46,7 +44,7 @@ func NewKeeper(
 	marketKeeper types.MarketKeeper,
 	oracleKeeper types.OracleKeeper,
 	stakingKeeper types.StakingKeeper,
-	distrKeeper types.DistributionKeeper,
+	distrKeeper distrkeeper.Keeper,
 	wasmKeeper *wasmkeeper.Keeper,
 	distributionModuleName string,
 ) Keeper {
@@ -86,7 +84,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetTaxRate loads the tax rate
-func (k Keeper) GetTaxRate(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetTaxRate(ctx sdk.Context) sdkmath.LegacyDec {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.TaxRateKey)
 	if b == nil {
@@ -99,14 +97,14 @@ func (k Keeper) GetTaxRate(ctx sdk.Context) sdk.Dec {
 }
 
 // SetTaxRate sets the tax rate
-func (k Keeper) SetTaxRate(ctx sdk.Context, taxRate sdk.Dec) {
+func (k Keeper) SetTaxRate(ctx sdk.Context, taxRate sdkmath.LegacyDec) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&sdk.DecProto{Dec: taxRate})
 	store.Set(types.TaxRateKey, b)
 }
 
 // GetRewardWeight loads the reward weight
-func (k Keeper) GetRewardWeight(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetRewardWeight(ctx sdk.Context) sdkmath.LegacyDec {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.RewardWeightKey)
 	if b == nil {
@@ -149,11 +147,12 @@ func (k Keeper) GetTaxCap(ctx sdk.Context, denom string) math.Int {
 // IterateTaxCap iterates all tax cap
 func (k Keeper) IterateTaxCap(ctx sdk.Context, handler func(denom string, taxCap math.Int) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.TaxCapKey)
+	sub := prefix.NewStore(store, types.TaxCapKey)
+	iter := sub.Iterator(nil, nil)
 
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		denom := string(iter.Key()[len(types.TaxCapKey):])
+		denom := string(iter.Key())
 		var ip sdk.IntProto
 		k.cdc.MustUnmarshal(iter.Value(), &ip)
 
@@ -241,20 +240,20 @@ func (k Keeper) PeekEpochSeigniorage(ctx sdk.Context) math.Int {
 	epochSeigniorage := preEpochIssuance.Sub(epochIssuance)
 
 	if epochSeigniorage.IsNegative() {
-		return sdk.ZeroInt()
+		return sdkmath.ZeroInt()
 	}
 
 	return epochSeigniorage
 }
 
 // GetTR returns the tax rewards for the epoch
-func (k Keeper) GetTR(ctx sdk.Context, epoch int64) sdk.Dec {
+func (k Keeper) GetTR(ctx sdk.Context, epoch int64) sdkmath.LegacyDec {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTRKey(epoch))
 
 	dp := sdk.DecProto{}
 	if bz == nil {
-		dp.Dec = sdk.ZeroDec()
+		dp.Dec = sdkmath.LegacyZeroDec()
 	} else {
 		k.cdc.MustUnmarshal(bz, &dp)
 	}
@@ -263,7 +262,7 @@ func (k Keeper) GetTR(ctx sdk.Context, epoch int64) sdk.Dec {
 }
 
 // SetTR stores the tax rewards for the epoch
-func (k Keeper) SetTR(ctx sdk.Context, epoch int64, tr sdk.Dec) {
+func (k Keeper) SetTR(ctx sdk.Context, epoch int64, tr sdkmath.LegacyDec) {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: tr})
@@ -274,21 +273,22 @@ func (k Keeper) SetTR(ctx sdk.Context, epoch int64, tr sdk.Dec) {
 func (k Keeper) ClearTRs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
-	iter := sdk.KVStorePrefixIterator(store, types.TRKey)
+	sub := prefix.NewStore(store, types.TRKey)
+	iter := sub.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+		sub.Delete(iter.Key())
 	}
 }
 
 // GetSR returns the seigniorage rewards for the epoch
-func (k Keeper) GetSR(ctx sdk.Context, epoch int64) sdk.Dec {
+func (k Keeper) GetSR(ctx sdk.Context, epoch int64) sdkmath.LegacyDec {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetSRKey(epoch))
 
 	dp := sdk.DecProto{}
 	if bz == nil {
-		dp.Dec = sdk.ZeroDec()
+		dp.Dec = sdkmath.LegacyZeroDec()
 	} else {
 		k.cdc.MustUnmarshal(bz, &dp)
 	}
@@ -297,7 +297,7 @@ func (k Keeper) GetSR(ctx sdk.Context, epoch int64) sdk.Dec {
 }
 
 // SetSR stores the seigniorage rewards for the epoch
-func (k Keeper) SetSR(ctx sdk.Context, epoch int64, sr sdk.Dec) {
+func (k Keeper) SetSR(ctx sdk.Context, epoch int64, sr sdkmath.LegacyDec) {
 	store := ctx.KVStore(k.storeKey)
 
 	bz := k.cdc.MustMarshal(&sdk.DecProto{Dec: sr})
@@ -308,10 +308,11 @@ func (k Keeper) SetSR(ctx sdk.Context, epoch int64, sr sdk.Dec) {
 func (k Keeper) ClearSRs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
-	iter := sdk.KVStorePrefixIterator(store, types.SRKey)
+	sub := prefix.NewStore(store, types.SRKey)
+	iter := sub.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+		sub.Delete(iter.Key())
 	}
 }
 
@@ -342,10 +343,11 @@ func (k Keeper) SetTSL(ctx sdk.Context, epoch int64, tsl math.Int) {
 func (k Keeper) ClearTSLs(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 
-	iter := sdk.KVStorePrefixIterator(store, types.TSLKey)
+	sub := prefix.NewStore(store, types.TSLKey)
+	iter := sub.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+		sub.Delete(iter.Key())
 	}
 }
 

@@ -1,11 +1,12 @@
 package staking_test
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/math"
-	apptesting "github.com/classic-terra/core/v3/app/testing"
-	"github.com/classic-terra/core/v3/types"
+	apptesting "github.com/classic-terra/core/v4/app/testing"
+	"github.com/classic-terra/core/v4/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -23,9 +24,9 @@ func TestStakingTestSuite(t *testing.T) {
 	suite.Run(t, new(StakingTestSuite))
 }
 
-// go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v3/custom/staking
+// go test -v -run=TestStakingTestSuite/TestValidatorVPLimit github.com/classic-terra/core/v4/custom/staking
 func (s *StakingTestSuite) TestValidatorVPLimit() {
-	s.KeeperTestHelper.Setup(s.T(), types.ColumbusChainID)
+	s.Setup(s.T(), types.ColumbusChainID)
 
 	// construct new validators, to a total of 10 validators, each with 10% of the total voting power
 	num := 9
@@ -40,7 +41,7 @@ func (s *StakingTestSuite) TestValidatorVPLimit() {
 
 	var amts [9]math.Int
 	for i := range amts {
-		amts[i] = sdk.NewInt(1000000)
+		amts[i] = math.NewInt(1000000)
 	}
 
 	var validators [9]stakingtypes.Validator
@@ -55,25 +56,25 @@ func (s *StakingTestSuite) TestValidatorVPLimit() {
 
 	// delegate to a validator over 20% VP
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewInt64Coin("uluna", 2000000)))
-	s.App.DistrKeeper.SetValidatorHistoricalRewards(s.Ctx, valAddrs[0], 1, disttypes.NewValidatorHistoricalRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", sdk.NewInt(1))), 2))
-	s.App.DistrKeeper.SetValidatorCurrentRewards(s.Ctx, valAddrs[0], disttypes.NewValidatorCurrentRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", sdk.NewInt(1))), 2))
-	s.App.DistrKeeper.SetDelegatorStartingInfo(s.Ctx, valAddrs[0], s.TestAccs[0], disttypes.NewDelegatorStartingInfo(1, sdk.OneDec(), 1))
+	s.App.DistrKeeper.SetValidatorHistoricalRewards(s.Ctx, valAddrs[0], 1, disttypes.NewValidatorHistoricalRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", math.NewInt(1))), 2))
+	s.App.DistrKeeper.SetValidatorCurrentRewards(s.Ctx, valAddrs[0], disttypes.NewValidatorCurrentRewards(sdk.NewDecCoins(sdk.NewDecCoin("uluna", math.NewInt(1))), 2))
+	s.App.DistrKeeper.SetDelegatorStartingInfo(s.Ctx, valAddrs[0], s.TestAccs[0], disttypes.NewDelegatorStartingInfo(1, math.LegacyOneDec(), 1))
 	// first delegation should be normal
 	// raise voting power of validator 0 by 1 (1+1)/(10+1) = 0.181818 < 0.2
-	s.App.StakingKeeper.SetDelegation(s.Ctx, stakingtypes.NewDelegation(s.TestAccs[0], valAddrs[0], sdk.NewDec(1000000)))
-	_, err := s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], sdk.NewInt(1000000), stakingtypes.Unbonded, validators[0], true)
+	s.App.StakingKeeper.SetDelegation(s.Ctx, stakingtypes.NewDelegation(s.TestAccs[0].String(), valAddrs[0].String(), math.LegacyNewDec(1000000)))
+	_, err := s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], math.NewInt(1000000), stakingtypes.Unbonded, validators[0], true)
 	s.Require().NoError(err)
 
 	// update validator set and validator 0 state
 	_, err = s.App.StakingKeeper.ApplyAndReturnValidatorSetUpdates(s.Ctx)
 	s.Require().NoError(err)
-	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[0])
-	s.Require().True(found)
+	validator, err := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrs[0])
+	s.Require().NoError(err)
 	validators[0] = validator
 
-	s.App.StakingKeeper.SetDelegation(s.Ctx, stakingtypes.NewDelegation(s.TestAccs[0], valAddrs[0], sdk.NewDec(1000000)))
-	_, err = s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], sdk.NewInt(1000000), stakingtypes.Unbonded, validators[0], true)
+	s.App.StakingKeeper.SetDelegation(s.Ctx, stakingtypes.NewDelegation(s.TestAccs[0].String(), valAddrs[0].String(), math.LegacyNewDec(1000000)))
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], math.NewInt(1000000), stakingtypes.Unbonded, validators[0], true)
 	// Assert that an error was returned
-	s.Require().Error(err)
+	s.Require().Error(err, fmt.Sprintf("voting power is %v, should be > 20", validators[0].ConsensusPower(s.App.StakingKeeper.PowerReduction(s.Ctx))))
 	s.Require().Equal("validator power is over the allowed limit", err.Error())
 }

@@ -3,15 +3,13 @@ package vesting
 import (
 	"encoding/json"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
+	"github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

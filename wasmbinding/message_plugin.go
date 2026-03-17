@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-
-	"github.com/classic-terra/core/v3/wasmbinding/bindings"
-	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	"github.com/classic-terra/core/v4/wasmbinding/bindings"
+	marketkeeper "github.com/classic-terra/core/v4/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
@@ -32,30 +31,30 @@ type CustomMessenger struct {
 var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
 
 // DispatchMsg executes on the contractMsg.
-func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
 	if msg.Custom != nil {
 		var contractMsg bindings.TerraMsg
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
-			return nil, nil, errorsmod.Wrap(err, "terra msg")
+			return nil, nil, nil, errorsmod.Wrap(err, "terra msg")
 		}
 
 		switch {
 		case contractMsg.Swap != nil:
 			_, bz, err := m.swap(ctx, contractAddr, contractMsg.Swap)
 			if err != nil {
-				return nil, nil, errorsmod.Wrap(err, "swap msg failed")
+				return nil, nil, nil, errorsmod.Wrap(err, "swap msg failed")
 			}
-			return nil, bz, nil
+			return nil, bz, nil, nil
 
 		case contractMsg.SwapSend != nil:
 			_, bz, err := m.swapSend(ctx, contractAddr, contractMsg.SwapSend)
 			if err != nil {
-				return nil, nil, errorsmod.Wrap(err, "swap msg failed")
+				return nil, nil, nil, errorsmod.Wrap(err, "swap msg failed")
 			}
-			return nil, bz, nil
+			return nil, bz, nil, nil
 
 		default:
-			return nil, nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown terra msg variant"}
+			return nil, nil, nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown terra msg variant"}
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)

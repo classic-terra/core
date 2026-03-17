@@ -3,8 +3,8 @@ package types
 import (
 	fmt "fmt"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -14,6 +14,11 @@ const (
 	ProposalTypeModifyTaxExemptionZone    = "ModifyTaxExemptionZone"
 	ProposalTypeAddTaxExemptionAddress    = "AddTaxExemptionAddress"
 	ProposalTypeRemoveTaxExemptionAddress = "RemoveTaxExemptionAddress"
+)
+
+var (
+	ErrUnknownAddress = errors.Register(ModuleName, 1001, "unknown address")
+	ErrInvalidAddress = errors.Register(ModuleName, 1002, "invalid address")
 )
 
 func init() {
@@ -64,13 +69,13 @@ func (p *AddTaxExemptionZoneProposal) ValidateBasic() error {
 	}
 
 	if p.Zone == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "zone name cannot be empty")
+		return errors.Wrap(ErrUnknownAddress, "zone name cannot be empty")
 	}
 
 	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
+			return errors.Wrapf(ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 
@@ -106,7 +111,7 @@ func (p *RemoveTaxExemptionZoneProposal) ValidateBasic() error {
 	}
 
 	if p.Zone == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "zone name cannot be empty")
+		return errors.Wrap(ErrUnknownAddress, "zone name cannot be empty")
 	}
 
 	return nil
@@ -144,7 +149,7 @@ func (p *ModifyTaxExemptionZoneProposal) ValidateBasic() error {
 	}
 
 	if p.Zone == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "zone name cannot be empty")
+		return errors.Wrap(ErrUnknownAddress, "zone name cannot be empty")
 	}
 
 	return nil
@@ -182,7 +187,7 @@ func (p *AddTaxExemptionAddressProposal) ValidateBasic() error {
 	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
+			return errors.Wrapf(ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 
@@ -220,7 +225,7 @@ func (p *RemoveTaxExemptionAddressProposal) ValidateBasic() error {
 	for _, address := range p.Addresses {
 		_, err = sdk.AccAddressFromBech32(address)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "%s: %s", err, address)
+			return errors.Wrapf(ErrInvalidAddress, "%s: %s", err, address)
 		}
 	}
 

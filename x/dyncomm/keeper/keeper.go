@@ -3,14 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
-
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/classic-terra/core/v4/x/dyncomm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	"github.com/classic-terra/core/v3/x/dyncomm/types"
 )
 
 // Keeper of the market store

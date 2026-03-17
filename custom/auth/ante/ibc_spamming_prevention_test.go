@@ -1,12 +1,13 @@
 package ante_test
 
 import (
-	"github.com/classic-terra/core/v3/custom/auth/ante"
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/custom/auth/ante"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 )
 
 func (suite *AnteTestSuite) TestIBCTransferSpamPrevention() {
@@ -27,7 +28,7 @@ func (suite *AnteTestSuite) TestIBCTransferSpamPrevention() {
 				msg := ibctransfertypes.NewMsgTransfer(
 					"transfer",
 					"channel-0",
-					sdk.NewCoin("uluna", sdk.NewInt(100000)),
+					sdk.NewCoin("uluna", sdkmath.NewInt(100000)),
 					addr1.String(),
 					addr2.String(),
 					clienttypes.NewHeight(1, 1000),
@@ -57,7 +58,7 @@ func (suite *AnteTestSuite) TestIBCTransferSpamPrevention() {
 				msg := ibctransfertypes.NewMsgTransfer(
 					"transfer",
 					"channel-0",
-					sdk.NewCoin("uluna", sdk.NewInt(100000)),
+					sdk.NewCoin("uluna", sdkmath.NewInt(100000)),
 					addr1.String(),
 					string(make([]byte, ante.DefaultMaxReceiverLength+1)), // greater than max receiver length
 					clienttypes.NewHeight(1, 1000),
@@ -88,7 +89,7 @@ func (suite *AnteTestSuite) TestIBCTransferSpamPrevention() {
 				msg := ibctransfertypes.NewMsgTransfer(
 					"transfer",
 					"channel-0",
-					sdk.NewCoin("uluna", sdk.NewInt(100000)),
+					sdk.NewCoin("uluna", sdkmath.NewInt(100000)),
 					addr1.String(),
 					addr2.String(),
 					clienttypes.NewHeight(1, 1000),

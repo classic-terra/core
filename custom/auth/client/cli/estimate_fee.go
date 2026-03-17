@@ -3,13 +3,11 @@ package cli
 import (
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	feeutils "github.com/classic-terra/core/v4/custom/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
+	"github.com/spf13/cobra"
 )
 
 // GetTxFeesEstimateCommand will create a send tx and sign it with the given key.

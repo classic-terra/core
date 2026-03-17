@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,7 +19,7 @@ type TaxCapProvider interface {
 // - Applies burn tax rate
 // - In simulate mode, enforces a minimum tax of 100 to allow split simulation
 // - Applies per-denom tax caps
-func ComputeTaxes(ctx sdk.Context, principal sdk.Coins, taxRate sdk.Dec, simulate bool, caps TaxCapProvider) sdk.Coins {
+func ComputeTaxes(ctx sdk.Context, principal sdk.Coins, taxRate sdkmath.LegacyDec, simulate bool, caps TaxCapProvider) sdk.Coins {
 	if taxRate.IsZero() {
 		return sdk.Coins{}
 	}
@@ -36,9 +37,9 @@ func ComputeTaxes(ctx sdk.Context, principal sdk.Coins, taxRate sdk.Dec, simulat
 			continue
 		}
 
-		taxDue := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
-		if simulate && taxDue.LT(sdk.NewInt(100)) {
-			taxDue = sdk.NewInt(100)
+		taxDue := sdkmath.LegacyNewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
+		if simulate && taxDue.LT(sdkmath.NewInt(100)) {
+			taxDue = sdkmath.NewInt(100)
 		}
 
 		if caps != nil {

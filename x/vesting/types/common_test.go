@@ -3,12 +3,10 @@ package types_test
 import (
 	"testing"
 
-	"github.com/classic-terra/core/v3/custom/auth"
-	"github.com/classic-terra/core/v3/x/vesting/types"
+	"github.com/classic-terra/core/v4/custom/auth"
+	"github.com/classic-terra/core/v4/x/vesting/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-
-	simparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -26,7 +24,14 @@ func MakeTestCodec(t *testing.T) codec.Codec {
 	return MakeEncodingConfig(t).Codec
 }
 
-func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
+type EncodingConfig struct {
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Codec             codec.Codec
+	TxConfig          interface{}
+	Amino             *codec.LegacyAmino
+}
+
+func MakeEncodingConfig(_ *testing.T) EncodingConfig {
 	amino := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
@@ -40,7 +45,7 @@ func MakeEncodingConfig(_ *testing.T) simparams.EncodingConfig {
 	types.RegisterLegacyAminoCodec(amino)
 	types.RegisterInterfaces(interfaceRegistry)
 
-	return simparams.EncodingConfig{
+	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Codec:             codec,
 		TxConfig:          txCfg,

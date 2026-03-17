@@ -1,10 +1,11 @@
 package post
 
 import (
-	authante "github.com/classic-terra/core/v3/custom/auth/ante"
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	errorsmod "cosmossdk.io/errors"
+	authante "github.com/classic-terra/core/v4/custom/auth/ante"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -45,12 +46,12 @@ func (dd TaxDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success 
 	value = ctx.Value(taxtypes.ContextKeyTaxPayer)
 	deductFeesFrom, err := sdk.AccAddressFromBech32(value.(string))
 	if err != nil {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "tax payer address not found")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "tax payer address not found")
 	}
 
 	deductFeesFromAcc := dd.accountKeeper.GetAccount(ctx, deductFeesFrom)
 	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.ErrUnknownAddress.Wrapf("fee payer address: %s does not exist", deductFeesFrom)
+		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	err = authante.DeductFees(dd.bankKeeper, ctx, deductFeesFromAcc, dueTax)

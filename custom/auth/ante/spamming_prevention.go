@@ -3,10 +3,10 @@ package ante
 import (
 	"sync"
 
+	errorsmod "cosmossdk.io/errors"
+	oracleexported "github.com/classic-terra/core/v4/x/oracle/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	oracleexported "github.com/classic-terra/core/v3/x/oracle/exported"
 )
 
 const MaxOracleGasLimit = 1_000_000
@@ -83,7 +83,7 @@ func (spd SpammingPreventionDecorator) CheckOracleSpamming(ctx sdk.Context, msgs
 			}
 
 			if lastSubmittedHeight, ok := spd.oraclePrevoteMap[msg.Validator]; ok && lastSubmittedHeight == curHeight {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the validator has already been submitted prevote at the current height")
+				return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "the validator has already been submitted prevote at the current height")
 			}
 
 			spd.oraclePrevoteMap[msg.Validator] = curHeight
@@ -105,7 +105,7 @@ func (spd SpammingPreventionDecorator) CheckOracleSpamming(ctx sdk.Context, msgs
 			}
 
 			if lastSubmittedHeight, ok := spd.oracleVoteMap[msg.Validator]; ok && lastSubmittedHeight == curHeight {
-				return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the validator has already been submitted vote at the current height")
+				return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "the validator has already been submitted vote at the current height")
 			}
 
 			spd.oracleVoteMap[msg.Validator] = curHeight

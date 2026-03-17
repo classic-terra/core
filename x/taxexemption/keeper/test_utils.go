@@ -4,37 +4,37 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/stretchr/testify/require"
-
-	simappparams "cosmossdk.io/simapp/params"
-	customauth "github.com/classic-terra/core/v3/custom/auth"
-	custombank "github.com/classic-terra/core/v3/custom/bank"
-	customdistr "github.com/classic-terra/core/v3/custom/distribution"
-	customparams "github.com/classic-terra/core/v3/custom/params"
-	customstaking "github.com/classic-terra/core/v3/custom/staking"
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/market"
-	"github.com/classic-terra/core/v3/x/oracle"
-	"github.com/classic-terra/core/v3/x/taxexemption/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	dbm "github.com/cometbft/cometbft-db"
+	sdklog "cosmossdk.io/log"
+	store "cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	customauth "github.com/classic-terra/core/v4/custom/auth"
+	custombank "github.com/classic-terra/core/v4/custom/bank"
+	customdistr "github.com/classic-terra/core/v4/custom/distribution"
+	customparams "github.com/classic-terra/core/v4/custom/params"
+	customstaking "github.com/classic-terra/core/v4/custom/staking"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/market"
+	"github.com/classic-terra/core/v4/x/oracle"
+	"github.com/classic-terra/core/v4/x/taxexemption/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/stretchr/testify/require"
 )
 
 var ModuleBasics = module.NewBasicManager(
@@ -47,15 +47,23 @@ var ModuleBasics = module.NewBasicManager(
 	market.AppModuleBasic{},
 )
 
-func MakeTestCodec(t *testing.T) codec.Codec {
-	return MakeEncodingConfig(t).Codec
+type EncodingConfig struct {
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Codec             codec.Codec
+	Amino             *codec.LegacyAmino
 }
 
-func MakeEncodingConfig(_ *testing.T) simappparams.EncodingConfig {
-	encodingConfig := simappparams.MakeTestEncodingConfig()
-	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	return encodingConfig
+func MakeEncodingConfig(_ *testing.T) EncodingConfig {
+	amino := codec.NewLegacyAmino()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	ModuleBasics.RegisterLegacyAminoCodec(amino)
+	ModuleBasics.RegisterInterfaces(interfaceRegistry)
+	return EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             cdc,
+		Amino:             amino,
+	}
 }
 
 var (
@@ -91,33 +99,42 @@ type TestInput struct {
 
 func CreateTestInput(t *testing.T) TestInput {
 	sdk.GetConfig().SetBech32PrefixForAccount(core.Bech32PrefixAccAddr, core.Bech32PrefixAccPub)
+	accAddrCodec := address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 
-	keyTaxExemption := sdk.NewKVStoreKey(types.StoreKey)
-	keyParams := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tKeyParams := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
-	aKeyParams := sdk.NewKVStoreKey(authtypes.StoreKey)
+	keyTaxExemption := storetypes.NewKVStoreKey(types.StoreKey)
+	keyParams := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tKeyParams := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
+	aKeyParams := storetypes.NewKVStoreKey(authtypes.StoreKey)
 
 	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, log.NewNopLogger())
+	ms := store.NewCommitMultiStore(db, sdklog.NewNopLogger(), storemetrics.NewNoOpMetrics())
+	ctx := sdk.NewContext(ms, tmproto.Header{Time: time.Now().UTC()}, false, sdklog.NewNopLogger())
 	encodingConfig := MakeEncodingConfig(t)
 	appCodec, legacyAmino := encodingConfig.Codec, encodingConfig.Amino
 
 	ms.MountStoreWithDB(keyTaxExemption, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tKeyParams, storetypes.StoreTypeTransient, db)
+	ms.MountStoreWithDB(aKeyParams, storetypes.StoreTypeIAVL, db)
 
 	require.NoError(t, ms.LoadLatestVersion())
 
 	maccPerms := map[string][]string{
 		authtypes.FeeCollectorName: nil, // just added to enable align fee
 		govtypes.ModuleName:        {authtypes.Burner},
-		wasm.ModuleName:            {authtypes.Burner},
+		wasmtypes.ModuleName:       {authtypes.Burner},
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
-	accountKeeper := authkeeper.NewAccountKeeper(appCodec, aKeyParams,
+	accountKeeper := authkeeper.NewAccountKeeper(
+		appCodec,
+		runtime.NewKVStoreService(aKeyParams),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		sdk.GetConfig().GetBech32AccountAddrPrefix(), string(authtypes.NewModuleAddress(govtypes.ModuleName)))
+		accAddrCodec,
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
 	taxexemptionKeeper := NewKeeper(appCodec,
 		keyTaxExemption, paramsKeeper.Subspace(types.ModuleName),

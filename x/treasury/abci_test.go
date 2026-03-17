@@ -3,11 +3,10 @@ package treasury
 import (
 	"testing"
 
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/keeper"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	"github.com/stretchr/testify/require"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/keeper"
-	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 func TestBurnAddress(t *testing.T) {

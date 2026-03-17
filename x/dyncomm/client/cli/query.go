@@ -3,13 +3,11 @@ package cli
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-
+	"github.com/classic-terra/core/v4/x/dyncomm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v3/x/dyncomm/types"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module

@@ -9,18 +9,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	app "github.com/classic-terra/core/v4/app"
+	"github.com/classic-terra/core/v4/tests/e2e/containers"
+	"github.com/classic-terra/core/v4/tests/e2e/initialization"
+	"github.com/classic-terra/core/v4/types/assets"
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/p2p"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	app "github.com/classic-terra/core/v3/app"
-	"github.com/classic-terra/core/v3/tests/e2e/initialization"
-	"github.com/classic-terra/core/v3/types/assets"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/stretchr/testify/require"
 )
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -37,7 +38,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from strin
 	if amount != "" {
 		cmd = append(cmd, fmt.Sprintf("--amount=%s", amount))
 	}
-	n.LogActionF(strings.Join(cmd, " "))
+	n.LogActionF("%s", strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 
 	require.NoError(n.t, err)
@@ -59,7 +60,7 @@ func (n *NodeConfig) Instantiate2WasmContract(codeID, initMsg, salt, amount, fee
 	if gas != "" {
 		cmd = append(cmd, fmt.Sprintf("--gas=%s", gas))
 	}
-	n.LogActionF(strings.Join(cmd, " "))
+	n.LogActionF("%s", strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully initialized")
@@ -74,7 +75,7 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, amount, fee, from string) {
 	if fee != "" {
 		cmd = append(cmd, fmt.Sprintf("--fees=%s", fee))
 	}
-	n.LogActionF(strings.Join(cmd, " "))
+	n.LogActionF("%s", strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully executed")
@@ -116,25 +117,245 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJSON, from string) {
 	n.LogActionF("successfully submitted param change proposal")
 }
 
-func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposal(addresses []string, walletName string) int {
-	n.LogActionF("submitting add burn tax exemption address proposal %s", addresses)
-
-	cmd := []string{
-		"terrad", "tx", "gov", "submit-legacy-proposal",
-		"add-burn-tax-exemption-address", strings.Join(addresses, ","),
-		"--title=\"burn tax exemption address\"",
-		"--description=\"\"burn tax exemption address",
-		fmt.Sprintf("--from=%s", walletName),
+func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposalV1(addresses []string, walletName string) int {
+	n.LogActionF("submitting add burn tax exemption address proposal (v1 JSON) %s", addresses)
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	proposal := map[string]any{
+		"messages": []any{
+			map[string]any{
+				"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+				"content": map[string]any{
+					"@type":       "/terra.treasury.v1beta1.AddBurnTaxExemptionAddressProposal",
+					"title":       "burn tax exemption address",
+					"description": "burn tax exemption address",
+					"addresses":   addresses,
+				},
+				"authority": authority,
+			},
+		},
+		"metadata": "",
+		"deposit":  deposit,
+		"title":    "burn tax exemption address",
+		"summary":  "burn tax exemption address",
 	}
+	bz, err := json.Marshal(proposal)
+	require.NoError(n.t, err)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.Write(bz)
+	require.NoError(n.t, err)
+	require.NoError(n.t, f.Close())
 
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
-
-	fmt.Println("resp: ", resp.String())
 	proposalID, err := extractProposalIDFromResponse(resp.String())
 	require.NoError(n.t, err)
+	_ = os.Remove(localProposalFile)
+	n.LogActionF("successfully submitted add burn tax exemption address proposal (v1 JSON)")
+	return proposalID
+}
 
-	n.LogActionF("successfully submitted add burn tax exemption address proposal")
+func (n *NodeConfig) SubmitAddTaxExemptionZoneProposal(zone string, addresses []string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool, walletName string) int {
+	n.LogActionF("submitting add tax exemption zone proposal: zone=%s addresses=%s incoming=%t outgoing=%t cross=%t", zone, strings.Join(addresses, ","), exemptIncoming, exemptOutgoing, exemptCrossZone)
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	proposal := map[string]any{
+		"messages": []any{
+			map[string]any{
+				"@type":      "/terra.taxexemption.v1.MsgAddTaxExemptionZone",
+				"zone":       zone,
+				"outgoing":   exemptOutgoing,
+				"incoming":   exemptIncoming,
+				"cross_zone": exemptCrossZone,
+				"addresses":  addresses,
+				"authority":  authority,
+			},
+		},
+		"metadata": "",
+		"deposit":  deposit,
+		"title":    "add tax exemption zone",
+		"summary":  "add tax exemption zone",
+	}
+	bz, err := json.Marshal(proposal)
+	require.NoError(n.t, err)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.Write(bz)
+	require.NoError(n.t, err)
+	require.NoError(n.t, f.Close())
+
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	proposalID, err := extractProposalIDFromResponse(resp.String())
+	require.NoError(n.t, err)
+	_ = os.Remove(localProposalFile)
+	n.LogActionF("successfully submitted add tax exemption zone proposal")
+	return proposalID
+}
+
+func (n *NodeConfig) SubmitModifyTaxExemptionZoneProposal(zone string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool, walletName string) int {
+	n.LogActionF("submitting modify tax exemption zone proposal: zone=%s incoming=%t outgoing=%t cross=%t", zone, exemptIncoming, exemptOutgoing, exemptCrossZone)
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	proposal := map[string]any{
+		"messages": []any{
+			map[string]any{
+				"@type":      "/terra.taxexemption.v1.MsgModifyTaxExemptionZone",
+				"zone":       zone,
+				"outgoing":   exemptOutgoing,
+				"incoming":   exemptIncoming,
+				"cross_zone": exemptCrossZone,
+				"authority":  authority,
+			},
+		},
+		"metadata": "",
+		"deposit":  deposit,
+		"title":    "modify tax exemption zone",
+		"summary":  "modify tax exemption zone",
+	}
+	bz, err := json.Marshal(proposal)
+	require.NoError(n.t, err)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.Write(bz)
+	require.NoError(n.t, err)
+	require.NoError(n.t, f.Close())
+
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	proposalID, err := extractProposalIDFromResponse(resp.String())
+	require.NoError(n.t, err)
+	_ = os.Remove(localProposalFile)
+	n.LogActionF("successfully submitted modify tax exemption zone proposal")
+	return proposalID
+}
+
+func (n *NodeConfig) SubmitRemoveTaxExemptionZoneProposal(zone string, walletName string) int {
+	n.LogActionF("submitting remove tax exemption zone proposal: zone=%s", zone)
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	proposal := map[string]any{
+		"messages": []any{
+			map[string]any{
+				"@type":     "/terra.taxexemption.v1.MsgRemoveTaxExemptionZone",
+				"zone":      zone,
+				"authority": authority,
+			},
+		},
+		"metadata": "",
+		"deposit":  deposit,
+		"title":    "remove tax exemption zone",
+		"summary":  "remove tax exemption zone",
+	}
+	bz, err := json.Marshal(proposal)
+	require.NoError(n.t, err)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.Write(bz)
+	require.NoError(n.t, err)
+	require.NoError(n.t, f.Close())
+
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	proposalID, err := extractProposalIDFromResponse(resp.String())
+	require.NoError(n.t, err)
+	_ = os.Remove(localProposalFile)
+	n.LogActionF("successfully submitted remove tax exemption zone proposal")
+	return proposalID
+}
+
+func (n *NodeConfig) SubmitAddTaxExemptionAddressProposal(zone string, addresses []string, walletName string) int {
+	n.LogActionF("submitting add tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	proposal := map[string]any{
+		"messages": []any{
+			map[string]any{
+				"@type":     "/terra.taxexemption.v1.MsgAddTaxExemptionAddress",
+				"zone":      zone,
+				"addresses": addresses,
+				"authority": authority,
+			},
+		},
+		"metadata": "",
+		"deposit":  deposit,
+		"title":    "add tax exemption address",
+		"summary":  "add tax exemption address",
+	}
+	bz, err := json.Marshal(proposal)
+	require.NoError(n.t, err)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.Write(bz)
+	require.NoError(n.t, err)
+	require.NoError(n.t, f.Close())
+
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	proposalID, err := extractProposalIDFromResponse(resp.String())
+	require.NoError(n.t, err)
+	_ = os.Remove(localProposalFile)
+	n.LogActionF("successfully submitted add tax exemption address proposal")
+	return proposalID
+}
+
+func (n *NodeConfig) SubmitRemoveTaxExemptionAddressProposal(zone string, addresses []string, walletName string) int {
+	n.LogActionF("submitting remove tax exemption address proposal: zone=%s addresses=%s", zone, strings.Join(addresses, ","))
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	proposal := map[string]any{
+		"messages": []any{
+			map[string]any{
+				"@type":     "/terra.taxexemption.v1.MsgRemoveTaxExemptionAddress",
+				"zone":      zone,
+				"addresses": addresses,
+				"authority": authority,
+			},
+		},
+		"metadata": "",
+		"deposit":  deposit,
+		"title":    "remove tax exemption address",
+		"summary":  "remove tax exemption address",
+	}
+	bz, err := json.Marshal(proposal)
+	require.NoError(n.t, err)
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.Write(bz)
+	require.NoError(n.t, err)
+	require.NoError(n.t, f.Close())
+
+	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	proposalID, err := extractProposalIDFromResponse(resp.String())
+	require.NoError(n.t, err)
+	_ = os.Remove(localProposalFile)
+	n.LogActionF("successfully submitted remove tax exemption address proposal")
 	return proposalID
 }
 
@@ -170,7 +391,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin) {
 
 func (n *NodeConfig) DepositProposal(proposalNumber int) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin(initialization.TerraDenom, sdk.NewInt(20*assets.MicroUnit)).String()
+	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
 	cmd := []string{"terrad", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -305,7 +526,7 @@ type resultStatus struct {
 	ValidatorInfo validatorInfo
 }
 
-func (n *NodeConfig) Status() (resultStatus, error) { //nolint
+func (n *NodeConfig) Status() (resultStatus, error) {
 	cmd := []string{"terrad", "status"}
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
 	if err != nil {
@@ -322,6 +543,34 @@ func (n *NodeConfig) Status() (resultStatus, error) { //nolint
 		return resultStatus{}, err
 	}
 	return result, nil
+}
+
+// Unjail broadcasts an unjail tx and returns any broadcast-level error.
+// It does NOT assert on-chain delivery; callers must verify via QuerySigningInfo.
+// Returning an error (rather than panicking) lets callers retry inside Eventually.
+func (n *NodeConfig) Unjail(walletName string) error {
+	n.LogActionF("unjailing validator using wallet %s", walletName)
+	cmd := []string{
+		"terrad", "tx", "slashing", "unjail",
+		fmt.Sprintf("--from=%s", walletName),
+		fmt.Sprintf("--chain-id=%s", n.chainID),
+		"--yes", "--keyring-backend=test", "--log_format=json",
+		fmt.Sprintf("--gas=%d", containers.GasLimit), "--fees=0uluna",
+	}
+	_, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "txhash", false)
+	if err != nil {
+		return err
+	}
+	n.LogActionF("successfully broadcast unjail tx from wallet %s", walletName)
+	return nil
+}
+
+func (n *NodeConfig) DelegateFeedConsent(feederAddr string, walletName string) {
+	n.LogActionF("delegating feed consent to %s from wallet %s", feederAddr, walletName)
+	cmd := []string{"terrad", "tx", "oracle", "set-feeder", feederAddr, fmt.Sprintf("--from=%s", walletName)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully delegated feed consent to %s", feederAddr)
 }
 
 func (n *NodeConfig) SubmitOracleAggregatePrevote(salt string, amount string) {

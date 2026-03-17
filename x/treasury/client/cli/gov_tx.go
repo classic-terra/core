@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/classic-terra/core/v3/x/treasury/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,9 +56,6 @@ $ %s tx gov submit-legacy-proposal add-burn-tax-exemption-address terra1dczz24r3
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
 			if err != nil {
-				return err
-			}
-			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -115,9 +112,6 @@ $ %s tx gov submit-proposal remove-burn-tax-exemption-address terra1dczz24r33fwl
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
 			if err != nil {
-				return err
-			}
-			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 

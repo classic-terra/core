@@ -3,14 +3,12 @@ package keeper
 import (
 	"testing"
 
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/types"
-
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueryParams(t *testing.T) {
@@ -50,7 +48,7 @@ func TestQueryTaxCap(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := sdk.WrapSDKContext(input.Ctx)
 
-	taxCap := sdk.NewInt(1000000000)
+	taxCap := sdkmath.NewInt(1000000000)
 	input.TreasuryKeeper.SetTaxCap(input.Ctx, core.MicroKRWDenom, taxCap)
 
 	querier := NewQuerier(input.TreasuryKeeper)
@@ -67,9 +65,9 @@ func TestQueryTaxCaps(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := sdk.WrapSDKContext(input.Ctx)
 
-	input.TreasuryKeeper.SetTaxCap(input.Ctx, "ukrw", sdk.NewInt(1000000000))
-	input.TreasuryKeeper.SetTaxCap(input.Ctx, "usdr", sdk.NewInt(1000000))
-	input.TreasuryKeeper.SetTaxCap(input.Ctx, "uusd", sdk.NewInt(1200000))
+	input.TreasuryKeeper.SetTaxCap(input.Ctx, "ukrw", sdkmath.NewInt(1000000000))
+	input.TreasuryKeeper.SetTaxCap(input.Ctx, "usdr", sdkmath.NewInt(1000000))
+	input.TreasuryKeeper.SetTaxCap(input.Ctx, "uusd", sdkmath.NewInt(1200000))
 
 	// Get a currency super random; should default to policy coin.
 	querier := NewQuerier(input.TreasuryKeeper)
@@ -78,13 +76,13 @@ func TestQueryTaxCaps(t *testing.T) {
 
 	require.Equal(t, []types.QueryTaxCapsResponseItem{{
 		Denom:  "ukrw",
-		TaxCap: sdk.NewInt(1000000000),
+		TaxCap: sdkmath.NewInt(1000000000),
 	}, {
 		Denom:  "usdr",
-		TaxCap: sdk.NewInt(1000000),
+		TaxCap: sdkmath.NewInt(1000000),
 	}, {
 		Denom:  "uusd",
-		TaxCap: sdk.NewInt(1200000),
+		TaxCap: sdkmath.NewInt(1200000),
 	}}, res.TaxCaps)
 }
 
@@ -92,7 +90,7 @@ func TestQueryTaxProceeds(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := sdk.WrapSDKContext(input.Ctx)
 
-	taxProceeds := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdk.NewInt(100)), sdk.NewCoin(core.MicroKRWDenom, sdk.NewInt(100)))
+	taxProceeds := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(100)), sdk.NewCoin(core.MicroKRWDenom, sdkmath.NewInt(100)))
 	input.TreasuryKeeper.SetEpochTaxProceeds(input.Ctx, taxProceeds)
 
 	querier := NewQuerier(input.TreasuryKeeper)
@@ -107,7 +105,7 @@ func TestQuerySeigniorageProceeds(t *testing.T) {
 	input := CreateTestInput(t)
 	ctx := sdk.WrapSDKContext(input.Ctx)
 
-	targetSeigniorage := sdk.NewInt(10)
+	targetSeigniorage := sdkmath.NewInt(10)
 
 	input.TreasuryKeeper.RecordEpochInitialIssuance(input.Ctx)
 
@@ -137,15 +135,15 @@ func TestQueryIndicators(t *testing.T) {
 	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(addr1, val1, stakingAmt))
 	require.NoError(t, err)
 
-	staking.EndBlocker(input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek)-1), input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(input.Ctx.WithBlockHeight(int64(core.BlocksPerWeek) - 1))
 
-	proceedsAmt := sdk.NewInt(1000000000000)
+	proceedsAmt := sdkmath.NewInt(1000000000000)
 	taxProceeds := sdk.NewCoins(sdk.NewCoin(core.MicroSDRDenom, proceedsAmt))
 	input.TreasuryKeeper.RecordEpochTaxProceeds(input.Ctx, taxProceeds)
 
 	targetIndicators := &types.QueryIndicatorsResponse{
-		TRLYear:  sdk.NewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
-		TRLMonth: sdk.NewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
+		TRLYear:  sdkmath.LegacyNewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
+		TRLMonth: sdkmath.LegacyNewDecFromInt(proceedsAmt).QuoInt(stakingAmt.MulRaw(2)),
 	}
 
 	querier := NewQuerier(input.TreasuryKeeper)

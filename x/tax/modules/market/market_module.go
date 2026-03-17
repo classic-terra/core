@@ -1,15 +1,15 @@
 package market
 
 import (
-	"github.com/classic-terra/core/v3/x/tax/handlers"
-
-	"github.com/classic-terra/core/v3/x/market"
-	"github.com/classic-terra/core/v3/x/market/keeper"
-	"github.com/classic-terra/core/v3/x/market/types"
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	"github.com/classic-terra/core/v4/x/market"
+	"github.com/classic-terra/core/v4/x/market/keeper"
+	"github.com/classic-terra/core/v4/x/market/types"
+	"github.com/classic-terra/core/v4/x/tax/handlers"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
@@ -50,4 +50,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), handlers.NewMarketMsgServer(am.keeper, am.treasuryKeeper, am.taxKeeper, origMsgServer))
 	querier := keeper.NewQuerier(am.keeper)
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
+}
+
+func (am AppModule) RegisterStoreDecoder(reg simulation.StoreDecoderRegistry) {
+	/* TODO */
 }

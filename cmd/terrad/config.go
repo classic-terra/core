@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	//	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -18,11 +19,11 @@ const (
 // TerraAppConfig terra specify app config
 type TerraAppConfig struct {
 	serverconfig.Config
-	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+	Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
 }
 
 // ConfigTemplate toml snippet for app.toml
-func WasmConfigTemplate(c wasmtypes.WasmConfig) string {
+func WasmConfigTemplate(c wasmtypes.NodeConfig) string {
 	simGasLimit := `# simulation_gas_limit =`
 	if c.SimulationGasLimit != nil {
 		simGasLimit = fmt.Sprintf(`simulation_gas_limit = %d`, *c.SimulationGasLimit)
@@ -50,7 +51,7 @@ memory_cache_size = %d
 
 // DefaultConfigTemplate toml snippet with default values for app.toml
 func DefaultWasmConfigTemplate() string {
-	return WasmConfigTemplate(wasmtypes.DefaultWasmConfig())
+	return WasmConfigTemplate(wasmtypes.DefaultNodeConfig())
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -80,7 +81,7 @@ func initAppConfig() (string, interface{}) {
 
 	terraAppConfig := TerraAppConfig{
 		Config: *srvCfg,
-		Wasm:   wasmtypes.DefaultWasmConfig(),
+		Wasm:   wasmtypes.DefaultNodeConfig(),
 	}
 
 	terraAppTemplate := serverconfig.DefaultConfigTemplate + DefaultWasmConfigTemplate()

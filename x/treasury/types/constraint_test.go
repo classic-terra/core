@@ -3,9 +3,8 @@ package types
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestConstraintClamp(t *testing.T) {
@@ -24,13 +23,13 @@ func TestConstraintClamp(t *testing.T) {
 
 	// Case 3: try to update the new rate > maxRate
 	prevRate = taxPolicy.RateMax
-	newRate = taxPolicy.RateMax.Add(sdk.NewDecWithPrec(1, 3))
+	newRate = taxPolicy.RateMax.Add(sdkmath.LegacyNewDecWithPrec(1, 3))
 	clampedRate = taxPolicy.Clamp(prevRate, newRate)
 	require.Equal(t, taxPolicy.RateMax, clampedRate)
 
 	// Case 4: try to update the new rate < minRate
 	prevRate = taxPolicy.RateMin
-	newRate = taxPolicy.RateMin.Sub(sdk.NewDecWithPrec(1, 3))
+	newRate = taxPolicy.RateMin.Sub(sdkmath.LegacyNewDecWithPrec(1, 3))
 	clampedRate = taxPolicy.Clamp(prevRate, newRate)
 	require.Equal(t, taxPolicy.RateMin, clampedRate)
 }

@@ -275,28 +275,37 @@ ictest-ibc-pfm-terra: ictest-build
 ictest-oracle: ictest-build
 	@cd tests/interchaintest && go test -race -v -run TestOracle .
 
+ictest-ibc-v2: ictest-build
+	@cd tests/interchaintest && go test -race -v -run 'TestIBCv2' .
+
+ictest-upgrade-ibc: ictest-build
+	@cd tests/interchaintest && go test -race -v -run TestTerraClassicUpgradeIBC .
+ictest-all: ictest-start ictest-validator ictest-ibc ictest-ibc-hooks ictest-ibc-pfm ictest-ibc-pfm-terra ictest-oracle ictest-ibc-v2 ictest-upgrade-ibc		
+
 ictest-build: 
 	@DOCKER_BUILDKIT=1 docker build -t core:local -f ictest.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
+golangci_lint_cmd=golangci-lint
+golangci_version=v2.1.6
 
 lint:
-	golangci-lint run --out-format=tab
+	@echo "--> Running linter"
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
+	@$(golangci_lint_cmd) run --timeout=10m
 
 lint-fix:
-	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-
-lint-strict:
-	find . -path './_build' -prune -o -type f -name '*.go' -exec gofumpt -w -l {} +
-
-.PHONY: lint lint-fix lint-strict
+	@echo "--> Running linter"
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
+	@$(golangci_lint_cmd) run --fix --issues-exit-code=0
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	@go install mvdan.cc/gofumpt@latest
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go" -not -path "./crypto/keys/secp256k1/*" | xargs gofumpt -w -l
+	$(golangci_lint_cmd) run --fix
 .PHONY: format
 
 ###############################################################################

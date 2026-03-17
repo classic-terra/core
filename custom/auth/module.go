@@ -1,15 +1,14 @@
 package auth
 
 import (
+	customsim "github.com/classic-terra/core/v4/custom/auth/simulation"
+	customtypes "github.com/classic-terra/core/v4/custom/auth/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	customsim "github.com/classic-terra/core/v3/custom/auth/simulation"
-	customtypes "github.com/classic-terra/core/v3/custom/auth/types"
 )
 
 var (
@@ -26,7 +25,8 @@ type AppModuleBasic struct {
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
-	*types.ModuleCdc = *customtypes.ModuleCdc
+	// Note: In SDK 0.50, types.ModuleCdc is no longer available
+	// *types.ModuleCdc = *customtypes.ModuleCdc
 }
 
 // ____________________________________________________________________________

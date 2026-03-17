@@ -4,22 +4,21 @@ import (
 	"sort"
 	"testing"
 
-	fuzz "github.com/google/gofuzz"
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/oracle"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v3/x/oracle"
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	fuzz "github.com/google/gofuzz"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFuzz_Tally(t *testing.T) {
 	validators := map[string]int64{}
 
 	f := fuzz.New().NilChance(0).Funcs(
-		func(e *sdk.Dec, c fuzz.Continue) {
-			*e = sdk.NewDec(c.Int63())
+		func(e *sdkmath.LegacyDec, c fuzz.Continue) {
+			*e = sdkmath.LegacyNewDec(c.Int63())
 		},
 		func(e *map[string]int64, c fuzz.Continue) {
 			numValidators := c.Intn(100) + 5
@@ -40,7 +39,7 @@ func TestFuzz_Tally(t *testing.T) {
 			for addr, power := range validators {
 				addr, _ := sdk.ValAddressFromBech32(addr)
 
-				var rate sdk.Dec
+				var rate sdkmath.LegacyDec
 				c.Fuzz(&rate)
 
 				ballot = append(ballot, types.NewVoteForTally(rate, c.RandString(), addr, power))
@@ -61,7 +60,7 @@ func TestFuzz_Tally(t *testing.T) {
 	ballot := types.ExchangeRateBallot{}
 	f.Fuzz(&ballot)
 
-	var rewardBand sdk.Dec
+	var rewardBand sdkmath.LegacyDec
 	f.Fuzz(&rewardBand)
 
 	require.NotPanics(t, func() {
@@ -80,12 +79,12 @@ func TestFuzz_PickReferenceTerra(t *testing.T) {
 				*e = append(*e, c.RandString())
 			}
 		},
-		func(e *sdk.Dec, c fuzz.Continue) {
-			*e = sdk.NewDec(c.Int63())
+		func(e *sdkmath.LegacyDec, c fuzz.Continue) {
+			*e = sdkmath.LegacyNewDec(c.Int63())
 		},
-		func(e *map[string]sdk.Dec, c fuzz.Continue) {
+		func(e *map[string]sdkmath.LegacyDec, c fuzz.Continue) {
 			for _, denom := range denoms {
-				var rate sdk.Dec
+				var rate sdkmath.LegacyDec
 				c.Fuzz(&rate)
 
 				(*e)[denom] = rate
@@ -107,7 +106,7 @@ func TestFuzz_PickReferenceTerra(t *testing.T) {
 				for addr, power := range validators {
 					addr, _ := sdk.ValAddressFromBech32(addr)
 
-					var rate sdk.Dec
+					var rate sdkmath.LegacyDec
 					c.Fuzz(&rate)
 
 					ballot = append(ballot, types.NewVoteForTally(rate, denom, addr, power))
@@ -124,7 +123,7 @@ func TestFuzz_PickReferenceTerra(t *testing.T) {
 
 	input, _ := setup(t)
 
-	voteTargets := map[string]sdk.Dec{}
+	voteTargets := map[string]sdkmath.LegacyDec{}
 	f.Fuzz(&voteTargets)
 
 	voteMap := map[string]types.ExchangeRateBallot{}

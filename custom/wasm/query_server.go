@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	legacyupgrade "github.com/classic-terra/core/v4/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

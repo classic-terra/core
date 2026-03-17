@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	gogotypes "github.com/gogo/protobuf/types"
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/oracle/keeper"
+	sim "github.com/classic-terra/core/v4/x/oracle/simulation"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/keeper"
-	sim "github.com/classic-terra/core/v3/x/oracle/simulation"
-	"github.com/classic-terra/core/v3/x/oracle/types"
+	gogotypes "github.com/gogo/protobuf/types"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -28,16 +26,16 @@ func TestDecodeDistributionStore(t *testing.T) {
 	cdc := keeper.MakeTestCodec(t)
 	dec := sim.NewDecodeStore(cdc)
 
-	exchangeRate := sdk.NewDecWithPrec(1234, 1)
+	exchangeRate := sdkmath.LegacyNewDecWithPrec(1234, 1)
 	missCounter := uint64(23)
 
 	aggregatePrevote := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash([]byte("12345")), valAddr, 123)
 	aggregateVote := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
-		{Denom: core.MicroKRWDenom, ExchangeRate: sdk.NewDecWithPrec(1234, 1)},
-		{Denom: core.MicroKRWDenom, ExchangeRate: sdk.NewDecWithPrec(4321, 1)},
+		{Denom: core.MicroKRWDenom, ExchangeRate: sdkmath.LegacyNewDecWithPrec(1234, 1)},
+		{Denom: core.MicroKRWDenom, ExchangeRate: sdkmath.LegacyNewDecWithPrec(4321, 1)},
 	}, valAddr)
 
-	tobinTax := sdk.NewDecWithPrec(2, 2)
+	tobinTax := sdkmath.LegacyNewDecWithPrec(2, 2)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

@@ -4,29 +4,28 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/keeper"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/keeper"
-	"github.com/classic-terra/core/v3/x/treasury/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
 	cdc := keeper.MakeTestCodec(t)
 	dec := NewDecodeStore(cdc)
 
-	taxRate := sdk.NewDecWithPrec(123, 2)
-	rewardWeight := sdk.NewDecWithPrec(532, 2)
-	taxCap := sdk.NewInt(1600)
+	taxRate := sdkmath.LegacyNewDecWithPrec(123, 2)
+	rewardWeight := sdkmath.LegacyNewDecWithPrec(532, 2)
+	taxCap := sdkmath.NewInt(1600)
 	taxProceeds := sdk.NewCoins(sdk.NewInt64Coin(core.MicroKRWDenom, 123124), sdk.NewInt64Coin(core.MicroSDRDenom, 123124))
 	epochInitialIssuance := sdk.NewCoins(sdk.NewInt64Coin(core.MicroKRWDenom, 645352342))
 
-	TR := sdk.NewDecWithPrec(123, 2)
-	SR := sdk.NewDecWithPrec(43523, 4)
-	TSL := sdk.NewInt(1245213)
+	TR := sdkmath.LegacyNewDecWithPrec(123, 2)
+	SR := sdkmath.LegacyNewDecWithPrec(43523, 4)
+	TSL := sdkmath.NewInt(1245213)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

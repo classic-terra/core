@@ -4,12 +4,12 @@ import (
 	fmt "fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesttypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -82,8 +82,8 @@ func (lgva LazyGradedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coi
 	for _, ovc := range lgva.OriginalVesting {
 		if vestingSchedule, exists := lgva.GetVestingSchedule(ovc.Denom); exists {
 			vestedRatio := vestingSchedule.GetVestedRatio(blockTime.Unix())
-			vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(vestedRatio).RoundInt()
-			if vestedAmt.Equal(sdk.ZeroInt()) {
+			vestedAmt := math.LegacyNewDecFromInt(ovc.Amount).Mul(vestedRatio).RoundInt()
+			if vestedAmt.Equal(math.ZeroInt()) {
 				continue
 			}
 			vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
@@ -103,7 +103,7 @@ func (lgva LazyGradedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Co
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked).
 func (lgva LazyGradedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return lgva.BaseVestingAccount.LockedCoinsFromVesting(lgva.GetVestingCoins(blockTime))
+	return lgva.LockedCoinsFromVesting(lgva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a delegation amount for any given vesting account type

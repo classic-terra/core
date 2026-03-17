@@ -1,28 +1,28 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/x/market/types"
-
+	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/market/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BasePool is liquidity pool(usdr unit) which will be made available per PoolRecoveryPeriod
-func (k Keeper) BasePool(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) BasePool(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyBasePool, &res)
-	return
+	return res
 }
 
 // MinStabilitySpread is the minimum spread applied to swaps to / from Luna.
 // Intended to prevent swing trades exploiting oracle period delays
-func (k Keeper) MinStabilitySpread(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MinStabilitySpread(ctx sdk.Context) (res math.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMinStabilitySpread, &res)
-	return
+	return res
 }
 
 // PoolRecoveryPeriod is the period required to recover Terra&Luna Pools to the MintBasePool & BurnBasePool
 func (k Keeper) PoolRecoveryPeriod(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyPoolRecoveryPeriod, &res)
-	return
+	return res
 }
 
 // GetParams returns the total set of market parameters.

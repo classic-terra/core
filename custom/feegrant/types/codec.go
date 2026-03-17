@@ -1,9 +1,9 @@
 package types
 
 import (
+	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/authz interfaces and concrete types

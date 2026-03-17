@@ -4,12 +4,10 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/classic-terra/core/v4/x/oracle/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
-
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestAggregateVoteHash(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/classic-terra/core/v3/tests/e2e/initialization"
+	"github.com/classic-terra/core/v4/tests/e2e/initialization"
 )
 
 func main() {
@@ -45,7 +45,7 @@ func main() {
 
 	b, _ := json.Marshal(createdChain)
 	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainID)
-	if err = os.WriteFile(fileName, b, 0o777); err != nil { //nolint
+	if err = os.WriteFile(fileName, b, 0o777); err != nil {
 		panic(err)
 	}
 }

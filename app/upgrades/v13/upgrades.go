@@ -1,20 +1,19 @@
-//nolint:revive
 package v13
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
-	"github.com/classic-terra/core/v3/app/keepers"
-	"github.com/classic-terra/core/v3/app/upgrades"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/classic-terra/core/v4/app/keepers"
+	"github.com/classic-terra/core/v4/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // Helper for saving sequence keys
@@ -29,10 +28,10 @@ func CreateV13UpgradeHandler(
 	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// Perform wasm key migration
 		wasmStoreKey := keepers.GetKey(wasmtypes.StoreKey)
-		if err := migrateWasmKeys(ctx, keepers.WasmKeeper, wasmStoreKey); err != nil {
+		if err := migrateWasmKeys(sdk.UnwrapSDKContext(ctx), keepers.WasmKeeper, wasmStoreKey); err != nil {
 			return nil, err
 		}
 		return mm.RunMigrations(ctx, cfg, fromVM)
@@ -83,7 +82,7 @@ func migrateWasmKeys(ctx sdk.Context, wasmKeeper wasmkeeper.Keeper, wasmStoreKey
 
 // migrateContractKeys move contracts key from 0x04 -> 0x02
 // 0x04/"length-prefixed-contract-addr" -> 0x02/"raw-contract-addr"
-func migrateContractKeys(ctx sdk.Context, store sdk.KVStore) error {
+func migrateContractKeys(ctx sdk.Context, store storetypes.KVStore) error {
 	oldPrefix := LegacyPrefixes.ContractKeyPrefix
 	newPrefix := wasmtypes.ContractKeyPrefix
 
@@ -112,7 +111,7 @@ func migrateContractKeys(ctx sdk.Context, store sdk.KVStore) error {
 }
 
 // saveSequenceKeys save sequence keys temporarily, then delete from store for later migration
-func saveSequenceKeys(ctx sdk.Context, store sdk.KVStore) sequenceKeys {
+func saveSequenceKeys(ctx sdk.Context, store storetypes.KVStore) sequenceKeys {
 	oldCodeIDKey := LegacyPrefixes.KeySequenceCodeID
 	oldInstanceIDKey := LegacyPrefixes.KeySequenceInstanceID
 
@@ -135,7 +134,7 @@ func saveSequenceKeys(ctx sdk.Context, store sdk.KVStore) sequenceKeys {
 // migrateSequenceKeys migrates the saved sequence keys from old to new prefix
 // 0x01 → 0x04/"lastCodeId"
 // 0x02 → 0x04/"lastContractId"
-func migrateSequenceKeys(ctx sdk.Context, store sdk.KVStore, seq sequenceKeys) error {
+func migrateSequenceKeys(ctx sdk.Context, store storetypes.KVStore, seq sequenceKeys) error {
 	newKey := wasmtypes.KeySequenceCodeID
 	if !store.Has(newKey) {
 		if seq.codeIDValue == nil {
@@ -158,7 +157,7 @@ func migrateSequenceKeys(ctx sdk.Context, store sdk.KVStore, seq sequenceKeys) e
 }
 
 // migrateContractHistoryKey migrates contract history keys from 0x06 -> 0x04
-func migrateContractHistoryKey(ctx sdk.Context, store sdk.KVStore) error {
+func migrateContractHistoryKey(ctx sdk.Context, store storetypes.KVStore) error {
 	oldPrefix := LegacyPrefixes.ContractCodeHistoryElementPrefix
 	newPrefix := wasmtypes.ContractCodeHistoryElementPrefix
 
@@ -169,7 +168,7 @@ func migrateContractHistoryKey(ctx sdk.Context, store sdk.KVStore) error {
 }
 
 // migrateSecondaryIndexKeys migrates secondary index keys from 0x10 -> 0x06
-func migrateSecondaryIndexKeys(ctx sdk.Context, store sdk.KVStore) error {
+func migrateSecondaryIndexKeys(ctx sdk.Context, store storetypes.KVStore) error {
 	oldPrefix := LegacyPrefixes.ContractByCodeIDAndCreatedSecondaryIndexPrefix
 	newPrefix := wasmtypes.ContractByCodeIDAndCreatedSecondaryIndexPrefix
 
@@ -197,7 +196,7 @@ func migrateSecondaryIndexKeys(ctx sdk.Context, store sdk.KVStore) error {
 }
 
 // migrateContractStoreKeys migrates contract store keys from old to new prefix
-func migrateContractStoreKeys(ctx sdk.Context, store sdk.KVStore) error {
+func migrateContractStoreKeys(ctx sdk.Context, store storetypes.KVStore) error {
 	oldPrefix := LegacyPrefixes.ContractStorePrefix
 	newPrefix := wasmtypes.ContractStorePrefix
 
@@ -207,7 +206,7 @@ func migrateContractStoreKeys(ctx sdk.Context, store sdk.KVStore) error {
 	return nil
 }
 
-func migrateDirectContractStoreKeys(ctx sdk.Context, store sdk.KVStore, oldPrefix, newPrefix []byte) int {
+func migrateDirectContractStoreKeys(ctx sdk.Context, store storetypes.KVStore, oldPrefix, newPrefix []byte) int {
 	directOldStore := prefix.NewStore(store, oldPrefix)
 	directOldIter := directOldStore.Iterator(nil, nil)
 	defer directOldIter.Close()
@@ -252,7 +251,7 @@ func rebuildCompositeKey(ctx sdk.Context, originalKey []byte) []byte {
 	return originalKey
 }
 
-func migrateParamsKey(store sdk.KVStore) error {
+func migrateParamsKey(store storetypes.KVStore) error {
 	oldKey := LegacyPrefixes.ParamsKey
 	newKey := wasmtypes.ParamsKey
 
@@ -267,7 +266,7 @@ func migrateParamsKey(store sdk.KVStore) error {
 	return nil
 }
 
-func migrateCodeKeys(ctx sdk.Context, store sdk.KVStore) error {
+func migrateCodeKeys(ctx sdk.Context, store storetypes.KVStore) error {
 	oldPrefix := LegacyPrefixes.CodeKeyPrefix
 	newPrefix := wasmtypes.CodeKeyPrefix
 
@@ -330,7 +329,7 @@ func removeLengthPrefixIfNeeded(b []byte) (out []byte, stripped bool) {
 }
 
 // Generic prefix migration from an old prefix to a new prefix
-func migratePrefix(ctx sdk.Context, store sdk.KVStore, oldPrefix, newPrefix []byte, name string) error {
+func migratePrefix(ctx sdk.Context, store storetypes.KVStore, oldPrefix, newPrefix []byte, name string) error {
 	oldStore := prefix.NewStore(store, oldPrefix)
 	iterator := oldStore.Iterator(nil, nil)
 	defer iterator.Close()

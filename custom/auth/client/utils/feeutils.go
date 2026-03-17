@@ -4,19 +4,16 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	"github.com/spf13/pflag"
-
+	marketexported "github.com/classic-terra/core/v4/x/market/exported"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
+	treasuryexported "github.com/classic-terra/core/v4/x/treasury/exported"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	marketexported "github.com/classic-terra/core/v3/x/market/exported"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
-	treasuryexported "github.com/classic-terra/core/v3/x/treasury/exported"
+	"github.com/spf13/pflag"
 )
 
 type (
@@ -72,11 +69,11 @@ func ComputeFeesWithCmd(
 	gasPrices := txf.GasPrices()
 
 	if !gasPrices.IsZero() {
-		glDec := sdk.NewDec(int64(gas))
-		adjustment := sdk.NewDecWithPrec(int64(txf.GasAdjustment())*100, 2)
+		glDec := math.LegacyNewDec(int64(gas))
+		adjustment := math.LegacyNewDecWithPrec(int64(txf.GasAdjustment())*100, 2)
 
-		if adjustment.LT(sdk.OneDec()) {
-			adjustment = sdk.OneDec()
+		if adjustment.LT(math.LegacyOneDec()) {
+			adjustment = math.LegacyOneDec()
 		}
 
 		// Derive the fees based on the provided gas prices, where
@@ -150,7 +147,7 @@ func FilterMsgAndComputeTax(clientCtx client.Context, msgs ...sdk.Msg) (taxes sd
 }
 
 // computes the stability tax according to tax-rate and tax-cap
-func computeTax(clientCtx client.Context, taxRate sdk.Dec, principal sdk.Coins) (taxes sdk.Coins, err error) {
+func computeTax(clientCtx client.Context, taxRate math.LegacyDec, principal sdk.Coins) (taxes sdk.Coins, err error) {
 	for _, coin := range principal {
 
 		taxCap, err := queryTaxCap(clientCtx, coin.Denom)
@@ -158,29 +155,29 @@ func computeTax(clientCtx client.Context, taxRate sdk.Dec, principal sdk.Coins) 
 			return nil, err
 		}
 
-		taxDue := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
+		taxDue := math.LegacyNewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
 
 		// If tax due is greater than the tax cap, cap!
 		if taxDue.GT(taxCap) {
 			taxDue = taxCap
 		}
 
-		if taxDue.Equal(sdk.ZeroInt()) {
+		if taxDue.Equal(math.ZeroInt()) {
 			continue
 		}
 
 		taxes = taxes.Add(sdk.NewCoin(coin.Denom, taxDue))
 	}
 
-	return
+	return taxes, err
 }
 
-func queryTaxRate(clientCtx client.Context) (sdk.Dec, error) {
+func queryTaxRate(clientCtx client.Context) (math.LegacyDec, error) {
 	queryClient := taxtypes.NewQueryClient(clientCtx)
 
 	res, err := queryClient.BurnTaxRate(context.Background(), &taxtypes.QueryBurnTaxRateRequest{})
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return math.LegacyZeroDec(), err
 	}
 	return res.TaxRate, err
 }
@@ -190,7 +187,7 @@ func queryTaxCap(clientCtx client.Context, denom string) (math.Int, error) {
 
 	res, err := queryClient.TaxCap(context.Background(), &treasuryexported.QueryTaxCapRequest{Denom: denom})
 	if err != nil {
-		return sdk.NewInt(0), err
+		return math.ZeroInt(), err
 	}
 	return res.TaxCap, err
 }

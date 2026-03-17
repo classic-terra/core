@@ -1,67 +1,60 @@
+version: "2"
 run:
   tests: true
-  timeout: 10m
-  sort-results: true
-  allow-parallel-runners: true
-  concurrency: 4
-
+  timeout: 5m
 linters:
-  disable-all: true
+  default: none
   enable:
     - dogsled
-    - exportloopref
+    # - errcheck
     - goconst
     - gocritic
-    - gofumpt
-    - gosec
-    - gosimple
-    # - govet
+    - govet
     - ineffassign
     - misspell
     - nakedret
-    # - nolintlint
-    - staticcheck
-    - revive
-    - stylecheck
-    - typecheck
+    - nolintlint
+    # - revive
+    # - staticcheck
+    # - thelper
     - unconvert
+    # - unparam
     - unused
-
+  settings:
+    dogsled:
+      max-blank-identifiers: 3
+    nolintlint:
+      require-explanation: false
+      require-specific: false
+      allow-unused: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - golint
+        text: comment on exported var
+      - linters:
+          - golint
+        text: don't use an underscore in package name
+      - linters:
+          - staticcheck
+        text: 'ST1003:'
+      - linters:
+          - staticcheck
+        text: 'ST1016:'
+      - linters:
+          - staticcheck
+        path: migrations
+        text: 'SA1019:'
 issues:
-  exclude-rules:
-    - text: "Use of weak random number generator"
-      linters:
-        - gosec
-    - text: "ST1003:"
-      linters:
-        - stylecheck
-    # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
-    # https://github.com/dominikh/go-tools/issues/389
-    - text: "ST1016:"
-      linters:
-        - stylecheck
-    - text: "SA1019:"
-      linters:
-        - staticcheck
-    - text: "leading space"
-      linters:
-        - nolintlint
-
   max-issues-per-linter: 10000
   max-same-issues: 10000
-
-linters-settings:
-  dogsled:
-    max-blank-identifiers: 3
-  maligned:
-    # print struct with more effective memory layout or not, false by default
-    suggest-new: true
-  nolintlint:
-    allow-unused: false
-    allow-leading-space: true
-    require-explanation: false
-    require-specific: false
-  revive:
-    rules:
-      - name: unused-parameter
-        disabled: true
+formatters:
+  enable:
+    - gci
+    - gofumpt

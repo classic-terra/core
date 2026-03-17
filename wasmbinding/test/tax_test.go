@@ -3,16 +3,17 @@ package wasmbinding_test
 import (
 	"encoding/json"
 
+	sdkmath "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	core "github.com/classic-terra/core/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	core "github.com/classic-terra/core/v4/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v3/wasmbinding/test
+// go test -v -run ^TestWasmTestSuite/TestTax$ github.com/classic-terra/core/v4/wasmbinding/test
 func (s *WasmTestSuite) TestTax() {
 	s.SetupTest()
-	taxRate := sdk.NewDecWithPrec(11, 2)            // 11%
+	taxRate := sdkmath.LegacyNewDecWithPrec(11, 2)  // 11%
 	s.App.TreasuryKeeper.SetTaxRate(s.Ctx, taxRate) // 11%
 
 	payer := s.TestAccs[0]
@@ -26,7 +27,7 @@ func (s *WasmTestSuite) TestTax() {
 
 	// make a bank send message
 	coin := sdk.NewInt64Coin(core.MicroLunaDenom, 10000)
-	taxAmount := sdk.NewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
+	taxAmount := sdkmath.LegacyNewDecFromInt(coin.Amount).Mul(taxRate).TruncateInt()
 	updateAmt := coin.Amount.Add(taxAmount)
 	updatedCoins := sdk.NewCoins(sdk.NewInt64Coin(core.MicroLunaDenom, updateAmt.Int64()))
 	reflectMsg := ReflectExec{
@@ -53,5 +54,5 @@ func (s *WasmTestSuite) TestTax() {
 
 	// check balance
 	res := s.App.BankKeeper.GetAllBalances(s.Ctx, payer)
-	s.Require().Equal(sdk.NewInt(1000000000).Sub(updateAmt), res.AmountOf(core.MicroLunaDenom))
+	s.Require().Equal(sdkmath.NewInt(1000000000).Sub(updateAmt), res.AmountOf(core.MicroLunaDenom))
 }

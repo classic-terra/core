@@ -3,9 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 )
 
 // Oracle Errors

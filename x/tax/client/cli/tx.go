@@ -1,11 +1,9 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
-
+	"github.com/classic-terra/core/v4/x/tax/types"
 	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/classic-terra/core/v3/x/tax/types"
+	"github.com/spf13/cobra"
 )
 
 // NewTxCmd returns a root CLI command handler for certain modules transaction commands.

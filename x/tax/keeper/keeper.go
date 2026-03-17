@@ -3,12 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
-
-	"github.com/classic-terra/core/v3/x/tax/types"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	slog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/classic-terra/core/v4/x/tax/types"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -61,7 +61,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(ctx sdk.Context) slog.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
@@ -74,7 +74,7 @@ func (k Keeper) GetGasPrices(ctx sdk.Context) sdk.DecCoins {
 	return k.GetParams(ctx).GasPrices.Sort()
 }
 
-func (k Keeper) GetBurnTaxRate(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetBurnTaxRate(ctx sdk.Context) sdkmath.LegacyDec {
 	return k.GetParams(ctx).BurnTaxRate
 }
 
@@ -136,28 +136,25 @@ func (k Keeper) GetEffectiveGasPrices(ctx sdk.Context) sdk.DecCoins {
 	gasPrices := make(sdk.DecCoins, len(taxGasPrices))
 
 	for i, gasPrice := range taxGasPrices {
-		maxGasPrice := sdk.DecCoin{
-			Denom: gasPrice.Denom,
-			Amount: sdk.MaxDec(
-				minGasPrices.AmountOf(gasPrice.Denom),
-				gasPrice.Amount,
-			),
+		minAmt := minGasPrices.AmountOf(gasPrice.Denom)
+		maxAmt := gasPrice.Amount
+		if minAmt.GT(maxAmt) {
+			maxAmt = minAmt
 		}
-
-		gasPrices[i] = maxGasPrice
+		gasPrices[i] = sdk.DecCoin{Denom: gasPrice.Denom, Amount: maxAmt}
 	}
 
 	return gasPrices
 }
 
-func (k Keeper) GetGasPriceForDenom(ctx sdk.Context, denom string) sdk.Dec {
+func (k Keeper) GetGasPriceForDenom(ctx sdk.Context, denom string) sdkmath.LegacyDec {
 	for _, gasPrice := range k.GetGasPrices(ctx) {
 		if gasPrice.Denom == denom {
 			return gasPrice.Amount
 		}
 	}
 
-	return sdk.ZeroDec()
+	return sdkmath.LegacyZeroDec()
 }
 
 func (k Keeper) IsReverseCharge(ctx sdk.Context, emit bool) bool {

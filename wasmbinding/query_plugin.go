@@ -5,20 +5,17 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	"github.com/classic-terra/core/v4/wasmbinding/bindings"
+	marketkeeper "github.com/classic-terra/core/v4/x/market/keeper"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	oracletypes "github.com/classic-terra/core/v3/x/oracle/types"
-	treasurytypes "github.com/classic-terra/core/v3/x/treasury/types"
-
-	"github.com/classic-terra/core/v3/wasmbinding/bindings"
-	marketkeeper "github.com/classic-terra/core/v3/x/market/keeper"
-	markettypes "github.com/classic-terra/core/v3/x/market/types"
 )
 
 // TaxCapQueryResponse - tax cap query response for wasm module
@@ -40,7 +37,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		res, err := route(ctx, abci.RequestQuery{
+		res, err := route(ctx, &abci.RequestQuery{
 			Data: request.Data,
 			Path: request.Path,
 		})

@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
+	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -74,7 +74,7 @@ func (k Keeper) ClearBallots(ctx sdk.Context, votePeriod uint64) {
 }
 
 // ApplyWhitelist update vote target denom list and set tobin tax with params whitelist
-func (k Keeper) ApplyWhitelist(ctx sdk.Context, whitelist types.DenomList, voteTargets map[string]sdk.Dec) {
+func (k Keeper) ApplyWhitelist(ctx sdk.Context, whitelist types.DenomList, voteTargets map[string]math.LegacyDec) {
 	// check is there any update in whitelist params
 	updateRequired := false
 	if len(voteTargets) != len(whitelist) {

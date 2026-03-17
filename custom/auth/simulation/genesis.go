@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	customvestingtypes "github.com/classic-terra/core/v4/x/vesting/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	customvestingtypes "github.com/classic-terra/core/v3/x/vesting/types"
 )
 
 // Simulation parameter constants
@@ -33,7 +33,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccoun
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
-		if !(int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50) {
+		if int64(i) <= simState.NumBonded || simState.Rand.Intn(100) >= 50 {
 			genesisAccs[i] = bacc
 			continue
 		}
@@ -53,7 +53,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccoun
 				scheduleNum++
 			}
 
-			ratio := sdk.OneDec().QuoInt64(scheduleNum)
+			ratio := math.LegacyOneDec().QuoInt64(scheduleNum)
 			for i := int64(0); i < scheduleNum; i++ {
 				var endTime int64
 				startTime := simState.GenTimestamp.Unix()
@@ -110,31 +110,31 @@ func GenSigVerifyCostSECP256K1(r *rand.Rand) uint64 {
 func RandomizedGenState(simState *module.SimulationState, randGenAccountsFn types.RandomGenesisAccountsFn) {
 	var maxMemoChars uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxMemoChars, &maxMemoChars, simState.Rand,
+		MaxMemoChars, &maxMemoChars, simState.Rand,
 		func(r *rand.Rand) { maxMemoChars = GenMaxMemoChars(r) },
 	)
 
 	var txSigLimit uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, TxSigLimit, &txSigLimit, simState.Rand,
+		TxSigLimit, &txSigLimit, simState.Rand,
 		func(r *rand.Rand) { txSigLimit = GenTxSigLimit(r) },
 	)
 
 	var txSizeCostPerByte uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, TxSizeCostPerByte, &txSizeCostPerByte, simState.Rand,
+		TxSizeCostPerByte, &txSizeCostPerByte, simState.Rand,
 		func(r *rand.Rand) { txSizeCostPerByte = GenTxSizeCostPerByte(r) },
 	)
 
 	var sigVerifyCostED25519 uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SigVerifyCostED25519, &sigVerifyCostED25519, simState.Rand,
+		SigVerifyCostED25519, &sigVerifyCostED25519, simState.Rand,
 		func(r *rand.Rand) { sigVerifyCostED25519 = GenSigVerifyCostED25519(r) },
 	)
 
 	var sigVerifyCostSECP256K1 uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SigVerifyCostSECP256K1, &sigVerifyCostSECP256K1, simState.Rand,
+		SigVerifyCostSECP256K1, &sigVerifyCostSECP256K1, simState.Rand,
 		func(r *rand.Rand) { sigVerifyCostSECP256K1 = GenSigVerifyCostSECP256K1(r) },
 	)
 

@@ -2,12 +2,15 @@
 package v10_1
 
 import (
-	"github.com/classic-terra/core/v3/app/keepers"
-	"github.com/classic-terra/core/v3/app/upgrades"
-	taxtypes "github.com/classic-terra/core/v3/x/tax/types"
+	"context"
+
+	sdkmath "cosmossdk.io/math"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/classic-terra/core/v4/app/keepers"
+	"github.com/classic-terra/core/v4/app/upgrades"
+	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func CreateV101UpgradeHandler(
@@ -16,15 +19,16 @@ func CreateV101UpgradeHandler(
 	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		keepers.TreasuryKeeper.SetTaxRate(ctx, sdk.ZeroDec())
-		params := keepers.TreasuryKeeper.GetParams(ctx)
-		params.TaxPolicy.RateMax = sdk.ZeroDec()
-		params.TaxPolicy.RateMin = sdk.ZeroDec()
-		keepers.TreasuryKeeper.SetParams(ctx, params)
+	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		keepers.TreasuryKeeper.SetTaxRate(sdkCtx, sdkmath.LegacyZeroDec())
+		params := keepers.TreasuryKeeper.GetParams(sdkCtx)
+		params.TaxPolicy.RateMax = sdkmath.LegacyZeroDec()
+		params.TaxPolicy.RateMin = sdkmath.LegacyZeroDec()
+		keepers.TreasuryKeeper.SetParams(sdkCtx, params)
 
 		tax2gasParams := taxtypes.DefaultParams()
-		keepers.TaxKeeper.SetParams(ctx, tax2gasParams)
+		keepers.TaxKeeper.SetParams(sdkCtx, tax2gasParams)
 		return mm.RunMigrations(ctx, cfg, fromVM)
 	}
 }

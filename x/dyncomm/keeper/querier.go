@@ -3,9 +3,8 @@ package keeper
 import (
 	"context"
 
+	"github.com/classic-terra/core/v4/x/dyncomm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v3/x/dyncomm/types"
 )
 
 // querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over q

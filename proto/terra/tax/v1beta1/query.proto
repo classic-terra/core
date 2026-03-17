@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "terra/tax/v1beta1/genesis.proto";
 
-option go_package = "github.com/classic-terra/core/v3/x/tax/types";
+option go_package = "github.com/classic-terra/core/v4/x/tax/types";
 
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
@@ -24,8 +24,5 @@ message QueryParamsResponse {
 
 message QueryBurnTaxRateRequest {}
 message QueryBurnTaxRateResponse {
-  string tax_rate = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
+  string tax_rate = 1 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
 }

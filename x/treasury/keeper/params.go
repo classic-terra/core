@@ -1,77 +1,77 @@
 package keeper
 
 import (
-	"github.com/classic-terra/core/v3/x/treasury/types"
-
+	sdkmath "cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TaxPolicy defines constraints for TaxRate
 func (k Keeper) TaxPolicy(ctx sdk.Context) (res types.PolicyConstraints) {
 	k.paramSpace.Get(ctx, types.KeyTaxPolicy, &res)
-	return
+	return res
 }
 
 // RewardPolicy defines constraints for RewardWeight
 func (k Keeper) RewardPolicy(ctx sdk.Context) (res types.PolicyConstraints) {
 	k.paramSpace.Get(ctx, types.KeyRewardPolicy, &res)
-	return
+	return res
 }
 
 // SeigniorageBurdenTarget defines fixed target for the Seigniorage Burden. Between 0 and 1.
-func (k Keeper) SeigniorageBurdenTarget(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) SeigniorageBurdenTarget(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeySeigniorageBurdenTarget, &res)
-	return
+	return res
 }
 
 // MiningIncrement is a factor used to determine how fast MRL should grow over time
-func (k Keeper) MiningIncrement(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) MiningIncrement(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMiningIncrement, &res)
-	return
+	return res
 }
 
 // WindowShort is a short period window for moving average
 func (k Keeper) WindowShort(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyWindowShort, &res)
-	return
+	return res
 }
 
 // WindowLong is a long period window for moving average
 func (k Keeper) WindowLong(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyWindowLong, &res)
-	return
+	return res
 }
 
 // WindowProbation is a period of time to prevent updates
 func (k Keeper) WindowProbation(ctx sdk.Context) (res uint64) {
 	k.paramSpace.Get(ctx, types.KeyWindowProbation, &res)
-	return
+	return res
 }
 
-func (k Keeper) GetBurnSplitRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetBurnSplitRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyBurnTaxSplit, &res)
-	return
+	return res
 }
 
-func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdk.Dec) {
+func (k Keeper) SetBurnSplitRate(ctx sdk.Context, burnTaxSplit sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyBurnTaxSplit, burnTaxSplit)
 }
 
-func (k Keeper) GetMinInitialDepositRatio(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetMinInitialDepositRatio(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyMinInitialDepositRatio, &res)
-	return
+	return res
 }
 
-func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRatio sdk.Dec) {
+func (k Keeper) SetMinInitialDepositRatio(ctx sdk.Context, minInitialDepositRatio sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyMinInitialDepositRatio, minInitialDepositRatio)
 }
 
-func (k Keeper) GetOracleSplitRate(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) GetOracleSplitRate(ctx sdk.Context) (res sdkmath.LegacyDec) {
 	k.paramSpace.Get(ctx, types.KeyOracleSplit, &res)
-	return
+	return res
 }
 
-func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdk.Dec) {
+func (k Keeper) SetOracleSplitRate(ctx sdk.Context, oracleSplit sdkmath.LegacyDec) {
 	k.paramSpace.Set(ctx, types.KeyOracleSplit, oracleSplit)
 }
 

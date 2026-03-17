@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/oracle/types"
-
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServer_FeederDelegation(t *testing.T) {
@@ -144,7 +141,7 @@ func TestMsgServer_AggregatePrevoteVote(t *testing.T) {
 
 var (
 	stakingAmt         = sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
-	randomExchangeRate = sdk.NewDec(1700)
+	randomExchangeRate = sdkmath.LegacyNewDec(1700)
 )
 
 func setup(t *testing.T) (TestInput, types.MsgServer) {
@@ -165,7 +162,7 @@ func setup(t *testing.T) (TestInput, types.MsgServer) {
 	require.NoError(t, err)
 	_, err = stakingMsgSvr.CreateValidator(input.Ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], stakingAmt))
 	require.NoError(t, err)
-	staking.EndBlocker(input.Ctx, input.StakingKeeper)
+	input.StakingKeeper.EndBlocker(input.Ctx)
 
 	return input, msgServer
 }

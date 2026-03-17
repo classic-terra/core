@@ -1,14 +1,12 @@
 package authz
 
 import (
-	"github.com/spf13/cobra"
-
+	customcli "github.com/classic-terra/core/v4/custom/authz/client/cli"
+	customtypes "github.com/classic-terra/core/v4/custom/authz/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/module"
-
-	customcli "github.com/classic-terra/core/v3/custom/authz/client/cli"
-	customtypes "github.com/classic-terra/core/v3/custom/authz/types"
+	"github.com/spf13/cobra"
 )
 
 var _ module.AppModuleBasic = AppModuleBasic{}

@@ -3,8 +3,9 @@ package staking
 import (
 	"context"
 
-	legacytypes "github.com/classic-terra/core/v3/custom/staking/types"
-	legacyupgrade "github.com/classic-terra/core/v3/custom/upgrade/legacy"
+	"cosmossdk.io/math"
+	legacytypes "github.com/classic-terra/core/v4/custom/staking/types"
+	legacyupgrade "github.com/classic-terra/core/v4/custom/upgrade/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -59,7 +60,7 @@ func (q *LegacyQueryServer) ensureLegacyParams(ctx context.Context) context.Cont
 			MaxEntries:        params.MaxEntries,
 			HistoricalEntries: params.HistoricalEntries,
 			BondDenom:         params.BondDenom,
-			MinCommissionRate: sdk.ZeroDec(),
+			MinCommissionRate: math.LegacyZeroDec(),
 		})
 
 		// Return updated context

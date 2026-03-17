@@ -3,15 +3,13 @@ package cli
 import (
 	"strings"
 
+	feeutils "github.com/classic-terra/core/v4/custom/auth/client/utils"
+	"github.com/classic-terra/core/v4/x/market/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/spf13/cobra"
-
-	feeutils "github.com/classic-terra/core/v3/custom/auth/client/utils"
-	"github.com/classic-terra/core/v3/x/market/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -75,9 +73,6 @@ $ terrad market swap "1000ukrw" "uusd" "terra1..."
 				}
 
 				msg = types.NewMsgSwapSend(fromAddress, toAddress, offerCoin, askDenom)
-				if err = msg.ValidateBasic(); err != nil {
-					return err
-				}
 
 				if !clientCtx.GenerateOnly && txf.Fees().IsZero() {
 					// estimate tax and gas
@@ -95,12 +90,7 @@ $ terrad market swap "1000ukrw" "uusd" "terra1..."
 				}
 			} else {
 				msg = types.NewMsgSwap(fromAddress, offerCoin, askDenom)
-				if err = msg.ValidateBasic(); err != nil {
-					return err
-				}
-			}
-
-			// build and sign the transaction, then broadcast to Tendermint
+			} // build and sign the transaction, then broadcast to Tendermint
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}

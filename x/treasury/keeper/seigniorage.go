@@ -1,17 +1,17 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
+	core "github.com/classic-terra/core/v4/types"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	core "github.com/classic-terra/core/v3/types"
-	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 // SettleSeigniorage computes seigniorage and distributes it to oracle and distribution(community-pool) account
 func (k Keeper) SettleSeigniorage(ctx sdk.Context) {
 	// Mint seigniorage for oracle and community pool
 	seigniorageLunaAmt := k.PeekEpochSeigniorage(ctx)
-	if seigniorageLunaAmt.LTE(sdk.ZeroInt()) {
+	if seigniorageLunaAmt.LTE(sdkmath.ZeroInt()) {
 		return
 	}
 
@@ -54,8 +54,11 @@ func (k Keeper) SettleSeigniorage(ctx sdk.Context) {
 		}
 
 		// Update distribution community pool
-		feePool := k.distrKeeper.GetFeePool(ctx)
+		feePool, err := k.distrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			panic(err)
+		}
 		feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(leftCoins...)...)
-		k.distrKeeper.SetFeePool(ctx, feePool)
+		k.distrKeeper.FeePool.Set(ctx, feePool)
 	}
 }

@@ -2,16 +2,15 @@ package oracle
 
 import (
 	"cosmossdk.io/math"
+	"github.com/classic-terra/core/v4/x/oracle/keeper"
+	"github.com/classic-terra/core/v4/x/oracle/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v3/x/oracle/keeper"
-	"github.com/classic-terra/core/v3/x/oracle/types"
 )
 
 // Tally calculates the median and returns it. Sets the set of voters to be rewarded, i.e. voted within
 // a reasonable spread from the weighted median to the store
 // CONTRACT: pb must be sorted
-func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap map[string]types.Claim) (weightedMedian sdk.Dec) {
+func Tally(pb types.ExchangeRateBallot, rewardBand math.LegacyDec, validatorClaimMap map[string]types.Claim) (weightedMedian math.LegacyDec) {
 	weightedMedian = pb.WeightedMedian()
 	standardDeviation := pb.StandardDeviation(weightedMedian)
 	rewardSpread := weightedMedian.Mul(rewardBand.QuoInt64(2))
@@ -39,20 +38,26 @@ func Tally(pb types.ExchangeRateBallot, rewardBand sdk.Dec, validatorClaimMap ma
 
 // ballot for the asset is passing the threshold amount of voting power
 func ballotIsPassing(ballot types.ExchangeRateBallot, thresholdVotes math.Int) (math.Int, bool) {
-	ballotPower := sdk.NewInt(ballot.Power())
+	ballotPower := math.NewInt(ballot.Power())
 	return ballotPower, !ballotPower.IsZero() && ballotPower.GTE(thresholdVotes)
 }
 
 // PickReferenceTerra choose Reference Terra with the highest voter turnout
 // If the voting power of the two denominations is the same,
 // select reference Terra in alphabetical order.
-func PickReferenceTerra(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]sdk.Dec, voteMap map[string]types.ExchangeRateBallot) string {
+func PickReferenceTerra(ctx sdk.Context, k keeper.Keeper, voteTargets map[string]math.LegacyDec, voteMap map[string]types.ExchangeRateBallot) string {
 	largestBallotPower := int64(0)
 	referenceTerra := ""
 
-	totalBondedPower := sdk.TokensToConsensusPower(k.StakingKeeper.TotalBondedTokens(ctx), k.StakingKeeper.PowerReduction(ctx))
+	totalBondedTokens, err := k.StakingKeeper.TotalBondedTokens(ctx)
+	if err != nil {
+		return ""
+	}
 	voteThreshold := k.VoteThreshold(ctx)
-	thresholdVotes := voteThreshold.MulInt64(totalBondedPower).RoundInt()
+	// Convert bonded tokens to consensus power to match ballot power units
+	powerReduction := k.StakingKeeper.PowerReduction(ctx)
+	totalBondedPower := totalBondedTokens.Quo(powerReduction)
+	thresholdVotes := voteThreshold.MulInt(totalBondedPower).RoundInt()
 
 	for denom, ballot := range voteMap {
 		// If denom is not in the voteTargets, or the ballot for it has failed, then skip

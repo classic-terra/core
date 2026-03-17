@@ -2,12 +2,11 @@ package treasury
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/classic-terra/core/v4/x/treasury/keeper"
+	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
-	"github.com/classic-terra/core/v3/x/treasury/keeper"
-	"github.com/classic-terra/core/v3/x/treasury/types"
 )
 
 func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {

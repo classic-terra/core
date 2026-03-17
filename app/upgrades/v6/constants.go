@@ -1,9 +1,9 @@
 package v6
 
 import (
-	"github.com/classic-terra/core/v3/app/upgrades"
-	dyncommtypes "github.com/classic-terra/core/v3/x/dyncomm/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
+	"github.com/classic-terra/core/v4/app/upgrades"
+	dyncommtypes "github.com/classic-terra/core/v4/x/dyncomm/types"
 )
 
 const UpgradeName = "v6"

@@ -1,8 +1,9 @@
 package bank
 
 import (
-	"github.com/spf13/cobra"
-
+	customcli "github.com/classic-terra/core/v4/custom/bank/client/cli"
+	customsim "github.com/classic-terra/core/v4/custom/bank/simulation"
+	customtypes "github.com/classic-terra/core/v4/custom/bank/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -10,10 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	customcli "github.com/classic-terra/core/v3/custom/bank/client/cli"
-	customsim "github.com/classic-terra/core/v3/custom/bank/simulation"
-	customtypes "github.com/classic-terra/core/v3/custom/bank/types"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -30,7 +28,6 @@ type AppModuleBasic struct {
 // RegisterLegacyAminoCodec registers the bank module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	customtypes.RegisterLegacyAminoCodec(cdc)
-	*types.ModuleCdc = *customtypes.ModuleCdc
 }
 
 // GetTxCmd returns the root tx command for the bank module.

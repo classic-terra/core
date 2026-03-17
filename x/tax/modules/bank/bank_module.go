@@ -3,11 +3,10 @@ package bank
 import (
 	"fmt"
 
-	"github.com/classic-terra/core/v3/x/tax/handlers"
-	taxexemptionkeeper "github.com/classic-terra/core/v3/x/taxexemption/keeper"
-
-	taxkeeper "github.com/classic-terra/core/v3/x/tax/keeper"
-	treasurykeeper "github.com/classic-terra/core/v3/x/treasury/keeper"
+	"github.com/classic-terra/core/v4/x/tax/handlers"
+	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
+	taxexemptionkeeper "github.com/classic-terra/core/v4/x/taxexemption/keeper"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"

@@ -1,108 +1,122 @@
 name: Interchain Tests
 
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - frag/foundation
+    workflow_dispatch:
+    pull_request:
+    push:
+        branches:
+            - frag/foundation
 permissions:
-  contents: read
-  packages: write
+    contents: read
+    packages: write
 
 jobs:
-  build-image:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.22'
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build interchain image
-        id: build_image
-        uses: docker/build-push-action@v5
-        with:
-          file: ./ictest.Dockerfile
-          context: .
-          platforms: linux/amd64
-          tags: |
-            core:local
+    build-image:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+            - name: Check out repository code
+              uses: actions/checkout@v5
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+            - name: Build interchain image
+              id: build_image
+              uses: docker/build-push-action@v5
+              with:
+                  file: ./ictest.Dockerfile
+                  context: .
+                  platforms: linux/amd64
+                  tags: |
+                      core:local
 
-  test-terra-start:
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.22"
-          check-latest: true
+    test-terra-start:
+        runs-on: ubuntu-latest
+        needs: build-image
+        steps:
+            - name: Set up Go 1.24
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  check-latest: true
 
-      - name: checkout code
-        uses: actions/checkout@v4
+            - name: checkout code
+              uses: actions/checkout@v5
 
-      - run: make ictest-start
+            - run: make ictest-start
 
-  test-ibc-transfer:
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.22"
-          check-latest: true
+    test-ibc-transfer:
+        runs-on: ubuntu-latest
+        needs: build-image
+        steps:
+            - name: Set up Go 1.24
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  check-latest: true
 
-      - name: checkout code
-        uses: actions/checkout@v4
+            - name: checkout code
+              uses: actions/checkout@v5
 
-      - run: make ictest-ibc
+            - run: make ictest-ibc
 
-  test-ibc-hooks:
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.22"
-          check-latest: true
+    test-ibc-hooks:
+        runs-on: ubuntu-latest
+        needs: build-image
+        steps:
+            - name: Set up Go 1.24
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  check-latest: true
 
-      - name: checkout code
-        uses: actions/checkout@v4
+            - name: checkout code
+              uses: actions/checkout@v5
 
-      - run: make ictest-ibc-hooks
-    
-  test-ibc-pfm:
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.22"
-          check-latest: true
+            - run: make ictest-ibc-hooks
 
-      - name: checkout code
-        uses: actions/checkout@v4
+    test-ibc-pfm:
+        runs-on: ubuntu-latest
+        needs: build-image
+        steps:
+            - name: Set up Go 1.24
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  check-latest: true
 
-      - run: make ictest-ibc-pfm
+            - name: checkout code
+              uses: actions/checkout@v5
 
-  test-validator:
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - name: Set up Go 1.22
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.22"
-          check-latest: true
+            - run: make ictest-ibc-pfm
 
-      - name: checkout code
-        uses: actions/checkout@v4
+    test-validator:
+        runs-on: ubuntu-latest
+        needs: build-image
+        steps:
+            - name: Set up Go 1.24
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  check-latest: true
 
-      - run: make ictest-validator
+            - name: checkout code
+              uses: actions/checkout@v5
+
+            - run: make ictest-validator
+    test-ibc-upgrade:
+        runs-on: ubuntu-latest
+        needs: build-image
+        steps:
+            - name: Set up Go 1.24
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
+                  check-latest: true
+
+            - name: checkout code
+              uses: actions/checkout@v5
+
+            - run: make ictest-upgrade-ibc

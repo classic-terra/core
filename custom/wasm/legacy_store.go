@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
+	storetypes "cosmossdk.io/store/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	legacytypes "github.com/classic-terra/core/v4/custom/wasm/types/legacy"
-	storetypes "cosmossdk.io/store/types"
 	coretypes "github.com/classic-terra/core/v4/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

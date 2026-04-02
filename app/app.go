@@ -46,6 +46,7 @@ import (
 	customante "github.com/classic-terra/core/v4/custom/auth/ante"
 	custompost "github.com/classic-terra/core/v4/custom/auth/post"
 	customauthtx "github.com/classic-terra/core/v4/custom/auth/tx"
+	customslashing "github.com/classic-terra/core/v4/custom/slashing"
 	customserver "github.com/classic-terra/core/v4/server"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -465,9 +466,11 @@ func (app *TerraApp) SimulationManager() *module.SimulationManager {
 // (e.g., with codecs) to construct tx/query commands safely.
 func (app *TerraApp) BasicModuleManager() module.BasicManager {
 	// Use the SDK helper which extracts module basics (with initialized codecs)
-	// from the module manager, ensuring CLI commands from upstream modules are
-	// wired correctly.
-	return module.NewBasicManagerFromManager(app.mm, nil)
+	// from the module manager, while overriding select modules with our custom
+	// CLI basics where we intentionally diverge from upstream behavior.
+	return module.NewBasicManagerFromManager(app.mm, map[string]module.AppModuleBasic{
+		"slashing": customslashing.AppModuleBasic{},
+	})
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided

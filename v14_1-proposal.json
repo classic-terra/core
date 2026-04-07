@@ -1,0 +1,17 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "terra10d07y265gmmuvt4z0w9aw880jnsr700juxf95n",
+      "plan": {
+        "name": "v14_1",
+        "height": "28214400",
+        "info": ""
+      }
+    }
+  ],
+  "metadata": "ipfs://TODO",
+  "deposit": "1000000000000uluna",
+  "title": "Software Upgrade to v4.0.0 (Cosmos SDK v0.53.x)",
+  "summary": "Upgrade Terra Classic to v4.0.0 with Cosmos SDK v0.53.6, CometBFT v0.38.21, wasmd v0.61.8, and wasmvm v3.0.3. Chain halt at height 28214400 (~Apr 17 2026 14:30 UTC)."
+}

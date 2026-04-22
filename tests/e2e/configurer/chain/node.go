@@ -24,6 +24,7 @@ type NodeConfig struct {
 	IsValidator bool
 
 	OperatorAddress  string
+	ConsensusAddress string // bech32 terravalcons... format
 	SnapshotInterval uint64
 	chainID          string
 	rpcClient        *rpchttp.HTTP
@@ -85,6 +86,23 @@ func (n *NodeConfig) Run() error {
 		"Terra node failed to produce blocks",
 	)
 
+	// Wait for 2 more blocks to confirm p2p connections are established.
+	// Without this, a just-restarted node may not yet have peers and any
+	// tx broadcast to it would sit in the local mempool and never be committed.
+	firstHeight, _ := n.QueryCurrentHeight()
+	if firstHeight > 0 {
+		require.Eventually(
+			n.t,
+			func() bool {
+				h, err := n.QueryCurrentHeight()
+				return err == nil && h >= firstHeight+2
+			},
+			initialization.TwoMin,
+			time.Second,
+			"Terra node failed to advance blocks after start",
+		)
+	}
+
 	return n.extractOperatorAddressIfValidator()
 }
 
@@ -128,14 +146,22 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 	if err != nil {
 		return err
 	}
-	// Match full bech32 validator operator address robustly (avoid truncation)
-	re := regexp.MustCompile(`terravaloper1[0-9a-z]{38,}`)
-	match := re.FindString(outBuf.String())
-	if match == "" {
-		n.t.Logf("failed to extract operator address from debug output for %s: %q", n.Name, outBuf.String())
-		return fmt.Errorf("could not parse operator address from terrad debug addr output")
+	out := outBuf.String()
+
+	reOper := regexp.MustCompile("terravaloper(.{39})")
+	operAddr := fmt.Sprintf("%s\n", reOper.FindString(out))
+	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+
+	// The consensus address is derived from the ed25519 consensus key, which is
+	// different from the secp256k1 account/operator key fed to "debug addr".
+	// Use "comet show-address" to read it directly from the node's local keyfiles.
+	showAddrCmd := []string{"terrad", "comet", "show-address"}
+	showAddrBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, showAddrCmd, "", false)
+	if err != nil {
+		return err
 	}
-	n.OperatorAddress = strings.TrimSpace(match)
+	n.ConsensusAddress = strings.TrimSpace(showAddrBuf.String())
+
 	return nil
 }
 

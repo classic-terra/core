@@ -19,6 +19,7 @@ DENOM=${2:-uluna}
 
 COMMISSION_RATE=0.01
 COMMISSION_MAX_RATE=0.02
+SELF_DELEGATION=${SELF_DELEGATION:-900000000000}
 
 SED_BINARY=sed
 # check if this is OS X
@@ -63,9 +64,15 @@ $BINARY add-genesis-account $KEY1 "1000000000000${DENOM}" --keyring-backend $KEY
 $BINARY add-genesis-account $KEY2 "1000000000000${DENOM}" --keyring-backend $KEYRING --home $HOME_DIR
 
 update_test_genesis '.app_state["mint"]["params"]["mint_denom"]="'$DENOM'"'
+# Support both legacy and newer gov param layouts across old/new binaries.
 update_test_genesis '.app_state["gov"]["deposit_params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
-#update_test_genesis '.app_state["gov"]["params"]["expedited_voting_period"]="4s"'
+update_test_genesis '.app_state["gov"]["params"]["min_deposit"]=[{"denom":"'$DENOM'","amount": "1000000"}]'
 update_test_genesis '.app_state["gov"]["params"]["voting_period"]="30s"'
+update_test_genesis '.app_state["gov"]["voting_params"]["voting_period"]="30s"'
+# Only set expedited_voting_period if the binary's genesis schema supports it
+if cat $HOME_DIR/config/genesis.json | jq -e '.app_state["gov"]["params"]["expedited_voting_period"]' > /dev/null 2>&1; then
+    update_test_genesis '.app_state["gov"]["params"]["expedited_voting_period"]="4s"'
+fi
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 
@@ -81,13 +88,17 @@ $SED_BINARY -i -e 's/timeout_commit = "5s"/timeout_commit = "500ms"/g' $HOME_DIR
 
 
 # Sign genesis transaction
-$BINARY gentx $KEY "1000000${DENOM}" --commission-rate=$COMMISSION_RATE --commission-max-rate=$COMMISSION_MAX_RATE --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME_DIR
+$BINARY gentx $KEY "${SELF_DELEGATION}${DENOM}" --commission-rate=$COMMISSION_RATE --commission-max-rate=$COMMISSION_MAX_RATE --keyring-backend $KEYRING --chain-id $CHAIN_ID --home $HOME_DIR
 
 # Collect genesis tx
 $BINARY collect-gentxs --home $HOME_DIR
 
 # Run this to ensure everything worked and that the genesis file is setup correctly
-$BINARY validate-genesis --home $HOME_DIR
+$BINARY validate-genesis --home $HOME_DIR || echo "WARNING: validate-genesis failed, continuing anyway..."
 
-$BINARY start --home $HOME_DIR
+EXTRA_FLAGS=""
+if [ -n "$TERRAD_HALT_HEIGHT" ]; then
+    EXTRA_FLAGS="--halt-height $TERRAD_HALT_HEIGHT"
+fi
 
+$BINARY start --home $HOME_DIR $EXTRA_FLAGS

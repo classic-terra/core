@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	sdklog "cosmossdk.io/log"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -28,7 +29,7 @@ import (
 	v12 "github.com/classic-terra/core/v4/app/upgrades/v12"
 	v13 "github.com/classic-terra/core/v4/app/upgrades/v13"
 	v13_1 "github.com/classic-terra/core/v4/app/upgrades/v13_1"
-	v14 "github.com/classic-terra/core/v4/app/upgrades/v14"
+	v14_1 "github.com/classic-terra/core/v4/app/upgrades/v14_1"
 	v15 "github.com/classic-terra/core/v4/app/upgrades/v15"
 	v2 "github.com/classic-terra/core/v4/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v4/app/upgrades/v3"
@@ -61,6 +62,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -105,7 +107,7 @@ var (
 		v12.Upgrade,
 		v13.Upgrade,
 		v13_1.Upgrade,
-		v14.Upgrade,
+		v14_1.Upgrade,
 		v15.Upgrade,
 	}
 
@@ -246,6 +248,9 @@ func NewTerraApp(
 	if err != nil {
 		panic(err)
 	}
+
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
+
 	app.setupUpgradeHandlers()
 	app.setupUpgradeStoreLoaders()
 

@@ -8,8 +8,8 @@ FORK=${FORK:-"false"}
 # Each element in OLD_VERSIONS represents a version to upgrade from,
 # and the corresponding element in UPGRADE_NAMES is the upgrade name applied to that version.
 # For example, OLD_VERSIONS[0] is upgraded using UPGRADE_NAMES[0], and so on.
-OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v2.4.2,v3.0.4,v3.1.3,v3.1.5,v3.1.6,v3.3.0,v3.4.0,v3.4.3,v3.5.0,v3.6.0-rc.0"}
-UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v8,v8_1,v8_2,v8_3,v10_1,v11_1,v11_2,v12,v13,v14"}
+OLD_VERSIONS_STRING=${OLD_VERSIONS:-"v3.6.2,v4.0.0-rc.3,v4.0.0-rc.6"}
+UPGRADE_NAMES_STRING=${UPGRADE_NAMES:-"v14,v14rc4,v14_1"}
 
 # Parse comma-separated lists into arrays
 IFS=',' read -r -a OLD_VERSIONS <<< "$OLD_VERSIONS_STRING"
@@ -28,7 +28,7 @@ UPGRADE_WAIT=${UPGRADE_WAIT:-10}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
-CHAIN_ID=localterra-legacy
+CHAIN_ID=localterra
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}
@@ -56,7 +56,7 @@ install_version() {
     fi
     
     # Install the binary
-    if [ "$reinstall_flag" == "--reinstall" ] || ! command -v _build/$target_dir/terrad &> /dev/null; then
+    if [ "$reinstall_flag" == "--reinstall" ] || [ ! -x "$ROOT/_build/$target_dir/terrad" ]; then
         cd ./_build/core-${version:1}
         GOBIN="$ROOT/_build/$target_dir" go install -mod=readonly ./...
         cd ../..
@@ -75,7 +75,7 @@ for ((i=0; i<${#OLD_VERSIONS[@]}; i++)); do
 done
 
 # Install the current version as "new"
-if ! command -v _build/new/terrad &> /dev/null; then
+if [ ! -x "_build/new/terrad" ]; then
     mkdir -p ./_build/new
     GOBIN="$ROOT/_build/new" go install -mod=readonly ./...
 fi
@@ -84,16 +84,27 @@ fi
 run_node() {
     local binary_path=$1
     local continue_flag=$2
-    
+
     echo "Starting node with binary: $binary_path"
-    
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        CONTINUE="$continue_flag" screen -L -dmS node1 bash scripts/run-node-legacy.sh $binary_path $DENOM
+        CONTINUE="$continue_flag" screen -L -dmS node1 bash scripts/run-node.sh $binary_path $DENOM
     else
-        CONTINUE="$continue_flag" screen -L -Logfile $HOME/log-screen.txt -dmS node1 bash scripts/run-node-legacy.sh $binary_path $DENOM
+        CONTINUE="$continue_flag" screen -L -Logfile $HOME/log-screen.txt -dmS node1 bash scripts/run-node.sh $binary_path $DENOM
     fi
-    
-    sleep 10
+
+    echo "Waiting for node to be ready..."
+    for attempt in $(seq 1 60); do
+        if $binary_path status --home $HOME > /dev/null 2>&1; then
+            echo "Node is ready (attempt $attempt)"
+            break
+        fi
+        if [ $attempt -eq 60 ]; then
+            echo "Node failed to start within 60 attempts. Check $HOME/log-screen.txt"
+            exit 1
+        fi
+        sleep 5
+    done
 }
 
 # Function to execute additional scripts
@@ -140,11 +151,12 @@ run_upgrade () {
     
     echo "Upgrading from $current_binary to $next_binary with upgrade name $upgrade_name"
 
-    STATUS_INFO=($(./_build/$current_binary/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
-    if [ $UPGRADE_HEIGHT -lt 35 ]; then
-        UPGRADE_HEIGHT=35
+    STATUS_INFO=($(./_build/$current_binary/terrad status --home $HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height // .sync_info.latest_block_height'))
+    UPGRADE_HEIGHT=$((STATUS_INFO[1] + 80))
+    if [ $UPGRADE_HEIGHT -lt 80 ]; then
+        UPGRADE_HEIGHT=80
     fi
+    echo "UPGRADE_HEIGHT = $UPGRADE_HEIGHT"
 
     # Create the upgrade package for the next binary
     tar -cf ./_build/$next_binary/terrad.tar -C ./_build/$next_binary terrad
@@ -158,8 +170,32 @@ run_upgrade () {
 
     ./_build/$current_binary/terrad keys list --home $HOME --keyring-backend test
 
-    # Submit the upgrade proposal
-    ./_build/$current_binary/terrad tx gov submit-legacy-proposal software-upgrade "$upgrade_name" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "$UPGRADE_INFO" --title "upgrade to $upgrade_name" --description "upgrade to $upgrade_name"  --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
+    # Get the gov module authority address
+    GOV_AUTHORITY=$(./_build/$current_binary/terrad q auth module-account gov --home $HOME --output json | jq -r '.account.value.address // .account.base_account.address // .account.address')
+
+    # Create the upgrade proposal JSON file
+    cat > $HOME/upgrade_proposal_$upgrade_name.json <<EOF
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "$GOV_AUTHORITY",
+      "plan": {
+        "name": "$upgrade_name",
+        "height": "$UPGRADE_HEIGHT",
+        "info": $(echo "$UPGRADE_INFO" | jq -c '. | tostring')
+      }
+    }
+  ],
+  "deposit": "20000000${DENOM}",
+  "title": "upgrade to $upgrade_name",
+  "summary": "upgrade to $upgrade_name",
+  "metadata": ""
+}
+EOF
+
+    # Submit the upgrade proposal using the new JSON format
+    ./_build/$current_binary/terrad tx gov submit-proposal $HOME/upgrade_proposal_$upgrade_name.json --from test1 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
 
     sleep 2
 
@@ -178,16 +214,41 @@ run_upgrade () {
     sleep 2
 
     # Wait for the upgrade height
-    while true; do 
-        BLOCK_HEIGHT=$(./_build/$current_binary/terrad status | jq '.SyncInfo.latest_block_height' -r)
-        if [ $BLOCK_HEIGHT = "$UPGRADE_HEIGHT" ]; then
+    LAST_BLOCK_HEIGHT=""
+    STALLED_ROUNDS=0
+    while true; do
+        BLOCK_HEIGHT=$(./_build/$current_binary/terrad status --home $HOME | jq -r '.SyncInfo.latest_block_height // .sync_info.latest_block_height')
+
+        if [ -z "$BLOCK_HEIGHT" ] || [ "$BLOCK_HEIGHT" == "null" ]; then
+            echo "failed to fetch block height from old node"
+            exit 1
+        fi
+
+        if [ "$BLOCK_HEIGHT" == "$LAST_BLOCK_HEIGHT" ]; then
+            STALLED_ROUNDS=$((STALLED_ROUNDS + 1))
+        else
+            STALLED_ROUNDS=0
+            LAST_BLOCK_HEIGHT="$BLOCK_HEIGHT"
+        fi
+
+        if [ "$STALLED_ROUNDS" -ge 6 ]; then
+            echo "block height stalled at $BLOCK_HEIGHT; old node may have halted or crashed"
+            exit 1
+        fi
+
+        if [ "$BLOCK_HEIGHT" = "$UPGRADE_HEIGHT" ]; then
             # assuming running only 1 terrad
             echo "BLOCK HEIGHT = $UPGRADE_HEIGHT REACHED, KILLING CURRENT NODE"
             pkill terrad
             sleep 5
             break
         else
-            ./_build/$current_binary/terrad q gov proposal $proposal_id --output=json | jq ".status"
+            PROPOSAL_STATUS=$(./_build/$current_binary/terrad q gov proposal $proposal_id --output=json | jq -r '.status // .proposal.status // "UNKNOWN"')
+            echo "$PROPOSAL_STATUS"
+            if [ "$PROPOSAL_STATUS" = "PROPOSAL_STATUS_FAILED" ] || [ "$PROPOSAL_STATUS" = "PROPOSAL_STATUS_REJECTED" ]; then
+                echo "upgrade proposal is not passable in this run"
+                exit 1
+            fi
             echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
             sleep 2
         fi
@@ -211,14 +272,23 @@ upload_and_instantiate_contract() {
         --gas auto \
         --gas-adjustment 1.3 \
         --gas-prices ${GAS_PRICE} \
-        --broadcast-mode block \
+        --broadcast-mode sync \
         --keyring-backend test \
         --home ${HOME} \
         -y \
         --output json)
-    
-    # Extract code ID
-    CODE_ID=$(echo $STORE_OUTPUT | jq -r '.logs[0].events[] | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value')
+
+    TX_HASH=$(echo $STORE_OUTPUT | jq -r '.txhash')
+    echo "Store tx submitted: $TX_HASH"
+    sleep 6
+
+    # Query the tx result to get code ID
+    TX_RESULT=$(${binary_path} q tx $TX_HASH --home ${HOME} --output json 2>/dev/null)
+    CODE_ID=$(echo $TX_RESULT | jq -r '
+        (.logs[0].events[]? | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value) //
+        (.events[]? | select(.type=="store_code") | .attributes[] | select(.key=="code_id") | .value) //
+        empty
+    ' 2>/dev/null | head -1)
     echo "Contract uploaded with code ID: $CODE_ID"
     
     # Prepare instantiate message
@@ -232,15 +302,24 @@ upload_and_instantiate_contract() {
         --gas auto \
         --gas-adjustment 1.3 \
         --gas-prices ${GAS_PRICE} \
-        --broadcast-mode block \
+        --broadcast-mode sync \
         --keyring-backend test \
         --home ${HOME} \
         --admin $(${binary_path} keys show test1 -a --keyring-backend test --home ${HOME}) \
         -y \
         --output json)
-    
-    # Extract contract address
-    CONTRACT_ADDR=$(echo $INIT_OUTPUT | jq -r '.logs[0].events[] | select(.type=="instantiate") | .attributes[] | select(.key=="_contract_address") | .value')
+
+    TX_HASH=$(echo $INIT_OUTPUT | jq -r '.txhash')
+    echo "Instantiate tx submitted: $TX_HASH"
+    sleep 6
+
+    # Query the tx result to get contract address
+    TX_RESULT=$(${binary_path} q tx $TX_HASH --home ${HOME} --output json 2>/dev/null)
+    CONTRACT_ADDR=$(echo $TX_RESULT | jq -r '
+        (.logs[0].events[]? | select(.type=="instantiate") | .attributes[] | select(.key=="_contract_address") | .value) //
+        (.events[]? | select(.type=="instantiate") | .attributes[] | select(.key=="_contract_address") | .value) //
+        empty
+    ' 2>/dev/null | head -1)
     echo "Contract instantiated at address: $CONTRACT_ADDR"
     
     # Save contract address to a file for later use

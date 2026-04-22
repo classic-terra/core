@@ -5,6 +5,8 @@ import (
 	"io"
 
 	storetypes "cosmossdk.io/store/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	legacytypes "github.com/classic-terra/core/v4/custom/wasm/types/legacy"
 	coretypes "github.com/classic-terra/core/v4/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -206,10 +208,60 @@ func stripLegacyLenPrefix(b []byte) []byte {
 	return b
 }
 
+func translateLegacyValueForKey(newKey, value []byte) []byte {
+	if len(newKey) == 0 || value == nil {
+		return value
+	}
+
+	switch newKey[0] {
+	case 0x01:
+		return translateLegacyCodeInfoValue(value)
+	case 0x02:
+		return translateLegacyContractInfoValue(value)
+	default:
+		return value
+	}
+}
+
+func translateLegacyCodeInfoValue(value []byte) []byte {
+	var legacyInfo legacytypes.LegacyCodeInfo
+	if err := legacyInfo.Unmarshal(value); err != nil {
+		return value
+	}
+
+	translated := wasmtypes.CodeInfo{
+		CodeHash: append([]byte(nil), legacyInfo.CodeHash...),
+		Creator:  legacyInfo.Creator,
+	}
+	marshaled, err := translated.Marshal()
+	if err != nil {
+		return value
+	}
+	return marshaled
+}
+
+func translateLegacyContractInfoValue(value []byte) []byte {
+	var legacyInfo legacytypes.LegacyContractInfo
+	if err := legacyInfo.Unmarshal(value); err != nil {
+		return value
+	}
+
+	translated := wasmtypes.ContractInfo{
+		CodeID:  legacyInfo.CodeID,
+		Creator: legacyInfo.Creator,
+		Admin:   legacyInfo.Admin,
+	}
+	marshaled, err := translated.Marshal()
+	if err != nil {
+		return value
+	}
+	return marshaled
+}
+
 func (s *legacyWasmStore) Get(key []byte) []byte {
 	for _, cand := range translateNewToOld(key) {
 		if bz := s.parent.Get(cand); bz != nil {
-			return bz
+			return translateLegacyValueForKey(key, bz)
 		}
 	}
 	return nil
@@ -351,7 +403,7 @@ func (it *legacyIterator) advance() {
 			continue
 		}
 		it.key = newKey
-		it.val = it.under.Value()
+		it.val = translateLegacyValueForKey(newKey, it.under.Value())
 		it.valid = true
 		it.under.Next() // Advance before returning, since post-statement won't run
 		return

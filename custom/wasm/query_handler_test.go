@@ -10,6 +10,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	legacytypes "github.com/classic-terra/core/v4/custom/wasm/types/legacy"
 	coretypes "github.com/classic-terra/core/v4/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -449,6 +450,91 @@ func (suite *LegacyQueryHandlerTestSuite) TestHandleQuery_LegacyStoreIntegration
 		_, isLegacyMultiStore := ms.(legacyMultiStore)
 		require.True(suite.T(), isLegacyMultiStore, "Should use legacy multistore for pre-migration height")
 	})
+}
+
+func (suite *LegacyQueryHandlerTestSuite) TestLegacyStore_TranslatesLegacyMetadataValues() {
+	ctx := suite.ctx.WithChainID(coretypes.ColumbusChainID).WithBlockHeight(25619229)
+	parent := ctx.KVStore(suite.storeKey)
+	legacyStore := &legacyWasmStore{parent: parent}
+
+	contractAddr := make([]byte, 20)
+	for i := range contractAddr {
+		contractAddr[i] = byte(i + 1)
+	}
+	codeID := uint64(77)
+
+	oldContractKey := append([]byte{0x04, 0x14}, contractAddr...)
+	oldContractValue, err := (&legacytypes.LegacyContractInfo{
+		Address: "terra1legacycontract",
+		Creator: "terra1creator",
+		Admin:   "terra1admin",
+		CodeID:  codeID,
+		InitMsg: []byte(`{"count":1}`),
+	}).Marshal()
+	require.NoError(suite.T(), err)
+	parent.Set(oldContractKey, oldContractValue)
+
+	oldCodeKey := append([]byte{0x03}, sdk.Uint64ToBigEndian(codeID)...)
+	oldCodeValue, err := (&legacytypes.LegacyCodeInfo{
+		CodeID:   codeID,
+		CodeHash: []byte("legacy-hash"),
+		Creator:  "terra1creator",
+	}).Marshal()
+	require.NoError(suite.T(), err)
+	parent.Set(oldCodeKey, oldCodeValue)
+
+	newContractKey := append([]byte{0x02}, contractAddr...)
+	contractBz := legacyStore.Get(newContractKey)
+	require.NotNil(suite.T(), contractBz)
+
+	var contractInfo wasmtypes.ContractInfo
+	require.NoError(suite.T(), contractInfo.Unmarshal(contractBz))
+	require.Equal(suite.T(), codeID, contractInfo.CodeID)
+	require.Equal(suite.T(), "terra1creator", contractInfo.Creator)
+	require.Equal(suite.T(), "terra1admin", contractInfo.Admin)
+	require.Empty(suite.T(), contractInfo.Label)
+
+	newCodeKey := append([]byte{0x01}, sdk.Uint64ToBigEndian(codeID)...)
+	codeBz := legacyStore.Get(newCodeKey)
+	require.NotNil(suite.T(), codeBz)
+
+	var codeInfo wasmtypes.CodeInfo
+	require.NoError(suite.T(), codeInfo.Unmarshal(codeBz))
+	require.Equal(suite.T(), []byte("legacy-hash"), codeInfo.CodeHash)
+	require.Equal(suite.T(), "terra1creator", codeInfo.Creator)
+}
+
+func (suite *LegacyQueryHandlerTestSuite) TestLegacyStore_IteratorTranslatesLegacyMetadataValues() {
+	ctx := suite.ctx.WithChainID(coretypes.ColumbusChainID).WithBlockHeight(25619229)
+	parent := ctx.KVStore(suite.storeKey)
+	legacyStore := &legacyWasmStore{parent: parent}
+
+	contractAddr := make([]byte, 20)
+	for i := range contractAddr {
+		contractAddr[i] = byte(20 - i)
+	}
+
+	oldContractKey := append([]byte{0x04, 0x14}, contractAddr...)
+	oldContractValue, err := (&legacytypes.LegacyContractInfo{
+		Address: "terra1legacycontract",
+		Creator: "terra1creator",
+		CodeID:  9,
+	}).Marshal()
+	require.NoError(suite.T(), err)
+	parent.Set(oldContractKey, oldContractValue)
+
+	iter := legacyStore.Iterator([]byte{0x02}, []byte{0x03})
+	defer iter.Close()
+
+	require.True(suite.T(), iter.Valid())
+	require.Equal(suite.T(), append([]byte{0x02}, contractAddr...), iter.Key())
+
+	var contractInfo wasmtypes.ContractInfo
+	require.NoError(suite.T(), contractInfo.Unmarshal(iter.Value()))
+	require.Equal(suite.T(), uint64(9), contractInfo.CodeID)
+	require.Equal(suite.T(), "terra1creator", contractInfo.Creator)
+	iter.Next()
+	require.False(suite.T(), iter.Valid())
 }
 
 // Test the isPreWasmKeyMigration function directly

@@ -32,6 +32,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
@@ -274,6 +275,30 @@ func (n *internalNode) init() error {
 	appState, err := json.MarshalIndent(terraApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
 	if err != nil {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
+	}
+
+	// Override slashing params so TestSlashingUnjail completes in reasonable time.
+	// Defaults (signed_blocks_window=100, downtime_jail_duration=600s) would require
+	// the test to wait >10 min before unjailing is possible.
+	// 60s jail duration gives enough margin so BFT block time is well past
+	// jailed_until by the time the unjail tx is submitted.
+	{
+		var rawState map[string]json.RawMessage
+		if err = json.Unmarshal(appState, &rawState); err != nil {
+			return fmt.Errorf("failed to unmarshal app state: %w", err)
+		}
+		var slashGenState slashingtypes.GenesisState
+		if err = util.Cdc.UnmarshalJSON(rawState[slashingtypes.ModuleName], &slashGenState); err != nil {
+			return fmt.Errorf("failed to unmarshal slashing genesis: %w", err)
+		}
+		slashGenState.Params.SignedBlocksWindow = 10
+		slashGenState.Params.DowntimeJailDuration = 60 * time.Second
+		if rawState[slashingtypes.ModuleName], err = util.Cdc.MarshalJSON(&slashGenState); err != nil {
+			return fmt.Errorf("failed to marshal slashing genesis: %w", err)
+		}
+		if appState, err = json.MarshalIndent(rawState, "", " "); err != nil {
+			return fmt.Errorf("failed to re-marshal app state: %w", err)
+		}
 	}
 
 	genDoc.ChainID = n.chain.chainMeta.ID

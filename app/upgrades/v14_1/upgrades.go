@@ -1,4 +1,5 @@
-package v14
+//nolint:revive
+package v14_1
 
 import (
 	"context"
@@ -11,9 +12,9 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 )
 
-// CreateV14UpgradeHandler wires module migrations for v14.
+// CreateV141UpgradeHandler wires module migrations for v14_1.
 // Add any one-off migration logic here before/after RunMigrations if needed.
-func CreateV14UpgradeHandler(
+func CreateV141UpgradeHandler(
 	mm *module.Manager,
 	cfg module.Configurator,
 	_ upgrades.BaseAppParamManager,

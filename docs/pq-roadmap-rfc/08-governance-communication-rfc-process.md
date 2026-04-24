@@ -1,4 +1,4 @@
-# Governance, Communication, and RFC Process
+# Governance, Communication, and RFC Process (Formal)
 
 ## Governance Decisions
 This chapter defines how decisions across the RFC lifecycle are prepared, made, documented, and communicated. The goal is a traceable process combining technical quality, stakeholder participation, and formal decisionability.
@@ -27,7 +27,7 @@ The feedback process runs iteratively until freeze readiness and follows a stabl
 ## Freeze
 RFC freeze is defined as preceding `Phase Omega` and must be completed before implementation phases A-C begin.
 
-Freeze is triggered by a formal governance proposal on freeze decision. The RFC is freeze-ready only when critical open decisions are resolved or reasonedly deferred, no blocking inconsistencies remain between Public and Technical Layer, prioritization and phase logic are stable, audit-gate logic per phase is complete, and stakeholder feedback plus scope and decision-log updates are cleanly integrated. Freeze output is a published "frozen" reference version; changes to frozen core decisions are only allowed via new RFC revision.
+Freeze is triggered by a formal governance proposal on freeze decision. The RFC is freeze-ready only when critical open decisions are resolved or reasonedly deferred, no blocking inconsistencies remain between Informative and Formal chapters, prioritization and phase logic are stable, audit-gate logic per phase is complete, and stakeholder feedback plus scope and decision-log updates are cleanly integrated. Freeze output is a published "frozen" reference version; changes to frozen core decisions are only allowed via new RFC revision.
 
 ## Change Control After Freeze
 After freeze, a two-level change model applies. Editorial changes without impact on target state, gate logic, or scope may be applied directly. Content changes affecting target states, phase logic, gate criteria, risk assumptions, or migration principles require new RFC revision with formal governance approval. Each content change must explicitly reference impacted chapters at least through target state, roadmap phase, audit gate, and decision-log entry.
@@ -36,7 +36,7 @@ After freeze, a two-level change model applies. Editorial changes without impact
 Even after freeze, governance decisions remain required, especially for critical audit findings needing risk acceptance, gate blockers that trigger replanning, external PQ developments affecting assumptions, and deviations from defined cutover/security principles. Escalation logic is strict: first technical clarification and documentation, then explicit governance decision with Go/No-Go or deferral. Silent continuation with unresolved critical deviations is excluded.
 
 ## Communication Framework
-Communication follows the principle "one process, two layers": Public Layer focuses on understandable purpose, risk, and impact for community/users; Technical Layer focuses on precise decision basis, gate status, and residual risk. For every phase-relevant decision, communication must include at least decision and scope, technical rationale, affected phases/gates, and open residual risks with next review point.
+Communication follows the principle "one process, two categories": Informative communication focuses on understandable purpose, risk, and impact for community/users; Formal communication focuses on precise decision basis, gate status, and residual risk. For every phase-relevant decision, communication must include at least decision and scope, technical rationale, affected phases/gates, and open residual risks with next review point.
 
 ## Link to Decision Log
 This chapter defines process; Chapter 09 is the operational register. Every relevant governance step must create a traceable status change in the Decision Log (`open`, `closed`, `deferred`) including short rationale.

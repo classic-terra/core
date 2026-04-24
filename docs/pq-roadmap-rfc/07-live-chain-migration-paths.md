@@ -1,7 +1,7 @@
-# Live-Chain Migration Paths
+# Live-Chain Migration Paths (Formal)
 
 ## Positioning of This Chapter
-This chapter is intentionally informative. It provides a more detailed view of the consensus cutover path and explains how emergency scenarios are evaluated if the primary migration path cannot be executed safely or in time.
+This chapter is categorized as formal. It provides a more detailed view of the consensus cutover path and explains how emergency scenarios are evaluated if the primary migration path cannot be executed safely or in time.
 
 It is not a delivery plan, but a technical orientation for transitioning from current consensus operation to PQ-based consensus operation.
 

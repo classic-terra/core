@@ -1,4 +1,4 @@
-# Current State and Terminology
+# Current State and Terminology (Informative)
 
 ## Which Signature Paths This RFC Covers
 Before describing the status quo, this chapter defines the signature paths covered by the rest of the RFC. In this context, a path is not a single code section but a connected technical and operational domain in which signatures are created, transmitted, verified, and used as a basis for decisions.

@@ -1,4 +1,4 @@
-# Roadmap Phases (Direction, not Delivery Plan)
+# Roadmap Phases (Formal)
 
 ## Phase Omega: RFC Freeze and Start Authorization (Preceding)
 Phase Omega is the upstream completion of RFC drafting before any technical implementation starts. It is not a delivery plan and not an implementation phase, but the formal transition from "discussion and variants" to a "binding implementation baseline." Without a completed Omega gate, implementation phases A through C do not begin.
@@ -13,7 +13,7 @@ The mandatory result of O1 is a content-consistent RFC state without hidden conf
 ### Work Package O2: Phase and Gate Consistency Review
 O2 ensures consistency of implementation logic across chapter boundaries. It reviews target states, scope boundaries, audit gates, and exit criteria in phases A through C, as well as compatibility with governance and migration chapters.
 
-The mandatory result of O2 is a documented consistency review showing clearly that there are no blocking conflicts between Public and Technical Layer, and no silent scope shifts being carried into implementation.
+The mandatory result of O2 is a documented consistency review showing clearly that there are no blocking conflicts between Informative and Formal chapters, and no silent scope shifts being carried into implementation.
 
 ### Work Package O3: Governance Freeze and Reference Publication
 O3 executes the formal governance event for freeze (for example proposal and vote) and converts the consolidated state into a frozen reference version. This version is the binding basis for implementation in phases A through C.
@@ -25,7 +25,7 @@ Omega packages run in clear sequence. O2 depends on content closure from O1. O3 
 
 ### Preliminary Exit Criteria (Omega Go/No-Go)
 - O1 is complete and the Decision Log is finally consolidated, including explicitly marked deferrals.
-- O2 documents and confirms consistency between Public and Technical Layer and between phase and gate logic.
+- O2 documents and confirms consistency between Informative and Formal chapters and between phase and gate logic.
 - O3 is formally approved and published as frozen reference version.
 - Post-freeze change rules are bindingly documented.
 

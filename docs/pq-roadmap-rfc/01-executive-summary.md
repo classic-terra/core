@@ -3,7 +3,7 @@ This RFC bundle defines direction, decision logic, and validation paths for the 
 
 RFC stands for “Request for Comments.” In this context, the document is published to proactively gather feedback from all relevant Terra Classic stakeholders in order to improve scope clarity, content quality, readability, and practical feasibility before final freeze decisions are made.
 
-# Executive Summary
+# Executive Summary (Informative)
 
 ## Context and Purpose
 Terra Classic currently uses cryptographic signatures in multiple security-critical areas. These signatures ensure that only authorized actors can execute valid actions and that the chain maintains a shared, verifiable state. Post-quantum cryptography (PQ, meaning cryptographic methods designed with future quantum-computing risks in mind) becomes relevant because sufficiently capable quantum computers may eventually attack and break classical signature algorithms that are widely used today.
@@ -16,6 +16,8 @@ In the Terra Classic stack, signatures are used across several areas. In this do
 After the executive summary, the document covers the current state and key terminology. This is followed by target states and options, then a phased roadmap. Afterward, audit gates, live-chain migration paths, and governance/feedback process are described. The document concludes with a decision log, where closed and open points are tracked transparently.
 
 ## Reading Logic and Boundaries
-The RFC is split into a Public Layer and a Technical Layer. The Public Layer explains motivation, structure, and decision logic in accessible language. The Technical Layer deepens path definitions, risks, validation logic, and decision options. Both layers are aligned so readers can enter at different levels of detail without losing the overall thread.
+The RFC is split into two chapter categories: Informative and Formal. Informative chapters explain motivation, structure, and decision logic in accessible language. Formal chapters deepen path definitions, risks, validation logic, and decision options for technical and governance decisions.
+
+This formal/informative split is meant as orientation, not as exclusion. Non-technical readers are explicitly encouraged to read formal chapters as well; these chapters are intended to remain readable even when they are technically precise.
 
 This executive summary does not pre-empt technical detail decisions and does not define a fine-grained implementation sequence. It serves as reading guidance. Detailed argumentation, assessments, and decision proposals follow in the subsequent chapters.

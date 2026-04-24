@@ -1,16 +1,21 @@
+## Scope Note
+This RFC bundle defines direction, decision logic, and validation paths for the Terra Classic PQ roadmap. It is intentionally not an implementation plan, delivery schedule, or resource commitment.
+
+RFC stands for “Request for Comments.” In this context, the document is published to proactively gather feedback from all relevant Terra Classic stakeholders in order to improve scope clarity, content quality, readability, and practical feasibility before final freeze decisions are made.
+
 # 1) Executive Summary
 
-## Kontext und Zweck
-Terra Classic nutzt heute kryptografische Signaturen in mehreren sicherheitskritischen Bereichen. Diese Signaturen stellen sicher, dass nur berechtigte Akteure gueltige Aktionen ausfuehren koennen und dass die Chain einen gemeinsamen, verifizierbaren Zustand behaelt. Post-Quantum-Kryptografie (kurz: PQ, also kryptografische Verfahren mit Blick auf kuenftige Quantencomputer-Risiken) wird relevant, weil langfristig leistungsfaehige Quantencomputer klassische Signaturalgorithmen angreifen und brechen koennten, die heute breit eingesetzt werden.
+## Context and Purpose
+Terra Classic currently uses cryptographic signatures in multiple security-critical areas. These signatures ensure that only authorized actors can execute valid actions and that the chain maintains a shared, verifiable state. Post-quantum cryptography (PQ, meaning cryptographic methods designed with future quantum-computing risks in mind) becomes relevant because sufficiently capable quantum computers may eventually attack and break classical signature algorithms that are widely used today.
 
-Dieses RFC schafft dafuer einen strukturierten Orientierungsrahmen. Es definiert, wie Migrationspfade identifiziert, bewertet und priorisiert werden, und beschreibt den Rahmen fuer Audit-Gates, Governance und Feedback bis zum RFC-Freeze. Gleichzeitig ist diese Fassung bewusst keine technische Feinspezifikation und auch kein Release-, Ressourcen- oder Termincommitment.
+This RFC provides a structured orientation framework for that transition. It defines how migration paths are identified, evaluated, and prioritized, and it describes the framework for audit gates, governance, and feedback up to RFC freeze. At the same time, this version is intentionally not a detailed technical specification and not a release, resource, or timeline commitment.
 
-## Aufbau des Dokuments
-Im Terra-Classic-Stack werden Signaturen in mehreren Bereichen verwendet. Diese Bereiche werden in diesem Dokument als Pfade bezeichnet. Das RFC ordnet diese Pfade zunaechst auf hoher Ebene ein und arbeitet die genaue Abgrenzung sowie ihre jeweilige Kritikalitaet in den Folgekapiteln systematisch aus. Auf dieser Basis wird die Priorisierung transparent hergeleitet und begruendet.
+## Document Structure
+In the Terra Classic stack, signatures are used across several areas. In this document, these areas are called paths. The RFC first classifies these paths at a high level, then systematically defines their boundaries and criticality in the following chapters. Based on that, prioritization is derived and justified transparently.
 
-Nach der Executive Summary folgt die Ausgangslage mit Begriffsfundament. Darauf bauen Zielbilder und Optionen auf, bevor die Roadmap in Phasen strukturiert wird. Anschliessend werden Audit-Gates, Migrationspfade fuer die Live-Chain sowie Governance- und Feedbackprozess beschrieben. Den Abschluss bildet ein Decision Log, in dem geschlossene und offene Punkte nachvollziehbar gefuehrt werden.
+After the executive summary, the document covers the current state and key terminology. This is followed by target states and options, then a phased roadmap. Afterward, audit gates, live-chain migration paths, and governance/feedback process are described. The document concludes with a decision log, where closed and open points are tracked transparently.
 
-## Leselogik und Abgrenzung
-Das RFC ist in Public Layer und Technical Layer gegliedert. Der Public Layer erklaert Motivation, Struktur und Entscheidungslogik in gut nachvollziehbarer Sprache. Der Technical Layer vertieft Pfade, Risiken, Pruefpfade und Entscheidungsoptionen. Beide Ebenen sind aufeinander abgestimmt, damit Leser je nach Detailtiefe einsteigen koennen, ohne den roten Faden zu verlieren.
+## Reading Logic and Boundaries
+The RFC is split into a Public Layer and a Technical Layer. The Public Layer explains motivation, structure, and decision logic in accessible language. The Technical Layer deepens path definitions, risks, validation logic, and decision options. Both layers are aligned so readers can enter at different levels of detail without losing the overall thread.
 
-Diese Executive Summary nimmt keine technischen Detailentscheidungen vorweg und legt keine Implementierungsabfolge im Feinschnitt fest. Sie dient als Lesefuehrung. Die inhaltlichen Ausarbeitungen, Begruendungen und Entscheidungsvorlagen folgen in den nachgelagerten Kapiteln.
+This executive summary does not pre-empt technical detail decisions and does not define a fine-grained implementation sequence. It serves as reading guidance. Detailed argumentation, assessments, and decision proposals follow in the subsequent chapters.

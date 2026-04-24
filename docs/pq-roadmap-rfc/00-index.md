@@ -1,18 +1,18 @@
-# PQ Roadmap RFC fuer Terra Classic
+# Post-Quantum Roadmap RFC for Terra Classic
 
-Dieses Verzeichnis enthaelt den auszuarbeitenden RFC-Text als Kapiteldateien.
+This directory contains the RFC text under development as chapter files.
 
-## Kapitel
+## Chapters
 - [01-executive-summary.md](./01-executive-summary.md)
-- [02-kryptografische-signaturen-einfach-erklaert.md](./02-kryptografische-signaturen-einfach-erklaert.md)
-- [03-ausgangslage-und-begriffe.md](./03-ausgangslage-und-begriffe.md)
-- [04-zielbilder-und-optionen.md](./04-zielbilder-und-optionen.md)
-- [05-roadmap-phasen.md](./05-roadmap-phasen.md)
+- [02-cryptographic-signatures-explained.md](./02-cryptographic-signatures-explained.md)
+- [03-current-state-and-terminology.md](./03-current-state-and-terminology.md)
+- [04-target-states-and-options.md](./04-target-states-and-options.md)
+- [05-roadmap-phases.md](./05-roadmap-phases.md)
 - [06-audit-gates.md](./06-audit-gates.md)
-- [07-migrationspfade-live-chain.md](./07-migrationspfade-live-chain.md)
-- [08-governance-kommunikation-rfc-prozess.md](./08-governance-kommunikation-rfc-prozess.md)
-- [09-offene-entscheidungen-decision-log.md](./09-offene-entscheidungen-decision-log.md)
+- [07-live-chain-migration-paths.md](./07-live-chain-migration-paths.md)
+- [08-governance-communication-rfc-process.md](./08-governance-communication-rfc-process.md)
+- [09-open-decisions-decision-log.md](./09-open-decisions-decision-log.md)
 
-## Hinweis zum Scope
-Dieses Dokumentbuendel beschreibt Richtung, Entscheidungsrahmen und Pruefpfade.
-Es ist kein Umsetzungs- oder Delivery-Plan.
+## Scope Note
+This document bundle describes direction, decision framework, and validation paths.
+It is not an implementation or delivery plan.

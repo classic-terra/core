@@ -22,14 +22,14 @@ esac
 
 INPUT_FILES=(
   "$SCRIPT_DIR/01-executive-summary.md"
-  "$SCRIPT_DIR/02-kryptografische-signaturen-einfach-erklaert.md"
-  "$SCRIPT_DIR/03-ausgangslage-und-begriffe.md"
-  "$SCRIPT_DIR/04-zielbilder-und-optionen.md"
-  "$SCRIPT_DIR/05-roadmap-phasen.md"
+  "$SCRIPT_DIR/02-cryptographic-signatures-explained.md"
+  "$SCRIPT_DIR/03-current-state-and-terminology.md"
+  "$SCRIPT_DIR/04-target-states-and-options.md"
+  "$SCRIPT_DIR/05-roadmap-phases.md"
   "$SCRIPT_DIR/06-audit-gates.md"
-  "$SCRIPT_DIR/07-migrationspfade-live-chain.md"
-  "$SCRIPT_DIR/08-governance-kommunikation-rfc-prozess.md"
-  "$SCRIPT_DIR/09-offene-entscheidungen-decision-log.md"
+  "$SCRIPT_DIR/07-live-chain-migration-paths.md"
+  "$SCRIPT_DIR/08-governance-communication-rfc-process.md"
+  "$SCRIPT_DIR/09-open-decisions-decision-log.md"
 )
 
 if ! command -v pandoc >/dev/null 2>&1; then

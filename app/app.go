@@ -29,6 +29,7 @@ import (
 	v13 "github.com/classic-terra/core/v4/app/upgrades/v13"
 	v13_1 "github.com/classic-terra/core/v4/app/upgrades/v13_1"
 	v14_1 "github.com/classic-terra/core/v4/app/upgrades/v14_1"
+	"github.com/classic-terra/core/v4/app/upgrades/v14_2"
 	v2 "github.com/classic-terra/core/v4/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v4/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v4/app/upgrades/v4"
@@ -105,6 +106,7 @@ var (
 		v13.Upgrade,
 		v13_1.Upgrade,
 		v14_1.Upgrade,
+		v14_2.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network

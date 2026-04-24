@@ -1,4 +1,4 @@
-# 8) Governance, Communication, and RFC Process
+# Governance, Communication, and RFC Process
 
 ## Governance Decisions
 This chapter defines how decisions across the RFC lifecycle are prepared, made, documented, and communicated. The goal is a traceable process combining technical quality, stakeholder participation, and formal decisionability.

@@ -3,7 +3,7 @@ This RFC bundle defines direction, decision logic, and validation paths for the 
 
 RFC stands for “Request for Comments.” In this context, the document is published to proactively gather feedback from all relevant Terra Classic stakeholders in order to improve scope clarity, content quality, readability, and practical feasibility before final freeze decisions are made.
 
-# 1) Executive Summary
+# Executive Summary
 
 ## Context and Purpose
 Terra Classic currently uses cryptographic signatures in multiple security-critical areas. These signatures ensure that only authorized actors can execute valid actions and that the chain maintains a shared, verifiable state. Post-quantum cryptography (PQ, meaning cryptographic methods designed with future quantum-computing risks in mind) becomes relevant because sufficiently capable quantum computers may eventually attack and break classical signature algorithms that are widely used today.

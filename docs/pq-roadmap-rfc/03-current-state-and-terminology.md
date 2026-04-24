@@ -1,4 +1,4 @@
-# 3) Current State and Terminology
+# Current State and Terminology
 
 ## Which Signature Paths This RFC Covers
 Before describing the status quo, this chapter defines the signature paths covered by the rest of the RFC. In this context, a path is not a single code section but a connected technical and operational domain in which signatures are created, transmitted, verified, and used as a basis for decisions.
@@ -44,6 +44,10 @@ This chapter therefore provides the shared foundation for following chapters: ta
 - **Re-genesis** - Re-genesis is the fallback path if in-place upgrade is not viable.
 - **Key binding** - Key binding is the traceable assignment of a new key to an existing validator identity.
 - **CometBFT** - CometBFT is a Terra Classic software component where core consensus and validator signing flows are anchored.
+- **Cosmos SDK** - Cosmos SDK is the modular application framework Terra Classic uses for core chain logic, transaction handling, and module composition.
+- **wasmd** - wasmd is the CosmWasm integration layer used by Terra Classic to run and manage smart contracts in the chain runtime.
+- **IBC** - IBC (Inter-Blockchain Communication) is the protocol stack used to exchange packets and verify state proofs across connected chains.
+- **ibc-go** - ibc-go is the Go implementation of IBC modules and middleware used by SDK-based chains, including Terra Classic.
 - **Ante** - In SDK context, Ante is the transaction pre-check layer before execution.
 - **RFC** - RFC stands for "Request for Comments" and in this context means a structured discussion and decision document that makes direction, options, risks, and open points transparent before binding delivery decisions are made.
 - **Ed25519** - Ed25519 is the relevant signature scheme in the current Terra Classic consensus path.

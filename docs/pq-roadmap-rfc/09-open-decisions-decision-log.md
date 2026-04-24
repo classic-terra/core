@@ -1,4 +1,4 @@
-# 9) Open Decisions (Decision Log)
+# Open Decisions (Decision Log)
 
 This chapter is the operational decision register of the RFC. It tracks closed, open, and deferred points in a form directly usable for governance, audit, and phase steering. The Decision Log is updated with each relevant RFC revision and is the binding reference for status transitions.
 

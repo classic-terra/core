@@ -1,4 +1,4 @@
-# 5) Roadmap Phases (Direction, not Delivery Plan)
+# Roadmap Phases (Direction, not Delivery Plan)
 
 ## Phase Omega: RFC Freeze and Start Authorization (Preceding)
 Phase Omega is the upstream completion of RFC drafting before any technical implementation starts. It is not a delivery plan and not an implementation phase, but the formal transition from "discussion and variants" to a "binding implementation baseline." Without a completed Omega gate, implementation phases A through C do not begin.

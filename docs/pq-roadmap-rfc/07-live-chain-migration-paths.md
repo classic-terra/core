@@ -1,4 +1,4 @@
-# 7) Live-Chain Migration Paths
+# Live-Chain Migration Paths
 
 ## Positioning of This Chapter
 This chapter is intentionally informative. It provides a more detailed view of the consensus cutover path and explains how emergency scenarios are evaluated if the primary migration path cannot be executed safely or in time.

@@ -1,4 +1,4 @@
-# 4) Target States and Options (Technical Layer)
+# Target States and Options (Technical Layer)
 
 ## Consensus Target State
 For the consensus path, the target state is a clear PQ-only operation using ML-DSA from a defined switch day (Day X). This means that after cutover, the consensus path should not run with two signature regimes in parallel as a permanent mode, but should have one unambiguous end state.

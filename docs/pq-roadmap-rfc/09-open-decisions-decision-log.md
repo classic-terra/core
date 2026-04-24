@@ -107,6 +107,13 @@ This chapter is the operational decision register of the RFC. It tracks closed, 
 **Status:** deferred
 **Reference:** Chapters 04, 08
 
+### Q-16
+**Question:** Should the RFC feedback process run in fixed iterative windows and formal review rounds, or as a continuous open feedback process?  
+**Decision:** The RFC feedback process is continuous during the open phase and not organized by fixed iterative windows or mandatory review rounds.  
+**Rationale:** In Terra Classic's decentralized environment, continuous intake and ongoing incorporation of comments provides better operational fit than institutional round cycles. Comments may trigger single revisions or be consolidated into combined revisions, provided per-comment traceability remains explicit in the Comment Log and corresponding decision updates remain explicit in the Decision Log.  
+**Status:** closed  
+**Reference:** Chapters 08, 10
+
 ## Status Scheme and Transition Rules
 Status values:
 - `open`: question is decision-ready but not finally decided.

@@ -5,6 +5,12 @@ This chapter defines how decisions across the RFC lifecycle are prepared, made, 
 
 In this RFC, governance does not mean operational delivery steering. It means content-level direction decisions, release logic, and transparent risk acceptance across phases Omega through C.
 
+This chapter distinguishes two governance scopes to avoid ambiguity:
+- **RFC Governance Authority** - the process-level authority for active RFC operations (editing flow, versioning flow, comment processing flow, and preparation of closure/freeze decisions).
+- **Terra Classic Chain Governance** - the on-chain governance body that can observe the RFC process and decide formal proposals affecting RFC direction, closure, or freeze.
+
+During the open RFC process, document editing and versioning are intentionally not operated as day-to-day chain-governance actions. This preserves operational agility while comments and decisions are still being incorporated. Chain governance remains fully entitled to question, challenge, or revise RFC decisions through formal proposals, but this is defined as an escalation path, not the default operating mode.
+
 Binding principle: traceability is prioritized over speed, risk acceptance must always be explicit, no phase-critical continuation is allowed without satisfied gate logic, and post-freeze technical deviations are only permitted via formal change rules.
 
 ## Stakeholder Groups
@@ -19,10 +25,21 @@ The following groups are central for feedback, impact, and practical feasibility
 - `External infrastructure and standardization actors`: references from broader ecosystem (for example Cosmos/Ethereum-adjacent projects, security research, tooling providers) relevant for Phase C and ongoing PQ alignment.
 
 ## Roles in the RFC Process
-The process distinguishes functional roles: RFC editors consolidate text and maintain versions/change log; technical maintainers assess coherence, risks, and gate readiness; the governance authority makes formal release and freeze decisions; auditors provide internal or external gate assessments per Chapter 06. Roles may overlap in persons, but documentation must still clearly separate who proposed, reviewed, and finally decided.
+The process distinguishes functional roles:
+- **RFC Editors** - consolidate text contributions, maintain chapter consistency, and maintain versions and change logs.
+- **Technical Maintainers** - assess technical coherence, risk assumptions, and gate readiness across chapters and phases.
+- **RFC Governance Authority** - makes process-level release, closure, and freeze preparations and coordinates formal decision packages for governance steps.
+- **Terra Classic Chain Governance** - retains final on-chain decision rights where formal proposals are required and can challenge or revise RFC direction when needed.
+- **Auditors** - perform internal, external, or combined gate assessments as defined in Chapter 06.
+
+Roles may overlap in persons, but documentation must still clearly separate who proposed, reviewed, and finally decided.
 
 ## RFC Feedback Cycle
-The feedback process runs iteratively until freeze readiness and follows a stable four-step cycle: publish an RFC version and open a feedback window, classify comments, publish follow-up revision with change log, then run a short review round for changed sections. Each round ends with a transparent delta showing what changed, what remains intentionally open, and what was transferred into the Decision Log.
+The RFC feedback process is continuous during the open RFC phase, not round-based. Incoming comments are reviewed on an ongoing basis, incorporated where accepted, and reflected in updated document versions and decision records.
+
+In the default flow, each relevant comment can trigger a new document revision. Where appropriate, multiple comments may be consolidated into one combined revision, provided traceability per comment is preserved in the Comment Log and corresponding decision updates remain explicit in the Decision Log.
+
+This model is intentionally lightweight and operationally flexible for a decentralized environment: no fixed feedback windows and no mandatory institutional review rounds are required as the default operating pattern.
 
 ## Comment Submission and Review Process
 Comments are submitted through an RFC mailing list (`to-be-done`, list details will be published before the next feedback round). The process is:

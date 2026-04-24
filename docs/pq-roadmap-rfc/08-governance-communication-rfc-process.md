@@ -1,4 +1,4 @@
-# Governance, Communication, and RFC Process (Formal)
+# Governance, Communication, and RFC Process (Formal) {#ch-governance-process}
 
 ## Governance Decisions
 This chapter defines how decisions across the RFC lifecycle are prepared, made, documented, and communicated. The goal is a traceable process combining technical quality, stakeholder participation, and formal decisionability.
@@ -30,7 +30,7 @@ The process distinguishes functional roles:
 - **Technical Maintainers** - assess technical coherence, risk assumptions, and gate readiness across chapters and phases.
 - **RFC Governance Authority** - makes process-level release, closure, and freeze preparations and coordinates formal decision packages for governance steps.
 - **Terra Classic Chain Governance** - retains final on-chain decision rights where formal proposals are required and can challenge or revise RFC direction when needed.
-- **Auditors** - perform internal, external, or combined gate assessments as defined in Chapter 06.
+- **Auditors** - perform internal, external, or combined gate assessments as defined in Chapter {{chapter:audit-gates}}.
 
 Roles may overlap in persons, but documentation must still clearly separate who proposed, reviewed, and finally decided.
 
@@ -47,8 +47,8 @@ Comments are submitted through an RFC mailing list (`to-be-done`, list details w
 1. A commenter submits a comment to the mailing list with a clear subject, chapter reference, and rationale.
 2. RFC editors review the comment for scope fit, clarity, and actionability.
 3. Editors assign one of two outcomes: `accepted` or `rejected`.
-4. Every reviewed comment is recorded in Chapter 10 (Comment Log) with status and short rationale.
-5. Accepted comments usually result in a document change; the corresponding chapter/revision reference is recorded in Chapter 10.
+4. Every reviewed comment is recorded in Chapter {{chapter:comment-log}} (Comment Log) with status and short rationale.
+5. Accepted comments usually result in a document change; the corresponding chapter/revision reference is recorded in Chapter {{chapter:comment-log}}.
 
 This process ensures that comments are not only discussed but traceably processed and linked to resulting document updates.
 
@@ -67,4 +67,4 @@ Even after freeze, governance decisions remain required, especially for critical
 Communication follows the principle "one process, two categories": Informative communication focuses on understandable purpose, risk, and impact for community/users; Formal communication focuses on precise decision basis, gate status, and residual risk. For every phase-relevant decision, communication must include at least decision and scope, technical rationale, affected phases/gates, and open residual risks with next review point.
 
 ## Link to Logs
-This chapter defines process; Chapter 09 is the operational decision register and Chapter 10 is the operational comment register. Every relevant governance step must create a traceable status change in the Decision Log (`open`, `closed`, `deferred`) including short rationale. Every submitted comment must be tracked in the Comment Log (`accepted`, `rejected`) including short rationale and, when applicable, document-change references.
+This chapter defines process; Chapter {{chapter:decision-log}} is the operational decision register and Chapter {{chapter:comment-log}} is the operational comment register. Every relevant governance step must create a traceable status change in the Decision Log (`open`, `closed`, `deferred`) including short rationale. Every submitted comment must be tracked in the Comment Log (`accepted`, `rejected`) including short rationale and, when applicable, document-change references.

@@ -1,4 +1,4 @@
-# Roadmap Phases (Formal)
+# Roadmap Phases (Formal) {#ch-roadmap-phases}
 
 ## Phase Omega: RFC Freeze and Start Authorization (Preceding)
 Phase Omega is the upstream completion of RFC drafting before any technical implementation starts. It is not a delivery plan and not an implementation phase, but the formal transition from "discussion and variants" to a "binding implementation baseline." Without a completed Omega gate, implementation phases A through C do not begin.
@@ -8,7 +8,7 @@ The purpose of this phase is to establish a robust content baseline for all down
 ### Work Package O0: RFC Launch and Formal Comment Solicitation
 O0 is the formal start package for this RFC process. The RFC was initially drafted by the author in single-author mode and is then presented and published through a Terra Classic governance proposal as the formal kickoff for stakeholder review.
 
-The proposal explicitly asks whether Terra Classic stakeholders should formally enter the RFC comment process and requests relevant stakeholder groups (see Chapter 08, Stakeholder Groups) to submit comments through the defined channels (see Chapter 10, Submission Channel).
+The proposal explicitly asks whether Terra Classic stakeholders should formally enter the RFC comment process and requests relevant stakeholder groups (see Chapter {{chapter:governance-process}}, Stakeholder Groups) to submit comments through the defined channels (see Chapter {{chapter:comment-log}}, Submission Channel).
 
 The mandatory result of O0 is a published kickoff baseline with explicit governance-level invitation to comment, clear stakeholder addressing, and active comment intake.
 

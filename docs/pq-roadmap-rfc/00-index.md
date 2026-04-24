@@ -3,6 +3,7 @@
 This directory contains the RFC text under development as chapter files.
 
 ## Chapters
+- [00-scope-note.md](./00-scope-note.md) - Formal
 - [01-executive-summary.md](./01-executive-summary.md) - Informative
 - [02-cryptographic-signatures-explained.md](./02-cryptographic-signatures-explained.md) - Informative
 - [03-current-state-and-terminology.md](./03-current-state-and-terminology.md) - Informative

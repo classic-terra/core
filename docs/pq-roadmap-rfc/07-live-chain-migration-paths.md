@@ -1,4 +1,4 @@
-# Live-Chain Migration Paths (Formal)
+# Live-Chain Migration Paths (Formal) {#ch-live-chain-migration-paths}
 
 ## Positioning of This Chapter
 This chapter is categorized as formal. It provides a more detailed view of the consensus cutover path and explains how emergency scenarios are evaluated if the primary migration path cannot be executed safely or in time.

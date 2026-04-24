@@ -1,4 +1,4 @@
-# Comment Log (Formal)
+# Comment Log (Formal) {#ch-comment-log}
 
 This chapter is the operational register for RFC comments. It tracks each submitted comment and whether it was accepted or rejected by editors. The Comment Log is updated with each relevant RFC revision and is the binding reference for comment-processing traceability.
 

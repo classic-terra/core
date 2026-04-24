@@ -1,4 +1,4 @@
-# Cryptographic Signatures Explained Simply (Informative)
+# Cryptographic Signatures Explained Simply (Informative) {#ch-signatures-explained}
 
 ## What Signatures Are About
 A cryptographic signature is digital proof that a message actually comes from the person or system named as sender, and that the content was not modified unnoticed during transit. In practical terms, anyone verifying a signed message can check whether sender and content match.

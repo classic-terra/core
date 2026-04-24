@@ -1,4 +1,4 @@
-# Audit Gates as a Mandatory Component (Formal)
+# Audit Gates as a Mandatory Component (Formal) {#ch-audit-gates}
 
 ## Purpose and Core Principle
 Audit gates are the binding security and quality mechanism between roadmap phases. They prevent insufficiently validated assumptions from prototype or migration work from moving into live operation.

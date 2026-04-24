@@ -5,10 +5,17 @@ Phase Omega is the upstream completion of RFC drafting before any technical impl
 
 The purpose of this phase is to establish a robust content baseline for all downstream technical decisions. Open conflicts are not left implicit; they are explicitly decided, deferred, or rejected. At the same time, this phase defines which parts of the RFC are frozen and under which conditions post-freeze changes are allowed.
 
-### Work Package O1: Consolidation and Decision Closure
-O1 formally closes the RFC feedback cycle. Comments and opposing positions from stakeholder rounds are classified and transferred into document state with reasoned decisions. The Decision Log is maintained as a binding reference, including status per point (closed, deferred, rejected) and traceable rationale.
+### Work Package O0: RFC Launch and Formal Comment Solicitation
+O0 is the formal start package for this RFC process. The RFC was initially drafted by the author in single-author mode and is then presented and published through a Terra Classic governance proposal as the formal kickoff for stakeholder review.
 
-The mandatory result of O1 is a content-consistent RFC state without hidden conflicts in core questions. What remains open is explicitly marked as deferred and assigned to a clear follow-up process.
+The proposal explicitly asks whether Terra Classic stakeholders should formally enter the RFC comment process and requests relevant stakeholder groups (see Chapter 08, Stakeholder Groups) to submit comments through the defined channels (see Chapter 10, Submission Channel).
+
+The mandatory result of O0 is a published kickoff baseline with explicit governance-level invitation to comment, clear stakeholder addressing, and active comment intake.
+
+### Work Package O1: Consolidation and Decision Closure
+O1 formally closes the RFC feedback cycles. Comments and opposing positions from stakeholder rounds are classified and transferred into document state with reasoned decisions. The Decision Log is maintained as a binding reference, including status per point (closed, deferred, rejected) and traceable rationale.
+
+The mandatory result of O1 is a content-consistent RFC state without hidden conflicts in core questions. What remains open is explicitly marked as deferred and assigned to a clear follow-up process. O1 is formally closed through a dedicated governance proposal that confirms decision closure and the consolidated RFC baseline.
 
 ### Work Package O2: Phase and Gate Consistency Review
 O2 ensures consistency of implementation logic across chapter boundaries. It reviews target states, scope boundaries, audit gates, and exit criteria in phases A through C, as well as compatibility with governance and migration chapters.
@@ -21,10 +28,11 @@ O3 executes the formal governance event for freeze (for example proposal and vot
 Part of O3 is defining post-freeze change rules: which changes count as editorial only, and which require a new RFC revision and renewed governance approval.
 
 ### Dependencies and Order
-Omega packages run in clear sequence. O2 depends on content closure from O1. O3 depends on a passed consistency review from O2. This sequence ensures unresolved conflicts do not enter a formal freeze decision.
+Omega packages run in clear sequence. O1 depends on a completed kickoff and formal comment solicitation from O0. O2 depends on formally approved O1 closure and the resulting consolidated baseline. O3 depends on a passed consistency review from O2. This sequence ensures unresolved conflicts do not enter a formal freeze decision.
 
 ### Preliminary Exit Criteria (Omega Go/No-Go)
-- O1 is complete and the Decision Log is finally consolidated, including explicitly marked deferrals.
+- O0 publishes the RFC kickoff through governance and formally opens stakeholder comment intake through defined channels.
+- O1 is complete, the Decision Log is finally consolidated including explicitly marked deferrals, and formal closure is approved through governance proposal.
 - O2 documents and confirms consistency between Informative and Formal chapters and between phase and gate logic.
 - O3 is formally approved and published as frozen reference version.
 - Post-freeze change rules are bindingly documented.

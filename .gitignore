@@ -19,6 +19,7 @@ dist
 tools/bin/*
 examples/build/*
 docs/_build
+docs/pq-roadmap-rfc/*.pdf
 tools-stamp
 
 # Data - ideally these don't exist

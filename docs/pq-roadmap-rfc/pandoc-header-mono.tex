@@ -1,0 +1,18 @@
+\usepackage{fontspec}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{ragged2e}
+
+\setmainfont{Latin Modern Mono}
+\setsansfont{Latin Modern Mono}
+\setmonofont{Latin Modern Mono}
+\renewcommand{\familydefault}{\ttdefault}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\setlength{\emergencystretch}{3em}
+\renewcommand{\arraystretch}{1.12}

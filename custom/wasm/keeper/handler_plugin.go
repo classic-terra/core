@@ -1,134 +1,44 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
-	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
 	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
-	taxexemptionkeeper "github.com/classic-terra/core/v4/x/taxexemption/keeper"
-	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankKeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
-// msgEncoder is an extension point to customize encodings
-type msgEncoder interface {
-	// Encode converts wasmvm message to n cosmos message types
-	Encode(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Msg, error)
-}
-
-// MessageRouter ADR 031 request type routing
-type MessageRouter interface {
-	Handler(msg sdk.Msg) baseapp.MsgServiceHandler
-}
-
-// SDKMessageHandler can handles messages that can be encoded into sdk.Message types and routed.
-type SDKMessageHandler struct {
-	router             MessageRouter
-	encoders           msgEncoder
-	treasuryKeeper     treasurykeeper.Keeper
-	accountKeeper      authkeeper.AccountKeeper
-	bankKeeper         bankKeeper.Keeper
-	taxexemptionKeeper taxexemptionkeeper.Keeper
-	taxKeeper          taxkeeper.Keeper
-}
-
 func NewMessageHandler(
-	router MessageRouter,
+	router wasmkeeper.MessageRouter,
+	wasmKeeper wasmtypes.IBCContractKeeper,
 	ics4Wrapper wasmtypes.ICS4Wrapper,
-	channelKeeper wasmtypes.ChannelKeeper,
+	channelKeeperV2 wasmtypes.ChannelKeeperV2,
 	bankKeeper bankKeeper.Keeper,
-	taxexemptionKeeper taxexemptionkeeper.Keeper,
-	treasuryKeeper treasurykeeper.Keeper,
-	accountKeeper authkeeper.AccountKeeper,
-	taxKeeper taxkeeper.Keeper,
-	unpacker codectypes.AnyUnpacker,
+	cdc codec.Codec,
 	portSource wasmtypes.ICS20TransferPortSource,
 	customEncoders ...*wasmkeeper.MessageEncoders,
 ) wasmkeeper.Messenger {
-	encoders := wasmkeeper.DefaultEncoders(unpacker, portSource)
+	encoders := wasmkeeper.DefaultEncoders(cdc, portSource)
 	for _, e := range customEncoders {
 		encoders = encoders.Merge(e)
 	}
+	sdkHandler := wasmkeeper.NewSDKMessageHandler(cdc, router, encoders)
+	wrappedSDKHandler := wasmkeeper.MessageHandlerFunc(func(
+		ctx sdk.Context,
+		contractAddr sdk.AccAddress,
+		contractIBCPortID string,
+		msg wasmvmtypes.CosmosMsg,
+	) (events []sdk.Event, data [][]byte, msgResponses [][]*codectypes.Any, err error) {
+		ctx = ctx.WithValue(taxtypes.ContextKeyTaxReverseCharge, true)
+		return sdkHandler.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
+	})
 	return wasmkeeper.NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders, taxexemptionKeeper, treasuryKeeper, accountKeeper, bankKeeper, taxKeeper),
+		wrappedSDKHandler,
+		wasmkeeper.NewIBCRawPacketHandler(ics4Wrapper, wasmKeeper),
+		wasmkeeper.NewIBC2RawPacketHandler(channelKeeperV2),
 		wasmkeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
-}
-
-func NewSDKMessageHandler(router MessageRouter, encoders msgEncoder, taxexemptionKeeper taxexemptionkeeper.Keeper, treasuryKeeper treasurykeeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankKeeper.Keeper, taxKeeper taxkeeper.Keeper) SDKMessageHandler {
-	return SDKMessageHandler{
-		router:             router,
-		encoders:           encoders,
-		treasuryKeeper:     treasuryKeeper,
-		taxexemptionKeeper: taxexemptionKeeper,
-		accountKeeper:      accountKeeper,
-		bankKeeper:         bankKeeper,
-		taxKeeper:          taxKeeper,
-	}
-}
-
-func (h SDKMessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) (events []sdk.Event, data [][]byte, msgs [][]*codectypes.Any, err error) {
-	sdkMsgs, err := h.encoders.Encode(ctx, contractAddr, contractIBCPortID, msg)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	// contract handling is ALWAYS reverse charged
-	ctx = ctx.WithValue(taxtypes.ContextKeyTaxReverseCharge, true)
-
-	for _, sdkMsg := range sdkMsgs {
-		// Charge tax on result msg
-		// we set simulate to false here as it is not available and we don't need to
-		// increase the tax amount for simulation inside of wasm
-		res, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		// append data
-		data = append(data, res.Data)
-		// append events
-		sdkEvents := make([]sdk.Event, len(res.Events))
-		for i := range res.Events {
-			sdkEvents[i] = sdk.Event(res.Events[i])
-		}
-		events = append(events, sdkEvents...)
-		// no additional msg responses to return from SDK handler
-	}
-	return events, data, nil, nil
-}
-
-func (h SDKMessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (*sdk.Result, error) {
-	if msgValidate, ok := msg.(sdk.HasValidateBasic); ok {
-		if err := msgValidate.ValidateBasic(); err != nil {
-			return nil, err
-		}
-	}
-	// make sure this account can send it
-	if msgSigners, ok := msg.(sdk.LegacyMsg); ok {
-		for _, acct := range msgSigners.GetSigners() {
-			if !acct.Equals(contractAddr) {
-				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
-			}
-		}
-	}
-
-	// find the handler and execute it
-	if handler := h.router.Handler(msg); handler != nil {
-		// ADR 031 request type routing
-		msgResult, err := handler(ctx, msg)
-		return msgResult, err
-	}
-	// legacy sdk.Msg routing
-	// Assuming that the app developer has migrated all their Msgs to
-	// proto messages and has registered all `Msg services`, then this
-	// path should never be called, because all those Msgs should be
-	// registered within the `msgServiceRouter` already.
-	return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 }

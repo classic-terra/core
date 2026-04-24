@@ -12,6 +12,7 @@ This directory contains the RFC text under development as chapter files.
 - [07-live-chain-migration-paths.md](./07-live-chain-migration-paths.md) - Formal
 - [08-governance-communication-rfc-process.md](./08-governance-communication-rfc-process.md) - Formal
 - [09-open-decisions-decision-log.md](./09-open-decisions-decision-log.md) - Formal
+- [10-comment-log.md](./10-comment-log.md) - Formal
 
 ## Scope Note
 This document bundle describes direction, decision framework, and validation paths.

@@ -30,6 +30,7 @@ INPUT_FILES=(
   "$SCRIPT_DIR/07-live-chain-migration-paths.md"
   "$SCRIPT_DIR/08-governance-communication-rfc-process.md"
   "$SCRIPT_DIR/09-open-decisions-decision-log.md"
+  "$SCRIPT_DIR/10-comment-log.md"
 )
 
 if ! command -v pandoc >/dev/null 2>&1; then

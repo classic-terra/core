@@ -24,6 +24,17 @@ The process distinguishes functional roles: RFC editors consolidate text and mai
 ## RFC Feedback Cycle
 The feedback process runs iteratively until freeze readiness and follows a stable four-step cycle: publish an RFC version and open a feedback window, classify comments, publish follow-up revision with change log, then run a short review round for changed sections. Each round ends with a transparent delta showing what changed, what remains intentionally open, and what was transferred into the Decision Log.
 
+## Comment Submission and Review Process
+Comments are submitted through an RFC mailing list (`to-be-done`, list details will be published before the next feedback round). The process is:
+
+1. A commenter submits a comment to the mailing list with a clear subject, chapter reference, and rationale.
+2. RFC editors review the comment for scope fit, clarity, and actionability.
+3. Editors assign one of two outcomes: `accepted` or `rejected`.
+4. Every reviewed comment is recorded in Chapter 10 (Comment Log) with status and short rationale.
+5. Accepted comments usually result in a document change; the corresponding chapter/revision reference is recorded in Chapter 10.
+
+This process ensures that comments are not only discussed but traceably processed and linked to resulting document updates.
+
 ## Freeze
 RFC freeze is defined as preceding `Phase Omega` and must be completed before implementation phases A-C begin.
 
@@ -38,5 +49,5 @@ Even after freeze, governance decisions remain required, especially for critical
 ## Communication Framework
 Communication follows the principle "one process, two categories": Informative communication focuses on understandable purpose, risk, and impact for community/users; Formal communication focuses on precise decision basis, gate status, and residual risk. For every phase-relevant decision, communication must include at least decision and scope, technical rationale, affected phases/gates, and open residual risks with next review point.
 
-## Link to Decision Log
-This chapter defines process; Chapter 09 is the operational register. Every relevant governance step must create a traceable status change in the Decision Log (`open`, `closed`, `deferred`) including short rationale.
+## Link to Logs
+This chapter defines process; Chapter 09 is the operational decision register and Chapter 10 is the operational comment register. Every relevant governance step must create a traceable status change in the Decision Log (`open`, `closed`, `deferred`) including short rationale. Every submitted comment must be tracked in the Comment Log (`accepted`, `rejected`) including short rationale and, when applicable, document-change references.

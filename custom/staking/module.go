@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
 	customtypes "github.com/classic-terra/core/v4/custom/staking/types"
 	core "github.com/classic-terra/core/v4/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -44,9 +45,11 @@ func (am AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 type AppModule struct {
 	staking.AppModule
 
+	cdc          codec.Codec
 	keeper       *keeper.Keeper
 	paramsKeeper paramskeeper.Keeper
 	ss           paramtypes.Subspace
+	storeKey     storetypes.StoreKey
 }
 
 // NewAppModule creates a new AppModule object
@@ -56,12 +59,15 @@ func NewAppModule(cdc codec.Codec,
 	bk stakingtypes.BankKeeper,
 	pk paramskeeper.Keeper,
 	ss paramtypes.Subspace,
+	storeKey storetypes.StoreKey,
 ) AppModule {
 	return AppModule{
 		AppModule:    staking.NewAppModule(cdc, keeper, ak, bk, ss),
+		cdc:          cdc,
 		keeper:       keeper,
 		paramsKeeper: pk,
 		ss:           ss,
+		storeKey:     storeKey,
 	}
 }
 
@@ -72,7 +78,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	querier := keeper.Querier{Keeper: am.keeper}
 	stakingtypes.RegisterQueryServer(
 		cfg.QueryServer(),
-		NewLegacyQueryServer(querier, am.ss, am.keeper),
+		NewLegacyQueryServer(querier, am.ss, am.keeper, am.cdc, am.storeKey),
 	)
 
 	m := keeper.NewMigrator(am.keeper, am.ss)

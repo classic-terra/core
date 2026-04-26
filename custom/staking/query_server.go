@@ -227,34 +227,6 @@ func parseLengthPrefixedAccAddress(bz []byte) (sdk.AccAddress, error) {
 	return sdk.AccAddress(bz[1:]), nil
 }
 
-// delegationsToDelegationResponses mirrors the unexported helper of the same
-// name in cosmos-sdk's staking keeper: it looks up the validator for each
-// delegation and converts shares to bonded balance.
-func (q *LegacyQueryServer) delegationsToDelegationResponses(
-	ctx sdk.Context, delegations stakingtypes.Delegations,
-) (stakingtypes.DelegationResponses, error) {
-	bondDenom, err := q.keeper.BondDenom(ctx)
-	if err != nil {
-		return nil, err
-	}
-	resps := make(stakingtypes.DelegationResponses, 0, len(delegations))
-	for _, d := range delegations {
-		valAddr, err := sdk.ValAddressFromBech32(d.GetValidatorAddr())
-		if err != nil {
-			return nil, err
-		}
-		val, err := q.keeper.GetValidator(ctx, valAddr)
-		if err != nil {
-			return nil, err
-		}
-		balance := val.TokensFromShares(d.Shares).TruncateInt()
-		resps = append(resps, stakingtypes.NewDelegationResp(
-			d.GetDelegatorAddr(), d.GetValidatorAddr(), d.Shares, sdk.NewCoin(bondDenom, balance),
-		))
-	}
-	return resps, nil
-}
-
 func (q *LegacyQueryServer) ValidatorUnbondingDelegations(ctx context.Context, req *stakingtypes.QueryValidatorUnbondingDelegationsRequest) (*stakingtypes.QueryValidatorUnbondingDelegationsResponse, error) {
 	return q.QueryServer.ValidatorUnbondingDelegations(q.ensureLegacyParams(ctx), req)
 }

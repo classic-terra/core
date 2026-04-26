@@ -12,7 +12,6 @@ import (
 	customstaking "github.com/classic-terra/core/v4/custom/staking"
 	"github.com/classic-terra/core/v4/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +20,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 )
 

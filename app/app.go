@@ -18,7 +18,6 @@ import (
 	"github.com/classic-terra/core/v4/app/keepers"
 	appmempool "github.com/classic-terra/core/v4/app/mempool"
 	terraappparams "github.com/classic-terra/core/v4/app/params"
-
 	// upgrades
 	"github.com/classic-terra/core/v4/app/upgrades"
 	// v9 had been used by tax2gas and has to be skipped
@@ -43,7 +42,6 @@ import (
 	v8_1 "github.com/classic-terra/core/v4/app/upgrades/v8_1"
 	v8_2 "github.com/classic-terra/core/v4/app/upgrades/v8_2"
 	v8_3 "github.com/classic-terra/core/v4/app/upgrades/v8_3"
-
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v4/client/docs/statik"
 	customante "github.com/classic-terra/core/v4/custom/auth/ante"
@@ -280,6 +278,8 @@ func NewTerraApp(
 		panic("error while reading wasm config: " + err.Error())
 	}
 
+	replacementTracker := customante.NewReplacementTracker()
+
 	anteHandler, err := customante.NewAnteHandler(
 		customante.HandlerOptions{
 			AccountKeeper:      app.AccountKeeper,
@@ -300,6 +300,8 @@ func NewTerraApp(
 			StakingKeeper:      app.StakingKeeper,
 			TaxKeeper:          &app.TaxKeeper,
 			Cdc:                app.appCodec,
+			CommitMultiStore:   app.CommitMultiStore(),
+			ReplacementTracker: replacementTracker,
 		},
 	)
 	if err != nil {

@@ -175,9 +175,9 @@ func NewTerraApp(
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
 		var mempool *appmempool.FifoMempool
 		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs > 0 {
-			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs))
+			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs), appmempool.FifoTxEncoderOpt(txConfig.TxEncoder()))
 		} else {
-			mempool = appmempool.NewFifoMempool()
+			mempool = appmempool.NewFifoMempool(appmempool.FifoTxEncoderOpt(txConfig.TxEncoder()))
 		}
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetMempool(mempool)

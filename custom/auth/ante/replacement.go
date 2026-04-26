@@ -107,6 +107,10 @@ func (d TxReplacementDecorator) handleRecheck(ctx sdk.Context, tx sdk.Tx, next s
 
 	// This is the replacement tx itself — clear the tracker and allow it.
 	if bytes.Equal(ctx.TxBytes(), info.NewTxBytes) {
+		committedAcc := d.getCommittedAccount(ctx, sdk.MustAccAddressFromBech32(sender))
+		if committedAcc != nil && seq == committedAcc.GetSequence() {
+			d.ak.SetAccount(ctx, committedAcc)
+		}
 		d.tracker.Clear(sender)
 		return next(ctx, tx, false)
 	}

@@ -12,9 +12,12 @@ import (
 	customstaking "github.com/classic-terra/core/v4/custom/staking"
 	"github.com/classic-terra/core/v4/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -27,6 +30,16 @@ type ValidatorDelegationsSuite struct {
 
 func TestValidatorDelegationsSuite(t *testing.T) {
 	suite.Run(t, new(ValidatorDelegationsSuite))
+}
+
+type countingCodec struct {
+	codec.BinaryCodec
+	unmarshalCalls int
+}
+
+func (c *countingCodec) Unmarshal(bz []byte, ptr proto.Message) error {
+	c.unmarshalCalls++
+	return c.BinaryCodec.Unmarshal(bz, ptr)
 }
 
 // seedValidatorWithDelegations creates `numVals` validators (so no single one
@@ -122,7 +135,7 @@ func (s *ValidatorDelegationsSuite) TestValidatorDelegations_ReproducesArchiveBu
 	ss := s.App.GetSubspace(stakingtypes.ModuleName)
 	qs := customstaking.NewLegacyQueryServer(
 		querier, ss, s.App.StakingKeeper,
-		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey),
+		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
 	)
 
 	req := &stakingtypes.QueryValidatorDelegationsRequest{ValidatorAddr: valAddr.String()}
@@ -163,7 +176,7 @@ func (s *ValidatorDelegationsSuite) TestValidatorDelegations_LegacyPathKeepsLega
 	ss := s.App.GetSubspace(stakingtypes.ModuleName)
 	qs := customstaking.NewLegacyQueryServer(
 		querier, ss, s.App.StakingKeeper,
-		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey),
+		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
 	)
 
 	params, err := s.App.StakingKeeper.GetParams(s.Ctx)
@@ -202,7 +215,7 @@ func (s *ValidatorDelegationsSuite) TestValidatorDelegations_LegacyPathPaginates
 	ss := s.App.GetSubspace(stakingtypes.ModuleName)
 	qs := customstaking.NewLegacyQueryServer(
 		querier, ss, s.App.StakingKeeper,
-		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey),
+		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
 	)
 
 	// Drop the reverse-index and force the legacy path.
@@ -238,6 +251,35 @@ func (s *ValidatorDelegationsSuite) TestValidatorDelegations_LegacyPathPaginates
 		"paginated walk must surface every delegation exactly once")
 }
 
+// TestValidatorDelegations_LegacyPathDefaultPaginationOnlyLoadsFirstPage
+// guards the timeout mode from archive LCDs: nil pagination defaults to
+// limit=100 with count_total=true, so the legacy path must count all matches
+// without loading every delegation value.
+func (s *ValidatorDelegationsSuite) TestValidatorDelegations_LegacyPathDefaultPaginationOnlyLoadsFirstPage() {
+	s.Setup(s.T(), types.ColumbusChainID)
+
+	const totalDelegations = 101
+	valAddr := s.seedValidatorWithDelegations(410, totalDelegations)
+
+	querier := stakingkeeper.Querier{Keeper: s.App.StakingKeeper}
+	ss := s.App.GetSubspace(stakingtypes.ModuleName)
+	counting := &countingCodec{BinaryCodec: s.App.AppCodec()}
+	qs := customstaking.NewLegacyQueryServer(
+		querier, ss, s.App.StakingKeeper,
+		counting, s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
+	)
+
+	s.dropReverseIndex()
+	resp, err := qs.ValidatorDelegations(s.Ctx.WithBlockHeight(28214399), &stakingtypes.QueryValidatorDelegationsRequest{ValidatorAddr: valAddr.String()})
+	s.Require().NoError(err)
+	s.Require().Len(resp.DelegationResponses, 100)
+	s.Require().NotNil(resp.Pagination)
+	s.Require().Equal(uint64(totalDelegations), resp.Pagination.Total)
+	s.Require().NotEmpty(resp.Pagination.NextKey)
+	s.Require().Equal(100, counting.unmarshalCalls,
+		"legacy fallback should only unmarshal the current page of delegations")
+}
+
 // TestValidatorDelegations_PostMigrationUsesIndex ensures the fix doesn't change
 // behavior at chain-head heights: with the reverse-index intact and queried at
 // a post-v5-staking-migration height, the SDK's normal indexed path runs.
@@ -253,7 +295,7 @@ func (s *ValidatorDelegationsSuite) TestValidatorDelegations_PostMigrationUsesIn
 	ss := s.App.GetSubspace(stakingtypes.ModuleName)
 	qs := customstaking.NewLegacyQueryServer(
 		querier, ss, s.App.StakingKeeper,
-		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey),
+		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
 	)
 
 	req := &stakingtypes.QueryValidatorDelegationsRequest{ValidatorAddr: valAddr.String()}
@@ -344,7 +386,7 @@ func (s *ValidatorDelegationsSuite) TestHistoricalInfo_ReproducesArchiveBug() {
 	ss := s.App.GetSubspace(stakingtypes.ModuleName)
 	qs := customstaking.NewLegacyQueryServer(
 		querier, ss, s.App.StakingKeeper,
-		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey),
+		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
 	)
 
 	req := &stakingtypes.QueryHistoricalInfoRequest{Height: targetHeight}
@@ -394,7 +436,7 @@ func (s *ValidatorDelegationsSuite) TestHistoricalInfo_PostMigrationUsesIndex() 
 	ss := s.App.GetSubspace(stakingtypes.ModuleName)
 	qs := customstaking.NewLegacyQueryServer(
 		querier, ss, s.App.StakingKeeper,
-		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey),
+		s.App.AppCodec(), s.App.GetKey(stakingtypes.StoreKey), s.App.GetKey(distrtypes.StoreKey),
 	)
 
 	// Rewrite into legacy string-format keys; with the height gate at

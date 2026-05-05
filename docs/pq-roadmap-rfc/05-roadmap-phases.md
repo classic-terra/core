@@ -1,7 +1,7 @@
 # Roadmap Phases (Formal) {#ch-roadmap-phases}
 
 ## Phase Omega: RFC Freeze and Start Authorization (Preceding)
-Phase Omega is the upstream completion of RFC drafting before any technical implementation starts. It is not a delivery plan and not an implementation phase, but the formal transition from "discussion and variants" to a "binding implementation baseline." Without a completed Omega gate, implementation phases A through C do not begin.
+Phase Omega is the upstream completion of RFC drafting before any technical implementation starts. It is not a delivery plan and not an implementation phase, but the formal transition from "discussion and variants" to a "binding implementation baseline" (the frozen, governance-approved RFC reference that implementation work must follow unless formally revised). Without a completed Omega gate, implementation phases A through C do not begin.
 
 The purpose of this phase is to establish a robust content baseline for all downstream technical decisions. Open conflicts are not left implicit; they are explicitly decided, deferred, or rejected. At the same time, this phase defines which parts of the RFC are frozen and under which conditions post-freeze changes are allowed.
 

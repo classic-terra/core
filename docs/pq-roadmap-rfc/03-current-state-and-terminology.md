@@ -50,6 +50,9 @@ This chapter therefore provides the shared foundation for following chapters: ta
 - **ibc-go** - ibc-go is the Go implementation of IBC modules and middleware used by SDK-based chains, including Terra Classic.
 - **Ante** - In SDK context, Ante is the transaction pre-check layer before execution.
 - **RFC** - RFC stands for "Request for Comments" and in this context means a structured discussion and decision document that makes direction, options, risks, and open points transparent before binding delivery decisions are made.
+- **Binding** - Binding means formally mandatory within this RFC/governance context: once marked binding, it is the required baseline until changed through the defined revision/change-control process.
+- **Delivery** - Delivery means practical implementation and operational rollout work (code, testing, migration preparation, operations execution), as distinct from RFC discussion and direction setting.
+- **Decision** - A decision is a formally documented choice between options, including rationale and status (`open`, `closed`, `deferred`) in the Decision Log.
 - **Ed25519** - Ed25519 is the relevant signature scheme in the current Terra Classic consensus path.
 - **secp256k1** - secp256k1 is the relevant signature scheme in the current Terra Classic wallet/tx path.
 - **PQ (Post-Quantum)** - PQ denotes cryptographic methods intended to be more robust against threat models with capable quantum computers than many widely used classical methods.

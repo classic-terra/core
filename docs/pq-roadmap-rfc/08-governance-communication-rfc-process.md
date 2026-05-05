@@ -66,6 +66,10 @@ After freeze, a two-level change model applies. Editorial changes without impact
 ## Decision and Escalation Logic During Implementation
 Even after freeze, governance decisions remain required, especially for critical audit findings needing risk acceptance, gate blockers that trigger replanning, external PQ developments affecting assumptions, and deviations from defined cutover/security principles. Escalation logic is strict: first technical clarification and documentation, then explicit governance decision with Go/No-Go or deferral. Silent continuation with unresolved critical deviations is excluded.
 
+Decision authority in this escalation path is explicitly split:
+- Process-level preparation and escalation coordination is handled by the `RFC Governance Authority`.
+- Binding chain-level direction and risk-acceptance decisions are made by `Terra Classic Chain Governance` through formal on-chain governance mechanisms.
+
 For `Phase A5` IBC migration work, execution ownership and reporting cadence must be explicitly assigned and published. At minimum, a named owner set (technical lead, governance liaison, and operations liaison) and a recurring status cadence must be defined to track counterparty outreach, relayer readiness, fallback-mode status, and unresolved blockers through to `A6`.
 
 ## Communication Framework

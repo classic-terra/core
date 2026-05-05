@@ -67,20 +67,38 @@ A4 develops all technical components and operational strategies required for ord
 
 This package ensures the transition is not only technically possible but operable within production-grade governance and operations logic. The focus is deterministic behavior in the upgrade window and unambiguous rules for valid signatures before, during, and after cutover.
 
-### Work Package A5: Audit Gate for Migration Components (Gate 2)
-A5 is the final audit gate before productive consensus-path transition. It reviews correctness and tamper resistance of registration and migration mechanics, consistency of cutover rules, and secure deterministic post-switch startup.
+### Work Package A5: IBC Compatibility and Counterparty Migration Preparation
+A5 specifies and implements all IBC-relevant migration components required to keep interchain operation viable across consensus cutover. This includes explicit compatibility strategy for existing `07-tendermint` clients, introduction path for a successor client type where required, relayer runbooks, and chain-by-chain counterparty upgrade coordination requirements.
+
+The package must produce a deterministic operational plan for the cutover window: how client updates are sequenced, how channel disruption risk is limited, what fallback and recovery procedures apply, and which readiness evidence must be reached before productive switch.
+
+**Critical risk premise**: the decisive client upgrades are executed on counterparty chains, not on Terra Classic. Counterparty governance decisions, release cycles, and operational priorities are external dependencies and cannot be enforced by Terra Classic. Therefore participation and timeline alignment are explicitly non-assured and must be treated as major Go/No-Go risk in migration governance.
+
+After the technical implementation profile for the PQ signing client path is sufficiently specified, A5 includes a mandatory active engagement step by roadmap executors: direct talks with relevant actors on each counterparty chain (governance participants, core maintainers, relayer operators, and major ecosystem operators) to negotiate upgrade feasibility, sequencing, and commitment level.
+
+Operational concentration risk is explicitly in scope: at the time of this RFC revision, `LuncGoblins` is the currently known paid IBC relayer operator for Terra Classic. A5 must therefore include a relayer-readiness and continuity plan that addresses single-operator dependency risk during migration.
+
+### Work Package A6: Audit Gate for Migration Components (Gate 2)
+A6 is the final audit gate before productive consensus-path transition. It reviews correctness and tamper resistance of registration and migration mechanics, consistency of cutover rules, and secure deterministic post-switch startup.
 
 The result is a robust Go/No-Go recommendation for the production migration path. Critical findings block transition to downstream rollout and governance steps until fixed and successfully re-audited.
 
 ### Dependencies and Order
-Packages are intentionally sequential. A2 requires a positive A1 result. A4 requires a passed audit gate from A3. A5 is mandatory before any production migration decision. This sequence prevents unverified assumptions from early development from leaking into live migration.
+Packages are intentionally sequential. A2 requires a positive A1 result. A4 requires a passed audit gate from A3. A5 depends on migration logic from A4 and must complete before final gate review. A5 additionally depends on external counterparty readiness signals that Terra Classic cannot unilaterally control. A6 is mandatory before any production migration decision. This sequence prevents unverified assumptions from early development from leaking into live migration.
 
 ### Preliminary Exit Criteria (Phase A Go/No-Go)
 - A1 is complete and includes an explicit continuation decision based on traceable no-go criteria.
 - A2 delivers a reproducibly running prototype on an independent genesis testnet.
 - A3 passes without critical blockers for entering migration development.
 - A4 fully specifies and implements migration components and cutover logic.
-- A5 passes without critical blockers for production migration path.
+- A5 delivers a validated IBC compatibility and counterparty migration plan with explicit cutover readiness signals and documented counterparty participation status.
+- A5 explicitly documents residual external dependency risk where counterparty participation is missing, uncertain, or time-unbounded.
+- A5 documents outreach execution and outcomes from direct counterparty-chain talks after technical client-path clarification, including chain-specific blockers and commitment signals.
+- A5 defines fallback operating modes for partial or delayed counterparty adoption, including routing-impact communication and recovery sequencing.
+- A5 includes a relayer-readiness and continuity plan that explicitly addresses the current `LuncGoblins` single-operator dependency.
+- A5 includes a counterparty test campaign with rehearsal scenarios and documented pass/fail evidence.
+- A5 produces governance package templates for counterparty-side proposal and operator communication flows.
+- A6 passes without critical blockers for production migration path.
 
 ### Out of Scope in Phase A
 - Wallet/tx rollout for end users.

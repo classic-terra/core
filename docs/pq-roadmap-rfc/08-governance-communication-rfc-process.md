@@ -6,6 +6,7 @@ This chapter defines how decisions across the RFC lifecycle are prepared, made, 
 In this RFC, governance does not mean operational delivery steering. It means content-level direction decisions, release logic, and transparent risk acceptance across phases Omega through C.
 
 This chapter distinguishes two governance scopes to avoid ambiguity:
+
 - **RFC Governance Authority** - the process-level authority for active RFC operations (editing flow, versioning flow, comment processing flow, and preparation of closure/freeze decisions).
 - **Terra Classic Chain Governance** - the on-chain governance body that can observe the RFC process and decide formal proposals affecting RFC direction, closure, or freeze.
 
@@ -26,6 +27,8 @@ The following groups are central for feedback, impact, and practical feasibility
 
 ## Roles in the RFC Process
 The process distinguishes functional roles:
+
+- **Commenters** - submit RFC comments through the defined channels, reference affected chapters, and provide rationale for proposed changes or objections.
 - **RFC Editors** - consolidate text contributions, maintain chapter consistency, and maintain versions and change logs.
 - **Technical Maintainers** - assess technical coherence, risk assumptions, and gate readiness across chapters and phases.
 - **RFC Governance Authority** - makes process-level release, closure, and freeze preparations and coordinates formal decision packages for governance steps.
@@ -63,8 +66,12 @@ After freeze, a two-level change model applies. Editorial changes without impact
 ## Decision and Escalation Logic During Implementation
 Even after freeze, governance decisions remain required, especially for critical audit findings needing risk acceptance, gate blockers that trigger replanning, external PQ developments affecting assumptions, and deviations from defined cutover/security principles. Escalation logic is strict: first technical clarification and documentation, then explicit governance decision with Go/No-Go or deferral. Silent continuation with unresolved critical deviations is excluded.
 
+For `Phase A5` IBC migration work, execution ownership and reporting cadence must be explicitly assigned and published. At minimum, a named owner set (technical lead, governance liaison, and operations liaison) and a recurring status cadence must be defined to track counterparty outreach, relayer readiness, fallback-mode status, and unresolved blockers through to `A6`.
+
 ## Communication Framework
 Communication follows the principle "one process, two categories": Informative communication focuses on understandable purpose, risk, and impact for community/users; Formal communication focuses on precise decision basis, gate status, and residual risk. For every phase-relevant decision, communication must include at least decision and scope, technical rationale, affected phases/gates, and open residual risks with next review point.
+
+For counterparty-chain coordination in `Phase A5`, communication includes a standardized governance package template set so outreach can be translated into executable counterpart actions with minimal friction. The template set includes at least: technical change summary, risk statement, suggested sequencing model, relayer/operator checklist, and contact/escalation points.
 
 ## Link to Logs
 This chapter defines process; Chapter {{chapter:decision-log}} is the operational decision register and Chapter {{chapter:comment-log}} is the operational comment register. Every relevant governance step must create a traceable status change in the Decision Log (`open`, `closed`, `deferred`) including short rationale. Every submitted comment must be tracked in the Comment Log (`accepted`, `rejected`) including short rationale and, when applicable, document-change references.

@@ -17,7 +17,7 @@ This keeps gate strictness aligned with phase criticality: strictest in consensu
 ## Gate Matrix (Binding Minimum Logic)
 1. `Omega Gate`: Phase Omega must be complete before A-C start.
 2. `A Gate 1` (after A2): audit of PQ consensus prototype as prerequisite for A4.
-3. `A Gate 2` (after A4): audit of consensus migration components as prerequisite for production migration decision.
+3. `A Gate 2` (after A5): audit of consensus migration components as prerequisite for production migration decision.
 4. `B Gate` (after B2): audit of hybrid wallet/tx path as prerequisite for B4.
 5. `B4` intentionally has no second separate mandatory gate; with high complexity, governance may require additional re-audit.
 6. `C Assurance`: recurring review cycles instead of single release gate.
@@ -56,6 +56,9 @@ After a passed gate, relevant code and configuration changes must be documented 
 - DoS risks from larger signatures, changed verification costs, and load spikes.
 - Hardening of PrivValidator/remote-signer interfaces.
 - Correctness and tamper resistance of key binding (`classical -> PQ`) and snapshot/activation logic.
+- IBC continuity risks from consensus-signature transition, including dependency on counterparty client upgrades and non-participation scenarios.
+- Relayer-readiness and continuity controls for migration, including concentration risk treatment for the currently known single paid Terra Classic relayer operator (`LuncGoblins`).
+- Counterparty test-campaign evidence, including rehearsal outcomes for partial-adoption fallback modes.
 - Negative tests (malformed input, boundary sizes, mixed-version scenarios).
 
 ## Mandatory Review Points in Wallet/Tx Path (Phase B)

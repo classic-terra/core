@@ -8,7 +8,7 @@ It is not a delivery plan, but a technical orientation for transitioning from cu
 ## Primary Path: In-Place Cutover
 The primary migration path is a coordinated in-place upgrade with planned chain halt and subsequent restart on the forked, PQ-enabled consensus stack. This path prioritizes live-chain continuity and minimizes ecosystem disruption.
 
-A prerequisite is that preparatory safety conditions from Phase A are satisfied, especially valid and robustly reviewed binding from existing validator identities to new PQ consensus keys.
+A prerequisite is that preparatory safety conditions from Phase A are satisfied, especially valid and robustly reviewed binding from existing validator identities to new PQ consensus keys and a documented IBC counterparty migration readiness assessment.
 
 ## Core Element: Binding Existing Validators to New Consensus Keys
 The security-critical core of cutover is unambiguous assignment of "existing validator -> new PQ consensus key." Without this mapping, post-switch operation cannot verify which new key belongs to which previous validator identity.
@@ -42,5 +42,16 @@ The decision on in-place cutover follows a strict Go/No-Go principle:
 - Safety before speed.
 - Determinism before ad-hoc workarounds.
 - Documented governance decision before operational shortcuts.
+- No implicit assumption of counterparty participation in required IBC client upgrades.
 
-If a Go cannot be robustly justified, no unsafe cutover is forced. Instead of switching to a currently unvalidated re-genesis path, hardening, re-audit, and renewed decision cycle are required.
+If a Go cannot be robustly justified, no unsafe cutover is forced. This includes cases where counterparty migration participation is missing, uncertain, or not aligned with cutover timing. Instead of switching to a currently unvalidated re-genesis path, hardening, re-audit, and renewed decision cycle are required.
+
+## Fallback Operating Modes for IBC
+Because counterparty client upgrades are external dependencies, this RFC requires explicit fallback modes for partial adoption scenarios instead of binary assumptions.
+
+Minimum fallback-mode coverage:
+- `Mode 1 - Full continuity`: counterparties required for target routing have completed client-side readiness; standard cutover sequence proceeds.
+- `Mode 2 - Partial continuity`: only a subset of counterparties is ready; operation proceeds with explicitly declared route limitations and prioritized relaying on viable paths.
+- `Mode 3 - Protective restriction`: readiness is insufficient for safe broad routing; IBC operation is temporarily restricted according to predefined safety policy while migration hardening and coordination continue.
+
+For each mode, A5 artifacts must define operator actions, relayer posture, user-facing communication scope, and the condition for transitioning to the next mode.

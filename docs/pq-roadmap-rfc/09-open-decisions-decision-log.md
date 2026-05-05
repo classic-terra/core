@@ -62,49 +62,49 @@ This chapter is the operational decision register of the RFC. It tracks closed, 
 **Question:** How exactly should the wallet/tx hybrid path be specified regarding key/account types, compatibility windows, and activation logic?  
 **Decision:** No final decision yet. Working options include conservative entry, staged activation, and aggressive rollout profiles.  
 **Rationale:** The decision depends on balancing security requirements, integration effort, user-experience risk, and operational complexity across heterogeneous ecosystem actors. Finalization requires B1-level architecture and compatibility evidence.  
-**Status:** open
+**Status:** open  
 **Reference:** Chapters {{chapter:target-states-options}}, {{chapter:roadmap-phases}}, target phase B1
 
 ### Q-10
 **Question:** Which formal trigger set should govern consensus cutover Go/No-Go decisions beyond minimum threshold criteria?  
 **Decision:** No final decision yet. Working options include strict criteria sets, weighted decision models, and multi-stage approval logic.  
 **Rationale:** Minimum thresholds alone may not capture full operational readiness and residual risk conditions. The final trigger model must preserve safety/liveness, deterministic behavior, and practical operational controllability in high-pressure cutover conditions.  
-**Status:** open
-**Reference:** Chapters {{chapter:roadmap-phases}}, {{chapter:live-chain-migration-paths}}, target phase A4-A5
+**Status:** open  
+**Reference:** Chapters {{chapter:roadmap-phases}}, {{chapter:live-chain-migration-paths}}, target phase A4-A6
 
 ### Q-11
 **Question:** Which governance model should define the relationship between Terra Classic governance and the Phase C carrier entity?  
 **Decision:** No final decision yet. Working options include direct governance binding, mandated sub-structure, and hybrid governance models.  
 **Rationale:** The relationship must ensure accountability and transparency while preserving operational ability to act and reliable control of critical assets (for example DNS, release accounts, distribution channels). The model must be precise enough to avoid governance ambiguity during incidents.  
-**Status:** open
+**Status:** open  
 **Reference:** Chapters {{chapter:roadmap-phases}}, {{chapter:governance-process}}, target phase C2
 
 ### Q-12
 **Question:** Which additional re-audit regime applies if B3 and B4 are merged into one execution block?  
 **Decision:** No final decision yet. Working options include trigger-based mandatory re-audits and case-by-case governance decisions.  
 **Rationale:** Merging B3/B4 may improve delivery flow but can compress review separation between implementation and migration logic. The final regime must preserve security assurance without creating disproportionate process overhead or timing risk.  
-**Status:** open
+**Status:** open  
 **Reference:** Chapters {{chapter:roadmap-phases}}, {{chapter:audit-gates}}, target phase B3-B4
 
 ### Q-13
 **Question:** How should external PQ monitoring and alignment be operationalized in cadence and decision impact?  
 **Decision:** No final decision yet. Working options include periodic cycles, event-driven triggers, and combined operating models.  
 **Rationale:** The mechanism must be responsive to external evidence changes without overwhelming governance and technical teams with noise. It must define when new external findings trigger review-only actions versus binding RFC or implementation adjustments.  
-**Status:** open
+**Status:** open  
 **Reference:** Chapters {{chapter:roadmap-phases}}, {{chapter:governance-process}}, target phase C3
 
 ### Q-14
 **Question:** Should a detailed re-genesis emergency specification be finalized now as part of this RFC baseline?  
 **Decision:** Deferred. No final specification is adopted in the current RFC baseline.  
 **Rationale:** A robust and reproducible technical proof for safe large-state export/import is still missing. The decision is deferred until credible end-to-end evidence under realistic operating conditions is available.  
-**Status:** deferred
+**Status:** deferred  
 **Reference:** Chapters {{chapter:live-chain-migration-paths}}, {{chapter:governance-process}}
 
 ### Q-15
 **Question:** Should the RFC define a final post-ML-DSA long-term cryptographic profile at this stage?  
 **Decision:** Deferred. No final post-ML-DSA profile is fixed in the current RFC revision.  
 **Rationale:** External PQ standards and cryptanalysis are still evolving. Prematurely freezing a long-term successor profile would risk locking the roadmap to assumptions that may change with new evidence and standardization outcomes.  
-**Status:** deferred
+**Status:** deferred  
 **Reference:** Chapters {{chapter:target-states-options}}, {{chapter:governance-process}}
 
 ### Q-16

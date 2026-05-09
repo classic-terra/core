@@ -3,7 +3,6 @@ package staking
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
@@ -12,7 +11,9 @@ import (
 	legacyupgrade "github.com/classic-terra/core/v4/custom/upgrade/legacy"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -28,13 +29,15 @@ type LegacyQueryServer struct {
 	legacySubspace paramtypes.Subspace
 	cdc            codec.BinaryCodec
 	storeKey       storetypes.StoreKey
+	distrStoreKey  storetypes.StoreKey
 }
 
 // NewLegacyQueryServer creates a new LegacyQueryServer instance.
 //
 // `cdc` and `storeKey` are required for the pre-v5-staking-migration
-// ValidatorDelegations fallback path, which scans the primary DelegationKey
-// (0x31) prefix directly when the SDK's reverse-index (0x71) hasn't been
+// ValidatorDelegations fallback path, which uses x/distribution's
+// DelegatorStartingInfo prefix (0x04 || valAddr || delAddr) to enumerate a
+// validator's delegators when staking's reverse-index (0x71) hasn't been
 // backfilled at the queried height.
 func NewLegacyQueryServer(
 	originalServer stakingtypes.QueryServer,
@@ -42,6 +45,7 @@ func NewLegacyQueryServer(
 	keeper *keeper.Keeper,
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	distrStoreKey storetypes.StoreKey,
 ) stakingtypes.QueryServer {
 	return &LegacyQueryServer{
 		QueryServer:    originalServer,
@@ -49,6 +53,7 @@ func NewLegacyQueryServer(
 		legacySubspace: legacySubspace,
 		cdc:            cdc,
 		storeKey:       storeKey,
+		distrStoreKey:  distrStoreKey,
 	}
 }
 
@@ -139,11 +144,12 @@ func (q *LegacyQueryServer) ValidatorDelegations(ctx context.Context, req *staki
 }
 
 // validatorDelegationsLegacy reproduces cosmos-sdk's unexported
-// `getValidatorDelegationsLegacy` (x/staking/keeper/grpc_query.go): it scans
-// the primary DelegationKey (0x31) prefix and filters by validator. Used for
-// archive queries at heights before the v4→v5 staking migration backfilled the
-// DelegationByValIndexKey (0x71) reverse-index that the SDK's default
-// ValidatorDelegations now relies on.
+// `getValidatorDelegationsLegacy` semantics for archive heights before the
+// v4→v5 staking migration. Instead of scanning every staking delegation under
+// 0x31, it walks x/distribution's DelegatorStartingInfo prefix for the target
+// validator, then fetches each exact staking delegation by (delegator,
+// validator). This keeps the query validator-scoped even when staking's 0x71
+// reverse-index does not exist yet.
 func (q *LegacyQueryServer) validatorDelegationsLegacy(
 	ctx sdk.Context, req *stakingtypes.QueryValidatorDelegationsRequest,
 ) (*stakingtypes.QueryValidatorDelegationsResponse, error) {
@@ -153,35 +159,55 @@ func (q *LegacyQueryServer) validatorDelegationsLegacy(
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
-	if _, err := sdk.ValAddressFromBech32(req.ValidatorAddr); err != nil {
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	store := ctx.KVStore(q.storeKey)
-	delStore := prefix.NewStore(store, stakingtypes.DelegationKey)
+	stakingStore := ctx.KVStore(q.storeKey)
+	distrStore := ctx.KVStore(q.distrStoreKey)
+	startingInfoPrefix := append([]byte{}, distrtypes.DelegatorStartingInfoPrefix...)
+	startingInfoPrefix = append(startingInfoPrefix, address.MustLengthPrefix(valAddr.Bytes())...)
+	startingInfoStore := prefix.NewStore(distrStore, startingInfoPrefix)
 
-	dels, pageRes, err := query.GenericFilteredPaginate(
-		q.cdc, delStore, req.Pagination,
-		func(_ []byte, d *stakingtypes.Delegation) (*stakingtypes.Delegation, error) {
-			if !strings.EqualFold(d.GetValidatorAddr(), req.ValidatorAddr) {
-				return nil, nil
-			}
-			return d, nil
-		},
-		func() *stakingtypes.Delegation { return &stakingtypes.Delegation{} },
-	)
+	delegatorAddrs := make([]sdk.AccAddress, 0)
+	pageRes, err := query.Paginate(startingInfoStore, req.Pagination, func(key, _ []byte) error {
+		delAddr, err := parseLengthPrefixedAccAddress(key)
+		if err != nil {
+			return err
+		}
+		delegatorAddrs = append(delegatorAddrs, delAddr)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	delegations := make(stakingtypes.Delegations, 0, len(dels))
-	for _, d := range dels {
-		delegations = append(delegations, *d)
-	}
-
-	delResps, err := q.delegationsToDelegationResponses(ctx, delegations)
+	bondDenom, err := q.keeper.BondDenom(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+	validator, err := q.keeper.GetValidator(ctx, valAddr)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	delResps := make(stakingtypes.DelegationResponses, 0, len(delegatorAddrs))
+	for _, delAddr := range delegatorAddrs {
+		delegationBz := stakingStore.Get(stakingtypes.GetDelegationKey(delAddr, valAddr))
+		if delegationBz == nil {
+			continue
+		}
+
+		var delegation stakingtypes.Delegation
+		if err := q.cdc.Unmarshal(delegationBz, &delegation); err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		balance := validator.TokensFromShares(delegation.Shares).TruncateInt()
+		delResps = append(delResps, stakingtypes.NewDelegationResp(
+			delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares, sdk.NewCoin(bondDenom, balance),
+		))
 	}
 
 	return &stakingtypes.QueryValidatorDelegationsResponse{
@@ -190,32 +216,15 @@ func (q *LegacyQueryServer) validatorDelegationsLegacy(
 	}, nil
 }
 
-// delegationsToDelegationResponses mirrors the unexported helper of the same
-// name in cosmos-sdk's staking keeper: it looks up the validator for each
-// delegation and converts shares to bonded balance.
-func (q *LegacyQueryServer) delegationsToDelegationResponses(
-	ctx sdk.Context, delegations stakingtypes.Delegations,
-) (stakingtypes.DelegationResponses, error) {
-	bondDenom, err := q.keeper.BondDenom(ctx)
-	if err != nil {
-		return nil, err
+func parseLengthPrefixedAccAddress(bz []byte) (sdk.AccAddress, error) {
+	if len(bz) == 0 {
+		return nil, status.Error(codes.Internal, "empty delegator key")
 	}
-	resps := make(stakingtypes.DelegationResponses, 0, len(delegations))
-	for _, d := range delegations {
-		valAddr, err := sdk.ValAddressFromBech32(d.GetValidatorAddr())
-		if err != nil {
-			return nil, err
-		}
-		val, err := q.keeper.GetValidator(ctx, valAddr)
-		if err != nil {
-			return nil, err
-		}
-		balance := val.TokensFromShares(d.Shares).TruncateInt()
-		resps = append(resps, stakingtypes.NewDelegationResp(
-			d.GetDelegatorAddr(), d.GetValidatorAddr(), d.Shares, sdk.NewCoin(bondDenom, balance),
-		))
+	addrLen := int(bz[0])
+	if len(bz) != 1+addrLen {
+		return nil, status.Error(codes.Internal, "invalid delegator key length")
 	}
-	return resps, nil
+	return sdk.AccAddress(bz[1:]), nil
 }
 
 func (q *LegacyQueryServer) ValidatorUnbondingDelegations(ctx context.Context, req *stakingtypes.QueryValidatorUnbondingDelegationsRequest) (*stakingtypes.QueryValidatorUnbondingDelegationsResponse, error) {

@@ -167,7 +167,14 @@ func (d TxReplacementDecorator) handleNewTx(ctx sdk.Context, tx sdk.Tx, next sdk
 
 	d.tracker.Set(sender, committedSeq, ctx.TxBytes())
 
-	return next(ctx, tx, false)
+	newCtx, err := next(ctx, tx, false)
+	if err != nil {
+		// The replacement tx was rejected downstream; clear the tracker so the
+		// original stuck tx is not evicted during recheck without a valid replacement.
+		d.tracker.Clear(sender)
+		return newCtx, err
+	}
+	return newCtx, nil
 }
 
 func (d TxReplacementDecorator) getCommittedAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI {

@@ -18,6 +18,8 @@ import (
 	customstaking "github.com/classic-terra/core/v4/custom/staking"
 	customwasmkeeper "github.com/classic-terra/core/v4/custom/wasm/keeper"
 	terrawasm "github.com/classic-terra/core/v4/wasmbinding"
+	cronkeeper "github.com/classic-terra/core/v4/x/cron/keeper"
+	crontypes "github.com/classic-terra/core/v4/x/cron/types"
 	dyncommkeeper "github.com/classic-terra/core/v4/x/dyncomm/keeper"
 	dyncommtypes "github.com/classic-terra/core/v4/x/dyncomm/types"
 	marketkeeper "github.com/classic-terra/core/v4/x/market/keeper"
@@ -101,6 +103,7 @@ type AppKeepers struct {
 	TreasuryKeeper        treasurykeeper.Keeper
 	TaxExemptionKeeper    taxexemptionkeeper.Keeper
 	WasmKeeper            wasmkeeper.Keeper
+	CronKeeper            cronkeeper.Keeper
 	DyncommKeeper         dyncommkeeper.Keeper
 	IBCHooksKeeper        *ibchookskeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -147,6 +150,7 @@ func NewAppKeepers(
 		treasurytypes.StoreKey:       storetypes.NewKVStoreKey(treasurytypes.StoreKey),
 		taxexemptiontypes.StoreKey:   storetypes.NewKVStoreKey(taxexemptiontypes.StoreKey),
 		wasmtypes.StoreKey:           storetypes.NewKVStoreKey(wasmtypes.StoreKey),
+		crontypes.StoreKey:           storetypes.NewKVStoreKey(crontypes.StoreKey),
 		dyncommtypes.StoreKey:        storetypes.NewKVStoreKey(dyncommtypes.StoreKey),
 		taxtypes.StoreKey:            storetypes.NewKVStoreKey(taxtypes.StoreKey),
 	}
@@ -343,6 +347,13 @@ func NewAppKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	appKeepers.CronKeeper = cronkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[crontypes.StoreKey],
+		appKeepers.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	hooksKeeper := ibchookskeeper.NewKeeper(
 		appKeepers.keys[ibchookstypes.StoreKey],
 	)
@@ -434,6 +445,8 @@ func NewAppKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(), // authority
 		wasmOpts..., // Options
 	)
+
+	appKeepers.CronKeeper.WasmMsgServer = wasmkeeper.NewMsgServerImpl(&appKeepers.WasmKeeper)
 
 	// AFTER wasm set contractKeeper for ics20 wasm hook
 	appKeepers.Ics20WasmHooks.ContractKeeper = &appKeepers.WasmKeeper
@@ -535,6 +548,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(crontypes.ModuleName).WithKeyTable(crontypes.ParamKeyTable())
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
 	paramsKeeper.Subspace(taxtypes.ModuleName)
 

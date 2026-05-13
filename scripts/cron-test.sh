@@ -63,7 +63,7 @@ fi
 update_test_genesis '.app_state["crisis"]["constant_fee"]={"denom":"'$DENOM'","amount":"1000"}'
 update_test_genesis '.app_state["staking"]["params"]["bond_denom"]="'$DENOM'"'
 update_test_genesis '.app_state["cron"]={
-  "params":{"limit":"1"},
+  "params":{"limit":"1","max_execution_gas":"5000000"},
   "schedule_list":[
     {
       "name":"cron-smoke",

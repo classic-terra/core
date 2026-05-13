@@ -27,7 +27,8 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	nodeA.InstantiateWasmContract(
 		strconv.Itoa(chainA.LatestCodeID),
 		`{"count": "0"}`, "",
-		initialization.ValidatorWalletName)
+		initialization.ValidatorWalletName,
+	)
 
 	contracts, err := nodeA.QueryContractsFromID(chainA.LatestCodeID)
 	s.NoError(err)
@@ -57,30 +58,31 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
 	s.Require().NoError(err)
 
-	s.Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
-		if err != nil {
-			return false
-		}
+	s.Eventually(
+		func() bool {
+			response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_total_funds": {}}`)
+			if err != nil {
+				return false
+			}
 
-		totalFunds := response.([]interface{})[0]
-		amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
-		if err != nil {
-			return false
-		}
-		denom := totalFunds.(map[string]interface{})["denom"].(string)
+			totalFunds := response.([]interface{})[0]
+			amount, err := strconv.ParseInt(totalFunds.(map[string]interface{})["amount"].(string), 10, 64)
+			if err != nil {
+				return false
+			}
+			denom := totalFunds.(map[string]interface{})["denom"].(string)
 
-		response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_count": {}}`)
-		if err != nil {
-			return false
-		}
-		count, err := strconv.ParseInt(response.(string), 10, 64)
-		if err != nil {
-			return false
-		}
-		// check if denom is uluna token ibc
-		return sdkmath.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom && count == 1
-	},
+			response, err = nodeA.QueryWasmSmart(contractAddr, `{"get_count": {}}`)
+			if err != nil {
+				return false
+			}
+			count, err := strconv.ParseInt(response.(string), 10, 64)
+			if err != nil {
+				return false
+			}
+			// check if denom is uluna token ibc
+			return sdkmath.NewInt(amount).Equal(transferAmount) && denom == initialization.TerraIBCDenom && count == 1
+		},
 		30*time.Second,
 		10*time.Millisecond,
 	)
@@ -230,7 +232,8 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 	node.InstantiateWasmContract(
 		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, transferCoin.String(),
-		"test")
+		"test",
+	)
 
 	contracts, err := node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)
@@ -248,7 +251,8 @@ func (s *IntegrationTestSuite) TestFeeTaxWasm() {
 		strconv.Itoa(chain.LatestCodeID),
 		`{"count": "0"}`, "salt",
 		transferCoin.String(),
-		fmt.Sprintf("%duluna", stabilityFee), "300000", "test")
+		fmt.Sprintf("%duluna", stabilityFee), "300000", "test",
+	)
 
 	contracts, err = node.QueryContractsFromID(chain.LatestCodeID)
 	s.Require().NoError(err)

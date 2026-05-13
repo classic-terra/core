@@ -35,7 +35,8 @@ func WeightedOperations(
 	ok types.OracleKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgSwap int
-	appParams.GetOrGenerate(OpWeightMsgSwap, &weightMsgSwap, nil,
+	appParams.GetOrGenerate(
+		OpWeightMsgSwap, &weightMsgSwap, nil,
 		func(*rand.Rand) {
 			weightMsgSwap = banksim.DefaultWeightMsgSend
 		},

@@ -23,7 +23,8 @@ func (k Keeper) SlashAndResetMissCounters(ctx sdk.Context) {
 	k.IterateMissCounters(ctx, func(operator sdk.ValAddress, missCounter uint64) bool {
 		// Calculate valid vote rate; (SlashWindow - MissCounter)/SlashWindow
 		validVoteRate := math.LegacyNewDecFromInt(
-			math.NewInt(int64(votePeriodsPerWindow - missCounter))).
+			math.NewInt(int64(votePeriodsPerWindow - missCounter)),
+		).
 			QuoInt64(int64(votePeriodsPerWindow))
 
 		// Penalize the validator whose the valid vote rate is smaller than min threshold

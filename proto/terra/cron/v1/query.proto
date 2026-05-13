@@ -1,0 +1,47 @@
+syntax = "proto3";
+package terra.cron.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "terra/cron/v1/params.proto";
+import "terra/cron/v1/schedule.proto";
+
+option go_package = "github.com/classic-terra/core/v4/x/cron/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/terra/cron/v1/params";
+  }
+
+  rpc Schedule(QueryScheduleRequest) returns (QueryScheduleResponse) {
+    option (google.api.http).get = "/terra/cron/v1/schedules/{name}";
+  }
+
+  rpc Schedules(QuerySchedulesRequest) returns (QuerySchedulesResponse) {
+    option (google.api.http).get = "/terra/cron/v1/schedules";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryScheduleRequest {
+  string name = 1;
+}
+
+message QueryScheduleResponse {
+  Schedule schedule = 1 [(gogoproto.nullable) = false];
+}
+
+message QuerySchedulesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QuerySchedulesResponse {
+  repeated Schedule schedules = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

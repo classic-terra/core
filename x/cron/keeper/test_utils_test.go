@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -32,19 +33,34 @@ func (f fakeAccountKeeper) GetModuleAddress(_ string) sdk.AccAddress {
 }
 
 type fakeWasmMsgServer struct {
-	calls []*chronotypes.MsgExecuteContract
-	err   error
+	calls            []*chronotypes.MsgExecuteContract
+	err              error
+	errByContract    map[string]error
+	gasToConsume     uint64
+	observedGasLimit uint64
 }
 
-func (f *fakeWasmMsgServer) ExecuteContract(_ context.Context, msg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
+func (f *fakeWasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
 	f.calls = append(f.calls, &chronotypes.MsgExecuteContract{
 		Contract: msg.Contract,
 		Msg:      string(msg.Msg),
 	})
+	if f.gasToConsume > 0 {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		f.observedGasLimit = sdkCtx.GasMeter().Limit()
+		sdkCtx.GasMeter().ConsumeGas(f.gasToConsume, "fake wasm execution")
+	}
 	if f.err != nil {
 		return nil, f.err
 	}
+	if err := f.errByContract[msg.Contract]; err != nil {
+		return nil, err
+	}
 	return &wasmtypes.MsgExecuteContractResponse{}, nil
+}
+
+func errFailedContract() error {
+	return errors.New("contract execution failed")
 }
 
 type testEncodingConfig struct {

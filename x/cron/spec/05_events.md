@@ -18,8 +18,10 @@ Execution failures are logged with:
 
 but these log lines are not ABCI events.
 
+Execution failures are also persisted on the schedule as `last_execution_error`. This field includes the failing contract and is cleared after the schedule later completes successfully.
+
 ## Nested Wasm Events
 
-When a scheduled contract call succeeds, any events emitted by the nested Wasm execution are surfaced through the normal Wasm execution pipeline.
+When an atomic schedule succeeds, any events emitted by the nested Wasm executions are surfaced through the normal Wasm execution pipeline.
 
 Cron itself does not rewrite or add additional execution events around those nested calls.

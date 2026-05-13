@@ -63,5 +63,6 @@ Validation rules:
 
 - `authority` must be a valid Bech32 account address
 - `params.limit` must be greater than zero
+- `params.max_execution_gas` must be greater than zero
 
 The handler is authority-gated.

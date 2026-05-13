@@ -12,10 +12,17 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	}
 
 	k.cdc.MustUnmarshal(bz, &params)
+	if params.MaxExecutionGas == 0 {
+		params.MaxExecutionGas = types.DefaultMaxExecutionGas
+	}
 	return params
 }
 
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)
 	if err != nil {

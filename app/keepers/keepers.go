@@ -548,7 +548,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)
 	paramsKeeper.Subspace(treasurytypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
-	paramsKeeper.Subspace(crontypes.ModuleName).WithKeyTable(crontypes.ParamKeyTable())
 	paramsKeeper.Subspace(dyncommtypes.ModuleName)
 	paramsKeeper.Subspace(taxtypes.ModuleName)
 

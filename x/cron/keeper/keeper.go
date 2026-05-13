@@ -144,12 +144,41 @@ func (k Keeper) getSchedulesReadyForExecution(ctx sdk.Context, executionStage ty
 	return res
 }
 
-func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) error {
-	schedule.LastExecuteHeight = uint64(ctx.BlockHeight())
+func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) (err error) {
+	params := k.GetParams(ctx)
+	schedule.LastRunHeight = uint64(ctx.BlockHeight())
 	k.storeSchedule(ctx, schedule)
 
 	cacheCtx, writeFn := ctx.CacheContext()
+	limitedCtx := cacheCtx.WithGasMeter(storetypes.NewGasMeter(params.MaxExecutionGas))
+	currentContract := ""
+	lastExecutionErr := func(contract string, err error) string {
+		if contract == "" {
+			return err.Error()
+		}
+		return fmt.Sprintf("%s: %v", contract, err)
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			if oog, ok := r.(storetypes.ErrorOutOfGas); ok {
+				err = fmt.Errorf("cron execute out of gas: %s", oog.Descriptor)
+				schedule.LastExecutionError = lastExecutionErr(currentContract, err)
+				k.storeSchedule(ctx, schedule)
+				ctx.Logger().Info("cron execute out of gas",
+					"schedule_name", schedule.Name,
+					"contract", currentContract,
+					"max_execution_gas", params.MaxExecutionGas,
+					"error", err,
+				)
+				return
+			}
+			panic(r)
+		}
+	}()
+
 	for _, msg := range schedule.Msgs {
+		currentContract = msg.Contract
 		executeMsg := wasmtypes.MsgExecuteContract{
 			Sender:   k.accountKeeper.GetModuleAddress(types.ModuleName).String(),
 			Contract: msg.Contract,
@@ -157,7 +186,9 @@ func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) error 
 			Funds:    sdk.NewCoins(),
 		}
 
-		if _, err := k.WasmMsgServer.ExecuteContract(cacheCtx, &executeMsg); err != nil {
+		if _, err := k.WasmMsgServer.ExecuteContract(sdk.WrapSDKContext(limitedCtx), &executeMsg); err != nil {
+			schedule.LastExecutionError = lastExecutionErr(msg.Contract, err)
+			k.storeSchedule(ctx, schedule)
 			ctx.Logger().Info("cron execute failed",
 				"schedule_name", schedule.Name,
 				"contract", msg.Contract,
@@ -168,6 +199,9 @@ func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) error 
 	}
 
 	writeFn()
+	schedule.LastExecuteHeight = uint64(ctx.BlockHeight())
+	schedule.LastExecutionError = ""
+	k.storeSchedule(ctx, schedule)
 	return nil
 }
 
@@ -187,7 +221,11 @@ func (k Keeper) scheduleExists(ctx sdk.Context, name string) bool {
 }
 
 func (k Keeper) intervalPassed(ctx sdk.Context, schedule types.Schedule) bool {
-	return uint64(ctx.BlockHeight()) >= (schedule.LastExecuteHeight + schedule.Period)
+	lastRunHeight := schedule.LastRunHeight
+	if lastRunHeight == 0 {
+		lastRunHeight = schedule.LastExecuteHeight
+	}
+	return uint64(ctx.BlockHeight()) >= (lastRunHeight + schedule.Period)
 }
 
 func (k Keeper) changeTotalCount(ctx sdk.Context, incrementAmount int32) {

@@ -17,6 +17,8 @@ type Schedule struct {
 	Msgs              []MsgExecuteContract
 	LastExecuteHeight uint64
 	ExecutionStage    ExecutionStage
+	LastRunHeight      uint64
+	LastExecutionError string
 }
 ```
 
@@ -25,8 +27,10 @@ Field meanings:
 - `Name`: unique schedule identifier
 - `Period`: execution interval in blocks
 - `Msgs`: ordered list of Wasm execute payloads
-- `LastExecuteHeight`: last successful scheduling checkpoint used for interval calculation
+- `LastExecuteHeight`: last block height where every message in the schedule succeeded
 - `ExecutionStage`: whether the schedule runs in `BeginBlock` or `EndBlock`
+- `LastRunHeight`: last block height where the scheduler attempted this schedule
+- `LastExecutionError`: most recent execution error, including the failing contract, cleared after a full successful run
 
 `Msgs` contains only contract address plus raw JSON message payload:
 
@@ -59,8 +63,11 @@ Cron parameters are stored under a dedicated params key.
 
 ```go
 type Params struct {
-	Limit uint64
+	Limit           uint64
+	MaxExecutionGas uint64
 }
 ```
 
 `Limit` bounds how many schedules may execute during one pass of `BeginBlock` or `EndBlock`.
+
+`MaxExecutionGas` bounds gas consumed by one atomic schedule execution.

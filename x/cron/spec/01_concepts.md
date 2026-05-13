@@ -11,7 +11,8 @@ A cron schedule is a named record that says:
 - which Wasm contract messages to execute
 - how often to execute them, measured in block intervals
 - whether execution happens in `BeginBlock` or `EndBlock`
-- the last block height at which the schedule executed
+- the last block height at which the schedule was attempted
+- the last block height at which the schedule fully succeeded
 
 At each supported block stage, the module scans stored schedules, selects the ones whose interval has elapsed, and executes up to the configured per-stage limit.
 
@@ -32,10 +33,12 @@ The stage is part of the stored schedule and is checked before execution. The ap
 
 ## Failure Semantics
 
-Cron executes each due schedule in a cached context.
+Cron treats one schedule as one atomic job. A schedule may contain multiple Wasm contract messages, but those messages are expected to be related steps of the same job.
 
-- Before execution starts, the module updates `last_execute_height` on the stored schedule.
+- Before execution starts, the module updates `last_run_height` on the stored schedule.
 - It then executes each nested contract message using the cron module account as the sender.
-- If any nested message fails, the cached writes are discarded, so no partial Wasm effects are committed for that schedule.
+- All nested messages run in one cached context with a schedule-level gas limit.
+- If every nested message succeeds, the cached writes are committed, `last_execute_height` is updated, and `last_execution_error` is cleared.
+- If any nested message fails or the schedule runs out of gas, the cached writes are discarded, `last_execute_height` is not updated, and `last_execution_error` is stored on the schedule.
 
-The failure is logged, but the schedule remains advanced to the current height because the schedule record itself is updated before the cached execution block. This means failed schedules are not retried again in the same block.
+Failed schedules do not prevent other ready schedules from running. Retry pacing is based on `last_run_height`, so a failed schedule waits for its period before being attempted again.

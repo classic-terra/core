@@ -114,8 +114,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		// Distribute rewards to ballot winners
 		k.RewardBallotWinners(
 			ctx,
-			(int64)(params.VotePeriod),
-			(int64)(params.RewardDistributionWindow),
+			int64(params.VotePeriod),
+			int64(params.RewardDistributionWindow),
 			voteTargets,
 			validatorClaimMap,
 		)

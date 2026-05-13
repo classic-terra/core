@@ -135,7 +135,8 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool) (Configurer, error)
 	}
 	if isIBCEnabled {
 		// configure two chains from current Git branch
-		return NewCurrentBranchConfigurer(t,
+		return NewCurrentBranchConfigurer(
+			t,
 			[]*chain.Config{
 				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
 				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
@@ -147,7 +148,8 @@ func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool) (Configurer, error)
 	}
 
 	// configure one chain from current Git branch
-	return NewCurrentBranchConfigurer(t,
+	return NewCurrentBranchConfigurer(
+		t,
 		[]*chain.Config{
 			chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
 		},

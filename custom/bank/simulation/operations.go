@@ -31,13 +31,15 @@ func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak banktypes.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend, weightMsgMultiSend int
-	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil,
+	appParams.GetOrGenerate(
+		OpWeightMsgSend, &weightMsgSend, nil,
 		func(*rand.Rand) {
 			weightMsgSend = banksim.DefaultWeightMsgSend
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
+	appParams.GetOrGenerate(
+		OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(*rand.Rand) {
 			weightMsgMultiSend = banksim.DefaultWeightMsgMultiSend
 		},

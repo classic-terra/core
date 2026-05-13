@@ -1,10 +1,9 @@
 package cron
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/classic-terra/core/v4/x/cron/keeper"
 	"github.com/classic-terra/core/v4/x/cron/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {

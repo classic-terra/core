@@ -149,7 +149,8 @@ func TestOracleTally(t *testing.T) {
 		}
 
 		vote := types.NewVoteForTally(
-			decExchangeRate, core.MicroSDRDenom, valAddrs[i], power)
+			decExchangeRate, core.MicroSDRDenom, valAddrs[i], power,
+		)
 		ballot = append(ballot, vote)
 
 		// change power of every three validator

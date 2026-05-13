@@ -6,10 +6,9 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/classic-terra/core/v4/x/cron/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/classic-terra/core/v4/x/cron/types"
 )
 
 type Keeper struct {
@@ -165,7 +164,8 @@ func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) (err e
 				err = fmt.Errorf("cron execute out of gas: %s", oog.Descriptor)
 				schedule.LastExecutionError = lastExecutionErr(currentContract, err)
 				k.storeSchedule(ctx, schedule)
-				ctx.Logger().Info("cron execute out of gas",
+				ctx.Logger().Info(
+					"cron execute out of gas",
 					"schedule_name", schedule.Name,
 					"contract", currentContract,
 					"max_execution_gas", params.MaxExecutionGas,
@@ -176,7 +176,8 @@ func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) (err e
 			err = fmt.Errorf("cron execute panic: %v", r)
 			schedule.LastExecutionError = lastExecutionErr(currentContract, err)
 			k.storeSchedule(ctx, schedule)
-			ctx.Logger().Info("cron execute panic",
+			ctx.Logger().Info(
+				"cron execute panic",
 				"schedule_name", schedule.Name,
 				"contract", currentContract,
 				"error", err,
@@ -196,7 +197,8 @@ func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) (err e
 		if _, err := k.WasmMsgServer.ExecuteContract(sdk.WrapSDKContext(limitedCtx), &executeMsg); err != nil {
 			schedule.LastExecutionError = lastExecutionErr(msg.Contract, err)
 			k.storeSchedule(ctx, schedule)
-			ctx.Logger().Info("cron execute failed",
+			ctx.Logger().Info(
+				"cron execute failed",
 				"schedule_name", schedule.Name,
 				"contract", msg.Contract,
 				"error", err,

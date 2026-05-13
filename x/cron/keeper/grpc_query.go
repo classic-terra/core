@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/store/prefix"
+	"github.com/classic-terra/core/v4/x/cron/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/classic-terra/core/v4/x/cron/types"
 )
 
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {

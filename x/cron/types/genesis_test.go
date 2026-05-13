@@ -1,8 +1,10 @@
 package types
 
-import "testing"
+import (
+	"testing"
 
-import "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
+)
 
 func TestGenesisValidate(t *testing.T) {
 	require.NoError(t, DefaultGenesisState().Validate())

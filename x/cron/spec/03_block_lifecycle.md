@@ -50,6 +50,6 @@ Each selected schedule is executed as one atomic job:
 1. `last_run_height` is updated before the contract calls are attempted.
 2. all nested contract calls run in a cached context with a schedule-level gas meter
 3. if all contract calls succeed, cached writes are committed, `last_execute_height` is updated, and `last_execution_error` is cleared
-4. if any contract call fails or the gas meter is exhausted, cached writes are discarded and `last_execution_error` is persisted
+4. if any contract call fails, panics, or the gas meter is exhausted, cached writes are discarded and `last_execution_error` is persisted
 
 A failed schedule does not stop later ready schedules from executing in the same stage pass.

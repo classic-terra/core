@@ -173,7 +173,14 @@ func (k Keeper) executeSchedule(ctx sdk.Context, schedule types.Schedule) (err e
 				)
 				return
 			}
-			panic(r)
+			err = fmt.Errorf("cron execute panic: %v", r)
+			schedule.LastExecutionError = lastExecutionErr(currentContract, err)
+			k.storeSchedule(ctx, schedule)
+			ctx.Logger().Info("cron execute panic",
+				"schedule_name", schedule.Name,
+				"contract", currentContract,
+				"error", err,
+			)
 		}
 	}()
 

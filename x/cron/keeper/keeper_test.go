@@ -62,6 +62,26 @@ func TestKeeperExecuteReadySchedules_ExecutionGasLimit(t *testing.T) {
 	require.Equal(t, uint64(10), input.MsgServer.observedGasLimit)
 }
 
+func TestKeeperExecuteReadySchedules_ExecutionPanicIsRecorded(t *testing.T) {
+	input := createTestInput(t)
+	ctx := input.Ctx.WithBlockHeight(5)
+	input.MsgServer.panicValue = "wasm panic"
+
+	require.NoError(t, input.Keeper.SetParams(ctx, types.NewParams(1)))
+	require.NoError(t, input.Keeper.AddSchedule(ctx, "job", 1, []types.MsgExecuteContract{{Contract: "terra1contract", Msg: `{"panic":{}}`}}, 2, types.ExecutionStage_EXECUTION_STAGE_END_BLOCKER))
+
+	require.NotPanics(t, func() {
+		input.Keeper.ExecuteReadySchedules(ctx, types.ExecutionStage_EXECUTION_STAGE_END_BLOCKER)
+	})
+
+	schedule, found := input.Keeper.GetSchedule(ctx, "job")
+	require.True(t, found)
+	require.Equal(t, uint64(5), schedule.LastRunHeight)
+	require.Equal(t, uint64(2), schedule.LastExecuteHeight)
+	require.Contains(t, schedule.LastExecutionError, "terra1contract")
+	require.Contains(t, schedule.LastExecutionError, "wasm panic")
+}
+
 func TestKeeperExecuteReadySchedules_FailedScheduleDoesNotBlockOthers(t *testing.T) {
 	input := createTestInput(t)
 	ctx := input.Ctx.WithBlockHeight(8)

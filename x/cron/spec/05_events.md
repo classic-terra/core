@@ -18,7 +18,7 @@ Execution failures are logged with:
 
 but these log lines are not ABCI events.
 
-Execution failures are also persisted on the schedule as `last_execution_error`. This field includes the failing contract and is cleared after the schedule later completes successfully.
+Execution failures, panics, and out-of-gas errors are also persisted on the schedule as `last_execution_error`. This field includes the failing contract when available and is cleared after the schedule later completes successfully.
 
 ## Nested Wasm Events
 

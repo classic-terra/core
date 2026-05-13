@@ -38,6 +38,7 @@ type fakeWasmMsgServer struct {
 	errByContract    map[string]error
 	gasToConsume     uint64
 	observedGasLimit uint64
+	panicValue       interface{}
 }
 
 func (f *fakeWasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
@@ -55,6 +56,9 @@ func (f *fakeWasmMsgServer) ExecuteContract(ctx context.Context, msg *wasmtypes.
 	}
 	if err := f.errByContract[msg.Contract]; err != nil {
 		return nil, err
+	}
+	if f.panicValue != nil {
+		panic(f.panicValue)
 	}
 	return &wasmtypes.MsgExecuteContractResponse{}, nil
 }

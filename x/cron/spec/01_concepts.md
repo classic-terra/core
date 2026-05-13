@@ -39,6 +39,6 @@ Cron treats one schedule as one atomic job. A schedule may contain multiple Wasm
 - It then executes each nested contract message using the cron module account as the sender.
 - All nested messages run in one cached context with a schedule-level gas limit.
 - If every nested message succeeds, the cached writes are committed, `last_execute_height` is updated, and `last_execution_error` is cleared.
-- If any nested message fails or the schedule runs out of gas, the cached writes are discarded, `last_execute_height` is not updated, and `last_execution_error` is stored on the schedule.
+- If any nested message fails, panics, or the schedule runs out of gas, the cached writes are discarded, `last_execute_height` is not updated, and `last_execution_error` is stored on the schedule.
 
 Failed schedules do not prevent other ready schedules from running. Retry pacing is based on `last_run_height`, so a failed schedule waits for its period before being attempted again.

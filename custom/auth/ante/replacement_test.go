@@ -35,17 +35,57 @@ func TestReplacementTracker(t *testing.T) {
 	info := tracker.Get(sender)
 	require.NotNil(t, info)
 	require.Equal(t, uint64(432), info.FromSequence)
-	require.Equal(t, orig, info.NewTxBytes)
+	require.True(t, info.Contains(orig))
 
-	// Set must store a copy; mutating original must not affect stored bytes.
+	// Set must store a copy; mutating the slice must not affect stored bytes.
+	origCopy := []byte("new-tx-bytes")
 	orig[0] = 'X'
-	require.Equal(t, byte('n'), tracker.Get(sender).NewTxBytes[0])
+	require.True(t, info.Contains(origCopy)) // original bytes still registered
+	require.False(t, info.Contains(orig))    // mutated bytes are not
 
 	tracker.Clear(sender)
 	require.Nil(t, tracker.Get(sender))
 
 	// Clear on unknown sender is a no-op.
 	tracker.Clear("unknown")
+
+	// Multiple rapid replacements at the same sequence must all be registered so
+	// the first replacement is not evicted when a second arrives.
+	rep1 := []byte("replacement-1")
+	rep2 := []byte("replacement-2")
+	tracker.Set(sender, 5, rep1)
+	tracker.Set(sender, 5, rep2)
+	info = tracker.Get(sender)
+	require.NotNil(t, info)
+	require.True(t, info.Contains(rep1))
+	require.True(t, info.Contains(rep2))
+
+	// A new sequence must reset the set entirely.
+	tracker.Set(sender, 6, rep1)
+	info = tracker.Get(sender)
+	require.Equal(t, uint64(6), info.FromSequence)
+	require.True(t, info.Contains(rep1))
+	require.False(t, info.Contains(rep2))
+
+	// RemoveTxBytes: removing one of two entries keeps the sender key alive
+	// so the original stuck tx is still evicted on the next recheck round.
+	tracker.Set(sender, 7, rep1)
+	tracker.Set(sender, 7, rep2)
+	tracker.RemoveTxBytes(sender, rep1)
+	info = tracker.Get(sender)
+	require.NotNil(t, info, "sender entry must survive after first of two replacements rechecks")
+	require.False(t, info.Contains(rep1))
+	require.True(t, info.Contains(rep2))
+
+	// Removing the last entry must delete the whole sender key.
+	tracker.RemoveTxBytes(sender, rep2)
+	require.Nil(t, tracker.Get(sender))
+
+	// RemoveTxBytes on an unknown sender or unknown bytes is a no-op.
+	tracker.RemoveTxBytes("unknown", rep1)
+	tracker.Set(sender, 8, rep1)
+	tracker.RemoveTxBytes(sender, rep2) // rep2 not in set — must not panic
+	require.NotNil(t, tracker.Get(sender))
 }
 
 // ---------------------------------------------------------------------------
@@ -312,7 +352,7 @@ func (s *ReplacementDecoratorSuite) TestNewTx_ReplacementAtCommittedSeq() {
 	info := tracker.Get(sender)
 	s.Require().NotNil(info, "tracker must record the replacement")
 	s.Require().Equal(uint64(432), info.FromSequence)
-	s.Require().Equal(txBytes, info.NewTxBytes)
+	s.Require().True(info.Contains(txBytes))
 
 	// The account in ctx must have been reset to committed seq=432 so that the
 	// downstream SigVerificationDecorator can pass.

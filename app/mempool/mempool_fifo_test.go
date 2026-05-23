@@ -396,7 +396,12 @@ func (s *MempoolTestSuite) TestDuplicateSenderNonceReplacesTx() {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	addr := accounts[0].Address
-	mp := appmempool.NewFifoMempool()
+	// Use a deterministic encoder keyed by testTx.id so replacement detection
+	// works correctly even when different object instances represent the same tx.
+	mockEnc := func(tx sdk.Tx) ([]byte, error) {
+		return []byte(fmt.Sprintf("%d", tx.(testTx).id)), nil
+	}
+	mp := appmempool.NewFifoMempool(appmempool.FifoTxEncoderOpt(mockEnc))
 
 	originalTx := testTx{
 		id:       1,

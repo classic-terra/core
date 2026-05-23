@@ -92,8 +92,14 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	isOracle := helper.IsOracleTx(tx.GetMsgs())
 	if elem, ok := mp.txsMap.Load(txKey); ok {
 		if !isOracle {
-			elem.(*clist.CElement).Value = tx
-			mp.txsBytes.Store(txKey, txBytes)
+			// In-place replacement requires an encoder to distinguish the new tx
+			// from the old one at Remove time.  Without one, skip the update so
+			// a later Remove of the superseded tx cannot accidentally evict the
+			// current one.
+			if mp.txEncoder != nil {
+				elem.(*clist.CElement).Value = tx
+				mp.txsBytes.Store(txKey, txBytes)
+			}
 			return nil
 		}
 		mp.txsMap.Delete(txKey)
@@ -102,8 +108,10 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	}
 	if elem, ok := mp.txsMapOracle.Load(txKey); ok {
 		if isOracle {
-			elem.(*clist.CElement).Value = tx
-			mp.txsBytes.Store(txKey, txBytes)
+			if mp.txEncoder != nil {
+				elem.(*clist.CElement).Value = tx
+				mp.txsBytes.Store(txKey, txBytes)
+			}
 			return nil
 		}
 		mp.txsMapOracle.Delete(txKey)
@@ -124,7 +132,9 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 		e := mp.txs.PushBack(tx)
 		mp.txsMap.Store(txKey, e)
 	}
-	mp.txsBytes.Store(txKey, txBytes)
+	if txBytes != "" {
+		mp.txsBytes.Store(txKey, txBytes)
+	}
 
 	return nil
 }
@@ -235,6 +245,8 @@ func (mp *FifoMempool) Remove(tx sdk.Tx) error {
 
 func (mp *FifoMempool) matchesStoredTx(txKey customTxKey, txBytes string) bool {
 	storedTxBytes, ok := mp.txsBytes.Load(txKey)
+	// No entry means no encoder was configured (bytes were never stored), so we
+	// have no discriminator and must allow the removal.
 	return !ok || storedTxBytes == txBytes
 }
 
@@ -262,7 +274,7 @@ func getTxKey(tx sdk.Tx) (customTxKey, error) {
 
 func (mp *FifoMempool) getTxBytes(tx sdk.Tx) (string, error) {
 	if mp.txEncoder == nil {
-		return fmt.Sprintf("%#v", tx), nil
+		return "", nil
 	}
 
 	txBytes, err := mp.txEncoder(tx)

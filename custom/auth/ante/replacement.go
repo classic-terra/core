@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"bytes"
 	"sync"
 
 	storetypes "cosmossdk.io/store/types"
@@ -19,8 +18,14 @@ type ReplacementTracker struct {
 }
 
 type ReplacementInfo struct {
-	FromSequence uint64
-	NewTxBytes   []byte
+	FromSequence  uint64
+	newTxBytesSet map[string]struct{} // keyed by string(txBytes) for O(1) membership
+}
+
+// Contains reports whether txBytes is a registered replacement for this entry.
+func (info *ReplacementInfo) Contains(txBytes []byte) bool {
+	_, ok := info.newTxBytesSet[string(txBytes)]
+	return ok
 }
 
 func NewReplacementTracker() *ReplacementTracker {
@@ -32,9 +37,63 @@ func NewReplacementTracker() *ReplacementTracker {
 func (rt *ReplacementTracker) Set(sender string, fromSeq uint64, newTxBytes []byte) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
+	info, exists := rt.replacements[sender]
+	if !exists || info.FromSequence != fromSeq {
+		// New sender or different sequence: start a fresh set.
+		rt.replacements[sender] = &ReplacementInfo{
+			FromSequence:  fromSeq,
+			newTxBytesSet: map[string]struct{}{string(newTxBytes): {}},
+		}
+		return
+	}
+	// Same sequence: register alongside any prior ones so all rapid replacements
+	// are tracked and none is incorrectly evicted during recheck.
+	//
+	// Copy-on-write: callers that received a *ReplacementInfo via Get hold a
+	// reference to the old map and may call Contains concurrently.  Mutating
+	// the existing map in-place while they read it would be a data race.
+	// Publishing a brand-new ReplacementInfo with a fresh map is safe because
+	// the old pointer remains valid for already-in-progress readers.
+	newSet := make(map[string]struct{}, len(info.newTxBytesSet)+1)
+	for k := range info.newTxBytesSet {
+		newSet[k] = struct{}{}
+	}
+	newSet[string(newTxBytes)] = struct{}{}
 	rt.replacements[sender] = &ReplacementInfo{
-		FromSequence: fromSeq,
-		NewTxBytes:   append([]byte(nil), newTxBytes...),
+		FromSequence:  fromSeq,
+		newTxBytesSet: newSet,
+	}
+}
+
+// RemoveTxBytes removes a single replacement byte string from the tracked set.
+// When the last entry is removed the sender key is deleted entirely, which
+// preserves the invariant that tracker.Get returns nil once all replacements
+// have been rechecked successfully.  Copy-on-write is used for the same
+// concurrency reason as in Set.
+func (rt *ReplacementTracker) RemoveTxBytes(sender string, txBytes []byte) {
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+	info, ok := rt.replacements[sender]
+	if !ok {
+		return
+	}
+	key := string(txBytes)
+	if _, found := info.newTxBytesSet[key]; !found {
+		return
+	}
+	if len(info.newTxBytesSet) <= 1 {
+		delete(rt.replacements, sender)
+		return
+	}
+	newSet := make(map[string]struct{}, len(info.newTxBytesSet)-1)
+	for k := range info.newTxBytesSet {
+		if k != key {
+			newSet[k] = struct{}{}
+		}
+	}
+	rt.replacements[sender] = &ReplacementInfo{
+		FromSequence:  info.FromSequence,
+		newTxBytesSet: newSet,
 	}
 }
 
@@ -105,14 +164,26 @@ func (d TxReplacementDecorator) handleRecheck(ctx sdk.Context, tx sdk.Tx, next s
 		return next(ctx, tx, false)
 	}
 
-	// This is the replacement tx itself — clear the tracker and allow it.
-	if bytes.Equal(ctx.TxBytes(), info.NewTxBytes) {
+	// This is one of the registered replacement txs — reset the account and allow it.
+	if info.Contains(ctx.TxBytes()) {
 		committedAcc := d.getCommittedAccount(ctx, sdk.MustAccAddressFromBech32(sender))
+		// Reset account to committed state when available so SigVerificationDecorator
+		// sees the correct sequence.  If committedAcc is nil (very rare: pruned account),
+		// skip the reset and let next() try with whatever state it has.
 		if committedAcc != nil && seq == committedAcc.GetSequence() {
 			d.ak.SetAccount(ctx, committedAcc)
 		}
-		d.tracker.Clear(sender)
-		return next(ctx, tx, false)
+		// Remove only this replacement's bytes after next() succeeds.  Using
+		// RemoveTxBytes instead of Clear ensures that if a second replacement for
+		// the same sender/sequence was registered, the sender entry (and its
+		// fromSequence eviction rule) survives until all replacements have been
+		// rechecked.  If next() fails keep the tracker alive so the replacement
+		// can be retried rather than silently losing both txs.
+		newCtx, err := next(ctx, tx, false)
+		if err == nil {
+			d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
+		}
+		return newCtx, err
 	}
 
 	// Evict only the original stuck tx at the replaced sequence.

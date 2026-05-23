@@ -240,9 +240,9 @@ func (d TxReplacementDecorator) handleNewTx(ctx sdk.Context, tx sdk.Tx, next sdk
 
 	newCtx, err := next(ctx, tx, false)
 	if err != nil {
-		// The replacement tx was rejected downstream; clear the tracker so the
-		// original stuck tx is not evicted during recheck without a valid replacement.
-		d.tracker.Clear(sender)
+		// Remove only this tx's bytes so a previously registered replacement for
+		// the same sender is not accidentally wiped if this attempt fails downstream.
+		d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
 		return newCtx, err
 	}
 	return newCtx, nil

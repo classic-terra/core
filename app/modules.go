@@ -9,7 +9,6 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	terraappparams "github.com/classic-terra/core/v4/app/params"
-
 	// unnamed import of statik for swagger UI support
 	_ "github.com/classic-terra/core/v4/client/docs/statik"
 	customauth "github.com/classic-terra/core/v4/custom/auth"

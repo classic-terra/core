@@ -1422,6 +1422,8 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 }
 
 func (s *AnteTestSuite) TestBurnSplitTax() {
+	require := s.Require()
+
 	// No market redirect
 	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyZeroDec())            // 100% distribute, 0% to oracle
 	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 1), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyZeroDec())            // 10% distribute, 0% to oracle
@@ -1440,8 +1442,18 @@ func (s *AnteTestSuite) TestBurnSplitTax() {
 	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyOneDec(), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyNewDecWithPrec(5, 1)) // 100% distribute, 100% to oracle, 50% market of remainder (0)
 	// Extreme: market 100%
 	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(1, 0), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyOneDec()) // 100% distribute, 100% redirect
-	// Validation: invalid burn split
-	s.runBurnSplitTaxTest(sdkmath.LegacyNewDecWithPrec(-1, 1), sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDecWithPrec(5, 1), sdkmath.LegacyZeroDec()) // -10% distribute - invalid rate
+
+	// Validation: invalid burn split must panic during treasury param validation.
+	s.Run("invalid burn split", func() {
+		s.SetupTest(true)
+		tk := s.app.TreasuryKeeper
+		tParams := tk.GetParams(s.ctx)
+		tParams.BurnTaxSplit = sdkmath.LegacyNewDecWithPrec(-1, 1)
+
+		require.Panics(func() {
+			tk.SetParams(s.ctx, tParams)
+		})
+	})
 }
 
 func (s *AnteTestSuite) runBurnSplitTaxTest(burnSplitRate sdkmath.LegacyDec, oracleSplitRate sdkmath.LegacyDec, communityTax sdkmath.LegacyDec, marketRedirectRate sdkmath.LegacyDec) {

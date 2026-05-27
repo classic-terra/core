@@ -278,7 +278,7 @@ func validateBurnTaxSplit(i interface{}) error {
 func validateMinInitialDepositRatio(i interface{}) error {
 	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
-		return fmt.Errorf("invalid paramater type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v.IsNegative() {

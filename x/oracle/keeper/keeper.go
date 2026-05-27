@@ -130,9 +130,6 @@ func (k Keeper) GetUSDPrice(ctx sdk.Context, denom string) (math.LegacyDec, erro
 	switch denom {
 	case core.MicroLunaDenom:
 		return usdPerLuna, nil
-	case core.MicroUSDDenom:
-		// handled by fast-path above
-		return math.LegacyZeroDec(), errorsmod.Wrap(types.ErrUnknownDenom, core.MicroUSDDenom)
 	default:
 		// denom per 1 LUNA
 		denomPerLuna, err := k.GetLunaExchangeRate(ctx, denom)

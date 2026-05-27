@@ -223,7 +223,7 @@ func (q querier) AggregateVotes(c context.Context, _ *types.QueryAggregateVotesR
 	}, nil
 }
 
-// USDPrice queries the USD price of a denom using meta-denom 'usd' as Luna/USD reference
+// USDPrice queries the USD price of a denom using meta-denom 'usd' as USD per 1 USTC
 func (q querier) USDPrice(c context.Context, req *types.QueryUSDPriceRequest) (*types.QueryUSDPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

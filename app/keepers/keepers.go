@@ -388,13 +388,10 @@ func NewAppKeepers(
 
 	wasmMsgHandler := customwasmkeeper.NewMessageHandler(
 		bApp.MsgServiceRouter(),
+		&appKeepers.WasmKeeper,
 		appKeepers.IBCHooksWrapper,
-		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.IBCKeeper.ChannelKeeperV2,
 		appKeepers.BankKeeper,
-		appKeepers.TaxExemptionKeeper,
-		appKeepers.TreasuryKeeper,
-		appKeepers.AccountKeeper,
-		appKeepers.TaxKeeper,
 		appCodec,
 		appKeepers.TransferKeeper,
 	)

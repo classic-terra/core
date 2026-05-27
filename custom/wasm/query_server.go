@@ -11,16 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	LegacyParamStoreKeyUploadAccess      = []byte("uploadAccess")
-	LegacyParamStoreKeyInstantiateAccess = []byte("instantiateAccess")
-)
-
-// LegacyWasmParams is a wrapper around wasmtypes.Params that implements ParamSet
-type LegacyWasmParams struct {
-	wasmtypes.Params
-}
-
 // LegacyQueryServer wraps the wasm QueryServer and sets legacy parameters for pre-upgrade height queries
 type LegacyQueryServer struct {
 	// Embed the original query server to inherit all methods

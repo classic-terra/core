@@ -5,12 +5,12 @@ FORK=${FORK:-"false"}
 
 # $(curl --silent "https://api.github.com/repos/classic-terra/core/releases/latest" | jq -r '.tag_name')
 
-OLD_VERSION=${OLD_VERSION:-v3.6.2}
+OLD_VERSION=${OLD_VERSION:-v4.0.0}
 HOME=mytestnet
 ROOT=$(pwd)
 DENOM=uluna
 CHAIN_ID=localterra
-SOFTWARE_UPGRADE_NAME=${SOFTWARE_UPGRADE_NAME:-"v14_1"}
+SOFTWARE_UPGRADE_NAME=${SOFTWARE_UPGRADE_NAME:-"v14_2"}
 ADDITIONAL_PRE_SCRIPTS=${ADDITIONAL_PRE_SCRIPTS:-""}
 ADDITIONAL_AFTER_SCRIPTS=${ADDITIONAL_AFTER_SCRIPTS:-""}
 GAS_PRICE=${GAS_PRICE:-"30uluna"}

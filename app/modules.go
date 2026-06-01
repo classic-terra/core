@@ -66,6 +66,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward/types"
 	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
 	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/types"
 	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
@@ -113,6 +115,7 @@ var (
 		customwasm.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
+		packetforward.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		taxmodule.AppModuleBasic{},
 	)
@@ -131,11 +134,13 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
 		wasmtypes.ModuleName:           {authtypes.Burner},
+		packetforwardtypes.ModuleName:  nil,
 	}
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
-		oracletypes.ModuleName:       true,
-		treasurytypes.BurnModuleName: true,
+		oracletypes.ModuleName:        true,
+		treasurytypes.BurnModuleName:  true,
+		packetforwardtypes.ModuleName: true, // intermediate receiver for in-flight forwarded packets
 	}
 )
 
@@ -171,6 +176,7 @@ func appModules(
 		customwasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName), app.GetKey(wasmtypes.StoreKey)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
+		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		taxmodule.NewAppModule(appCodec, app.TaxKeeper),
 	}
@@ -226,6 +232,7 @@ func orderBeginBlockers() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibchookstypes.ModuleName,
+		packetforwardtypes.ModuleName,
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
@@ -260,6 +267,7 @@ func orderEndBlockers() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibchookstypes.ModuleName,
+		packetforwardtypes.ModuleName,
 		// Terra Classic modules
 		oracletypes.ModuleName,
 		treasurytypes.ModuleName,
@@ -294,6 +302,7 @@ func orderInitGenesis() []string {
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibchookstypes.ModuleName,
+		packetforwardtypes.ModuleName,
 		// Terra Classic modules
 		markettypes.ModuleName,
 		oracletypes.ModuleName,

@@ -56,6 +56,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward/keeper"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward/types"
 	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
 	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/keeper"
 	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10/types"
@@ -96,6 +98,7 @@ type AppKeepers struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
+	PacketForwardKeeper   *packetforwardkeeper.Keeper
 	OracleKeeper          oraclekeeper.Keeper
 	MarketKeeper          marketkeeper.Keeper
 	TreasuryKeeper        treasurykeeper.Keeper
@@ -139,6 +142,7 @@ func NewAppKeepers(
 		authzkeeper.StoreKey:         storetypes.NewKVStoreKey(authzkeeper.StoreKey),
 		ibcexported.StoreKey:         storetypes.NewKVStoreKey(ibcexported.StoreKey),
 		ibctransfertypes.StoreKey:    storetypes.NewKVStoreKey(ibctransfertypes.StoreKey),
+		packetforwardtypes.StoreKey:  storetypes.NewKVStoreKey(packetforwardtypes.StoreKey),
 		icacontrollertypes.StoreKey:  storetypes.NewKVStoreKey(icacontrollertypes.StoreKey),
 		icahosttypes.StoreKey:        storetypes.NewKVStoreKey(icahosttypes.StoreKey),
 		ibchookstypes.StoreKey:       storetypes.NewKVStoreKey(ibchookstypes.StoreKey),
@@ -376,6 +380,19 @@ func NewAppKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	// Packet Forward Middleware keeper — enables multi-hop IBC routing.
+	// Created after TransferKeeper (PFM forwards via transfer) and before
+	// newIBCRouter() wraps it into the transfer stack.
+	appKeepers.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(appKeepers.keys[packetforwardtypes.StoreKey]),
+		&appKeepers.TransferKeeper,         // TransferKeeper (forward leg)
+		appKeepers.IBCKeeper.ChannelKeeper, // ChannelKeeper
+		appKeepers.BankKeeper,              // BankKeeper
+		appKeepers.IBCKeeper.ChannelKeeper, // ICS4Wrapper — acks written straight to channel; VERIFY forwarding semantics on rebel-2
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
 	wasmDir := filepath.Join(homePath, "data")
 	wasmNodeConfig, err := wasm.ReadNodeConfig(appOpts)
 	if err != nil {
@@ -530,6 +547,7 @@ func initParamsKeeper(
 			ctrlSS.WithKeyTable(icacontrollertypes.ParamKeyTable())
 		}
 	}
+	paramsKeeper.Subspace(packetforwardtypes.ModuleName)
 	paramsKeeper.Subspace(markettypes.ModuleName)
 	paramsKeeper.Subspace(oracletypes.ModuleName)
 	paramsKeeper.Subspace(taxexemptiontypes.ModuleName)

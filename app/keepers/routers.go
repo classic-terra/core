@@ -9,6 +9,8 @@ import (
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward"
+	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10/packetforward/keeper"
 	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v10"
 	icacontroller "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller"
 	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
@@ -36,7 +38,16 @@ func (appKeepers *AppKeepers) newIBCRouter() *porttypes.Router {
 	var transferStack porttypes.IBCModule
 	var transferHookStack porttypes.IBCModule
 
+	// Receive-path stack (outer -> inner): channel -> ibc-hooks -> packet-forward -> transfer.
+	// PFM intercepts OnRecvPacket: if the memo carries forward metadata it relays the
+	// packet onward, otherwise it passes through to the underlying transfer module.
 	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
+	transferStack = packetforward.NewIBCMiddleware(
+		transferStack,
+		appKeepers.PacketForwardKeeper,
+		0, // retries on timeout
+		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
+	)
 	transferHookStack = ibchooks.NewIBCMiddleware(transferStack, appKeepers.IBCHooksWrapper)
 
 	// Create Interchain Accounts Stack

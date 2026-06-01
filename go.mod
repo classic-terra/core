@@ -22,6 +22,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.53.6
 	github.com/cosmos/gogoproto v1.7.2
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10 v10.0.0
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v10 v10.0.0-20250826214904-d53749a559f6
 	github.com/cosmos/ibc-go/v10 v10.5.0
 	github.com/gogo/protobuf v1.3.3

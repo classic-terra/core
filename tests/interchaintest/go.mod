@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	github.com/classic-terra/core/v4 v4.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.53.6
-	github.com/cosmos/ibc-go/v10 v10.5.0
+	github.com/cosmos/ibc-go/v10 v10.6.0
 	github.com/cosmos/interchaintest/v10 v10.0.1
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/stretchr/testify v1.11.1

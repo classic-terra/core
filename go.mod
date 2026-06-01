@@ -22,9 +22,9 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.53.6
 	github.com/cosmos/gogoproto v1.7.2
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10 v10.0.0
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10 v10.6.0
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v10 v10.0.0-20250826214904-d53749a559f6
-	github.com/cosmos/ibc-go/v10 v10.5.0
+	github.com/cosmos/ibc-go/v10 v10.6.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
 	github.com/google/gofuzz v1.2.0
@@ -103,6 +103,7 @@ require (
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/huandu/skiplist v1.2.1 // indirect
+	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

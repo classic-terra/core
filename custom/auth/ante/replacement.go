@@ -272,13 +272,23 @@ func (rt *ReplacementTracker) enforceMaxEntriesLocked(keepSender string) {
 //     signature verification.
 //
 // On recheck:
-//   - Old txs from the same sender (at or above the replaced sequence) are
-//     rejected, causing CometBFT to evict them from its mempool.
+//   - The superseded tx at exactly the replaced sequence is rejected, causing
+//     CometBFT to evict it from its mempool.
+//   - Queued txs at seq > FromSequence are deliberately short-circuited to
+//     success while the tracker entry is live.  Evicting the tx at
+//     FromSequence breaks sequence continuity for the rest of the queue, so
+//     letting them run through SigVerificationDecorator would evict them all
+//     (a failed recheck also removes the tx from the app-side mempool, see
+//     baseapp.runTx).  They were fully validated at admission and are
+//     re-validated at PrepareProposal/ProcessProposal/DeliverTx.
 //
 // On DeliverTx:
 //   - Once the account sequence advances past FromSequence the tracker entry
 //     is cleared (covers the common path where a replacement is reaped
-//     straight into a block without a recheck).
+//     straight into a block without a recheck).  This — together with the
+//     BeginBlock prune and the TTL backstop — is what ends the entry's
+//     lifetime; a successful recheck alone does not, because the entry must
+//     survive every recheck round until the replacement is actually included.
 type TxReplacementDecorator struct {
 	ak      ante.AccountKeeper
 	cms     storetypes.CommitMultiStore
@@ -328,8 +338,8 @@ func (d TxReplacementDecorator) clearAfterDeliver(ctx sdk.Context, tx sdk.Tx) {
 }
 
 // handleRecheck rejects the old tx at fromSequence that has been superseded by
-// a replacement.  Subsequent txs (seq > fromSequence) are left in the pool so
-// CometBFT's normal sequence validation handles them after each committed block.
+// a replacement, and keeps the rest of the sender's queue alive while the
+// replacement is still pending (see the type-level comment for the rationale).
 func (d TxReplacementDecorator) handleRecheck(ctx sdk.Context, tx sdk.Tx, next sdk.AnteHandler) (sdk.Context, error) {
 	sender, seq, err := firstSignerSeq(tx)
 	if err != nil {
@@ -350,22 +360,35 @@ func (d TxReplacementDecorator) handleRecheck(ctx sdk.Context, tx sdk.Tx, next s
 		if committedAcc != nil && seq == committedAcc.GetSequence() {
 			d.ak.SetAccount(ctx, committedAcc)
 		}
-		// Always drop this replacement's bytes after recheck — success clears a
-		// live entry; failure means CometBFT will evict the tx anyway, so keeping
-		// the bytes would only leak until a later prune.
+		// Drop this replacement's bytes only on failure — CometBFT will evict
+		// the tx, so keeping the bytes would only leak until a later prune.
+		// On success the entry MUST survive: rechecks happen once per block
+		// until the replacement is included, and the queued txs above
+		// FromSequence rely on the live entry to stay in the pool.  The entry
+		// is cleared once the sequence advances (DeliverTx / BeginBlock prune).
 		newCtx, err := next(ctx, tx, false)
-		d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
+		if err != nil {
+			d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
+		}
 		return newCtx, err
 	}
 
 	// Evict only the original stuck tx at the replaced sequence.
-	// Txs at seq > fromSequence are valid and will be handled by normal
-	// sequence validation as the committed sequence advances.
 	if seq == info.FromSequence {
 		return ctx, sdkerrors.ErrWrongSequence.Wrapf(
 			"tx superseded: a replacement tx was submitted for %s at sequence %d",
 			sender, info.FromSequence,
 		)
+	}
+
+	// Queued txs above the replaced sequence: skip the rest of the recheck
+	// chain.  With the tx at FromSequence evicted, SigVerificationDecorator
+	// would see a sequence gap and fail them, and a failed recheck removes the
+	// tx from both CometBFT's and the app's mempool — flushing the sender's
+	// whole queue.  Keep them alive until the replacement fills the gap; if it
+	// never does, the entry expires (TTL/prune) and normal rechecks resume.
+	if seq > info.FromSequence {
+		return ctx, nil
 	}
 
 	return next(ctx, tx, false)
@@ -408,15 +431,19 @@ func (d TxReplacementDecorator) handleNewTx(ctx sdk.Context, tx sdk.Tx, next sdk
 	// If the full ante chain succeeds the branch is written; otherwise discarded.
 	d.ak.SetAccount(ctx, committedAcc)
 
-	d.tracker.SetAtHeight(sender, committedSeq, ctx.TxBytes(), ctx.BlockHeight())
-
 	newCtx, err := next(ctx, tx, false)
 	if err != nil {
-		// Remove only this tx's bytes so a previously registered replacement for
-		// the same sender is not accidentally wiped if this attempt fails downstream.
-		d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
 		return newCtx, err
 	}
+
+	// Register the replacement only AFTER the downstream ante chain (including
+	// SigVerificationDecorator) has accepted the tx.  Registering before would
+	// let an attacker poison the tracker with an unsigned tx naming a victim
+	// as first signer: a panic in a later decorator (e.g. out of gas during
+	// SigGasConsumeDecorator) unwinds past this frame to SetUpContextDecorator's
+	// recover, skipping any error-path cleanup — and the poisoned entry would
+	// then evict the victim's legitimate pending tx on every recheck.
+	d.tracker.SetAtHeight(sender, committedSeq, ctx.TxBytes(), ctx.BlockHeight())
 	return newCtx, nil
 }
 

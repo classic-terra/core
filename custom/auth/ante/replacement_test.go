@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/classic-terra/core/v4/custom/auth/ante"
 	core "github.com/classic-terra/core/v4/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -308,8 +309,11 @@ func (s *ReplacementDecoratorSuite) TestRecheck_OldTxAtFromSequenceIsEvicted() {
 	s.Require().ErrorIs(err, sdkerrors.ErrWrongSequence)
 }
 
-// The replacement tx itself (bytes match stored entry) must pass and clear the tracker.
-func (s *ReplacementDecoratorSuite) TestRecheck_ReplacementTxClearsTracker() {
+// The replacement tx itself (bytes match stored entry) must pass and KEEP the
+// tracker entry: rechecks repeat every block until the replacement is included,
+// and the queued txs above FromSequence rely on the live entry to survive.
+// The entry is cleared by DeliverTx / BeginBlock prune once the sequence advances.
+func (s *ReplacementDecoratorSuite) TestRecheck_ReplacementTxSuccessKeepsTracker() {
 	s.SetupTest(true)
 	priv, _, accNum := func() (cryptotypes.PrivKey, sdk.AccAddress, uint64) {
 		k, _, addr := testdata.KeyTestPubAddr()
@@ -331,7 +335,15 @@ func (s *ReplacementDecoratorSuite) TestRecheck_ReplacementTxClearsTracker() {
 	ctx := s.ctx.WithIsReCheckTx(true).WithTxBytes(txBytes)
 	_, err = dec.AnteHandle(ctx, replacementTx, false, noopHandler)
 	s.Require().NoError(err)
-	s.Require().Nil(tracker.Get(sender), "tracker entry must be cleared once replacement tx passes recheck")
+	info := tracker.Get(sender)
+	s.Require().NotNil(info, "tracker entry must survive a successful recheck — it protects the queued txs until the replacement is included")
+	s.Require().True(info.Contains(txBytes))
+
+	// A second recheck round (next block, replacement still not included) must
+	// behave identically.
+	_, err = dec.AnteHandle(ctx, replacementTx, false, noopHandler)
+	s.Require().NoError(err)
+	s.Require().NotNil(tracker.Get(sender))
 }
 
 // Recheck failure must also drop the replacement bytes — CometBFT evicts the tx.
@@ -395,29 +407,46 @@ func (s *ReplacementDecoratorSuite) TestDeliverTx_ClearsTrackerWhenSequenceAdvan
 	s.Require().Nil(tracker.Get(sender), "DeliverTx must clear tracker after sequence advances")
 }
 
-// Txs at seq > fromSequence must NOT be evicted — they are valid queued txs that
-// will be drained naturally as each block advances the committed sequence.
-// This is the key behaviour introduced by the bug fix in handleRecheck.
-func (s *ReplacementDecoratorSuite) TestRecheck_SubsequentTxsPassThrough() {
+// Txs at seq > fromSequence must NOT be evicted — evicting the tx at
+// fromSequence breaks sequence continuity for the queue, so running these txs
+// through the real recheck chain would fail them in SigVerificationDecorator
+// (and a failed recheck also removes the tx from the app-side mempool, see
+// baseapp.runTx).  The decorator must therefore short-circuit them to success
+// while the tracker entry is live.  The failing `next` handler below simulates
+// SigVerificationDecorator's wrong-sequence error: if the decorator ever calls
+// it, the queue would be flushed.
+func (s *ReplacementDecoratorSuite) TestRecheck_SubsequentTxsKeptAlive() {
 	s.SetupTest(true)
 	priv, _, accNum := func() (cryptotypes.PrivKey, sdk.AccAddress, uint64) {
 		k, _, addr := testdata.KeyTestPubAddr()
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
-		s.Require().NoError(acc.SetSequence(433))
+		// Committed sequence is still 432: the stuck tx was evicted, the
+		// replacement has not been included yet.
+		s.Require().NoError(acc.SetSequence(432))
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
 		return k, addr, acc.GetAccountNumber()
 	}()
 
 	tracker := ante.NewReplacementTracker()
-	// Replacement recorded at seq 432; the txs under test are at 433, 434.
+	// Replacement recorded at seq 432; the txs under test are at 433+.
 	tracker.Set(sdk.AccAddress(priv.PubKey().Address()).String(), 432, []byte("replacement-bytes"))
 	dec := s.makeDecorator(tracker)
 
+	sigVerifyHandler := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+		return ctx, sdkerrors.ErrWrongSequence.Wrap("account sequence mismatch")
+	}
 	for _, seq := range []uint64{433, 434, 441} {
 		tx := s.makeTxAtSeq(priv, accNum, seq)
-		_, err := dec.AnteHandle(s.ctx.WithIsReCheckTx(true), tx, false, noopHandler)
-		s.Require().NoError(err, "subsequent tx at seq=%d must pass through, not be evicted", seq)
+		_, err := dec.AnteHandle(s.ctx.WithIsReCheckTx(true), tx, false, sigVerifyHandler)
+		s.Require().NoError(err, "queued tx at seq=%d must be kept alive while the replacement is pending", seq)
 	}
+
+	// Once the tracker entry is gone (replacement included, entry cleared),
+	// queued txs must go through the normal recheck chain again.
+	tracker.Clear(sdk.AccAddress(priv.PubKey().Address()).String())
+	tx := s.makeTxAtSeq(priv, accNum, 433)
+	_, err := dec.AnteHandle(s.ctx.WithIsReCheckTx(true), tx, false, sigVerifyHandler)
+	s.Require().ErrorIs(err, sdkerrors.ErrWrongSequence, "without a live entry the decorator must be transparent")
 }
 
 // Txs at seq < fromSequence are unaffected by the tracker.
@@ -533,6 +562,62 @@ func (s *ReplacementDecoratorSuite) TestNewTx_BelowPendingButNotAtCommitted() {
 	s.Require().Nil(tracker.Get(addr.String()), "tracker must stay empty — txSeq 430 != committedSeq 432")
 }
 
+// A would-be replacement that fails the downstream ante chain (e.g. bad
+// signature) must NOT be registered in the tracker.  Registration happens only
+// after next() succeeds; otherwise an attacker could evict a victim's pending
+// tx with a forged, unverifiable tx.
+func (s *ReplacementDecoratorSuite) TestNewTx_FailedReplacementDoesNotRegister() {
+	s.SetupTest(true)
+	priv, _, addr := testdata.KeyTestPubAddr()
+
+	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
+	s.Require().NoError(acc.SetSequence(432))
+	committedCtx := s.ctx.WithMultiStore(s.app.CommitMultiStore())
+	s.app.AccountKeeper.SetAccount(committedCtx, acc)
+	s.Require().NoError(acc.SetSequence(443))
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+
+	tracker := ante.NewReplacementTracker()
+	dec := s.makeDecorator(tracker)
+
+	tx := s.makeTxAtSeq(priv, acc.GetAccountNumber(), 432)
+	failHandler := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+		return ctx, sdkerrors.ErrUnauthorized.Wrap("signature verification failed")
+	}
+	_, err := dec.AnteHandle(s.ctx.WithIsCheckTx(true).WithTxBytes([]byte("forged")), tx, false, failHandler)
+	s.Require().ErrorIs(err, sdkerrors.ErrUnauthorized)
+	s.Require().Nil(tracker.Get(addr.String()), "failed replacement must not poison the tracker")
+}
+
+// A panic in a downstream decorator (e.g. out-of-gas in SigGasConsumeDecorator,
+// recovered by SetUpContextDecorator far above this frame) must not leave a
+// poisoned tracker entry either.  Before the fix, the entry was registered
+// before next() and only cleaned up on the error return path, so a panic
+// skipped the cleanup.
+func (s *ReplacementDecoratorSuite) TestNewTx_PanickingReplacementDoesNotRegister() {
+	s.SetupTest(true)
+	priv, _, addr := testdata.KeyTestPubAddr()
+
+	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
+	s.Require().NoError(acc.SetSequence(432))
+	committedCtx := s.ctx.WithMultiStore(s.app.CommitMultiStore())
+	s.app.AccountKeeper.SetAccount(committedCtx, acc)
+	s.Require().NoError(acc.SetSequence(443))
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+
+	tracker := ante.NewReplacementTracker()
+	dec := s.makeDecorator(tracker)
+
+	tx := s.makeTxAtSeq(priv, acc.GetAccountNumber(), 432)
+	panicHandler := func(_ sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+		panic(storetypes.ErrorOutOfGas{Descriptor: "ante gas"})
+	}
+	s.Require().Panics(func() {
+		_, _ = dec.AnteHandle(s.ctx.WithIsCheckTx(true).WithTxBytes([]byte("forged")), tx, false, panicHandler)
+	})
+	s.Require().Nil(tracker.Get(addr.String()), "a downstream panic must not poison the tracker")
+}
+
 // This reproduces the production failure mode through the real TerraApp
 // CheckTx path: queued txs advance the local CheckTx account sequence to 443
 // while the committed account remains at 432. Before TxReplacementDecorator,
@@ -554,10 +639,13 @@ func (s *ReplacementDecoratorSuite) TestCheckTx_ReplacesCommittedSequenceAfterPe
 	))
 
 	var originalSeq432Tx sdk.Tx
+	queuedTxs := make(map[uint64]sdk.Tx)
 	for seq := uint64(432); seq <= 442; seq++ {
 		tx := s.makeBankSendTxAtSeqWithMemo(priv, acc.GetAccountNumber(), seq, "queued-tx")
 		if seq == 432 {
 			originalSeq432Tx = tx
+		} else {
+			queuedTxs[seq] = tx
 		}
 		s.checkTx(tx, 0)
 	}
@@ -584,6 +672,21 @@ func (s *ReplacementDecoratorSuite) TestCheckTx_ReplacesCommittedSequenceAfterPe
 		s.selectedMempoolSequences(s.app.Mempool()),
 	)
 	s.Require().Equal("replacement-at-committed-sequence", s.selectedMempoolMemos(s.app.Mempool())[0])
+
+	// CometBFT rechecks in FIFO order: the queued txs at 433..442 come BEFORE
+	// the replacement (it was admitted last).  With the stuck tx at 432 just
+	// evicted, sequence continuity is broken, so without the keep-alive in
+	// handleRecheck every queued tx would fail SigVerification here — and a
+	// failed recheck removes the tx from the app mempool too (baseapp.runTx),
+	// flushing the sender's whole queue from every node.
+	for seq := uint64(433); seq <= 442; seq++ {
+		s.checkTxWithType(queuedTxs[seq], abci.CheckTxType_Recheck, 0)
+	}
+	s.Require().Equal(11, s.app.Mempool().CountTx())
+	s.Require().Equal(
+		[]uint64{432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442},
+		s.selectedMempoolSequences(s.app.Mempool()),
+	)
 
 	s.checkTxWithType(replacementTx, abci.CheckTxType_Recheck, 0)
 	s.Require().Equal(11, s.app.Mempool().CountTx())

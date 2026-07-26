@@ -99,6 +99,10 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 			// from the old one at Remove time.  Without one, skip the update so
 			// a later Remove of the superseded tx cannot accidentally evict the
 			// current one.
+			//
+			// Mutating CElement.Value is safe only because the ABCI local client
+			// serializes CheckTx against PrepareProposal, so no Select iterator
+			// reads Value concurrently.  clist itself treats Value as write-once.
 			if mp.txEncoder != nil {
 				elem.(*clist.CElement).Value = tx
 				mp.txsBytes.Store(txKey, txBytes)

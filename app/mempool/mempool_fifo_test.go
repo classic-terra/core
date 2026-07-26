@@ -391,6 +391,48 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	require.Equal(t, mempool.ErrTxNotFound, err)
 }
 
+func (s *MempoolTestSuite) TestDuplicateSenderNonceReplacesTx() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	addr := accounts[0].Address
+	// Use a deterministic encoder keyed by testTx.id so replacement detection
+	// works correctly even when different object instances represent the same tx.
+	mockEnc := func(tx sdk.Tx) ([]byte, error) {
+		return []byte(fmt.Sprintf("%d", tx.(testTx).id)), nil
+	}
+	mp := appmempool.NewFifoMempool(appmempool.FifoTxEncoderOpt(mockEnc))
+
+	originalTx := testTx{
+		id:       1,
+		nonce:    432,
+		address:  addr,
+		priority: rand.Int63(),
+		msgs:     []sdk.Msg{&banktypes.MsgSend{}},
+	}
+	replacementTx := testTx{
+		id:       2,
+		nonce:    432,
+		address:  addr,
+		priority: rand.Int63(),
+		msgs:     []sdk.Msg{&banktypes.MsgSend{}},
+	}
+
+	require.NoError(t, mp.Insert(ctx, originalTx))
+	require.NoError(t, mp.Insert(ctx, replacementTx))
+	require.Equal(t, 1, mp.CountTx())
+
+	itr := mp.Select(ctx, nil)
+	selectedTxs := fetchTxs(itr, 1000)
+	require.Len(t, selectedTxs, 1)
+	require.Equal(t, 2, selectedTxs[0].(testTx).id)
+
+	require.NoError(t, mp.Remove(originalTx))
+	require.Equal(t, 1, mp.CountTx())
+	require.NoError(t, mp.Remove(replacementTx))
+	require.Equal(t, 0, mp.CountTx())
+}
+
 func (s *MempoolTestSuite) TestBatchTx_WhenEnoughMemPool() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())

@@ -40,7 +40,9 @@ type FifoMempool struct {
 	txsOracle    *clist.CList // Oracle transactions FIFO queue
 	txsMap       sync.Map     // For quick lookup of existing transactions
 	txsMapOracle sync.Map     // For quick lookup of existing transactions
+	txsBytes     sync.Map     // For distinguishing replacements with the same sender and nonce
 	maxTx        int
+	txEncoder    sdk.TxEncoder
 }
 
 type FifoMempoolOptions func(mp *FifoMempool)
@@ -65,28 +67,80 @@ func FifoMaxTxOpt(maxTx int) FifoMempoolOptions {
 	}
 }
 
-func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
-	mp.mtx.RLock()
-	defer mp.mtx.RUnlock()
-	totalTxs := mp.txs.Len() + mp.txsOracle.Len()
-	if mp.maxTx >= 0 && totalTxs >= mp.maxTx {
-		return mempool.ErrMempoolTxMaxCapacity
+func FifoTxEncoderOpt(txEncoder sdk.TxEncoder) FifoMempoolOptions {
+	return func(mp *FifoMempool) {
+		mp.txEncoder = txEncoder
 	}
+}
+
+func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	if mp.maxTx < 0 {
 		return nil
 	}
 
+	// Marshal before taking the exclusive lock so CheckTx/RecheckTx admission
+	// is not serialized behind proto encoding.
 	txKey, err := getTxKey(tx)
 	if err != nil {
 		return err
 	}
+	txBytes, err := mp.getTxBytes(tx)
+	if err != nil {
+		return err
+	}
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
+
+	isOracle := helper.IsOracleTx(tx.GetMsgs())
+	if elem, ok := mp.txsMap.Load(txKey); ok {
+		if !isOracle {
+			// In-place replacement requires an encoder to distinguish the new tx
+			// from the old one at Remove time.  Without one, skip the update so
+			// a later Remove of the superseded tx cannot accidentally evict the
+			// current one.
+			//
+			// Mutating CElement.Value is safe only because the ABCI local client
+			// serializes CheckTx against PrepareProposal, so no Select iterator
+			// reads Value concurrently.  clist itself treats Value as write-once.
+			if mp.txEncoder != nil {
+				elem.(*clist.CElement).Value = tx
+				mp.txsBytes.Store(txKey, txBytes)
+			}
+			return nil
+		}
+		mp.txsMap.Delete(txKey)
+		mp.txsBytes.Delete(txKey)
+		mp.txs.Remove(elem.(*clist.CElement))
+	}
+	if elem, ok := mp.txsMapOracle.Load(txKey); ok {
+		if isOracle {
+			if mp.txEncoder != nil {
+				elem.(*clist.CElement).Value = tx
+				mp.txsBytes.Store(txKey, txBytes)
+			}
+			return nil
+		}
+		mp.txsMapOracle.Delete(txKey)
+		mp.txsBytes.Delete(txKey)
+		mp.txsOracle.Remove(elem.(*clist.CElement))
+	}
+
+	totalTxs := mp.txs.Len() + mp.txsOracle.Len()
+	if mp.maxTx >= 0 && totalTxs >= mp.maxTx {
+		return mempool.ErrMempoolTxMaxCapacity
+	}
+
 	// Add to appropriate queue based on transaction type
-	if helper.IsOracleTx(tx.GetMsgs()) {
+	if isOracle {
 		e := mp.txsOracle.PushBack(tx)
 		mp.txsMapOracle.Store(txKey, e)
 	} else {
 		e := mp.txs.PushBack(tx)
 		mp.txsMap.Store(txKey, e)
+	}
+	if txBytes != "" {
+		mp.txsBytes.Store(txKey, txBytes)
 	}
 
 	return nil
@@ -159,27 +213,50 @@ func (it *fifoIterator) Tx() sdk.Tx {
 }
 
 func (mp *FifoMempool) Remove(tx sdk.Tx) error {
-	mp.mtx.RLock()
-	defer mp.mtx.RUnlock()
+	// Marshal before taking the exclusive lock (same rationale as Insert).
 	txKey, err := getTxKey(tx)
 	if err != nil {
 		return err
 	}
+	txBytes, err := mp.getTxBytes(tx)
+	if err != nil {
+		return err
+	}
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 
 	isOracle := helper.IsOracleTx(tx.GetMsgs())
 	if isOracle {
-		if elem, ok := mp.txsMapOracle.LoadAndDelete(txKey); ok {
+		if elem, ok := mp.txsMapOracle.Load(txKey); ok {
+			if !mp.matchesStoredTx(txKey, txBytes) {
+				return nil
+			}
+			mp.txsMapOracle.Delete(txKey)
+			mp.txsBytes.Delete(txKey)
 			mp.txsOracle.Remove(elem.(*clist.CElement))
 			return nil
 		}
 	} else {
-		if elem, ok := mp.txsMap.LoadAndDelete(txKey); ok {
+		if elem, ok := mp.txsMap.Load(txKey); ok {
+			if !mp.matchesStoredTx(txKey, txBytes) {
+				return nil
+			}
+			mp.txsMap.Delete(txKey)
+			mp.txsBytes.Delete(txKey)
 			mp.txs.Remove(elem.(*clist.CElement))
 			return nil
 		}
 	}
 
 	return mempool.ErrTxNotFound
+}
+
+func (mp *FifoMempool) matchesStoredTx(txKey customTxKey, txBytes string) bool {
+	storedTxBytes, ok := mp.txsBytes.Load(txKey)
+	// No entry means no encoder was configured (bytes were never stored), so we
+	// have no discriminator and must allow the removal.
+	return !ok || storedTxBytes == txBytes
 }
 
 func (mp *FifoMempool) CountTx() int {
@@ -202,6 +279,19 @@ func getTxKey(tx sdk.Tx) (customTxKey, error) {
 	nonce := sig.Sequence
 	key := customTxKey{nonce: nonce, address: sender}
 	return key, nil
+}
+
+func (mp *FifoMempool) getTxBytes(tx sdk.Tx) (string, error) {
+	if mp.txEncoder == nil {
+		return "", nil
+	}
+
+	txBytes, err := mp.txEncoder(tx)
+	if err != nil {
+		return "", err
+	}
+
+	return string(txBytes), nil
 }
 
 type customTxKey struct {

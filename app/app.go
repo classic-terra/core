@@ -30,6 +30,7 @@ import (
 	v13_1 "github.com/classic-terra/core/v4/app/upgrades/v13_1"
 	v14_1 "github.com/classic-terra/core/v4/app/upgrades/v14_1"
 	v14_2 "github.com/classic-terra/core/v4/app/upgrades/v14_2"
+	"github.com/classic-terra/core/v4/app/upgrades/v14_3"
 	v2 "github.com/classic-terra/core/v4/app/upgrades/v2"
 	v3 "github.com/classic-terra/core/v4/app/upgrades/v3"
 	v4 "github.com/classic-terra/core/v4/app/upgrades/v4"
@@ -107,6 +108,7 @@ var (
 		v13_1.Upgrade,
 		v14_1.Upgrade,
 		v14_2.Upgrade,
+		v14_3.Upgrade,
 	}
 
 	// Forks defines forks to be applied to the network
@@ -141,6 +143,10 @@ type TerraApp struct {
 
 	// the configurator
 	configurator module.Configurator
+
+	// replacementTracker is process-local mempool recovery state for
+	// TxReplacementDecorator. Pruned each BeginBlock.
+	replacementTracker *customante.ReplacementTracker
 }
 
 func init() {
@@ -175,9 +181,9 @@ func NewTerraApp(
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
 		var mempool *appmempool.FifoMempool
 		if maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs)); maxTxs > 0 {
-			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs))
+			mempool = appmempool.NewFifoMempool(appmempool.FifoMaxTxOpt(maxTxs), appmempool.FifoTxEncoderOpt(txConfig.TxEncoder()))
 		} else {
-			mempool = appmempool.NewFifoMempool()
+			mempool = appmempool.NewFifoMempool(appmempool.FifoTxEncoderOpt(txConfig.TxEncoder()))
 		}
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetMempool(mempool)
@@ -278,6 +284,8 @@ func NewTerraApp(
 		panic("error while reading wasm config: " + err.Error())
 	}
 
+	app.replacementTracker = customante.NewReplacementTracker()
+
 	anteHandler, err := customante.NewAnteHandler(
 		customante.HandlerOptions{
 			AccountKeeper:      app.AccountKeeper,
@@ -298,6 +306,8 @@ func NewTerraApp(
 			StakingKeeper:      app.StakingKeeper,
 			TaxKeeper:          &app.TaxKeeper,
 			Cdc:                app.appCodec,
+			CommitMultiStore:   app.CommitMultiStore(),
+			ReplacementTracker: app.replacementTracker,
 		},
 	)
 	if err != nil {
@@ -378,6 +388,19 @@ func (app *TerraApp) Modules() map[string]interface{} {
 // BeginBlocker application updates every begin block
 func (app *TerraApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
+	if app.replacementTracker != nil {
+		app.replacementTracker.Prune(func(sender string) (uint64, bool) {
+			addr, err := sdk.AccAddressFromBech32(sender)
+			if err != nil {
+				return 0, false
+			}
+			acc := app.AccountKeeper.GetAccount(ctx, addr)
+			if acc == nil {
+				return 0, false
+			}
+			return acc.GetSequence(), true
+		}, ctx.BlockHeight())
+	}
 	return app.mm.BeginBlock(ctx)
 }
 

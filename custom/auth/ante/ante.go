@@ -3,6 +3,7 @@ package ante
 import (
 	corestoretypes "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -43,6 +44,8 @@ type HandlerOptions struct {
 	StakingKeeper          *stakingkeeper.Keeper
 	TaxKeeper              *taxkeeper.Keeper
 	Cdc                    codec.BinaryCodec
+	CommitMultiStore       storetypes.CommitMultiStore
+	ReplacementTracker     *ReplacementTracker
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -81,6 +84,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "tax handler is required for ante builder")
 	}
 
+	if options.ReplacementTracker == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "replacement tracker is required for ante builder")
+	}
+
+	if options.CommitMultiStore == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "commit multi store is required for ante builder")
+	}
+
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
@@ -96,6 +107,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// MinInitialDepositDecorator prevents submitting governance proposal low initial deposit
 		NewMinInitialDepositDecorator(options.GovKeeper, options.TreasuryKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
+		NewTxReplacementDecorator(options.AccountKeeper, options.CommitMultiStore, options.ReplacementTracker),
 		NewFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TaxExemptionKeeper, options.TreasuryKeeper, options.DistributionKeeper, *options.TaxKeeper),
 		dyncommante.NewDyncommDecorator(options.Cdc, options.DyncommKeeper, options.StakingKeeper),
 

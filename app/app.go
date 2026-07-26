@@ -143,6 +143,10 @@ type TerraApp struct {
 
 	// the configurator
 	configurator module.Configurator
+
+	// replacementTracker is process-local mempool recovery state for
+	// TxReplacementDecorator. Pruned each BeginBlock.
+	replacementTracker *customante.ReplacementTracker
 }
 
 func init() {
@@ -280,7 +284,7 @@ func NewTerraApp(
 		panic("error while reading wasm config: " + err.Error())
 	}
 
-	replacementTracker := customante.NewReplacementTracker()
+	app.replacementTracker = customante.NewReplacementTracker()
 
 	anteHandler, err := customante.NewAnteHandler(
 		customante.HandlerOptions{
@@ -303,7 +307,7 @@ func NewTerraApp(
 			TaxKeeper:          &app.TaxKeeper,
 			Cdc:                app.appCodec,
 			CommitMultiStore:   app.CommitMultiStore(),
-			ReplacementTracker: replacementTracker,
+			ReplacementTracker: app.replacementTracker,
 		},
 	)
 	if err != nil {
@@ -384,6 +388,19 @@ func (app *TerraApp) Modules() map[string]interface{} {
 // BeginBlocker application updates every begin block
 func (app *TerraApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	BeginBlockForks(ctx, app)
+	if app.replacementTracker != nil {
+		app.replacementTracker.Prune(func(sender string) (uint64, bool) {
+			addr, err := sdk.AccAddressFromBech32(sender)
+			if err != nil {
+				return 0, false
+			}
+			acc := app.AccountKeeper.GetAccount(ctx, addr)
+			if acc == nil {
+				return 0, false
+			}
+			return acc.GetSequence(), true
+		}, ctx.BlockHeight())
+	}
 	return app.mm.BeginBlock(ctx)
 }
 

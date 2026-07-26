@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -86,6 +87,62 @@ func TestReplacementTracker(t *testing.T) {
 	tracker.Set(sender, 8, rep1)
 	tracker.RemoveTxBytes(sender, rep2) // rep2 not in set — must not panic
 	require.NotNil(t, tracker.Get(sender))
+}
+
+func TestReplacementTracker_ClearIfPast(t *testing.T) {
+	tracker := ante.NewReplacementTracker()
+	const sender = "terra1abc"
+	tracker.Set(sender, 432, []byte("rep"))
+
+	tracker.ClearIfPast(sender, 432)
+	require.NotNil(t, tracker.Get(sender), "equal sequence must not clear")
+
+	tracker.ClearIfPast(sender, 433)
+	require.Nil(t, tracker.Get(sender), "advanced sequence must clear")
+}
+
+func TestReplacementTracker_PruneBySequence(t *testing.T) {
+	tracker := ante.NewReplacementTracker()
+	tracker.SetAtHeight("terra1a", 10, []byte("a"), 100)
+	tracker.SetAtHeight("terra1b", 20, []byte("b"), 100)
+
+	seqs := map[string]uint64{
+		"terra1a": 11, // past → prune
+		"terra1b": 20, // equal → keep
+	}
+	tracker.Prune(func(sender string) (uint64, bool) {
+		seq, ok := seqs[sender]
+		return seq, ok
+	}, 100) // same height → no TTL expiry
+
+	require.Nil(t, tracker.Get("terra1a"))
+	require.NotNil(t, tracker.Get("terra1b"))
+	require.Equal(t, 1, tracker.Len())
+}
+
+func TestReplacementTracker_PruneByTTL(t *testing.T) {
+	tracker := ante.NewReplacementTracker()
+	tracker.SetAtHeight("terra1a", 10, []byte("a"), 100)
+
+	tracker.Prune(func(sender string) (uint64, bool) {
+		return 10, true // sequence not advanced
+	}, 201) // 201-100 > DefaultReplacementTTLBlocks(100)
+
+	require.Nil(t, tracker.Get("terra1a"))
+	require.Equal(t, 0, tracker.Len())
+}
+
+func TestReplacementTracker_MaxEntries(t *testing.T) {
+	tracker := ante.NewReplacementTracker()
+	// Shrink the cap for the test via filling past default is expensive;
+	// instead verify Len and that SetAtHeight of many distinct senders is bounded
+	// by forcing eviction through the unexported path via repeated Sets under a
+	// temporary tracker with the production default and checking Len() <= default.
+	for i := 0; i < ante.DefaultMaxReplacementEntries+10; i++ {
+		tracker.Set(fmt.Sprintf("terra1sender%d", i), uint64(i), []byte("x"))
+	}
+	require.LessOrEqual(t, tracker.Len(), ante.DefaultMaxReplacementEntries)
+	require.Equal(t, ante.DefaultMaxReplacementEntries, tracker.Len())
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +303,67 @@ func (s *ReplacementDecoratorSuite) TestRecheck_ReplacementTxClearsTracker() {
 	_, err = dec.AnteHandle(ctx, replacementTx, false, noopHandler)
 	s.Require().NoError(err)
 	s.Require().Nil(tracker.Get(sender), "tracker entry must be cleared once replacement tx passes recheck")
+}
+
+// Recheck failure must also drop the replacement bytes — CometBFT evicts the tx.
+func (s *ReplacementDecoratorSuite) TestRecheck_ReplacementTxFailureClearsTracker() {
+	s.SetupTest(true)
+	priv, _, accNum := func() (cryptotypes.PrivKey, sdk.AccAddress, uint64) {
+		k, _, addr := testdata.KeyTestPubAddr()
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
+		s.Require().NoError(acc.SetSequence(432))
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		return k, addr, acc.GetAccountNumber()
+	}()
+
+	replacementTx := s.makeTxAtSeq(priv, accNum, 432)
+	txBytes, err := s.clientCtx.TxConfig.TxEncoder()(replacementTx)
+	s.Require().NoError(err)
+
+	sender := sdk.AccAddress(priv.PubKey().Address()).String()
+	tracker := ante.NewReplacementTracker()
+	tracker.Set(sender, 432, txBytes)
+	dec := s.makeDecorator(tracker)
+
+	failHandler := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+		return ctx, sdkerrors.ErrInsufficientFunds
+	}
+	ctx := s.ctx.WithIsReCheckTx(true).WithTxBytes(txBytes)
+	_, err = dec.AnteHandle(ctx, replacementTx, false, failHandler)
+	s.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	s.Require().Nil(tracker.Get(sender), "failed recheck must drop tracker bytes to avoid leak")
+}
+
+// DeliverTx success must clear the tracker once the sequence advances past
+// FromSequence — the common path when a replacement is reaped into a block
+// without a prior recheck.
+func (s *ReplacementDecoratorSuite) TestDeliverTx_ClearsTrackerWhenSequenceAdvances() {
+	s.SetupTest(true)
+	priv, addr, accNum := func() (cryptotypes.PrivKey, sdk.AccAddress, uint64) {
+		k, _, a := testdata.KeyTestPubAddr()
+		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, a)
+		s.Require().NoError(acc.SetSequence(432))
+		s.app.AccountKeeper.SetAccount(s.ctx, acc)
+		return k, a, acc.GetAccountNumber()
+	}()
+
+	sender := addr.String()
+	tracker := ante.NewReplacementTracker()
+	tracker.Set(sender, 432, []byte("replacement-bytes"))
+	dec := s.makeDecorator(tracker)
+
+	tx := s.makeTxAtSeq(priv, accNum, 432)
+	bumpSeq := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+		acc := s.app.AccountKeeper.GetAccount(ctx, addr)
+		s.Require().NoError(acc.SetSequence(433))
+		s.app.AccountKeeper.SetAccount(ctx, acc)
+		return ctx, nil
+	}
+
+	// DeliverTx path: neither CheckTx nor ReCheckTx.
+	_, err := dec.AnteHandle(s.ctx.WithIsCheckTx(false).WithIsReCheckTx(false), tx, false, bumpSeq)
+	s.Require().NoError(err)
+	s.Require().Nil(tracker.Get(sender), "DeliverTx must clear tracker after sequence advances")
 }
 
 // Txs at seq > fromSequence must NOT be evicted — they are valid queued txs that

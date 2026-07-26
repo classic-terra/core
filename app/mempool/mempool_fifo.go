@@ -74,12 +74,12 @@ func FifoTxEncoderOpt(txEncoder sdk.TxEncoder) FifoMempoolOptions {
 }
 
 func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	if mp.maxTx < 0 {
 		return nil
 	}
 
+	// Marshal before taking the exclusive lock so CheckTx/RecheckTx admission
+	// is not serialized behind proto encoding.
 	txKey, err := getTxKey(tx)
 	if err != nil {
 		return err
@@ -88,6 +88,9 @@ func (mp *FifoMempool) Insert(_ context.Context, tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 
 	isOracle := helper.IsOracleTx(tx.GetMsgs())
 	if elem, ok := mp.txsMap.Load(txKey); ok {
@@ -206,8 +209,7 @@ func (it *fifoIterator) Tx() sdk.Tx {
 }
 
 func (mp *FifoMempool) Remove(tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
+	// Marshal before taking the exclusive lock (same rationale as Insert).
 	txKey, err := getTxKey(tx)
 	if err != nil {
 		return err
@@ -216,6 +218,9 @@ func (mp *FifoMempool) Remove(tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 
 	isOracle := helper.IsOracleTx(tx.GetMsgs())
 	if isOracle {

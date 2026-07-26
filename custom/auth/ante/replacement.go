@@ -10,15 +10,30 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+const (
+	// DefaultMaxReplacementEntries caps distinct senders tracked at once.
+	// Prevents unbounded growth if a cleanup path is missed.
+	DefaultMaxReplacementEntries = 4096
+
+	// DefaultReplacementTTLBlocks drops tracker entries that survive this many
+	// blocks without being cleared by recheck/deliver. Acts as a backstop for
+	// the rare path where CometBFT drops a replacement without rechecking it.
+	DefaultReplacementTTLBlocks = 100
+)
+
 // ReplacementTracker tracks pending tx replacements so old txs can be
 // evicted during CometBFT recheck.  Thread-safe.
 type ReplacementTracker struct {
 	mu           sync.RWMutex
 	replacements map[string]*ReplacementInfo
+	order        []string // insertion order for max-entries eviction
+	maxEntries   int
+	ttlBlocks    int64
 }
 
 type ReplacementInfo struct {
 	FromSequence  uint64
+	SetHeight     int64
 	newTxBytesSet map[string]struct{} // keyed by string(txBytes) for O(1) membership
 }
 
@@ -31,10 +46,16 @@ func (info *ReplacementInfo) Contains(txBytes []byte) bool {
 func NewReplacementTracker() *ReplacementTracker {
 	return &ReplacementTracker{
 		replacements: make(map[string]*ReplacementInfo),
+		maxEntries:   DefaultMaxReplacementEntries,
+		ttlBlocks:    DefaultReplacementTTLBlocks,
 	}
 }
 
 func (rt *ReplacementTracker) Set(sender string, fromSeq uint64, newTxBytes []byte) {
+	rt.SetAtHeight(sender, fromSeq, newTxBytes, 0)
+}
+
+func (rt *ReplacementTracker) SetAtHeight(sender string, fromSeq uint64, newTxBytes []byte, height int64) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
 	info, exists := rt.replacements[sender]
@@ -42,8 +63,15 @@ func (rt *ReplacementTracker) Set(sender string, fromSeq uint64, newTxBytes []by
 		// New sender or different sequence: start a fresh set.
 		rt.replacements[sender] = &ReplacementInfo{
 			FromSequence:  fromSeq,
+			SetHeight:     height,
 			newTxBytesSet: map[string]struct{}{string(newTxBytes): {}},
 		}
+		if !exists {
+			rt.order = append(rt.order, sender)
+		} else {
+			rt.moveToEndLocked(sender)
+		}
+		rt.enforceMaxEntriesLocked(sender)
 		return
 	}
 	// Same sequence: register alongside any prior ones so all rapid replacements
@@ -61,8 +89,10 @@ func (rt *ReplacementTracker) Set(sender string, fromSeq uint64, newTxBytes []by
 	newSet[string(newTxBytes)] = struct{}{}
 	rt.replacements[sender] = &ReplacementInfo{
 		FromSequence:  fromSeq,
+		SetHeight:     info.SetHeight,
 		newTxBytesSet: newSet,
 	}
+	rt.moveToEndLocked(sender)
 }
 
 // RemoveTxBytes removes a single replacement byte string from the tracked set.
@@ -83,6 +113,7 @@ func (rt *ReplacementTracker) RemoveTxBytes(sender string, txBytes []byte) {
 	}
 	if len(info.newTxBytesSet) <= 1 {
 		delete(rt.replacements, sender)
+		rt.removeFromOrderLocked(sender)
 		return
 	}
 	newSet := make(map[string]struct{}, len(info.newTxBytesSet)-1)
@@ -93,6 +124,7 @@ func (rt *ReplacementTracker) RemoveTxBytes(sender string, txBytes []byte) {
 	}
 	rt.replacements[sender] = &ReplacementInfo{
 		FromSequence:  info.FromSequence,
+		SetHeight:     info.SetHeight,
 		newTxBytesSet: newSet,
 	}
 }
@@ -106,7 +138,92 @@ func (rt *ReplacementTracker) Get(sender string) *ReplacementInfo {
 func (rt *ReplacementTracker) Clear(sender string) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
+	if _, ok := rt.replacements[sender]; !ok {
+		return
+	}
 	delete(rt.replacements, sender)
+	rt.removeFromOrderLocked(sender)
+}
+
+// ClearIfPast deletes the sender's entry when the committed sequence has
+// advanced past FromSequence (replacement was included / sequence consumed).
+func (rt *ReplacementTracker) ClearIfPast(sender string, committedSeq uint64) {
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+	info, ok := rt.replacements[sender]
+	if !ok {
+		return
+	}
+	if committedSeq > info.FromSequence {
+		delete(rt.replacements, sender)
+		rt.removeFromOrderLocked(sender)
+	}
+}
+
+// Prune removes entries whose committed sequence has advanced past FromSequence
+// and entries older than ttlBlocks. getSeq returns (sequence, true) for known
+// accounts; returning false drops the entry as orphaned.
+func (rt *ReplacementTracker) Prune(getSeq func(sender string) (uint64, bool), height int64) {
+	rt.mu.Lock()
+	defer rt.mu.Unlock()
+
+	kept := rt.order[:0]
+	for _, sender := range rt.order {
+		info, ok := rt.replacements[sender]
+		if !ok {
+			continue
+		}
+		if rt.ttlBlocks > 0 && info.SetHeight > 0 && height-info.SetHeight > rt.ttlBlocks {
+			delete(rt.replacements, sender)
+			continue
+		}
+		seq, found := getSeq(sender)
+		if !found || seq > info.FromSequence {
+			delete(rt.replacements, sender)
+			continue
+		}
+		kept = append(kept, sender)
+	}
+	rt.order = kept
+}
+
+func (rt *ReplacementTracker) Len() int {
+	rt.mu.RLock()
+	defer rt.mu.RUnlock()
+	return len(rt.replacements)
+}
+
+func (rt *ReplacementTracker) moveToEndLocked(sender string) {
+	rt.removeFromOrderLocked(sender)
+	rt.order = append(rt.order, sender)
+}
+
+func (rt *ReplacementTracker) removeFromOrderLocked(sender string) {
+	for i, s := range rt.order {
+		if s == sender {
+			rt.order = append(rt.order[:i], rt.order[i+1:]...)
+			return
+		}
+	}
+}
+
+func (rt *ReplacementTracker) enforceMaxEntriesLocked(keepSender string) {
+	if rt.maxEntries <= 0 {
+		return
+	}
+	for len(rt.replacements) > rt.maxEntries && len(rt.order) > 0 {
+		victim := rt.order[0]
+		if victim == keepSender {
+			if len(rt.order) == 1 {
+				return
+			}
+			// Rotate keepSender to the end and evict the next oldest.
+			rt.order = append(rt.order[1:], victim)
+			victim = rt.order[0]
+		}
+		delete(rt.replacements, victim)
+		rt.order = rt.order[1:]
+	}
 }
 
 // TxReplacementDecorator allows a sender to replace a stuck pending tx by
@@ -120,6 +237,11 @@ func (rt *ReplacementTracker) Clear(sender string) {
 // On recheck:
 //   - Old txs from the same sender (at or above the replaced sequence) are
 //     rejected, causing CometBFT to evict them from its mempool.
+//
+// On DeliverTx:
+//   - Once the account sequence advances past FromSequence the tracker entry
+//     is cleared (covers the common path where a replacement is reaped
+//     straight into a block without a recheck).
 type TxReplacementDecorator struct {
 	ak      ante.AccountKeeper
 	cms     storetypes.CommitMultiStore
@@ -147,7 +269,25 @@ func (d TxReplacementDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return d.handleNewTx(ctx, tx, next)
 	}
 
-	return next(ctx, tx, false)
+	// DeliverTx: after IncrementSequenceDecorator runs inside next(), clear
+	// the tracker once the sequence has advanced past the replaced one.
+	newCtx, err := next(ctx, tx, false)
+	if err == nil {
+		d.clearAfterDeliver(newCtx, tx)
+	}
+	return newCtx, err
+}
+
+func (d TxReplacementDecorator) clearAfterDeliver(ctx sdk.Context, tx sdk.Tx) {
+	sender, _, err := firstSignerSeq(tx)
+	if err != nil {
+		return
+	}
+	acc := d.ak.GetAccount(ctx, sdk.MustAccAddressFromBech32(sender))
+	if acc == nil {
+		return
+	}
+	d.tracker.ClearIfPast(sender, acc.GetSequence())
 }
 
 // handleRecheck rejects the old tx at fromSequence that has been superseded by
@@ -173,16 +313,11 @@ func (d TxReplacementDecorator) handleRecheck(ctx sdk.Context, tx sdk.Tx, next s
 		if committedAcc != nil && seq == committedAcc.GetSequence() {
 			d.ak.SetAccount(ctx, committedAcc)
 		}
-		// Remove only this replacement's bytes after next() succeeds.  Using
-		// RemoveTxBytes instead of Clear ensures that if a second replacement for
-		// the same sender/sequence was registered, the sender entry (and its
-		// fromSequence eviction rule) survives until all replacements have been
-		// rechecked.  If next() fails keep the tracker alive so the replacement
-		// can be retried rather than silently losing both txs.
+		// Always drop this replacement's bytes after recheck — success clears a
+		// live entry; failure means CometBFT will evict the tx anyway, so keeping
+		// the bytes would only leak until a later prune.
 		newCtx, err := next(ctx, tx, false)
-		if err == nil {
-			d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
-		}
+		d.tracker.RemoveTxBytes(sender, ctx.TxBytes())
 		return newCtx, err
 	}
 
@@ -236,7 +371,7 @@ func (d TxReplacementDecorator) handleNewTx(ctx sdk.Context, tx sdk.Tx, next sdk
 	// If the full ante chain succeeds the branch is written; otherwise discarded.
 	d.ak.SetAccount(ctx, committedAcc)
 
-	d.tracker.Set(sender, committedSeq, ctx.TxBytes())
+	d.tracker.SetAtHeight(sender, committedSeq, ctx.TxBytes(), ctx.BlockHeight())
 
 	newCtx, err := next(ctx, tx, false)
 	if err != nil {

@@ -15,6 +15,11 @@ const (
 	// Prevents unbounded growth if a cleanup path is missed.
 	DefaultMaxReplacementEntries = 4096
 
+	// DefaultMaxTxBytesPerSender caps how many distinct replacement txs are
+	// retained for a single sender+sequence. Rapid replacements stay tracked,
+	// but a single account cannot grow the set without bound.
+	DefaultMaxTxBytesPerSender = 16
+
 	// DefaultReplacementTTLBlocks drops tracker entries that survive this many
 	// blocks without being cleared by recheck/deliver. Acts as a backstop for
 	// the rare path where CometBFT drops a replacement without rechecking it.
@@ -24,17 +29,19 @@ const (
 // ReplacementTracker tracks pending tx replacements so old txs can be
 // evicted during CometBFT recheck.  Thread-safe.
 type ReplacementTracker struct {
-	mu           sync.RWMutex
-	replacements map[string]*ReplacementInfo
-	order        []string // insertion order for max-entries eviction
-	maxEntries   int
-	ttlBlocks    int64
+	mu                  sync.RWMutex
+	replacements        map[string]*ReplacementInfo
+	order               []string // insertion order for max-entries eviction
+	maxEntries          int
+	maxTxBytesPerSender int
+	ttlBlocks           int64
 }
 
 type ReplacementInfo struct {
-	FromSequence  uint64
-	SetHeight     int64
-	newTxBytesSet map[string]struct{} // keyed by string(txBytes) for O(1) membership
+	FromSequence    uint64
+	SetHeight       int64
+	newTxBytesSet   map[string]struct{} // keyed by string(txBytes) for O(1) membership
+	newTxBytesOrder []string            // insertion order for per-sender cap
 }
 
 // Contains reports whether txBytes is a registered replacement for this entry.
@@ -45,9 +52,10 @@ func (info *ReplacementInfo) Contains(txBytes []byte) bool {
 
 func NewReplacementTracker() *ReplacementTracker {
 	return &ReplacementTracker{
-		replacements: make(map[string]*ReplacementInfo),
-		maxEntries:   DefaultMaxReplacementEntries,
-		ttlBlocks:    DefaultReplacementTTLBlocks,
+		replacements:        make(map[string]*ReplacementInfo),
+		maxEntries:          DefaultMaxReplacementEntries,
+		maxTxBytesPerSender: DefaultMaxTxBytesPerSender,
+		ttlBlocks:           DefaultReplacementTTLBlocks,
 	}
 }
 
@@ -58,13 +66,15 @@ func (rt *ReplacementTracker) Set(sender string, fromSeq uint64, newTxBytes []by
 func (rt *ReplacementTracker) SetAtHeight(sender string, fromSeq uint64, newTxBytes []byte, height int64) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
+	key := string(newTxBytes)
 	info, exists := rt.replacements[sender]
 	if !exists || info.FromSequence != fromSeq {
 		// New sender or different sequence: start a fresh set.
 		rt.replacements[sender] = &ReplacementInfo{
-			FromSequence:  fromSeq,
-			SetHeight:     height,
-			newTxBytesSet: map[string]struct{}{string(newTxBytes): {}},
+			FromSequence:    fromSeq,
+			SetHeight:       height,
+			newTxBytesSet:   map[string]struct{}{key: {}},
+			newTxBytesOrder: []string{key},
 		}
 		if !exists {
 			rt.order = append(rt.order, sender)
@@ -72,6 +82,10 @@ func (rt *ReplacementTracker) SetAtHeight(sender string, fromSeq uint64, newTxBy
 			rt.moveToEndLocked(sender)
 		}
 		rt.enforceMaxEntriesLocked(sender)
+		return
+	}
+	if _, already := info.newTxBytesSet[key]; already {
+		rt.moveToEndLocked(sender)
 		return
 	}
 	// Same sequence: register alongside any prior ones so all rapid replacements
@@ -86,11 +100,27 @@ func (rt *ReplacementTracker) SetAtHeight(sender string, fromSeq uint64, newTxBy
 	for k := range info.newTxBytesSet {
 		newSet[k] = struct{}{}
 	}
-	newSet[string(newTxBytes)] = struct{}{}
+	newSet[key] = struct{}{}
+	newOrder := make([]string, len(info.newTxBytesOrder), len(info.newTxBytesOrder)+1)
+	copy(newOrder, info.newTxBytesOrder)
+	newOrder = append(newOrder, key)
+
+	// Drop oldest replacements once the per-sender cap is exceeded.
+	maxPerSender := rt.maxTxBytesPerSender
+	if maxPerSender <= 0 {
+		maxPerSender = DefaultMaxTxBytesPerSender
+	}
+	for len(newOrder) > maxPerSender {
+		victim := newOrder[0]
+		newOrder = newOrder[1:]
+		delete(newSet, victim)
+	}
+
 	rt.replacements[sender] = &ReplacementInfo{
-		FromSequence:  fromSeq,
-		SetHeight:     info.SetHeight,
-		newTxBytesSet: newSet,
+		FromSequence:    fromSeq,
+		SetHeight:       info.SetHeight,
+		newTxBytesSet:   newSet,
+		newTxBytesOrder: newOrder,
 	}
 	rt.moveToEndLocked(sender)
 }
@@ -122,10 +152,17 @@ func (rt *ReplacementTracker) RemoveTxBytes(sender string, txBytes []byte) {
 			newSet[k] = struct{}{}
 		}
 	}
+	newOrder := make([]string, 0, len(info.newTxBytesOrder)-1)
+	for _, k := range info.newTxBytesOrder {
+		if k != key {
+			newOrder = append(newOrder, k)
+		}
+	}
 	rt.replacements[sender] = &ReplacementInfo{
-		FromSequence:  info.FromSequence,
-		SetHeight:     info.SetHeight,
-		newTxBytesSet: newSet,
+		FromSequence:    info.FromSequence,
+		SetHeight:       info.SetHeight,
+		newTxBytesSet:   newSet,
+		newTxBytesOrder: newOrder,
 	}
 }
 

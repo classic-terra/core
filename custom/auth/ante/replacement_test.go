@@ -145,6 +145,35 @@ func TestReplacementTracker_MaxEntries(t *testing.T) {
 	require.Equal(t, ante.DefaultMaxReplacementEntries, tracker.Len())
 }
 
+func TestReplacementTracker_MaxTxBytesPerSender(t *testing.T) {
+	tracker := ante.NewReplacementTracker()
+	const sender = "terra1abc"
+
+	var first, last []byte
+	for i := 0; i < ante.DefaultMaxTxBytesPerSender+5; i++ {
+		txBytes := []byte(fmt.Sprintf("replacement-%d", i))
+		if i == 0 {
+			first = txBytes
+		}
+		last = txBytes
+		tracker.Set(sender, 432, txBytes)
+	}
+
+	info := tracker.Get(sender)
+	require.NotNil(t, info)
+	require.False(t, info.Contains(first), "oldest replacements must be evicted once per-sender cap is exceeded")
+	require.True(t, info.Contains(last), "newest replacement must remain tracked")
+
+	// Exactly the newest DefaultMaxTxBytesPerSender entries should remain.
+	kept := 0
+	for i := 0; i < ante.DefaultMaxTxBytesPerSender+5; i++ {
+		if info.Contains([]byte(fmt.Sprintf("replacement-%d", i))) {
+			kept++
+		}
+	}
+	require.Equal(t, ante.DefaultMaxTxBytesPerSender, kept)
+}
+
 // ---------------------------------------------------------------------------
 // TxReplacementDecorator — behaviour tests
 // ---------------------------------------------------------------------------

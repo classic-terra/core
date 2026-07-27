@@ -126,23 +126,28 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil
 	}
 
-	// Check TWAP for offer denom (if not LUNC)
+	// Check TWAP for each distinct denom involved in the swap, each one at most once
+	denomsToCheck := make([]string, 0, 2)
+	addDenomToCheck := func(denom string) {
+		for _, existing := range denomsToCheck {
+			if existing == denom {
+				return
+			}
+		}
+		denomsToCheck = append(denomsToCheck, denom)
+	}
 	if offerCoin.Denom != core.MicroLunaDenom {
-		if err := checkTWAPDeviation(offerCoin.Denom); err != nil {
-			return nil, err
-		}
+		addDenomToCheck(offerCoin.Denom)
 	}
-
-	// Check TWAP for ask denom (if not LUNC)
 	if askDenom != core.MicroLunaDenom {
-		if err := checkTWAPDeviation(askDenom); err != nil {
-			return nil, err
-		}
+		addDenomToCheck(askDenom)
 	}
-
-	// If either side is LUNC, also check LUNC price (MicroUSDDenom = LUNC price in USD)
+	// If either side is LUNC, also verify the LUNC/USD price (MicroUSDDenom).
 	if offerCoin.Denom == core.MicroLunaDenom || askDenom == core.MicroLunaDenom {
-		if err := checkTWAPDeviation(core.MicroUSDDenom); err != nil {
+		addDenomToCheck(core.MicroUSDDenom)
+	}
+	for _, denom := range denomsToCheck {
+		if err := checkTWAPDeviation(denom); err != nil {
 			return nil, err
 		}
 	}

@@ -7,7 +7,9 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/classic-terra/core/v4/app/keepers"
 	"github.com/classic-terra/core/v4/app/upgrades"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
 	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -21,8 +23,22 @@ func CreateV15UpgradeHandler(
 	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-		// Initialize/ensure allowed swap denoms for market: restrict to uusd by default.
-		k.MarketKeeper.SetAllowedSwapDenoms([]string{"uusd"})
+		// Note: allowedSwapDenoms is deliberately not touched here. It is code-fixed to
+		// {uusd} by marketkeeper.NewKeeper and cannot be usefully changed at this point
+
+		// Initialize the market params added in this upgrade.
+		marketParams := k.MarketKeeper.GetParams(sdkCtx)
+		marketParams.EpochLengthBlocks = markettypes.DefaultEpochLengthBlocks
+		marketParams.SwapFeeBurnRate = markettypes.DefaultSwapFeeBurnRate
+		marketParams.SwapFeeCommunityRate = markettypes.DefaultSwapFeeCommunityRate
+		marketParams.MaxOracleAgeSeconds = markettypes.DefaultMaxOracleAgeSeconds
+		marketParams.TwapLookbackWindow = markettypes.DefaultTWAPLookbackWindow
+		marketParams.MaxTwapDeviation = markettypes.DefaultMaxTWAPDeviation
+		marketParams.DailyCapFactor = markettypes.DefaultDailyCapFactor
+		k.MarketKeeper.SetParams(sdkCtx, marketParams)
+
+		// Initialize TaxRedirectRate. It is a new treasury param added in this upgrade.
+		k.TreasuryKeeper.SetTaxRedirectRate(sdkCtx, treasurytypes.DefaultTaxRedirectRate)
 
 		// Ensure UST meta denom (oracle-only) is present in oracle vote targets.
 		// Existing chains won't pick up DefaultParams changes automatically, so patch params here.

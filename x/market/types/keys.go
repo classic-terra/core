@@ -23,7 +23,7 @@ const (
 // - 0x01: sdk.Dec
 // - 0x20: uint64
 // - 0x21: int64 (unix timestamp)
-// - 0x22<denom>: []PriceSnapshot
+// - 0x22<denom>: PriceSnapshots (protobuf, pruned to lookback window)
 // - 0x23: int64 (block height)
 // - 0x24<denom>: sdk.Int (baseline balance per denom set at epoch change)
 // - 0x25<denom>: sdk.Int (daily usage per denom, resets each day)

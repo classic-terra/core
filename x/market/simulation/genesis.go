@@ -15,9 +15,15 @@ import (
 
 // Simulation parameter constants
 const (
-	basePoolKey           = "base_pool"
-	poolRecoveryPeriodKey = "pool_recovery_period"
-	minStabilitySpreadKey = "min_spread"
+	basePoolKey             = "base_pool"
+	poolRecoveryPeriodKey   = "pool_recovery_period"
+	minStabilitySpreadKey   = "min_spread"
+	swapFeeBurnRateKey      = "swap_fee_burn_rate"
+	swapFeeCommunityRateKey = "swap_fee_community_rate"
+	maxOracleAgeSecondsKey  = "max_oracle_age_seconds"
+	twapLookbackWindowKey   = "twap_lookback_window"
+	maxTWAPDeviationKey     = "max_twap_deviation"
+	dailyCapFactorKey       = "daily_cap_factor"
 )
 
 // GenBasePool randomized MintBasePool
@@ -35,6 +41,38 @@ func GenEpochLengthBlocks(r *rand.Rand) uint64 {
 	// between 7 and 60 days worth of blocks
 	days := 7 + r.Intn(54)
 	return uint64(days) * core.BlocksPerDay
+}
+
+// GenSwapFeeBurnRate randomized SwapFeeBurnRate in [0, 0.5].
+// Kept below 0.5 so that burn + community rates can never exceed 1 together
+// (validated by Params.Validate).
+func GenSwapFeeBurnRate(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(int64(r.Intn(501)), 3) // [0, 0.500]
+}
+
+// GenSwapFeeCommunityRate randomized SwapFeeCommunityRate in [0, 0.5].
+func GenSwapFeeCommunityRate(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(int64(r.Intn(501)), 3) // [0, 0.500]
+}
+
+// GenMaxOracleAgeSeconds randomized MaxOracleAgeSeconds in [30, 300] seconds.
+func GenMaxOracleAgeSeconds(r *rand.Rand) uint64 {
+	return uint64(30 + r.Intn(271))
+}
+
+// GenTWAPLookbackWindow randomized TWAPLookbackWindow in [10, 200] blocks.
+func GenTWAPLookbackWindow(r *rand.Rand) uint64 {
+	return uint64(10 + r.Intn(191))
+}
+
+// GenMaxTWAPDeviation randomized MaxTWAPDeviation in [0, 0.5].
+func GenMaxTWAPDeviation(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(int64(r.Intn(501)), 3) // [0, 0.500]
+}
+
+// GenDailyCapFactor randomized DailyCapFactor in [0, 0.5].
+func GenDailyCapFactor(r *rand.Rand) math.LegacyDec {
+	return math.LegacyNewDecWithPrec(int64(r.Intn(501)), 3) // [0, 0.500]
 }
 
 func GenMinSpread(r *rand.Rand) math.LegacyDec {
@@ -67,12 +105,55 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { epochLengthBlocks = GenEpochLengthBlocks(r) },
 	)
 
+	var swapFeeBurnRate math.LegacyDec
+	simState.AppParams.GetOrGenerate(
+		swapFeeBurnRateKey, &swapFeeBurnRate, simState.Rand,
+		func(r *rand.Rand) { swapFeeBurnRate = GenSwapFeeBurnRate(r) },
+	)
+
+	var swapFeeCommunityRate math.LegacyDec
+	simState.AppParams.GetOrGenerate(
+		swapFeeCommunityRateKey, &swapFeeCommunityRate, simState.Rand,
+		func(r *rand.Rand) { swapFeeCommunityRate = GenSwapFeeCommunityRate(r) },
+	)
+
+	var maxOracleAgeSeconds uint64
+	simState.AppParams.GetOrGenerate(
+		maxOracleAgeSecondsKey, &maxOracleAgeSeconds, simState.Rand,
+		func(r *rand.Rand) { maxOracleAgeSeconds = GenMaxOracleAgeSeconds(r) },
+	)
+
+	var twapLookbackWindow uint64
+	simState.AppParams.GetOrGenerate(
+		twapLookbackWindowKey, &twapLookbackWindow, simState.Rand,
+		func(r *rand.Rand) { twapLookbackWindow = GenTWAPLookbackWindow(r) },
+	)
+
+	var maxTWAPDeviation math.LegacyDec
+	simState.AppParams.GetOrGenerate(
+		maxTWAPDeviationKey, &maxTWAPDeviation, simState.Rand,
+		func(r *rand.Rand) { maxTWAPDeviation = GenMaxTWAPDeviation(r) },
+	)
+
+	var dailyCapFactor math.LegacyDec
+	simState.AppParams.GetOrGenerate(
+		dailyCapFactorKey, &dailyCapFactor, simState.Rand,
+		func(r *rand.Rand) { dailyCapFactor = GenDailyCapFactor(r) },
+	)
+
 	marketGenesis := types.NewGenesisState(
 		math.LegacyZeroDec(),
 		types.Params{
-			BasePool:           basePool,
-			PoolRecoveryPeriod: poolRecoveryPeriod,
-			MinStabilitySpread: minStabilitySpread,
+			BasePool:             basePool,
+			PoolRecoveryPeriod:   poolRecoveryPeriod,
+			MinStabilitySpread:   minStabilitySpread,
+			EpochLengthBlocks:    epochLengthBlocks,
+			SwapFeeBurnRate:      swapFeeBurnRate,
+			SwapFeeCommunityRate: swapFeeCommunityRate,
+			MaxOracleAgeSeconds:  maxOracleAgeSeconds,
+			TwapLookbackWindow:   twapLookbackWindow,
+			MaxTwapDeviation:     maxTWAPDeviation,
+			DailyCapFactor:       dailyCapFactor,
 		},
 	)
 

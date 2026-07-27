@@ -814,6 +814,8 @@
   
 - [terra/market/v1beta1/market.proto](#terra/market/v1beta1/market.proto)
     - [Params](#terra.market.v1beta1.Params)
+    - [PriceSnapshot](#terra.market.v1beta1.PriceSnapshot)
+    - [PriceSnapshots](#terra.market.v1beta1.PriceSnapshots)
   
 - [terra/market/v1beta1/genesis.proto](#terra/market/v1beta1/genesis.proto)
     - [GenesisState](#terra.market.v1beta1.GenesisState)
@@ -871,6 +873,11 @@
     - [QueryParamsRequest](#terra.oracle.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#terra.oracle.v1beta1.QueryParamsResponse)
     - [QueryTobinTaxRequest](#terra.oracle.v1beta1.QueryTobinTaxRequest)
+    - [QueryTobinTaxResponse](#terra.oracle.v1beta1.QueryTobinTaxResponse)
+    - [QueryUSDPriceRequest](#terra.oracle.v1beta1.QueryUSDPriceRequest)
+    - [QueryUSDPriceResponse](#terra.oracle.v1beta1.QueryUSDPriceResponse)
+    - [QueryUSDPricesRequest](#terra.oracle.v1beta1.QueryUSDPricesRequest)
+    - [QueryUSDPricesResponse](#terra.oracle.v1beta1.QueryUSDPricesResponse)
     - [QueryTobinTaxResponse](#terra.oracle.v1beta1.QueryTobinTaxResponse)
     - [QueryTobinTaxesRequest](#terra.oracle.v1beta1.QueryTobinTaxesRequest)
     - [QueryTobinTaxesResponse](#terra.oracle.v1beta1.QueryTobinTaxesResponse)
@@ -12019,6 +12026,43 @@ Params defines the parameters for the market module.
 | `base_pool` | [bytes](#bytes) |  |  |
 | `pool_recovery_period` | [uint64](#uint64) |  |  |
 | `min_stability_spread` | [bytes](#bytes) |  |  |
+| `epoch_length_blocks` | [uint64](#uint64) |  | Number of blocks per epoch for market burn/refill. Default: 30 days worth of blocks. |
+| `swap_fee_burn_rate` | [bytes](#bytes) |  | Fraction of swap fee to burn [0,1] |
+| `swap_fee_community_rate` | [bytes](#bytes) |  | Fraction of swap fee to send to Community Pool [0,1] |
+| `max_oracle_age_seconds` | [uint64](#uint64) |  | Maximum age in seconds for oracle prices before swaps are denied. Default: 75 seconds (25 blocks * 3s) |
+| `twap_lookback_window` | [uint64](#uint64) |  | Number of blocks for TWAP calculation window. Default: 45 blocks |
+| `max_twap_deviation` | [bytes](#bytes) |  | Maximum deviation from TWAP before swap is rejected [0,1]. Default: 0.10 (10%) |
+| `daily_cap_factor` | [bytes](#bytes) |  | Daily cap factor: fraction of pool balance usable per day [0,1]. Default: 0.10 (10%) |
+
+
+
+
+
+
+<a name="terra.market.v1beta1.PriceSnapshot"></a>
+
+### PriceSnapshot
+PriceSnapshot is a single price observation recorded at a specific block height.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  |  |
+| `price` | [bytes](#bytes) |  |  |
+
+
+
+
+<a name="terra.market.v1beta1.PriceSnapshots"></a>
+
+### PriceSnapshots
+PriceSnapshots is the persisted set of recent price observations for a denom,
+stored under the TWAP store prefix and pruned to the lookback window.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `snapshots` | [PriceSnapshot](#terra.market.v1beta1.PriceSnapshot) | repeated |  |
 
 
 
@@ -12755,6 +12799,60 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
+<a name="terra.oracle.v1beta1.QueryUSDPriceRequest"></a>
+
+### QueryUSDPriceRequest
+QueryUSDPriceRequest is the request type for the Query/USDPrice RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom defines the denomination to query for. |
+
+
+
+
+
+
+<a name="terra.oracle.v1beta1.QueryUSDPriceResponse"></a>
+
+### QueryUSDPriceResponse
+QueryUSDPriceResponse is response type for the Query/USDPrice RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `usd_price` | [bytes](#bytes) |  | usd_price defines the USD price of the denom |
+
+
+
+
+
+
+<a name="terra.oracle.v1beta1.QueryUSDPricesRequest"></a>
+
+### QueryUSDPricesRequest
+QueryUSDPricesRequest is the request type for the Query/USDPrices RPC method.
+
+
+
+
+
+<a name="terra.oracle.v1beta1.QueryUSDPricesResponse"></a>
+
+### QueryUSDPricesResponse
+QueryUSDPricesResponse is response type for the Query/USDPrices RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `usd_prices` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | usd_prices defines a list of USD prices for all denoms. |
+
+
+
+
+
+
 <a name="terra.oracle.v1beta1.QueryTobinTaxRequest"></a>
 
 ### QueryTobinTaxRequest
@@ -12864,6 +12962,8 @@ Query defines the gRPC querier service.
 | `AggregateVote` | [QueryAggregateVoteRequest](#terra.oracle.v1beta1.QueryAggregateVoteRequest) | [QueryAggregateVoteResponse](#terra.oracle.v1beta1.QueryAggregateVoteResponse) | AggregateVote returns an aggregate vote of a validator | GET|/terra/oracle/v1beta1/valdiators/{validator_addr}/aggregate_vote|
 | `AggregateVotes` | [QueryAggregateVotesRequest](#terra.oracle.v1beta1.QueryAggregateVotesRequest) | [QueryAggregateVotesResponse](#terra.oracle.v1beta1.QueryAggregateVotesResponse) | AggregateVotes returns aggregate votes of all validators | GET|/terra/oracle/v1beta1/validators/aggregate_votes|
 | `Params` | [QueryParamsRequest](#terra.oracle.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#terra.oracle.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/terra/oracle/v1beta1/params|
+| `USDPrice` | [QueryUSDPriceRequest](#terra.oracle.v1beta1.QueryUSDPriceRequest) | [QueryUSDPriceResponse](#terra.oracle.v1beta1.QueryUSDPriceResponse) | USDPrice returns USD price of a denom using the special meta-denom 'usd' as Luna/USD reference. | GET|/terra/oracle/v1beta1/denoms/{denom}/usd_price|
+| `USDPrices` | [QueryUSDPricesRequest](#terra.oracle.v1beta1.QueryUSDPricesRequest) | [QueryUSDPricesResponse](#terra.oracle.v1beta1.QueryUSDPricesResponse) | USDPrices returns USD prices of all denoms | GET|/terra/oracle/v1beta1/denoms/usd_prices|
 
  <!-- end services -->
 
@@ -13036,6 +13136,9 @@ Params defines the parameters for the oracle module.
 | `window_long` | [uint64](#uint64) |  |  |
 | `window_probation` | [uint64](#uint64) |  |  |
 | `burn_tax_split` | [string](#string) |  |  |
+| `min_initial_deposit_ratio` | [string](#string) |  |  |
+| `oracle_split` | [string](#string) |  |  |
+| `tax_redirect_rate` | [string](#string) |  | tax_redirect_rate defines the fraction of post-oracle-split distribution redirected to the market accumulator |
 
 
 

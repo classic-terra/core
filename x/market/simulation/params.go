@@ -35,5 +35,35 @@ func ParamChanges(*rand.Rand) []simtypes.LegacyParamChange {
 				return fmt.Sprintf("\"%d\"", GenEpochLengthBlocks(r))
 			},
 		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeySwapFeeBurnRate),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenSwapFeeBurnRate(r))
+			},
+		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeySwapFeeCommunityRate),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenSwapFeeCommunityRate(r))
+			},
+		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeyMaxOracleAgeSeconds),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%d\"", GenMaxOracleAgeSeconds(r))
+			},
+		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeyTWAPLookbackWindow),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%d\"", GenTWAPLookbackWindow(r))
+			},
+		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeyMaxTWAPDeviation),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenMaxTWAPDeviation(r))
+			},
+		),
+		simulation.NewSimLegacyParamChange(types.ModuleName, string(types.KeyDailyCapFactor),
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenDailyCapFactor(r))
+			},
+		),
 	}
 }

@@ -27,7 +27,7 @@ func TestOracleFreshnessCheck(t *testing.T) {
 		sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(10000000)),
 		sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(50000000)),
 	)
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, poolCoins)
+	require.NoError(t, FundModuleAccount(input, types.ModuleName, poolCoins))
 
 	// Set initial tally time
 	initialTime := time.Unix(1000000, 0)
@@ -134,7 +134,7 @@ func TestTWAPDeviationCheck(t *testing.T) {
 		sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(10000000)),
 		sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(10000000)),
 	)
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, poolCoins)
+	require.NoError(t, FundModuleAccount(input, types.ModuleName, poolCoins))
 
 	// Test 1: Current price within deviation (5% from TWAP) - should succeed
 	currentPrice := sdkmath.LegacyNewDecWithPrec(104, 2) // 1.04 USD (4% deviation)
@@ -142,8 +142,7 @@ func TestTWAPDeviationCheck(t *testing.T) {
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, currentPrice)
 
 	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1000000))
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
 
 	swapMsg := types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
 	_, err := msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
@@ -155,8 +154,7 @@ func TestTWAPDeviationCheck(t *testing.T) {
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, currentPrice)
 
 	// Fund trader again
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
 
 	swapMsg = types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
 	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
@@ -174,8 +172,7 @@ func TestTWAPDeviationCheck(t *testing.T) {
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, denom, currentPrice)
 	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, currentPrice)
 
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
 
 	swapMsg = types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom)
 	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
@@ -235,7 +232,7 @@ func TestDailyCapEnforcement(t *testing.T) {
 		sdk.NewCoin(core.MicroLunaDenom, lunaBaseline),
 		sdk.NewCoin(core.MicroUSDDenom, usdBaseline),
 	)
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, poolCoins)
+	require.NoError(t, FundModuleAccount(input, types.ModuleName, poolCoins))
 
 	// Set block height and baselines (simulating epoch change)
 	input.Ctx = input.Ctx.WithBlockHeight(100)
@@ -250,8 +247,7 @@ func TestDailyCapEnforcement(t *testing.T) {
 
 	// Test 1: Drain 80k LUNC - should succeed (80k USD at 1:1 ratio = 80k LUNC)
 	offerCoin := sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(80000)) // 80k USD -> 80k LUNC (1:1 in pool)
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
 
 	swapMsg := types.NewMsgSwap(trader, offerCoin, core.MicroLunaDenom)
 	_, err := msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
@@ -263,8 +259,7 @@ func TestDailyCapEnforcement(t *testing.T) {
 
 	// Test 2: Try to drain another 30k LUNC - should fail (total 110k > 100k cap)
 	offerCoin2 := sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(30000)) // 30k USD -> 30k LUNC
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin2))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin2))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin2)))
 
 	swapMsg2 := types.NewMsgSwap(trader, offerCoin2, core.MicroLunaDenom)
 	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg2)
@@ -273,8 +268,7 @@ func TestDailyCapEnforcement(t *testing.T) {
 
 	// Test 3: Swap back (add LUNC to pool) - should reduce usage
 	lunaToSwapBack := sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(40000)) // 40k LUNC back
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(lunaToSwapBack))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(lunaToSwapBack))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(lunaToSwapBack)))
 
 	swapBackMsg := types.NewMsgSwap(trader, lunaToSwapBack, core.MicroUSDDenom)
 	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapBackMsg)
@@ -290,8 +284,7 @@ func TestDailyCapEnforcement(t *testing.T) {
 
 	// Should be able to drain 80k LUNC again
 	offerCoin3 := sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(80000))
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, sdk.NewCoins(offerCoin3))
-	input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, types.ModuleName, trader, sdk.NewCoins(offerCoin3))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin3)))
 
 	swapMsg3 := types.NewMsgSwap(trader, offerCoin3, core.MicroLunaDenom)
 	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg3)
@@ -302,13 +295,12 @@ func TestDailyCapEnforcement(t *testing.T) {
 func TestEpochBaselineSetup(t *testing.T) {
 	input := CreateTestInput(t)
 
-	// Set up accumulator with funds (mint to market module first, then send)
+	// Set up accumulator with funds (mint to faucet first, then send to accumulator)
 	accumCoins := sdk.NewCoins(
 		sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(2000000)),
 		sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(10000000)),
 	)
-	input.BankKeeper.MintCoins(input.Ctx, types.ModuleName, accumCoins)
-	input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, types.ModuleName, types.AccumulatorModuleName, accumCoins)
+	require.NoError(t, FundModuleAccount(input, types.AccumulatorModuleName, accumCoins))
 
 	// Set epoch length and trigger epoch processing
 	params := input.MarketKeeper.GetParams(input.Ctx)

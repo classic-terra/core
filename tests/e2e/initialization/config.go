@@ -346,13 +346,20 @@ func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 }
 
 func updateMarketGenesis(marketGenState *markettypes.GenesisState) {
-	// Use a longer epoch in tests to avoid churn during swap assertions.
-	// This reduces interference from burn/refill while TestMarketSwap runs.
-	marketGenState.Params.EpochLengthBlocks = 50
-
-	// Set short oracle staleness limit for E2E testing (2 seconds)
-	// This allows us to test oracle staleness protection without waiting 75+ seconds
-	marketGenState.Params.MaxOracleAgeSeconds = 2
+	// WARNING: The values below are E2E-ONLY knobs tuned for fast test execution.
+	// They MUST NOT ship to mainnet/testnet genesis:
+	//   - EpochLengthBlocks=50 triggers an epoch burn+refill every ~2.5 minutes
+	//     (at 3s/block) instead of the 30-day production cadence.
+	//   - MaxOracleAgeSeconds=2 rejects any swap whose oracle data is older than
+	//     2 seconds, which would halt swaps on a real network.
+	// What keeps them out of production is that package initialization is imported
+	// only from tests/e2e; production genesis comes from markettypes.DefaultParams.
+	const (
+		e2eEpochLengthBlocks = 50
+		e2eMaxOracleAgeSecs  = 2
+	)
+	marketGenState.Params.EpochLengthBlocks = e2eEpochLengthBlocks
+	marketGenState.Params.MaxOracleAgeSeconds = e2eMaxOracleAgeSecs
 }
 
 func updateOracleGenesis(oracleGenState *oracletypes.GenesisState) {

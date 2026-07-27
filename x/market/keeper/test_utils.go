@@ -171,7 +171,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		distrtypes.ModuleName:          nil,
 		oracletypes.ModuleName:         nil,
-		types.ModuleName:               {authtypes.Burner, authtypes.Minter},
+		types.ModuleName:               {authtypes.Burner},
 		types.AccumulatorModuleName:    nil,
 	}
 
@@ -228,7 +228,7 @@ func CreateTestInput(t *testing.T) TestInput {
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 	oracleAcc := authtypes.NewEmptyModuleAccount(oracletypes.ModuleName)
-	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner, authtypes.Minter)
+	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner)
 	marketAccumAcc := authtypes.NewEmptyModuleAccount(types.AccumulatorModuleName)
 
 	// assign unique account numbers and set module accounts first
@@ -302,4 +302,16 @@ func FundAccount(input TestInput, addr sdk.AccAddress, amounts sdk.Coins) error 
 	}
 
 	return input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, faucetAccountName, addr, amounts)
+}
+
+// FundModuleAccount funds a module account by minting to the faucet and sending
+// the coins to the recipient module. Use this instead of MintCoins(ModuleName)
+// so tests mirror production, where the market module only holds the Burner
+// permission and cannot mint into itself.
+func FundModuleAccount(input TestInput, recipientModule string, amounts sdk.Coins) error {
+	if err := input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, amounts); err != nil {
+		return err
+	}
+
+	return input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, faucetAccountName, recipientModule, amounts)
 }

@@ -8,7 +8,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	core "github.com/classic-terra/core/v4/types"
 	"github.com/classic-terra/core/v4/x/market/types"
-	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -74,6 +73,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // SetAllowedSwapDenoms sets which denoms are allowed to be swapped with uluna.
 // Note: This is intended for configuration/tests; it is not persisted.
+// It must be called before the Keeper is handed to the AppModules, which capture it
+// by value: replacing the map afterwards (e.g. from an upgrade handler) is not seen
+// by the msg server or EndBlocker. For production, change the default in NewKeeper.
 func (k *Keeper) SetAllowedSwapDenoms(denoms []string) {
 	m := make(map[string]bool, len(denoms))
 	for _, d := range denoms {
@@ -222,50 +224,25 @@ func (k Keeper) SetLastOracleTallyTime(ctx sdk.Context, timestamp int64) {
 
 // -------- TWAP price tracking --------
 
-// PriceSnapshot represents a price observation at a specific height
-type PriceSnapshot struct {
-	Height int64
-	Price  math.LegacyDec
-}
-
 // GetTWAPPrices returns the recent price snapshots for a denom
-func (k Keeper) GetTWAPPrices(ctx sdk.Context, denom string) []PriceSnapshot {
+func (k Keeper) GetTWAPPrices(ctx sdk.Context, denom string) []types.PriceSnapshot {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTWAPPriceKey(denom))
 	if bz == nil {
-		return []PriceSnapshot{}
+		return []types.PriceSnapshot{}
 	}
 
-	var snapshots []PriceSnapshot
-	// Encoding: each snapshot is height (8 bytes) + price length (4 bytes) + price (variable)
-	offset := 0
-	for offset < len(bz) {
-		if offset+8 > len(bz) {
-			break
-		}
-		height := int64(sdk.BigEndianToUint64(bz[offset : offset+8]))
-		offset += 8
-
-		// Read price length (4 bytes)
-		if offset+4 > len(bz) {
-			break
-		}
-		priceLen := int(uint32(bz[offset])<<24 | uint32(bz[offset+1])<<16 | uint32(bz[offset+2])<<8 | uint32(bz[offset+3]))
-		offset += 4
-
-		// Read price bytes
-		if offset+priceLen > len(bz) {
-			break
-		}
-		priceBytes := bz[offset : offset+priceLen]
-		offset += priceLen
-
-		var dp sdk.DecProto
-		if err := k.cdc.Unmarshal(priceBytes, &dp); err == nil {
-			snapshots = append(snapshots, PriceSnapshot{Height: height, Price: dp.Dec})
-		}
+	var wrapped types.PriceSnapshots
+	if err := k.cdc.Unmarshal(bz, &wrapped); err != nil {
+		// Corrupted entry: surface the error in the logs rather than silently truncating,
+		// and treat as empty so callers fall back to bootstrapping behavior.
+		k.Logger(ctx).Error("failed to unmarshal TWAP snapshots", "denom", denom, "err", err)
+		return []types.PriceSnapshot{}
 	}
-	return snapshots
+	if wrapped.Snapshots == nil {
+		return []types.PriceSnapshot{}
+	}
+	return wrapped.Snapshots
 }
 
 // AddTWAPPrice adds a new price snapshot and prunes old ones
@@ -275,40 +252,24 @@ func (k Keeper) AddTWAPPrice(ctx sdk.Context, denom string, price math.LegacyDec
 	lookback := int64(k.TwapLookbackWindow(ctx))
 
 	// Add new snapshot
-	snapshots = append(snapshots, PriceSnapshot{Height: currentHeight, Price: price})
+	snapshots = append(snapshots, types.PriceSnapshot{Height: currentHeight, Price: price})
 
 	// Prune old snapshots (keep only those within lookback window)
-	pruned := []PriceSnapshot{}
+	pruned := make([]types.PriceSnapshot, 0, len(snapshots))
 	for _, snap := range snapshots {
 		if currentHeight-snap.Height <= lookback {
 			pruned = append(pruned, snap)
 		}
 	}
 
-	// Encode and store
+	// Encode and store as a single introspectable protobuf message.
 	store := ctx.KVStore(k.storeKey)
-	var bz []byte
-	for _, snap := range pruned {
-		heightBytes := sdk.Uint64ToBigEndian(uint64(snap.Height))
-		priceBytes := k.cdc.MustMarshal(&sdk.DecProto{Dec: snap.Price})
-		// Store length + data for variable-length protobuf (4 bytes for length)
-		priceLen := uint32(len(priceBytes))
-		lengthBytes := []byte{
-			byte(priceLen >> 24),
-			byte(priceLen >> 16),
-			byte(priceLen >> 8),
-			byte(priceLen),
-		}
-		bz = append(bz, heightBytes...)
-		bz = append(bz, lengthBytes...)
-		bz = append(bz, priceBytes...)
-	}
-
-	if len(bz) > 0 {
-		store.Set(types.GetTWAPPriceKey(denom), bz)
-	} else {
+	if len(pruned) == 0 {
 		store.Delete(types.GetTWAPPriceKey(denom))
+		return
 	}
+	bz := k.cdc.MustMarshal(&types.PriceSnapshots{Snapshots: pruned})
+	store.Set(types.GetTWAPPriceKey(denom), bz)
 }
 
 // ComputeTWAP calculates the time-weighted average price from snapshots
@@ -405,32 +366,23 @@ func (k Keeper) ResetDailyCapIfNeeded(ctx sdk.Context) {
 }
 
 // AfterOracleTally is called by the oracle module after a tally completes
-// This updates the last tally timestamp and TWAP prices for all denoms
+// This updates the last tally timestamp and TWAP prices for all denoms.
+// We iterate over the oracle's active exchange rates rather than a hardcoded
+// list, so TWAP coverage stays in sync with whatever the oracle actually prices
+// (including denoms added or removed via governance whitelist changes).
 func (k Keeper) AfterOracleTally(ctx sdk.Context) {
 	currentTime := ctx.BlockTime().Unix()
 	k.SetLastOracleTallyTime(ctx, currentTime)
 
-	// Update TWAP for USTC price (MetaUSDDenom - USTC price in USD)
-	ustcPrice, err := k.OracleKeeper.GetLunaExchangeRate(ctx, oracletypes.MetaUSDDenom)
-	if err == nil && ustcPrice.IsPositive() {
-		k.AddTWAPPrice(ctx, oracletypes.MetaUSDDenom, ustcPrice)
-	}
-
-	// Update TWAP for all denoms including LUNC (LUNC price in each currency)
-	// These are GetLunaExchangeRate for each denom (e.g., ukrw returns LUNC price in KRW)
-	denoms := []string{
-		core.MicroUSDDenom, // LUNC price in USD
-		core.MicroKRWDenom, core.MicroSDRDenom, core.MicroCNYDenom,
-		core.MicroJPYDenom, core.MicroEURDenom, core.MicroGBPDenom,
-		core.MicroMNTDenom,
-	}
-
-	for _, denom := range denoms {
-		price, err := k.OracleKeeper.GetLunaExchangeRate(ctx, denom)
-		if err == nil && price.IsPositive() {
+	// Sample every active Luna exchange rate. Each entry is the LUNC price in
+	// that currency (e.g., ukrw returns LUNC price in KRW); the MetaUSDDenom
+	// entry is the USTC price in USD. Only positive rates are recorded.
+	k.OracleKeeper.IterateLunaExchangeRates(ctx, func(denom string, price math.LegacyDec) (stop bool) {
+		if price.IsPositive() {
 			k.AddTWAPPrice(ctx, denom, price)
 		}
-	}
+		return false
+	})
 }
 
 // CheckAndUpdateDailyCapForSwap checks if a proposed swap would exceed daily cap limits and updates usage

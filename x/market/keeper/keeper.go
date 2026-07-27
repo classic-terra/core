@@ -192,6 +192,13 @@ func (k Keeper) ProcessEpochIfDue(ctx sdk.Context) {
 
 	k.setLastEpochHeight(ctx, now)
 
+	// Drop the previous epoch's baselines and usage counters. Baselines for denoms
+	// that are no longer in the pool must not linger, or they would keep sizing a
+	// cap for a denom the pool no longer holds, and carried-over usage would eat
+	// into the first day of the new epoch.
+	k.clearDailyCapBaselines(ctx)
+	k.ClearDailyCapUsage(ctx)
+
 	// Set daily cap baseline to the pool balance after epoch refill
 	// This baseline remains constant for the entire epoch (30 days)
 	poolBalances := k.BankKeeper.SpendableCoins(ctx, marketAddr)
@@ -344,6 +351,36 @@ func (k Keeper) SetDailyCapUsage(ctx sdk.Context, denom string, amount math.Int)
 	store.Set(types.GetDailyCapUsageKey(denom), bz)
 }
 
+// deleteByPrefix removes every entry under the given store prefix. Keys are
+// collected before deleting: mutating the store while an iterator over the same
+// range is open is not defined behaviour.
+func (k Keeper) deleteByPrefix(ctx sdk.Context, prefix []byte) {
+	store := ctx.KVStore(k.storeKey)
+
+	var keys [][]byte
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
+	for ; iterator.Valid(); iterator.Next() {
+		key := make([]byte, len(iterator.Key()))
+		copy(key, iterator.Key())
+		keys = append(keys, key)
+	}
+	iterator.Close()
+
+	for _, key := range keys {
+		store.Delete(key)
+	}
+}
+
+// ClearDailyCapUsage removes all per-denom daily usage counters
+func (k Keeper) ClearDailyCapUsage(ctx sdk.Context) {
+	k.deleteByPrefix(ctx, types.DailyCapUsageKey)
+}
+
+// clearDailyCapBaselines removes all per-denom daily cap baselines
+func (k Keeper) clearDailyCapBaselines(ctx sdk.Context) {
+	k.deleteByPrefix(ctx, types.DailyCapBaselineKey)
+}
+
 // ResetDailyCapIfNeeded resets daily usage counters if a day has passed
 func (k Keeper) ResetDailyCapIfNeeded(ctx sdk.Context) {
 	lastReset := k.GetDailyCapResetHeight(ctx)
@@ -351,16 +388,7 @@ func (k Keeper) ResetDailyCapIfNeeded(ctx sdk.Context) {
 
 	// Reset every 14,400 blocks (1 day at 3s/block)
 	if lastReset == 0 || currentHeight-lastReset >= int64(core.BlocksPerDay) {
-		// Clear all daily usage counters
-		// Note: We iterate through all denoms that have baselines
-		store := ctx.KVStore(k.storeKey)
-		iterator := storetypes.KVStorePrefixIterator(store, types.DailyCapUsageKey)
-		defer iterator.Close()
-
-		for ; iterator.Valid(); iterator.Next() {
-			store.Delete(iterator.Key())
-		}
-
+		k.ClearDailyCapUsage(ctx)
 		k.SetDailyCapResetHeight(ctx, currentHeight)
 	}
 }
@@ -388,6 +416,10 @@ func (k Keeper) AfterOracleTally(ctx sdk.Context) {
 // CheckAndUpdateDailyCapForSwap checks if a proposed swap would exceed daily cap limits and updates usage
 // Each day allows draining up to DailyCapFactor × baseline (e.g. 10% of 1M = 100k per day)
 // When you swap A→B, you drain B and add A. Adding A back reduces B's drainage counter.
+//
+// askCoin must be the gross amount leaving the pool for the ask denom, i.e. the
+// receiver's payout plus the swap fee, since the fee is carved out of the payout
+// and leaves the pool as well (burn / community pool / oracle).
 func (k Keeper) CheckAndUpdateDailyCapForSwap(ctx sdk.Context, offerCoin sdk.Coin, askCoin sdk.Coin) error {
 	k.ResetDailyCapIfNeeded(ctx)
 
@@ -396,8 +428,14 @@ func (k Keeper) CheckAndUpdateDailyCapForSwap(ctx sdk.Context, offerCoin sdk.Coi
 	// Check the ask denom (what's being drained from the pool)
 	askBaseline := k.GetDailyCapBaseline(ctx, askCoin.Denom)
 	if askBaseline.IsZero() {
-		// No baseline yet - allow swap (first epoch or denom not in pool at last epoch)
-		return nil
+		// No baseline for this denom. Seed the baseline from the current pool balance
+		marketAddr := k.AccountKeeper.GetModuleAddress(types.ModuleName)
+		askBaseline = k.BankKeeper.GetBalance(ctx, marketAddr, askCoin.Denom).Amount
+		if askBaseline.IsZero() {
+			// Nothing to drain; the liquidity check reports this more precisely.
+			return nil
+		}
+		k.SetDailyCapBaseline(ctx, askCoin.Denom, askBaseline)
 	}
 
 	// Calculate daily cap for this denom
@@ -416,7 +454,7 @@ func (k Keeper) CheckAndUpdateDailyCapForSwap(ctx sdk.Context, offerCoin sdk.Coi
 	// Check if the offer denom was previously drained - if so, this swap adds it back
 	offerBaseline := k.GetDailyCapBaseline(ctx, offerCoin.Denom)
 	if !offerBaseline.IsZero() {
-		// Reduce the ask denom usage by the amount we're adding back via offer
+		// Reduce the offer denom's usage by the amount we're adding back via offer
 		// This is the key insight: if we drained LUNC and now offer LUNC, we're undoing the drainage
 		offerUsage := k.GetDailyCapUsage(ctx, offerCoin.Denom)
 		if offerUsage.IsPositive() {

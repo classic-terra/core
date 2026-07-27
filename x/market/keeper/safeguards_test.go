@@ -400,3 +400,155 @@ func TestMultipleDenomDailyCap(t *testing.T) {
 		require.True(t, usage.IsZero(), "usage for %s should be reset", denom)
 	}
 }
+
+// setupSwapEnv seeds oracle rates, tally time and pool liquidity for swap tests
+func setupSwapEnv(t *testing.T, input TestInput, poolCoins sdk.Coins) types.MsgServer {
+	t.Helper()
+
+	// UST meta rate (USD per USTC) and the legacy uusd rate (USD per LUNA).
+	// usdr is the reference denom ComputeSwap prices through.
+	// Both USD rates are 5 so uusd/UST resolves to a 1:1 LUNC<->USTC pool ratio,
+	// which keeps the cap arithmetic in these tests readable.
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, oracletypes.MetaUSDDenom, sdkmath.LegacyNewDec(5))
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroSDRDenom, sdkmath.LegacyOneDec())
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, sdkmath.LegacyNewDec(5))
+	input.MarketKeeper.SetLastOracleTallyTime(input.Ctx, input.Ctx.BlockTime().Unix())
+
+	require.NoError(t, FundModuleAccount(input, types.ModuleName, poolCoins))
+
+	return NewMsgServerImpl(input.MarketKeeper)
+}
+
+// TestDailyCapCountsSwapFee ensures the recorded drain covers payout plus fee.
+// The fee is carved out of the trader's payout, so the trader pays nothing extra,
+// but it still leaves the pool and must count against the daily cap.
+func TestDailyCapCountsSwapFee(t *testing.T) {
+	input := CreateTestInput(t)
+
+	lunaBaseline := sdkmath.NewInt(1000000)
+	poolCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, lunaBaseline),
+		sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(5000000)),
+	)
+	msgServer := setupSwapEnv(t, input, poolCoins)
+
+	input.Ctx = input.Ctx.WithBlockHeight(100)
+	input.MarketKeeper.SetDailyCapBaseline(input.Ctx, core.MicroLunaDenom, lunaBaseline)
+	input.MarketKeeper.SetDailyCapResetHeight(input.Ctx, input.Ctx.BlockHeight())
+
+	trader := Addrs[0]
+	offerCoin := sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(50000))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
+
+	res, err := msgServer.Swap(sdk.WrapSDKContext(input.Ctx), types.NewMsgSwap(trader, offerCoin, core.MicroLunaDenom))
+	require.NoError(t, err)
+	require.True(t, res.SwapFee.Amount.IsPositive(), "test needs a positive spread fee to be meaningful")
+
+	usage := input.MarketKeeper.GetDailyCapUsage(input.Ctx, core.MicroLunaDenom)
+	require.Equal(t, res.SwapCoin.Amount.Add(res.SwapFee.Amount), usage,
+		"daily usage must count the gross drain (payout + fee), not just the payout")
+}
+
+// TestDailyCapSeedsMissingBaseline ensures a denom funded mid-epoch is still capped
+// instead of being drainable without limit for the rest of the epoch.
+func TestDailyCapSeedsMissingBaseline(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Pool is funded but no baselines exist (denom appeared after the epoch boundary)
+	poolCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1000000)),
+		sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(5000000)),
+	)
+	msgServer := setupSwapEnv(t, input, poolCoins)
+
+	input.Ctx = input.Ctx.WithBlockHeight(100)
+	input.MarketKeeper.SetDailyCapResetHeight(input.Ctx, input.Ctx.BlockHeight())
+	require.True(t, input.MarketKeeper.GetDailyCapBaseline(input.Ctx, core.MicroLunaDenom).IsZero())
+
+	trader := Addrs[0]
+
+	// Daily cap is 10% of the seeded baseline (1M LUNC) = 100k
+	offerCoin := sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(80000))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
+	_, err := msgServer.Swap(sdk.WrapSDKContext(input.Ctx), types.NewMsgSwap(trader, offerCoin, core.MicroLunaDenom))
+	require.NoError(t, err, "first swap seeds the baseline from the pool balance and fits the cap")
+
+	baseline := input.MarketKeeper.GetDailyCapBaseline(input.Ctx, core.MicroLunaDenom)
+	require.Equal(t, sdkmath.NewInt(1000000), baseline, "baseline should be seeded from the pool balance")
+
+	// Second swap pushes past the cap and must be rejected
+	offerCoin2 := sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(30000))
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin2)))
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), types.NewMsgSwap(trader, offerCoin2, core.MicroLunaDenom))
+	require.ErrorIs(t, err, types.ErrDailyCapExceeded)
+}
+
+// TestEpochClearsStaleCapState ensures epoch processing drops baselines for denoms
+// that left the pool and does not carry usage into the new epoch.
+func TestEpochClearsStaleCapState(t *testing.T) {
+	input := CreateTestInput(t)
+
+	// Stale state from the previous epoch
+	input.MarketKeeper.SetDailyCapBaseline(input.Ctx, core.MicroSDRDenom, sdkmath.NewInt(3000000))
+	input.MarketKeeper.SetDailyCapUsage(input.Ctx, core.MicroLunaDenom, sdkmath.NewInt(90000))
+
+	accumCoins := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(2000000)))
+	require.NoError(t, FundModuleAccount(input, types.AccumulatorModuleName, accumCoins))
+
+	params := input.MarketKeeper.GetParams(input.Ctx)
+	params.EpochLengthBlocks = 100
+	input.MarketKeeper.SetParams(input.Ctx, params)
+
+	input.Ctx = input.Ctx.WithBlockHeight(101)
+	input.MarketKeeper.ProcessEpochIfDue(input.Ctx)
+
+	require.True(t, input.MarketKeeper.GetDailyCapBaseline(input.Ctx, core.MicroSDRDenom).IsZero(),
+		"baseline for a denom no longer in the pool must be cleared")
+	require.True(t, input.MarketKeeper.GetDailyCapUsage(input.Ctx, core.MicroLunaDenom).IsZero(),
+		"usage must not carry into the new epoch")
+	require.Equal(t, sdkmath.NewInt(2000000), input.MarketKeeper.GetDailyCapBaseline(input.Ctx, core.MicroLunaDenom))
+}
+
+// TestTWAPDeviationUsesMetaUSTRate pins which rate guards a uusd leg.
+//
+// The UST meta rate is the real USD price of 1 USTC and is the guard input. The
+// legacy uusd rate is a LUNC price recorded under the old 1 USTC = 1 USD
+// assumption - the very thing the meta rate exists to correct - so a move in it
+// alone is not treated as a USTC price deviation.
+func TestTWAPDeviationUsesMetaUSTRate(t *testing.T) {
+	input := CreateTestInput(t)
+
+	poolCoins := sdk.NewCoins(
+		sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(10000000)),
+		sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(10000000)),
+	)
+	msgServer := setupSwapEnv(t, input, poolCoins)
+
+	// Build a TWAP history with both rates stable at 5
+	for h := int64(100); h < 105; h++ {
+		input.Ctx = input.Ctx.WithBlockHeight(h)
+		input.MarketKeeper.AfterOracleTally(input.Ctx)
+	}
+
+	metaTWAP, err := input.MarketKeeper.ComputeTWAP(input.Ctx, oracletypes.MetaUSDDenom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.LegacyNewDec(5), metaTWAP)
+
+	trader := Addrs[0]
+	offerCoin := sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1000))
+
+	// Moving only the legacy uusd rate 20% does not trip the guard
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, core.MicroUSDDenom, sdkmath.LegacyNewDec(6))
+	input.MarketKeeper.SetLastOracleTallyTime(input.Ctx, input.Ctx.BlockTime().Unix())
+
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom))
+	require.NoError(t, err, "legacy uusd rate is not the USTC price and must not gate the swap")
+
+	// Moving the UST meta rate 20% above its TWAP does trip the guard
+	input.OracleKeeper.SetLunaExchangeRate(input.Ctx, oracletypes.MetaUSDDenom, sdkmath.LegacyNewDec(6))
+
+	require.NoError(t, FundAccount(input, trader, sdk.NewCoins(offerCoin)))
+	_, err = msgServer.Swap(sdk.WrapSDKContext(input.Ctx), types.NewMsgSwap(trader, offerCoin, core.MicroUSDDenom))
+	require.ErrorIs(t, err, types.ErrTWAPDeviation)
+}

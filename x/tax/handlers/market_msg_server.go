@@ -3,11 +3,13 @@ package handlers
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	marketkeeper "github.com/classic-terra/core/v4/x/market/keeper"
 	markettypes "github.com/classic-terra/core/v4/x/market/types"
 	taxkeeper "github.com/classic-terra/core/v4/x/tax/keeper"
 	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type MarketMsgServer struct {
@@ -41,6 +43,10 @@ func (s *MarketMsgServer) SwapSend(ctx context.Context, msg *markettypes.MsgSwap
 	if err != nil {
 		return nil, err
 	}
+	if len(netOfferCoin) == 0 {
+		// The whole offer was consumed by the tax; there is nothing left to swap.
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "offer coin %s is fully consumed by tax", msg.OfferCoin)
+	}
 	msg.OfferCoin = netOfferCoin[0]
 
 	return s.messageServer.SwapSend(ctx, msg)
@@ -58,6 +64,10 @@ func (s *MarketMsgServer) Swap(ctx context.Context, msg *markettypes.MsgSwap) (*
 	netOfferCoin, err := s.taxKeeper.DeductTax(sdkCtx, sender, sdk.NewCoins(msg.OfferCoin), false)
 	if err != nil {
 		return nil, err
+	}
+	if len(netOfferCoin) == 0 {
+		// The whole offer was consumed by the tax; there is nothing left to swap.
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "offer coin %s is fully consumed by tax", msg.OfferCoin)
 	}
 	msg.OfferCoin = netOfferCoin[0]
 

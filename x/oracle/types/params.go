@@ -12,9 +12,10 @@ import (
 // Meta denom for oracle-only reporting (not bank coin)
 const (
 	// MetaUSDDenom is a special denom used only by the oracle to represent the price of 1 USTC in USD (USD per USTC).
-	// If supplied by the feeder, it can be used as an anchor for alternative USTC price computations.
-	// Note: GetUSDPrice currently uses the legacy `uusd` rate (LUNA/USD) and does not rely on this meta denom.
-	// Renamed to uppercase "UST" for clarity and to distinguish from bank denoms.
+	// It is the anchor for USTC pricing: GetUSDPrice returns this rate directly for `uusd`, and derives every
+	// other denom from the legacy `uusd` rate (USD per LUNA). The market module divides `uusd` rates by it to
+	// convert legacy USD-denominated rates into true USTC units.
+	// Uppercase "UST" distinguishes it from bank denoms; it is not a bank coin and carries no denom metadata.
 	MetaUSDDenom = "UST"
 )
 

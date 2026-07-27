@@ -93,16 +93,20 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil, err
 	}
 
-	// TWAP deviation check: ensure current price doesn't deviate too much from TWAP
-	// We need to check TWAP for both sides of the swap to prevent manipulation
+	// TWAP deviation check: the price a swap leg executes at must not deviate too far
+	// from its recent average.
 	maxDeviation := k.MaxTwapDeviation(ctx)
 
-	// Helper function to check TWAP for a denom
+	// Helper function to check the rate guarding a swap leg against its TWAP
 	checkTWAPDeviation := func(denom string) error {
-		// For USTC, use MetaUSDDenom (USTC price). For others, use the denom itself (LUNC price in that currency)
+		// USTC is priced by the UST meta rate (real USD per USTC). The legacy uusd
+		// rate is a LUNC price recorded under the broken 1 USTC = 1 USD assumption,
+		// so it is not a USTC exchange rate and is deliberately not the guard input
+		// here - correcting that assumption is what the meta rate exists for.
+		// Every other denom carries the LUNC price in that currency directly.
 		twapDenom := denom
 		if denom == core.MicroUSDDenom {
-			twapDenom = oracletypes.MetaUSDDenom // Use USTC price for USD swaps
+			twapDenom = oracletypes.MetaUSDDenom
 		}
 
 		currentPrice, err := k.OracleKeeper.GetLunaExchangeRate(ctx, twapDenom)
@@ -126,27 +130,13 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 		return nil
 	}
 
-	// Check TWAP for each distinct denom involved in the swap, each one at most once
-	denomsToCheck := make([]string, 0, 2)
-	addDenomToCheck := func(denom string) {
-		for _, existing := range denomsToCheck {
-			if existing == denom {
-				return
-			}
+	// One side of an allowed pair is always uluna, which is the oracle base and has no
+	// rate of its own, so guard the rate of every other leg. ValidateBasic rejects
+	// offer == ask, so no leg is checked twice.
+	for _, denom := range []string{offerCoin.Denom, askDenom} {
+		if denom == core.MicroLunaDenom {
+			continue
 		}
-		denomsToCheck = append(denomsToCheck, denom)
-	}
-	if offerCoin.Denom != core.MicroLunaDenom {
-		addDenomToCheck(offerCoin.Denom)
-	}
-	if askDenom != core.MicroLunaDenom {
-		addDenomToCheck(askDenom)
-	}
-	// If either side is LUNC, also verify the LUNC/USD price (MicroUSDDenom).
-	if offerCoin.Denom == core.MicroLunaDenom || askDenom == core.MicroLunaDenom {
-		addDenomToCheck(core.MicroUSDDenom)
-	}
-	for _, denom := range denomsToCheck {
 		if err := checkTWAPDeviation(denom); err != nil {
 			return nil, err
 		}
@@ -178,12 +168,6 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	// Determine amounts to transfer out of the pool
 	swapCoin, decimalCoin := swapDecCoin.TruncateDecimal()
 
-	// Daily cap check: ensure pool balance deviation from baseline doesn't exceed daily limit
-	// Check AFTER coins are in the pool but BEFORE sending out, with actual final amounts
-	if err := k.CheckAndUpdateDailyCapForSwap(ctx, offerCoin, swapCoin); err != nil {
-		return nil, err
-	}
-
 	// Ensure to fail the swap tx when zero swap coin
 	if !swapCoin.IsPositive() {
 		return nil, types.ErrZeroSwapCoin
@@ -197,6 +181,14 @@ func (k msgServer) handleSwapRequest(ctx sdk.Context,
 	requiredOut := swapCoin.Amount.Add(feeCoin.Amount)
 	if poolBal.Amount.LT(requiredOut) {
 		return nil, types.ErrInsufficientLiquidity
+	}
+
+	// Daily cap check: ensure pool balance deviation from baseline doesn't exceed daily limit.
+	// Check AFTER coins are in the pool but BEFORE sending out, and account for the gross
+	// drain (receiver payout + fee): the fee is carved out of the payout, so the trader pays
+	// no extra, but it still leaves the pool towards burn / community pool / oracle.
+	if err := k.CheckAndUpdateDailyCapForSwap(ctx, offerCoin, sdk.NewCoin(swapCoin.Denom, requiredOut)); err != nil {
+		return nil, err
 	}
 
 	// Transfer swap coin to receiver

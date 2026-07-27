@@ -7,6 +7,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	apptesting "github.com/classic-terra/core/v4/app/testing"
+	core "github.com/classic-terra/core/v4/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -21,6 +22,8 @@ func TestWasmTestSuite(t *testing.T) {
 
 func (s *WasmTestSuite) SetupTest() {
 	s.Setup(s.T(), apptesting.SimAppChainID)
+	// Allow SDR swaps in tests; production defaults to USD-only
+	s.App.MarketKeeper.SetAllowedSwapDenoms([]string{core.MicroUSDDenom, core.MicroSDRDenom})
 }
 
 func (s *WasmTestSuite) InstantiateContract(addr sdk.AccAddress, contractPath string) sdk.AccAddress {

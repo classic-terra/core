@@ -69,13 +69,13 @@ func TestSwapMsg(t *testing.T) {
 	_, err = h.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
 	require.Error(t, err)
 
-	// valid zero tobin tax test
+	// stable-to-stable swaps are not allowed by pair guard
 	input.OracleKeeper.SetTobinTax(input.Ctx, core.MicroKRWDenom, sdkmath.LegacyZeroDec())
 	input.OracleKeeper.SetTobinTax(input.Ctx, core.MicroSDRDenom, sdkmath.LegacyZeroDec())
 	offerCoin = sdk.NewCoin(core.MicroSDRDenom, amt)
 	swapMsg = types.NewMsgSwap(keeper.Addrs[0], offerCoin, core.MicroKRWDenom)
 	_, err = h.Swap(sdk.WrapSDKContext(input.Ctx), swapMsg)
-	require.NoError(t, err)
+	require.Error(t, err)
 }
 
 func TestSwapSendMsg(t *testing.T) {

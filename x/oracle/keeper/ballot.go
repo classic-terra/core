@@ -18,7 +18,7 @@ func (k Keeper) OrganizeBallotByDenom(ctx sdk.Context, validatorClaimMap map[str
 	// Organize aggregate votes
 	aggregateHandler := func(voterAddr sdk.ValAddress, vote types.AggregateExchangeRateVote) (stop bool) {
 		// organize ballot only for the active validators
-		claim, ok := validatorClaimMap[vote.Voter]
+		claim, ok := validatorClaimMap[voterAddr.String()]
 
 		if ok {
 			power := claim.Power
@@ -94,23 +94,25 @@ func (k Keeper) ApplyWhitelist(ctx sdk.Context, whitelist types.DenomList, voteT
 		for _, item := range whitelist {
 			k.SetTobinTax(ctx, item.Name, item.TobinTax)
 
-			// Register meta data to bank module
-			if _, ok := k.bankKeeper.GetDenomMetaData(ctx, item.Name); !ok {
-				base := item.Name
-				display := base[1:]
+			// Register metadata to bank module for all non-meta denoms.
+			if item.Name != types.MetaUSDDenom {
+				if _, ok := k.bankKeeper.GetDenomMetaData(ctx, item.Name); !ok {
+					base := item.Name
+					display := base[1:]
 
-				k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
-					Description: "The native stable token of the Terra Columbus.",
-					DenomUnits: []*banktypes.DenomUnit{
-						{Denom: "u" + display, Exponent: uint32(0), Aliases: []string{"micro" + display}},
-						{Denom: "m" + display, Exponent: uint32(3), Aliases: []string{"milli" + display}},
-						{Denom: display, Exponent: uint32(6), Aliases: []string{}},
-					},
-					Base:    base,
-					Display: display,
-					Name:    fmt.Sprintf("%s TERRA", strings.ToUpper(display)),
-					Symbol:  fmt.Sprintf("%sT", strings.ToUpper(display[:len(display)-1])),
-				})
+					k.bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+						Description: "The native stable token of the Terra Columbus.",
+						DenomUnits: []*banktypes.DenomUnit{
+							{Denom: "u" + display, Exponent: uint32(0), Aliases: []string{"micro" + display}},
+							{Denom: "m" + display, Exponent: uint32(3), Aliases: []string{"milli" + display}},
+							{Denom: display, Exponent: uint32(6), Aliases: []string{}},
+						},
+						Base:    base,
+						Display: display,
+						Name:    fmt.Sprintf("%s TERRA", strings.ToUpper(display)),
+						Symbol:  fmt.Sprintf("%sT", strings.ToUpper(display[:len(display)-1])),
+					})
+				}
 			}
 		}
 	}

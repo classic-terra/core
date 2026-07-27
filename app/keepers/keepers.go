@@ -325,8 +325,11 @@ func NewAppKeepers(
 	appKeepers.MarketKeeper = marketkeeper.NewKeeper(
 		appCodec, appKeepers.keys[markettypes.StoreKey],
 		appKeepers.GetSubspace(markettypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.OracleKeeper,
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.OracleKeeper, appKeepers.DistrKeeper,
 	)
+	// Set market hooks on oracle keeper to track tally events for TWAP and freshness
+	appKeepers.OracleKeeper.SetMarketHooks(&appKeepers.MarketKeeper)
+
 	appKeepers.TreasuryKeeper = treasurykeeper.NewKeeper(
 		appCodec, appKeepers.keys[treasurytypes.StoreKey],
 		appKeepers.GetSubspace(treasurytypes.ModuleName),

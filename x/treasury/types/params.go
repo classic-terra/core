@@ -22,6 +22,7 @@ var (
 	KeyBurnTaxSplit            = []byte("BurnTaxSplit")
 	KeyMinInitialDepositRatio  = []byte("MinInitialDepositRatio")
 	KeyOracleSplit             = []byte("OracleSplit")
+	KeyTaxRedirectRate         = []byte("TaxRedirectRate")
 )
 
 // Default parameter values
@@ -48,6 +49,7 @@ var (
 	DefaultBurnTaxSplit            = sdkmath.LegacyNewDecWithPrec(1, 1)   // 10% goes to community pool, 90% burn
 	DefaultMinInitialDepositRatio  = sdkmath.LegacyZeroDec()              // 0% min initial deposit
 	DefaultOracleSplit             = sdkmath.LegacyOneDec()               // 100% oracle, community tax (CP) is deducted before oracle split
+	DefaultTaxRedirectRate         = sdkmath.LegacyNewDecWithPrec(6, 1)   // 0.6 redirected to market accumulator (pre-oracle-split)
 )
 
 var _ paramstypes.ParamSet = &Params{}
@@ -65,6 +67,7 @@ func DefaultParams() Params {
 		BurnTaxSplit:            DefaultBurnTaxSplit,
 		MinInitialDepositRatio:  DefaultMinInitialDepositRatio,
 		OracleSplit:             DefaultOracleSplit,
+		TaxRedirectRate:         DefaultTaxRedirectRate,
 	}
 }
 
@@ -93,6 +96,7 @@ func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 		paramstypes.NewParamSetPair(KeyBurnTaxSplit, &p.BurnTaxSplit, validateBurnTaxSplit),
 		paramstypes.NewParamSetPair(KeyMinInitialDepositRatio, &p.MinInitialDepositRatio, validateMinInitialDepositRatio),
 		paramstypes.NewParamSetPair(KeyOracleSplit, &p.OracleSplit, validateOraceSplit),
+		paramstypes.NewParamSetPair(KeyTaxRedirectRate, &p.TaxRedirectRate, validateTaxRedirectRate),
 	}
 }
 
@@ -146,6 +150,14 @@ func (p Params) Validate() error {
 
 	if p.OracleSplit.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("treasury parameter OracleSplit must be less than or equal to 1.0: %s", p.OracleSplit)
+	}
+
+	if p.TaxRedirectRate.IsNegative() {
+		return fmt.Errorf("treasury parameter TaxRedirectRate must be positive: %s", p.TaxRedirectRate)
+	}
+
+	if p.TaxRedirectRate.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("treasury parameter TaxRedirectRate must be less than or equal to 1.0: %s", p.TaxRedirectRate)
 	}
 
 	return nil
@@ -266,7 +278,7 @@ func validateBurnTaxSplit(i interface{}) error {
 func validateMinInitialDepositRatio(i interface{}) error {
 	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
-		return fmt.Errorf("invalid paramater type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v.IsNegative() {
@@ -292,6 +304,23 @@ func validateOraceSplit(i interface{}) error {
 
 	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("oracle split must be less than or equal to 1.0: %s", v)
+	}
+
+	return nil
+}
+
+func validateTaxRedirectRate(i interface{}) error {
+	v, ok := i.(sdkmath.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid paramater type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("tax redirect rate must be positive: %s", v)
+	}
+
+	if v.GT(sdkmath.LegacyOneDec()) {
+		return fmt.Errorf("tax redirect rate must be less than or equal to 1.0: %s", v)
 	}
 
 	return nil

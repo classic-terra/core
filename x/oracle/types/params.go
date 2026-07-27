@@ -9,6 +9,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Meta denom for oracle-only reporting (not bank coin)
+const (
+	// MetaUSDDenom is a special denom used only by the oracle to represent the price of 1 USTC in USD (USD per USTC).
+	// It is the anchor for USTC pricing: GetUSDPrice returns this rate directly for `uusd`, and derives every
+	// other denom from the legacy `uusd` rate (USD per LUNA). The market module divides `uusd` rates by it to
+	// convert legacy USD-denominated rates into true USTC units.
+	// Uppercase "UST" distinguishes it from bank denoms; it is not a bank coin and carries no denom metadata.
+	MetaUSDDenom = "UST"
+)
+
 // Parameter keys
 var (
 	KeyVotePeriod               = []byte("VotePeriod")
@@ -38,6 +48,8 @@ var (
 		{Name: core.MicroSDRDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroUSDDenom, TobinTax: DefaultTobinTax},
 		{Name: core.MicroMNTDenom, TobinTax: DefaultTobinTax.MulInt64(8)},
+		// Meta USD denom to carry USTC/USD directly; set TobinTax to 0
+		{Name: MetaUSDDenom, TobinTax: math.LegacyZeroDec()},
 	}
 	DefaultSlashFraction     = math.LegacyNewDecWithPrec(1, 4) // 0.01%
 	DefaultMinValidPerWindow = math.LegacyNewDecWithPrec(5, 2) // 5%

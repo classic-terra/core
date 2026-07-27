@@ -171,7 +171,8 @@ func CreateTestInput(t *testing.T) TestInput {
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		distrtypes.ModuleName:          nil,
 		oracletypes.ModuleName:         nil,
-		types.ModuleName:               {authtypes.Burner, authtypes.Minter},
+		types.ModuleName:               {authtypes.Burner},
+		types.AccumulatorModuleName:    nil,
 	}
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
@@ -227,7 +228,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 	oracleAcc := authtypes.NewEmptyModuleAccount(oracletypes.ModuleName)
-	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner, authtypes.Minter)
+	marketAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Burner)
+	marketAccumAcc := authtypes.NewEmptyModuleAccount(types.AccumulatorModuleName)
 
 	// assign unique account numbers and set module accounts first
 	faucetAccI := accountKeeper.NewAccount(ctx, faucetAcc)
@@ -244,6 +246,8 @@ func CreateTestInput(t *testing.T) TestInput {
 	accountKeeper.SetModuleAccount(ctx, oracleAccI.(authtypes.ModuleAccountI))
 	marketAccI := accountKeeper.NewAccount(ctx, marketAcc)
 	accountKeeper.SetModuleAccount(ctx, marketAccI.(authtypes.ModuleAccountI))
+	marketAccumAccI := accountKeeper.NewAccount(ctx, marketAccumAcc)
+	accountKeeper.SetModuleAccount(ctx, marketAccumAccI.(authtypes.ModuleAccountI))
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, InitTokens.MulRaw(int64(len(Addrs))))))
 	require.NoError(t, err)
@@ -280,8 +284,11 @@ func CreateTestInput(t *testing.T) TestInput {
 		accountKeeper,
 		bankKeeper,
 		oracleKeeper,
+		distrKeeper,
 	)
 	keeper.SetParams(ctx, types.DefaultParams())
+	// For tests, allow both USD and SDR to keep legacy tests working
+	keeper.SetAllowedSwapDenoms([]string{core.MicroUSDDenom, core.MicroSDRDenom})
 
 	return TestInput{ctx, legacyAmino, accountKeeper, bankKeeper, oracleKeeper, keeper}
 }
@@ -295,4 +302,16 @@ func FundAccount(input TestInput, addr sdk.AccAddress, amounts sdk.Coins) error 
 	}
 
 	return input.BankKeeper.SendCoinsFromModuleToAccount(input.Ctx, faucetAccountName, addr, amounts)
+}
+
+// FundModuleAccount funds a module account by minting to the faucet and sending
+// the coins to the recipient module. Use this instead of MintCoins(ModuleName)
+// so tests mirror production, where the market module only holds the Burner
+// permission and cannot mint into itself.
+func FundModuleAccount(input TestInput, recipientModule string, amounts sdk.Coins) error {
+	if err := input.BankKeeper.MintCoins(input.Ctx, faucetAccountName, amounts); err != nil {
+		return err
+	}
+
+	return input.BankKeeper.SendCoinsFromModuleToModule(input.Ctx, faucetAccountName, recipientModule, amounts)
 }

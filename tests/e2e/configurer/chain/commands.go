@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	app "github.com/classic-terra/core/v4/app"
@@ -24,12 +26,91 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// extractTxHashFromJSON tries to parse a Cosmos SDK tx response JSON and return the txhash field.
+// Returns an empty string if not found or parsing fails.
+func extractTxHashFromJSON(payload []byte) string {
+	var resp struct {
+		TxHash string `json:"txhash"`
+	}
+	if err := json.Unmarshal(payload, &resp); err == nil && resp.TxHash != "" {
+		return resp.TxHash
+	}
+	return ""
+}
+
+// GetModuleAccountAddress returns the account address for a given module name (e.g., "market").
+// It queries `terrad query auth module-accounts --output=json` and scans for the matching ModuleAccount name.
+func (n *NodeConfig) GetModuleAccountAddress(moduleName string) string {
+	cmd := []string{"terrad", "query", "auth", "module-accounts", "--output=json"}
+	outBuf, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	require.NoErrorf(n.t, err, "failed to query module accounts: stdout=%q stderr=%q", strings.TrimSpace(outBuf.String()), strings.TrimSpace(errBuf.String()))
+	var resp struct {
+		Accounts []struct {
+			Name        string `json:"name"`
+			BaseAccount struct {
+				Address string `json:"address"`
+			} `json:"base_account"`
+		} `json:"accounts"`
+	}
+	require.NoErrorf(n.t, json.Unmarshal(outBuf.Bytes(), &resp), "failed to decode module accounts json: %q", strings.TrimSpace(outBuf.String()))
+	for _, acc := range resp.Accounts {
+		if acc.Name == moduleName {
+			if acc.BaseAccount.Address != "" {
+				return acc.BaseAccount.Address
+			}
+		}
+	}
+	require.Failf(n.t, "module account not found", "module %s not found in module-accounts", moduleName)
+	return ""
+}
+
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
 	cmd := []string{"terrad", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
+}
+
+// DelegateOracleFeedConsent sets the feeder address for this validator to the provided account address.
+func (n *NodeConfig) DelegateOracleFeedConsent(feeder string) {
+	if !n.IsValidator {
+		n.LogActionF("skipping feeder delegation: node is not a validator")
+		return
+	}
+	if n.OperatorAddress == "" {
+		_ = n.extractOperatorAddressIfValidator()
+	}
+	require.NotEmpty(n.t, n.OperatorAddress, "validator operator address must be known before delegating feeder consent")
+	n.LogActionF("delegating oracle feed consent: validator=%s feeder=%s", n.OperatorAddress, feeder)
+	// terrad tx oracle set-feeder [feeder]
+	cmd := []string{"terrad", "tx", "oracle", "set-feeder", feeder, fmt.Sprintf("--from=%s", initialization.ValidatorWalletName)}
+	outBuf, errBuf, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err, "feeder delegation tx failed: stderr=%s stdout=%s", strings.TrimSpace(errBuf.String()), strings.TrimSpace(outBuf.String()))
+	// Verify via query with retries until feeder mapping matches expected
+	var lastOut, lastErr string
+	for i := 0; i < 20; i++ {
+		q := []string{"terrad", "query", "oracle", "feeder", n.OperatorAddress, "--output=json"}
+		qOut, qErr, qE := n.containerManager.ExecCmd(n.t, n.Name, q, "", false)
+		lastOut, lastErr = strings.TrimSpace(qOut.String()), strings.TrimSpace(qErr.String())
+		if qE == nil && lastOut != "" {
+			var resp struct {
+				FeederAddr string `json:"feeder_addr"`
+			}
+			if err := json.Unmarshal(qOut.Bytes(), &resp); err == nil {
+				n.LogActionF("feeder query: operator=%s feeder=%s (expected=%s)", n.OperatorAddress, resp.FeederAddr, feeder)
+				if resp.FeederAddr == feeder {
+					break
+				}
+			} else {
+				n.LogActionF("failed to decode feeder query json; stdout=%q stderr=%q", lastOut, lastErr)
+			}
+		} else if qE != nil {
+			n.LogActionF("feeder query failed; stdout=%q stderr=%q err=%v", lastOut, lastErr, qE)
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	require.Containsf(n.t, lastOut, feeder, "feeder mapping for %s did not match expected feeder after delegation; stdout=%s stderr=%s", n.OperatorAddress, lastOut, lastErr)
 }
 
 func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from string) {
@@ -40,9 +121,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeID, initMsg, amount, from strin
 	}
 	n.LogActionF("%s", strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-
 	require.NoError(n.t, err)
-
 	n.LogActionF("successfully initialized")
 }
 
@@ -79,6 +158,48 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, amount, fee, from string) {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully executed")
+}
+
+// QueryOracleVotePeriod queries on-chain oracle params and returns the vote period as an int64.
+func (n *NodeConfig) QueryOracleVotePeriod() int64 {
+	cmd := []string{"terrad", "query", "oracle", "params", "--output=json"}
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	require.NoError(n.t, err)
+	var resp struct {
+		Params struct {
+			VotePeriod string `json:"vote_period"`
+		} `json:"params"`
+	}
+	require.NoError(n.t, json.Unmarshal(out.Bytes(), &resp))
+	vp, err := strconv.ParseInt(resp.Params.VotePeriod, 10, 64)
+	require.NoError(n.t, err)
+	return vp
+}
+
+// QueryOracleExchangeRates queries all current oracle exchange rates and returns a map denom->amount (as string decimal).
+// It uses `terrad query oracle exchange-rates --output=json` and parses the DecCoins response.
+func (n *NodeConfig) QueryOracleExchangeRates() map[string]string {
+	cmd := []string{"terrad", "query", "oracle", "exchange-rates", "--output=json"}
+	outBuf, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	if err != nil {
+		n.LogActionF("failed to query exchange rates: %v; stdout=%q stderr=%q", err, strings.TrimSpace(outBuf.String()), strings.TrimSpace(errBuf.String()))
+		return map[string]string{}
+	}
+	var resp struct {
+		ExchangeRates []struct {
+			Denom  string `json:"denom"`
+			Amount string `json:"amount"`
+		} `json:"exchange_rates"`
+	}
+	if jerr := json.Unmarshal(outBuf.Bytes(), &resp); jerr != nil {
+		n.LogActionF("failed to decode exchange rates json: %v; payload=%q", jerr, strings.TrimSpace(outBuf.String()))
+		return map[string]string{}
+	}
+	m := make(map[string]string, len(resp.ExchangeRates))
+	for _, dc := range resp.ExchangeRates {
+		m[dc.Denom] = dc.Amount
+	}
+	return m
 }
 
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
@@ -454,12 +575,11 @@ func (n *NodeConfig) BankSendFeeGrantWithWallet(amount string, sendAddress strin
 	cmd := []string{"terrad", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--fee-granter=%s", feeGranter), fmt.Sprintf("--from=%s", walletName)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
-
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
 func (n *NodeConfig) BankMultiSend(amount string, split bool, sendAddress string, receiveAddresses ...string) {
-	n.LogActionF("bank multisending from %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
+	n.LogActionF("bank multisend %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
 	cmd := []string{"terrad", "tx", "bank", "multi-send", sendAddress}
 	cmd = append(cmd, receiveAddresses...)
 	cmd = append(cmd, amount, "--from=val")
@@ -470,6 +590,14 @@ func (n *NodeConfig) BankMultiSend(amount string, split bool, sendAddress string
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully multisent %s to %s", sendAddress, strings.Join(receiveAddresses, ","))
+}
+
+func (n *NodeConfig) MarketSwap(offerCoin string, askDenom string, walletName string) {
+	n.LogActionF("market swap %s -> %s from %s", offerCoin, askDenom, walletName)
+	cmd := []string{"terrad", "tx", "market", "swap", offerCoin, askDenom, fmt.Sprintf("--from=%s", walletName)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully swapped %s to %s", offerCoin, askDenom)
 }
 
 func (n *NodeConfig) GrantAddress(granter, gratee string, spendLimit string, walletName string) {
@@ -574,18 +702,202 @@ func (n *NodeConfig) DelegateFeedConsent(feederAddr string, walletName string) {
 }
 
 func (n *NodeConfig) SubmitOracleAggregatePrevote(salt string, amount string) {
-	n.LogActionF("submitting oracle aggregate prevote")
-	cmd := []string{"terrad", "tx", "oracle", "aggregate-prevote", salt, amount, fmt.Sprintf("--from=%s", "val")}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
+	// Only validators should submit oracle prevotes.
+	if !n.IsValidator {
+		n.LogActionF("skipping oracle aggregate prevote: node is not a validator")
+		return
+	}
+	if n.OperatorAddress == "" {
+		// Best-effort resolve now to avoid CLI inference assigning to the wrong validator
+		_ = n.extractOperatorAddressIfValidator()
+	}
+	require.NotEmpty(n.t, n.OperatorAddress, "validator operator address must be known before submitting oracle prevote")
+	// Compute expected hash only for logging; CLI expects [salt, exchange-rates, validator] and computes the hash internally
+	preimage := fmt.Sprintf("%s:%s:%s", salt, amount, n.OperatorAddress)
+	sum := sha256.Sum256([]byte(preimage))
+	hash := hex.EncodeToString(sum[:])
+	n.LogActionF("submitting oracle aggregate prevote for %s (salt=%s rates=%s hash=%s)", n.OperatorAddress, salt, amount, hash)
+	// IMPORTANT: positional args must come BEFORE flags for cobra to parse them; pass validator before --from
+	cmd := []string{"terrad", "tx", "oracle", "aggregate-prevote", salt, amount, n.OperatorAddress, fmt.Sprintf("--from=%s", initialization.ValidatorWalletName)}
+	outBuf, errBuf, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
+	// Try to log txhash for correlation
+	if txh := extractTxHashFromJSON(outBuf.Bytes()); txh != "" {
+		n.LogActionF("prevote txhash=%s", txh)
+	} else if txh := extractTxHashFromJSON(errBuf.Bytes()); txh != "" {
+		n.LogActionF("prevote txhash=%s (stderr)", txh)
+	}
+	// After success, confirm prevote exists and log submit block for traceability
+	if hash2, sb, ok := n.GetOracleAggregatePrevote(); ok {
+		n.LogActionF("submitted prevote ok: hash=%s submit_block=%d", hash2, sb)
+	} else {
+		n.LogActionF("prevote not found immediately after submit; stdout=%q stderr=%q", strings.TrimSpace(outBuf.String()), strings.TrimSpace(errBuf.String()))
+	}
 	n.LogActionF("successfully submitted oracle aggregate prevote")
 }
 
 // should be submitted after prevote, and using the same salt
 func (n *NodeConfig) SubmitOracleAggregateVote(salt string, amount string) {
-	n.LogActionF("submitting oracle aggregate vote")
-	cmd := []string{"terrad", "tx", "oracle", "aggregate-vote", salt, amount, fmt.Sprintf("--from=%s", "val")}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully submitted oracle aggregate vote")
+	// Only validators should submit oracle votes.
+	if !n.IsValidator {
+		n.LogActionF("skipping oracle aggregate vote: node is not a validator")
+		return
+	}
+	if n.OperatorAddress == "" {
+		// Best-effort resolve now to avoid reveal with mismatched/unknown validator
+		_ = n.extractOperatorAddressIfValidator()
+	}
+	require.NotEmpty(n.t, n.OperatorAddress, "validator operator address must be known before submitting oracle vote")
+	n.LogActionF("submitting oracle aggregate vote for %s", n.OperatorAddress)
+	// IMPORTANT: positional args must come BEFORE flags for cobra to parse them; pass validator before --from
+	base := []string{
+		"terrad", "tx", "oracle", "aggregate-vote", salt, amount, n.OperatorAddress,
+		fmt.Sprintf("--from=%s", initialization.ValidatorWalletName), fmt.Sprintf("--chain-id=%s", n.chainID), "--yes", "--keyring-backend=test", "--log_format=json",
+		"--gas=4000000", "--fees=0uluna",
+	}
+	// Use ExecCmd directly with empty success string so we can parse and retry ourselves without require.Eventually gating.
+	for attempt := 1; attempt <= 6; attempt++ {
+		outBuf, errBuf, _ := n.containerManager.ExecCmd(n.t, n.Name, base, "", false)
+		out := strings.TrimSpace(outBuf.String())
+		errS := strings.TrimSpace(errBuf.String())
+		// Try to decode code field; fall back to substring search
+		var resp struct {
+			Code   int    `json:"code"`
+			RawLog string `json:"raw_log"`
+		}
+		_ = json.Unmarshal(outBuf.Bytes(), &resp)
+		if resp.Code == 0 || strings.Contains(out, "\"code\":0") {
+			if txh := extractTxHashFromJSON(outBuf.Bytes()); txh != "" {
+				n.LogActionF("vote tx accepted; txhash=%s", txh)
+			} else if txh := extractTxHashFromJSON(errBuf.Bytes()); txh != "" {
+				n.LogActionF("vote tx accepted; txhash=%s (stderr)", txh)
+			} else {
+				n.LogActionF("vote tx accepted; stdout=%q stderr=%q", out, errS)
+			}
+			n.LogActionF("successfully submitted oracle aggregate vote")
+			return
+		}
+		if strings.Contains(out, "no aggregate prevote") || strings.Contains(resp.RawLog, "no aggregate prevote") {
+			n.LogActionF("vote attempt %d failed with 'no aggregate prevote'; retrying shortly... stdout=%q stderr=%q", attempt, out, errS)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		// Non-retryable failure: surface details and stop
+		require.Failf(n.t, "aggregate vote failed", "validator=%s stdout=%s stderr=%s", n.OperatorAddress, out, errS)
+	}
+}
+
+// HasOracleAggregatePrevote returns true if this validator has an aggregate prevote recorded on-chain.
+func (n *NodeConfig) HasOracleAggregatePrevote() bool {
+	if !n.IsValidator {
+		return false
+	}
+	if n.OperatorAddress == "" {
+		n.LogActionF("cannot query aggregate prevote: operator address unknown")
+		return false
+	}
+	_, _, ok := n.GetOracleAggregatePrevote()
+	return ok
+}
+
+// CountOracleAggregatePrevotes returns the number of outstanding aggregate prevotes across all validators.
+func (n *NodeConfig) CountOracleAggregatePrevotes() int {
+	cmd := []string{"terrad", "query", "oracle", "aggregate-prevotes", "--output=json"}
+	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	if err != nil {
+		n.LogActionF("failed to query aggregate prevotes: %v", err)
+		return 0
+	}
+	var resp struct {
+		AggregatePrevotes []struct {
+			Voter string `json:"voter"`
+		} `json:"aggregate_prevotes"`
+	}
+	if err := json.Unmarshal(outBuf.Bytes(), &resp); err != nil {
+		n.LogActionF("failed to decode aggregate prevotes json: %v", err)
+		return 0
+	}
+	return len(resp.AggregatePrevotes)
+}
+
+// QueryOracleAggregatePrevoteFor returns (hash, submitBlock, ok) for the given voter address, querying via this node's container.
+func (n *NodeConfig) QueryOracleAggregatePrevoteFor(voter string) (string, uint64, bool) {
+	if voter == "" {
+		return "", 0, false
+	}
+	cmd := []string{"terrad", "query", "oracle", "aggregate-prevotes", voter, "--output=json"}
+	outBuf, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	if err != nil {
+		n.LogActionF("aggregate prevote query failed for %s (err=%v)", voter, err)
+		return "", 0, false
+	}
+	if strings.TrimSpace(outBuf.String()) == "" {
+		if strings.TrimSpace(errBuf.String()) != "" {
+			n.LogActionF("aggregate prevote stderr for %s: %s", voter, errBuf.String())
+		}
+		return "", 0, false
+	}
+	var resp struct {
+		AggregatePrevote struct {
+			Hash        string `json:"hash"`
+			Voter       string `json:"voter"`
+			SubmitBlock string `json:"submit_block"`
+		} `json:"aggregate_prevote"`
+	}
+	if err := json.Unmarshal(outBuf.Bytes(), &resp); err != nil {
+		n.LogActionF("failed to decode aggregate prevote json for %s: %v", voter, err)
+		return "", 0, false
+	}
+	if resp.AggregatePrevote.Voter != voter || resp.AggregatePrevote.Hash == "" {
+		return "", 0, false
+	}
+	sb, perr := strconv.ParseUint(resp.AggregatePrevote.SubmitBlock, 10, 64)
+	if perr != nil {
+		n.LogActionF("failed to parse submit_block %q for %s: %v", resp.AggregatePrevote.SubmitBlock, voter, perr)
+		return resp.AggregatePrevote.Hash, 0, true
+	}
+	return resp.AggregatePrevote.Hash, sb, true
+}
+
+// GetOracleAggregatePrevote returns (hash, submitBlock, ok) for this validator's aggregate prevote
+func (n *NodeConfig) GetOracleAggregatePrevote() (string, uint64, bool) {
+	if !n.IsValidator || n.OperatorAddress == "" {
+		return "", 0, false
+	}
+	return n.QueryOracleAggregatePrevoteFor(n.OperatorAddress)
+}
+
+// GetOracleAggregatePrevoteVia queries this validator's aggregate prevote using the provided reference node's container.
+// This helps avoid cases where the validator's own container is lagging or in state-sync and cannot serve the query reliably.
+func (n *NodeConfig) GetOracleAggregatePrevoteVia(via *NodeConfig) (string, uint64, bool) {
+	if via == nil || !n.IsValidator || n.OperatorAddress == "" {
+		return "", 0, false
+	}
+	return via.QueryOracleAggregatePrevoteFor(n.OperatorAddress)
+}
+
+// IsCatchingUp returns true if the node reports it is still catching up (state-sync/fast-sync) via `terrad status`.
+// It parses the JSON output to read `sync_info.catching_up` and falls back to true on any error to be conservative.
+func (n *NodeConfig) IsCatchingUp() bool {
+	cmd := []string{"terrad", "status"}
+	outBuf, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "", false)
+	if err != nil {
+		n.LogActionF("status query failed: %v", err)
+		return true
+	}
+	// terrad status usually writes JSON to stderr; try stderr first, then stdout as fallback
+	payload := errBuf.Bytes()
+	if len(payload) == 0 {
+		payload = outBuf.Bytes()
+	}
+	var resp struct {
+		SyncInfo struct {
+			CatchingUp bool `json:"catching_up"`
+		} `json:"sync_info"`
+	}
+	if err := json.Unmarshal(payload, &resp); err != nil {
+		n.LogActionF("failed to decode status json: %v; stdout=%q stderr=%q", err, strings.TrimSpace(outBuf.String()), strings.TrimSpace(errBuf.String()))
+		return true
+	}
+	return resp.SyncInfo.CatchingUp
 }

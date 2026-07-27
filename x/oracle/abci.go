@@ -125,6 +125,11 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 		// Update vote targets and tobin tax
 		k.ApplyWhitelist(ctx, params.Whitelist, voteTargets)
+
+		// Notify market module that oracle tally occurred
+		if k.MarketHooks != nil {
+			k.MarketHooks.AfterOracleTally(ctx)
+		}
 	}
 
 	// Do slash who did miss voting over threshold and

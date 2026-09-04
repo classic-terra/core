@@ -111,6 +111,13 @@ ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
+# Build a position-independent executable so the binary image is subject to
+# ASLR. Requires kernel.randomize_va_space=2 on the host to take effect.
+# Linux-only: not every GOOS/GOARCH Go targets supports -buildmode=pie.
+ifeq ($(UNAME_S),Linux)
+  BUILD_FLAGS += -buildmode=pie
+endif
+
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
 

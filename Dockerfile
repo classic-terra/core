@@ -53,7 +53,7 @@ RUN set -eux &&\
         https://github.com/microsoft/mimalloc . &&\
     mkdir -p build &&\
     cd build &&\
-    cmake .. &&\
+    cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON .. &&\
     make -j$(nproc) &&\
     make install
 
@@ -107,9 +107,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go install \
         -mod=readonly \
         -tags "netgo,muslc" \
+        -buildmode=pie \
         -ldflags " \
             -w -s -linkmode=external -extldflags \
-            '-L/go/src/mimalloc/build -lmimalloc -Wl,-z,muldefs -static' \
+            '-L/go/src/mimalloc/build -lmimalloc -Wl,-z,muldefs -static-pie' \
             -X github.com/cosmos/cosmos-sdk/version.Name='terra' \
             -X github.com/cosmos/cosmos-sdk/version.AppName='terrad' \
             -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \

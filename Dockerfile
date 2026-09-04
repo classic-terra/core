@@ -64,11 +64,23 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download -x
 
-# Cosmwasm - Download correct libwasmvm version and verify checksum
+# Cosmwasm - Download correct libwasmvm version and verify checksum.
+# Downloads are retried with an explicit timeout: a stalled transfer would
+# otherwise hang for busybox wget's 900s default and fail the release build.
 RUN set -eux &&\
+    dl() { \
+        for i in 1 2 3 4 5; do \
+            if wget -T 60 -O "$2" "$1"; then return 0; fi; \
+            echo "download failed (attempt $i/5): $1"; \
+            rm -f "$2"; \
+            sleep 5; \
+        done; \
+        echo "ERROR: giving up after 5 attempts: $1"; \
+        return 1; \
+    }; \
     WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm/v3 | cut -d ' ' -f 2) && \
     WASMVM_DOWNLOADS="https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}"; \
-    wget ${WASMVM_DOWNLOADS}/checksums.txt -O /tmp/checksums.txt; \
+    dl "${WASMVM_DOWNLOADS}/checksums.txt" /tmp/checksums.txt; \
     if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
         WASMVM_URL="${WASMVM_DOWNLOADS}/libwasmvm_muslc.x86_64.a"; \
         LIB_NAME="libwasmvm_muslc.x86_64.a"; \
@@ -79,7 +91,7 @@ RUN set -eux &&\
         echo "Unsupported Build Platfrom ${BUILDPLATFORM}"; \
         exit 1; \
     fi; \
-    wget ${WASMVM_URL} -O /tmp/${LIB_NAME}; \
+    dl "${WASMVM_URL}" "/tmp/${LIB_NAME}"; \
     CHECKSUM=`sha256sum /tmp/${LIB_NAME} | cut -d" " -f1`; \
     grep ${CHECKSUM} /tmp/checksums.txt; \
     rm /tmp/checksums.txt; \

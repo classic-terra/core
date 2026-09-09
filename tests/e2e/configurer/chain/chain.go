@@ -151,12 +151,8 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 
 // CreateNode returns new initialized NodeConfig.
 func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
-	nodeConfig := &NodeConfig{
-		Node:             *initNode,
-		chainID:          c.ID,
-		containerManager: c.containerManager,
-		t:                c.t,
-	}
+	defaultInitCfg := &initialization.NodeConfig{}
+	nodeConfig := NewNodeConfig(c.t, initNode, defaultInitCfg, c.ID, c.containerManager)
 	c.NodeConfigs = append(c.NodeConfigs, nodeConfig)
 	return nodeConfig
 }

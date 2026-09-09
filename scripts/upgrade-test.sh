@@ -187,10 +187,13 @@ EOF
 
     sleep 2
 
+    ./_build/old/terrad tx gov vote 1 yes --from test2 --keyring-backend test --chain-id $CHAIN_ID --home $HOME --gas-prices $GAS_PRICE -y
+
+
     # determine block_height to halt
     LAST_BLOCK_HEIGHT=""
     STALLED_ROUNDS=0
-    while true; do 
+    while true; do
         BLOCK_HEIGHT=$(./_build/old/terrad status --home $HOME | jq -r '.SyncInfo.latest_block_height // .sync_info.latest_block_height')
 
         if [ -z "$BLOCK_HEIGHT" ] || [ "$BLOCK_HEIGHT" == "null" ]; then

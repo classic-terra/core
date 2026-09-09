@@ -391,6 +391,7 @@ func CreateTestInput(t *testing.T) TestInput {
 		treasuryAccountAdapter{accountKeeper},
 		treasuryBankAdapter{bankKeeper},
 		oracleKeeper,
+		distrKeeper,
 	)
 	marketKeeper.SetParams(ctx, markettypes.DefaultParams())
 

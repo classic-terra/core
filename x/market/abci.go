@@ -7,6 +7,9 @@ import (
 
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	// Epoch processing: burn leftover and refill market pool if epoch elapsed
+	k.ProcessEpochIfDue(ctx)
+
 	// Replenishes each pools towards equilibrium
 	k.ReplenishPools(ctx)
 }

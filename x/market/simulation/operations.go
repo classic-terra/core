@@ -26,6 +26,29 @@ const (
 	OpWeightMsgSwap = "op_weight_msg_swap" //#nosec
 )
 
+// allowedSimSwapDenoms mirrors the market module's code-fixed
+// allowedSwapDenoms (production default: only uusd). The simulation must only
+// pick ask/offer denoms from this set; otherwise every swap hits
+// ErrInvalidSwapPair because allowedSwapDenoms is intentionally not a gov param.
+var allowedSimSwapDenoms = map[string]bool{
+	core.MicroUSDDenom: true,
+}
+
+// pickSwapDenom returns a random oracle denom that is also in the
+// allowedSwapDenoms set. Returns "" (no-op) if none qualify.
+func pickSwapDenom(r *rand.Rand, oracleDenoms []string) string {
+	allowed := make([]string, 0, len(oracleDenoms))
+	for _, d := range oracleDenoms {
+		if allowedSimSwapDenoms[d] {
+			allowed = append(allowed, d)
+		}
+	}
+	if len(allowed) == 0 {
+		return ""
+	}
+	return allowed[r.Intn(len(allowed))]
+}
+
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
@@ -73,18 +96,19 @@ func SimulateMsgSwap(
 			return false
 		})
 
-		var offerDenom string
-		var askDenom string
-		whitelistLen := len(whitelist)
-		if whitelistLen == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSwap, "no available exchange rates"), nil, nil
+		// Only pick denoms the market module actually allows (code-fixed set).
+		swapDenom := pickSwapDenom(r, whitelist)
+		if swapDenom == "" {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSwap, "no allowed swap denom with exchange rate"), nil, nil
 		}
 
-		if randVal := simtypes.RandIntBetween(r, 0, whitelistLen*2); randVal < whitelistLen {
+		// One side is always uluna; the other is an allowed denom.
+		var offerDenom, askDenom string
+		if r.Intn(2) == 0 {
 			offerDenom = core.MicroLunaDenom
-			askDenom = whitelist[randVal]
+			askDenom = swapDenom
 		} else {
-			offerDenom = whitelist[randVal-whitelistLen]
+			offerDenom = swapDenom
 			askDenom = core.MicroLunaDenom
 		}
 
@@ -147,18 +171,19 @@ func SimulateMsgSwapSend(
 			return false
 		})
 
-		var offerDenom string
-		var askDenom string
-		whitelistLen := len(whitelist)
-		if whitelistLen == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSwapSend, "no available exchange rates"), nil, nil
+		// Only pick denoms the market module actually allows (code-fixed set).
+		swapDenom := pickSwapDenom(r, whitelist)
+		if swapDenom == "" {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSwapSend, "no allowed swap denom with exchange rate"), nil, nil
 		}
 
-		if randVal := simtypes.RandIntBetween(r, 0, whitelistLen*2); randVal < whitelistLen {
+		// One side is always uluna; the other is an allowed denom.
+		var offerDenom, askDenom string
+		if r.Intn(2) == 0 {
 			offerDenom = core.MicroLunaDenom
-			askDenom = whitelist[randVal]
+			askDenom = swapDenom
 		} else {
-			offerDenom = whitelist[randVal-whitelistLen]
+			offerDenom = swapDenom
 			askDenom = core.MicroLunaDenom
 		}
 

@@ -83,7 +83,8 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	return balancesResp.GetBalances(), nil
 }
 
-// if coin is zero, return empty coin.
+// QuerySpecificBalance returns the balance for a denom.
+// If the denom is not present, it returns a zero-value coin for that denom.
 func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (sdk.Coin, error) {
 	balances, err := n.QueryBalances(addr)
 	if err != nil {
@@ -94,7 +95,7 @@ func (n *NodeConfig) QuerySpecificBalance(addr, denom string) (sdk.Coin, error) 
 			return c, nil
 		}
 	}
-	return sdk.Coin{}, nil
+	return sdk.NewCoin(denom, sdkmath.ZeroInt()), nil
 }
 
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdkmath.Int, error) {

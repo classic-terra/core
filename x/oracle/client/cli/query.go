@@ -31,6 +31,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryAggregateVote(),
 		GetCmdQueryVoteTargets(),
 		GetCmdQueryTobinTaxes(),
+		GetCmdQueryUSDPrice(),
+		GetCmdQueryUSDPrices(),
 	)
 
 	return oracleQueryCmd
@@ -81,6 +83,59 @@ $ terrad query oracle exchange-rates ukrw
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryUSDPrice queries the USD price of a denom using the meta anchor
+func GetCmdQueryUSDPrice() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "usd-price [denom]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the USD price of a denom (via USD/Luna anchor)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			denom := args[0]
+			res, err := queryClient.USDPrice(
+				context.Background(),
+				&types.QueryUSDPriceRequest{Denom: denom},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryUSDPrices queries USD prices for all denoms
+func GetCmdQueryUSDPrices() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "usd-prices",
+		Args:  cobra.NoArgs,
+		Short: "Query the USD prices for all denoms",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.USDPrices(
+				context.Background(),
+				&types.QueryUSDPricesRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

@@ -118,24 +118,27 @@ var (
 	)
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil, // just added to enable align fee
-		treasurytypes.BurnModuleName:   {authtypes.Burner},
-		minttypes.ModuleName:           {authtypes.Minter},
-		markettypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
-		oracletypes.ModuleName:         nil,
-		distrtypes.ModuleName:          nil,
-		treasurytypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:            nil,
-		wasmtypes.ModuleName:           {authtypes.Burner},
+		authtypes.FeeCollectorName:        nil, // just added to enable align fee
+		treasurytypes.BurnModuleName:      {authtypes.Burner},
+		minttypes.ModuleName:              {authtypes.Minter},
+		markettypes.ModuleName:            {authtypes.Burner},
+		markettypes.AccumulatorModuleName: nil,
+		oracletypes.ModuleName:            nil,
+		distrtypes.ModuleName:             nil,
+		treasurytypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
+		stakingtypes.BondedPoolName:       {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:               {authtypes.Burner},
+		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:               nil,
+		wasmtypes.ModuleName:              {authtypes.Burner},
 	}
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
-		oracletypes.ModuleName:       true,
-		treasurytypes.BurnModuleName: true,
+		oracletypes.ModuleName:            true,
+		treasurytypes.BurnModuleName:      true,
+		markettypes.ModuleName:            true,
+		markettypes.AccumulatorModuleName: true,
 	}
 )
 

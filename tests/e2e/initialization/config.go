@@ -8,6 +8,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/classic-terra/core/v4/tests/e2e/util"
+	core "github.com/classic-terra/core/v4/types"
+	markettypes "github.com/classic-terra/core/v4/x/market/types"
+	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -50,11 +53,13 @@ const (
 	// chainA
 	ChainAID      = "terra-test-a"
 	TerraBalanceA = 20000000000000
+	USDBalanceA   = 1000000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
 	// chainB
 	ChainBID          = "terra-test-b"
 	TerraBalanceB     = 500000000000
+	USDBalanceB       = 1000000000000
 	StakeBalanceB     = 440000000000
 	StakeAmountB      = 400000000000
 	GenesisFeeBalance = 100000000000
@@ -72,8 +77,8 @@ var (
 	StakeAmountIntB  = sdkmath.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(TerraDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s", TerraBalanceA, TerraDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s", TerraBalanceB, TerraDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", TerraBalanceA, TerraDenom, USDBalanceA, core.MicroUSDDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", TerraBalanceB, TerraDenom, USDBalanceB, core.MicroUSDDenom)
 	// InitBalanceStrC = fmt.Sprintf("%d%s", TerraBalanceC, TerraDenom)
 	LunaToken = sdk.NewInt64Coin(TerraDenom, IbcSendAmount) // 3,300luna
 	tenTerra  = sdk.Coins{sdk.NewInt64Coin(TerraDenom, 10_000_000)}
@@ -237,6 +242,16 @@ func initGenesis(chain *internalChain, forkHeight int) error {
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, markettypes.ModuleName, &markettypes.GenesisState{}, updateMarketGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, oracletypes.ModuleName, &oracletypes.GenesisState{}, updateOracleGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, taxtypes.ModuleName, &taxtypes.GenesisState{}, updateTaxGenesis)
 	if err != nil {
 		return err
@@ -306,10 +321,50 @@ func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	denomsToRegister := []string{TerraDenom, AtomDenom}
+	// Register denoms used in tests
+	denomsToRegister := []string{TerraDenom, AtomDenom, core.MicroUSDDenom, core.MicroKRWDenom}
 	for _, denom := range denomsToRegister {
 		setDenomMetadata(bankGenState, denom)
 	}
+
+	// Seed both market and accumulator modules with USTC (uusd) so swaps have liquidity
+	// even across epoch burns/refills.
+	marketAddr := authtypes.NewModuleAddress(markettypes.ModuleName)
+	accumAddr := authtypes.NewModuleAddress(markettypes.AccumulatorModuleName)
+	seedCoins := sdk.NewCoins(sdk.NewCoin(core.MicroUSDDenom, sdkmath.NewInt(1_000_000_000_000)))       // 1,000,000 USTC
+	seedCoinsUluna := sdk.NewCoins(sdk.NewCoin(core.MicroLunaDenom, sdkmath.NewInt(1_000_000_000_000))) // 1,000,000 LUNC
+
+	bankGenState.Balances = append(bankGenState.Balances,
+		banktypes.Balance{Address: marketAddr.String(), Coins: seedCoins},
+		banktypes.Balance{Address: accumAddr.String(), Coins: seedCoins},
+		banktypes.Balance{Address: marketAddr.String(), Coins: seedCoinsUluna},
+		banktypes.Balance{Address: accumAddr.String(), Coins: seedCoinsUluna},
+	)
+
+	// Sanitize balances to merge and ensure invariants
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+}
+
+func updateMarketGenesis(marketGenState *markettypes.GenesisState) {
+	// WARNING: The values below are E2E-ONLY knobs tuned for fast test execution.
+	// They MUST NOT ship to mainnet/testnet genesis:
+	//   - EpochLengthBlocks=50 triggers an epoch burn+refill every ~2.5 minutes
+	//     (at 3s/block) instead of the 30-day production cadence.
+	//   - MaxOracleAgeSeconds=2 rejects any swap whose oracle data is older than
+	//     2 seconds, which would halt swaps on a real network.
+	// What keeps them out of production is that package initialization is imported
+	// only from tests/e2e; production genesis comes from markettypes.DefaultParams.
+	const (
+		e2eEpochLengthBlocks = 50
+		e2eMaxOracleAgeSecs  = 2
+	)
+	marketGenState.Params.EpochLengthBlocks = e2eEpochLengthBlocks
+	marketGenState.Params.MaxOracleAgeSeconds = e2eMaxOracleAgeSecs
+}
+
+func updateOracleGenesis(oracleGenState *oracletypes.GenesisState) {
+	// Align oracle vote period with the test logic and market epoch length
+	oracleGenState.Params.VotePeriod = 10 // increase for better testing options
 }
 
 func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {

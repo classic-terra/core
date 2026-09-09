@@ -254,13 +254,16 @@ func TestQueryTobinTaxes(t *testing.T) {
 	// clear tobin taxes
 	input.OracleKeeper.ClearTobinTaxes(input.Ctx)
 
-	tobinTaxes := types.DenomList{{
-		Name:     core.MicroKRWDenom,
-		TobinTax: sdkmath.LegacyOneDec(),
-	}, {
-		Name:     core.MicroSDRDenom,
-		TobinTax: sdkmath.LegacyNewDecWithPrec(123, 2),
-	}}
+	tobinTaxes := types.DenomList{
+		types.Denom{
+			Name:     core.MicroKRWDenom,
+			TobinTax: sdkmath.LegacyOneDec(),
+		},
+		types.Denom{
+			Name:     core.MicroSDRDenom,
+			TobinTax: sdkmath.LegacyNewDecWithPrec(123, 2),
+		},
+	}
 	for _, item := range tobinTaxes {
 		input.OracleKeeper.SetTobinTax(input.Ctx, item.Name, item.TobinTax)
 	}

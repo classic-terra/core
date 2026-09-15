@@ -26,6 +26,12 @@ var (
 		UIDGID:     "1025:1025",
 	}
 
+	OsmosisImage = ibc.DockerImage{
+		Repository: "osmolabs/osmosis",
+		Version:    "25.0.0-alpine",
+		UIDGID:     "1025:1025",
+	}
+
 	pathTerraGaia        = "terra-gaia"
 	pathTerraOsmo        = "terra-osmo"
 	pathGaiaOsmo         = "gaia-osmo"
@@ -71,6 +77,12 @@ func createGaiaConfig() ibc.ChainConfig {
 	return ibc.ChainConfig{
 		GasPrices:     fixedChainGasPrices,
 		ModifyGenesis: cosmos.ModifyGenesis(fixedChainGenesis),
+	}
+}
+
+func createOsmosisConfig() ibc.ChainConfig {
+	return ibc.ChainConfig{
+		Images: []ibc.DockerImage{OsmosisImage},
 	}
 }
 

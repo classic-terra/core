@@ -63,7 +63,8 @@ func TestTerraGaiaOsmoPFM(t *testing.T) {
 		},
 		{
 			Name:          "osmosis",
-			Version:       "v25.0.0",
+			Version:       OsmosisImage.Version,
+			ChainConfig:   createOsmosisConfig(),
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 		},
@@ -587,7 +588,8 @@ func TestTerraPFM(t *testing.T) {
 		},
 		{
 			Name:          "osmosis",
-			Version:       "v25.0.0",
+			Version:       OsmosisImage.Version,
+			ChainConfig:   createOsmosisConfig(),
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 		},

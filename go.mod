@@ -247,7 +247,7 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/api v0.247.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect

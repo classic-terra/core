@@ -92,15 +92,48 @@ func InitTerraAppForTestnet(app *TerraApp, opts TestnetOptions) (*TerraApp, erro
 	}
 
 	// Remove all existing validators from the power index, last validator
-	// powers, validator records and the unbonding validator queue.
+	// powers, validator records and the unbonding validator queue, together
+	// with the delegations to them. The self delegation created below backs all
+	// bonded tokens, so surviving delegations would count those tokens twice.
 	stakingStore := ctx.KVStore(app.GetKey(stakingtypes.StoreKey))
 	for _, prefix := range [][]byte{
 		stakingtypes.ValidatorsByPowerIndexKey,
 		stakingtypes.LastValidatorPowerKey,
 		stakingtypes.ValidatorsKey,
 		stakingtypes.ValidatorQueueKey,
+		stakingtypes.DelegationKey,
+		stakingtypes.DelegationByValIndexKey,
 	} {
 		deletePrefix(stakingStore, prefix)
+	}
+
+	// The removed validators' distribution records go with them. Their
+	// outstanding rewards are coins held by the distribution module, so they
+	// move to the community pool to keep the module balance accounted for.
+	outstanding := sdk.DecCoins{}
+	app.DistrKeeper.IterateValidatorOutstandingRewards(ctx, func(_ sdk.ValAddress, rewards distrtypes.ValidatorOutstandingRewards) (stop bool) {
+		outstanding = outstanding.Add(rewards.Rewards...)
+		return false
+	})
+	feePool, err := app.DistrKeeper.FeePool.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	feePool.CommunityPool = feePool.CommunityPool.Add(outstanding...)
+	if err := app.DistrKeeper.FeePool.Set(ctx, feePool); err != nil {
+		return nil, err
+	}
+
+	distrStore := ctx.KVStore(app.GetKey(distrtypes.StoreKey))
+	for _, prefix := range [][]byte{
+		distrtypes.ValidatorOutstandingRewardsPrefix,
+		distrtypes.DelegatorStartingInfoPrefix,
+		distrtypes.ValidatorHistoricalRewardsPrefix,
+		distrtypes.ValidatorCurrentRewardsPrefix,
+		distrtypes.ValidatorAccumulatedCommissionPrefix,
+		distrtypes.ValidatorSlashEventPrefix,
+	} {
+		deletePrefix(distrStore, prefix)
 	}
 
 	if err := app.StakingKeeper.SetValidator(ctx, newVal); err != nil {

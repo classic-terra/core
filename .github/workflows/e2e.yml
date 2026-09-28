@@ -131,7 +131,7 @@ jobs:
 
             # 5. Download Docker image artifact
             - name: Download Docker image artifact
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: terra-e2e-image
                   path: /tmp

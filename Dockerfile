@@ -44,7 +44,9 @@ RUN set -eux &&\
     linux-headers \
     build-base \
     cmake \
-    git
+    git \
+    openssh-client \
+    xz
 
 # install mimalloc for musl
 WORKDIR ${GOPATH}/src/mimalloc
@@ -57,35 +59,54 @@ RUN set -eux &&\
     make -j$(nproc) &&\
     make install
 
+# Private modules (e.g. unreleased security forks): pass GOPRIVATE and build with
+# `--ssh default`; they are then fetched directly via git+SSH using the host's agent.
+# Without GOPRIVATE everything goes through the public module proxy as usual.
+ARG GOPRIVATE=""
+ENV GOPRIVATE=${GOPRIVATE}
+RUN set -eux; \
+    if [ -n "${GOPRIVATE}" ]; then \
+        mkdir -p -m 0700 /root/.ssh && \
+        echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> /root/.ssh/known_hosts && \
+        git config --global url."git@github.com:".insteadOf "https://github.com/"; \
+    fi
+
 # download dependencies to cache as layer
 WORKDIR ${GOPATH}/src/app
 COPY ${source}go.mod ${source}go.sum ./
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
+    --mount=type=ssh \
     go mod download -x
 
-# Cosmwasm - Download correct libwasmvm version and verify checksum
+# Cosmwasm - provide the static libwasmvm for muslc.
+# The library goes into the directory of the module actually used (honours `replace`).
+# If the module ships it as .xz (covered by go.sum), unpack that; otherwise download
+# the matching upstream release asset and verify its checksum.
 RUN set -eux &&\
-    WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm/v3 | cut -d ' ' -f 2) && \
-    WASMVM_DOWNLOADS="https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}"; \
-    wget ${WASMVM_DOWNLOADS}/checksums.txt -O /tmp/checksums.txt; \
     if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
-        WASMVM_URL="${WASMVM_DOWNLOADS}/libwasmvm_muslc.x86_64.a"; \
         LIB_NAME="libwasmvm_muslc.x86_64.a"; \
     elif [ ${BUILDPLATFORM} = "linux/arm64" ]; then \
-        WASMVM_URL="${WASMVM_DOWNLOADS}/libwasmvm_muslc.aarch64.a"; \
         LIB_NAME="libwasmvm_muslc.aarch64.a"; \
     else \
         echo "Unsupported Build Platfrom ${BUILDPLATFORM}"; \
         exit 1; \
     fi; \
-    wget ${WASMVM_URL} -O /tmp/${LIB_NAME}; \
-    CHECKSUM=`sha256sum /tmp/${LIB_NAME} | cut -d" " -f1`; \
-    grep ${CHECKSUM} /tmp/checksums.txt; \
-    rm /tmp/checksums.txt; \
-    mkdir -p /go/pkg/mod/github.com/!cosm!wasm/wasmvm/v3@${WASMVM_VERSION}/internal/api/; \
-    cp /tmp/${LIB_NAME} /go/pkg/mod/github.com/!cosm!wasm/wasmvm/v3@${WASMVM_VERSION}/internal/api/; \
-    rm /tmp/${LIB_NAME}
+    WASMVM_DIR=$(go list -m -f '{{if .Replace}}{{.Replace.Dir}}{{else}}{{.Dir}}{{end}}' github.com/CosmWasm/wasmvm/v3); \
+    if [ -f ${WASMVM_DIR}/internal/api/${LIB_NAME}.xz ]; then \
+        xz -dc ${WASMVM_DIR}/internal/api/${LIB_NAME}.xz > ${WASMVM_DIR}/internal/api/${LIB_NAME}; \
+    else \
+        WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v3); \
+        WASMVM_DOWNLOADS="https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}"; \
+        wget ${WASMVM_DOWNLOADS}/checksums.txt -O /tmp/checksums.txt; \
+        wget ${WASMVM_DOWNLOADS}/${LIB_NAME} -O /tmp/${LIB_NAME}; \
+        CHECKSUM=`sha256sum /tmp/${LIB_NAME} | cut -d" " -f1`; \
+        grep ${CHECKSUM} /tmp/checksums.txt; \
+        rm /tmp/checksums.txt; \
+        cp /tmp/${LIB_NAME} ${WASMVM_DIR}/internal/api/; \
+        rm /tmp/${LIB_NAME}; \
+    fi; \
+    ls -la ${WASMVM_DIR}/internal/api/${LIB_NAME}
 
 ###############################################################################
 

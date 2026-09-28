@@ -23,11 +23,13 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 		maxValidators, err := k.StakingKeeper.MaxValidators(ctx)
 		if err != nil {
+			k.Logger(ctx).Error("failed to get max validators; skipping oracle vote period", "error", err)
 			return
 		}
 
 		iterator, err := k.StakingKeeper.ValidatorsPowerStoreIterator(ctx)
 		if err != nil {
+			k.Logger(ctx).Error("failed to iterate validator power store; skipping oracle vote period", "error", err)
 			return
 		}
 		defer iterator.Close()

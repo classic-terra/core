@@ -25,6 +25,8 @@ import (
 	customstaking "github.com/classic-terra/core/v4/custom/staking"
 	customupgrade "github.com/classic-terra/core/v4/custom/upgrade"
 	customwasm "github.com/classic-terra/core/v4/custom/wasm"
+	"github.com/classic-terra/core/v4/x/cron"
+	crontypes "github.com/classic-terra/core/v4/x/cron/types"
 	"github.com/classic-terra/core/v4/x/dyncomm"
 	dyncommtypes "github.com/classic-terra/core/v4/x/dyncomm/types"
 	"github.com/classic-terra/core/v4/x/market"
@@ -111,6 +113,7 @@ var (
 		treasury.AppModuleBasic{},
 		taxexemption.AppModuleBasic{},
 		customwasm.AppModuleBasic{},
+		cron.AppModuleBasic{},
 		dyncomm.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 		consensus.AppModuleBasic{},
@@ -131,6 +134,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
 		wasmtypes.ModuleName:           {authtypes.Burner},
+		crontypes.ModuleName:           nil,
 	}
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
@@ -169,6 +173,7 @@ func appModules(
 		treasury.NewAppModule(appCodec, app.TreasuryKeeper),
 		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		customwasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName), app.GetKey(wasmtypes.StoreKey)),
+		cron.NewAppModule(appCodec, &app.CronKeeper),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
@@ -232,6 +237,7 @@ func orderBeginBlockers() []string {
 		taxexemptiontypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
+		crontypes.ModuleName,
 		dyncommtypes.ModuleName,
 		taxtypes.ModuleName,
 		// consensus module
@@ -266,6 +272,7 @@ func orderEndBlockers() []string {
 		taxexemptiontypes.ModuleName,
 		markettypes.ModuleName,
 		wasmtypes.ModuleName,
+		crontypes.ModuleName,
 		dyncommtypes.ModuleName,
 		taxtypes.ModuleName,
 		// consensus module
@@ -300,6 +307,7 @@ func orderInitGenesis() []string {
 		treasurytypes.ModuleName,
 		taxexemptiontypes.ModuleName,
 		wasmtypes.ModuleName,
+		crontypes.ModuleName,
 		dyncommtypes.ModuleName,
 		taxtypes.ModuleName,
 		// consensus module

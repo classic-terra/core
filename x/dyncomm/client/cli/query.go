@@ -47,7 +47,8 @@ func GetCmdQueryRate() *cobra.Command {
 				return err
 			}
 
-			res, err := queryClient.Rate(context.Background(),
+			res, err := queryClient.Rate(
+				context.Background(),
 				&types.QueryRateRequest{ValidatorAddr: addr.String()},
 			)
 			if err != nil {

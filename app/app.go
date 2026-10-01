@@ -186,6 +186,7 @@ func NewTerraApp(
 		app.SetTxEncoder(txConfig.TxEncoder())
 		app.SetPrepareProposal(handler.PrepareProposalHandler())
 		app.SetProcessProposal(handler.ProcessProposalHandler())
+		app.SetCheckTxHandler(appmempool.NewParityCheckTxHandler(mempool, txConfig.TxDecoder(), app.Trace))
 	})
 
 	// adapt CometBFT logger to cosmossdk.io/log.Logger expected by BaseApp

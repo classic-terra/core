@@ -25,9 +25,7 @@ func (dd DyncommDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, succ
 	// txs that CheckTx accepted (#648). Simulate must match Finalize so that
 	// gas estimation (--gas auto) includes this handler; its writes are
 	// discarded.
-	switch ctx.ExecMode() {
-	case sdk.ExecModeFinalize, sdk.ExecModeSimulate:
-	default:
+	if mode := ctx.ExecMode(); mode != sdk.ExecModeFinalize && mode != sdk.ExecModeSimulate {
 		return next(ctx, tx, simulate, success)
 	}
 

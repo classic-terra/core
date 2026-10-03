@@ -19,11 +19,13 @@ func NewDyncommPostDecorator(dk dyncommkeeper.Keeper) DyncommDecorator {
 }
 
 func (dd DyncommDecorator) PostHandle(ctx sdk.Context, tx sdk.Tx, simulate, success bool, next sdk.PostHandler) (sdk.Context, error) {
-	if simulate {
-		return next(ctx, tx, simulate, success)
-	}
-
-	if ctx.IsCheckTx() {
+	// Only run in the modes that execute msgs. In CheckTx/ReCheckTx and in
+	// PrepareProposal/ProcessProposal the msgs are not executed, so there is
+	// nothing to record, and charging gas there made PrepareProposal reject
+	// txs that CheckTx accepted (#648). Simulate must match Finalize so that
+	// gas estimation (--gas auto) includes this handler; its writes are
+	// discarded.
+	if mode := ctx.ExecMode(); mode != sdk.ExecModeFinalize && mode != sdk.ExecModeSimulate {
 		return next(ctx, tx, simulate, success)
 	}
 

@@ -182,6 +182,27 @@ func (mp *FifoMempool) Remove(tx sdk.Tx) error {
 	return mempool.ErrTxNotFound
 }
 
+// Contains reports whether a tx with the same first signer and sequence is in
+// the mempool. It always reports true when the mempool is disabled (maxTx < 0).
+func (mp *FifoMempool) Contains(tx sdk.Tx) bool {
+	if mp.maxTx < 0 {
+		return true
+	}
+
+	txKey, err := getTxKey(tx)
+	if err != nil {
+		return false
+	}
+
+	mp.mtx.RLock()
+	defer mp.mtx.RUnlock()
+	if _, ok := mp.txsMap.Load(txKey); ok {
+		return true
+	}
+	_, ok := mp.txsMapOracle.Load(txKey)
+	return ok
+}
+
 func (mp *FifoMempool) CountTx() int {
 	mp.mtx.RLock()
 	defer mp.mtx.RUnlock()

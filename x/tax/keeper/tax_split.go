@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	sdkmath "cosmossdk.io/math"
 	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
+	"github.com/classic-terra/core/v4/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -29,9 +29,12 @@ func (k Keeper) ProcessTaxSplits(ctx sdk.Context, taxes sdk.Coins) error {
 	}
 
 	// Calculate community tax coins
+	// CommunityTaxAdjustment guards the divisor: communityTax*(1-oracleSplitRate)
+	// is zero when communityTax == 1.0 and oracleSplitRate == 0 (both are
+	// governance-settable parameters), which previously caused a decimal
+	// division-by-zero panic in every taxable transaction.
+	applyCommunityTax := types.CommunityTaxAdjustment(communityTax, oracleSplitRate)
 	if communityTax.IsPositive() {
-		// Adjust community tax to avoid double taxation
-		applyCommunityTax := communityTax.Mul(oracleSplitRate.Quo(communityTax.Mul(oracleSplitRate).Add(sdkmath.LegacyOneDec()).Sub(communityTax)))
 
 		for _, distrCoin := range distributionDeltaCoins {
 			communityTaxAmount := applyCommunityTax.MulInt(distrCoin.Amount).RoundInt()

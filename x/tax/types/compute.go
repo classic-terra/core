@@ -69,10 +69,6 @@ func ComputeTaxes(ctx sdk.Context, principal sdk.Coins, taxRate sdkmath.LegacyDe
 // configuration, and whenever the divisor is non-positive, no adjustment is
 // applied and the original communityTax is returned.
 func CommunityTaxAdjustment(communityTax, oracleSplitRate sdkmath.LegacyDec) sdkmath.LegacyDec {
-	if !communityTax.IsPositive() {
-		return communityTax
-	}
-
 	denominator := communityTax.Mul(oracleSplitRate).Add(sdkmath.LegacyOneDec()).Sub(communityTax)
 	if !denominator.IsPositive() {
 		return communityTax

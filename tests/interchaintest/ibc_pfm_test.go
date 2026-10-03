@@ -64,6 +64,9 @@ func TestTerraGaiaOsmoPFM(t *testing.T) {
 		{
 			Name:    "osmosis",
 			Version: "v25.0.0",
+			// The strangelove-ventures GitHub org (and its ghcr.io image namespace)
+			// was renamed to amygdala-labs, breaking the built-in heighliner image
+			// path. Override the repository so the osmosis node image stays pullable.
 			ChainConfig: ibc.ChainConfig{
 				Images: []ibc.DockerImage{{
 					Repository: "ghcr.io/amygdala-labs/heighliner/osmosis",
@@ -594,6 +597,9 @@ func TestTerraPFM(t *testing.T) {
 		{
 			Name:    "osmosis",
 			Version: "v25.0.0",
+			// The strangelove-ventures GitHub org (and its ghcr.io image namespace)
+			// was renamed to amygdala-labs, breaking the built-in heighliner image
+			// path. Override the repository so the osmosis node image stays pullable.
 			ChainConfig: ibc.ChainConfig{
 				Images: []ibc.DockerImage{{
 					Repository: "ghcr.io/amygdala-labs/heighliner/osmosis",

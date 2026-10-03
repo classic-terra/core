@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
@@ -22,6 +24,8 @@ import (
 	authcustomcli "github.com/classic-terra/core/v4/custom/auth/client/cli"
 	core "github.com/classic-terra/core/v4/types"
 	tmcfg "github.com/cometbft/cometbft/config"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -222,6 +226,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 
 	server.AddCommands(rootCmd, terraapp.DefaultNodeHome, appCreatorFn, appExporterFn, addModuleInitFlags)
 
+	testnetAppCreatorFn := servertypes.AppCreator(func(_ sdklog.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+		return a.newTestnetApp(log.NewNopLogger(), db, traceStore, appOpts)
+	})
+	rootCmd.AddCommand(inPlaceTestnetCmd(testnetAppCreatorFn, addTestnetFlags))
+
 	// add keybase, auxiliary status, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
@@ -234,6 +243,21 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
+}
+
+const (
+	flagTestnetVotingPeriod          = "testnet-voting-period"
+	flagTestnetExpeditedVotingPeriod = "testnet-expedited-voting-period"
+	flagTestnetFundAccounts          = "testnet-fund-accounts"
+	flagTestnetFundCoins             = "testnet-fund-coins"
+)
+
+func addTestnetFlags(cmd *cobra.Command) {
+	addModuleInitFlags(cmd)
+	cmd.Flags().Duration(flagTestnetVotingPeriod, 5*time.Minute, "Governance voting period of the testnet")
+	cmd.Flags().Duration(flagTestnetExpeditedVotingPeriod, 2*time.Minute, "Governance expedited voting period of the testnet")
+	cmd.Flags().StringSlice(flagTestnetFundAccounts, []string{}, "Additional accounts to fund (the operator account is always funded)")
+	cmd.Flags().String(flagTestnetFundCoins, "10000000000000000uluna,1000000000000uusd", "Coins minted to each funded account")
 }
 
 func queryCommand(basicMgr module.BasicManager) *cobra.Command {
@@ -376,6 +400,62 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	)
 
 	return app
+}
+
+// newTestnetApp creates the app for the in-place-testnet command and rewrites
+// its state so that the local validator controls the network.
+func (a appCreator) newTestnetApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	terraApp, ok := a.newApp(logger, db, traceStore, appOpts).(*terraapp.TerraApp)
+	if !ok {
+		panic("app created from newApp is not of type *terraapp.TerraApp")
+	}
+
+	newValAddr, ok := appOpts.Get(server.KeyNewValAddr).(cmtbytes.HexBytes)
+	if !ok {
+		panic("newValAddr is not of type bytes.HexBytes")
+	}
+	newValPubKey, ok := appOpts.Get(server.KeyUserPubKey).(cmtcrypto.PubKey)
+	if !ok {
+		panic("newValPubKey is not of type crypto.PubKey")
+	}
+	newOperatorAddress, ok := appOpts.Get(server.KeyNewOpAddr).(string)
+	if !ok {
+		panic("newOperatorAddress is not of type string")
+	}
+	newChainID, ok := appOpts.Get(server.KeyNewChainID).(string)
+	if !ok {
+		panic("newChainID is not of type string")
+	}
+
+	fundCoins, err := sdk.ParseCoinsNormalized(cast.ToString(appOpts.Get(flagTestnetFundCoins)))
+	if err != nil {
+		panic(fmt.Errorf("invalid --%s: %w", flagTestnetFundCoins, err))
+	}
+	var fundAccounts []sdk.AccAddress
+	for _, addr := range cast.ToStringSlice(appOpts.Get(flagTestnetFundAccounts)) {
+		acc, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			panic(fmt.Errorf("invalid --%s entry %q: %w", flagTestnetFundAccounts, addr, err))
+		}
+		fundAccounts = append(fundAccounts, acc)
+	}
+
+	terraApp, err = terraapp.InitTerraAppForTestnet(terraApp, terraapp.TestnetOptions{
+		NewChainID:            newChainID,
+		NewValAddr:            newValAddr,
+		NewValPubKey:          newValPubKey,
+		NewOperatorAddress:    newOperatorAddress,
+		UpgradeToTrigger:      cast.ToString(appOpts.Get(server.KeyTriggerTestnetUpgrade)),
+		VotingPeriod:          cast.ToDuration(appOpts.Get(flagTestnetVotingPeriod)),
+		ExpeditedVotingPeriod: cast.ToDuration(appOpts.Get(flagTestnetExpeditedVotingPeriod)),
+		FundAccounts:          fundAccounts,
+		FundCoins:             fundCoins,
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to initialize in-place testnet: %w", err))
+	}
+
+	return terraApp
 }
 
 func (a appCreator) appExport(

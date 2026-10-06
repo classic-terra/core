@@ -13,6 +13,9 @@ HTTPS_GIT := https://github.com/classic-terra/core.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+# private modules for release builds (e.g. security forks); forwards the SSH agent only when set
+GOPRIVATE ?= $(shell go env GOPRIVATE)
+DOCKER_PRIVATE_ARGS := $(if $(GOPRIVATE),--build-arg GOPRIVATE=$(GOPRIVATE) --ssh default)
 
 #TESTNET PARAMETERS
 TESTNET_NVAL := $(if $(TESTNET_NVAL),$(TESTNET_NVAL),7)
@@ -151,6 +154,7 @@ build-release-amd64: go.sum
     --build-arg BUILDPLATFORM=linux/amd64 \
     --build-arg GOOS=linux \
     --build-arg GOARCH=amd64 \
+		$(DOCKER_PRIVATE_ARGS) \
 		-t core:local-amd64 \
 		--load \
 		-f Dockerfile .
@@ -172,6 +176,7 @@ build-release-arm64: go.sum
     --build-arg BUILDPLATFORM=linux/arm64 \
     --build-arg GOOS=linux \
     --build-arg GOARCH=arm64 \
+		$(DOCKER_PRIVATE_ARGS) \
 		-t core:local-arm64 \
 		--load \
 		-f Dockerfile .

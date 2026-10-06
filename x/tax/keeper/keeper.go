@@ -158,7 +158,8 @@ func (k Keeper) GetGasPriceForDenom(ctx sdk.Context, denom string) sdkmath.Legac
 }
 
 func (k Keeper) IsReverseCharge(ctx sdk.Context, emit bool) bool {
-	if !ctx.Value(types.ContextKeyTaxReverseCharge).(bool) {
+	reverseCharge, ok := ctx.Value(types.ContextKeyTaxReverseCharge).(bool)
+	if !ok || !reverseCharge {
 		if emit {
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(

@@ -59,3 +59,47 @@ func TestComputeTaxes_SkipBondDenom(t *testing.T) {
 	taxes := ComputeTaxes(ctx, principal, sdkmath.LegacyNewDecWithPrec(1, 2), false, mockCaps{}) // 1%
 	require.True(t, taxes.Empty(), "bond denom must be skipped")
 }
+
+// TestCommunityTaxAdjustment covers the adjusted community-tax rate used by the
+// tax splits. The divisor is communityTax*(1-oracleSplitRate), which is zero
+// when communityTax == 1.0 and oracleSplitRate == 0 — both governance-settable
+// parameters — and previously caused a decimal division-by-zero panic inside
+// every taxable transaction.
+func TestCommunityTaxAdjustment(t *testing.T) {
+	one := sdkmath.LegacyOneDec()
+	zero := sdkmath.LegacyZeroDec()
+
+	t.Run("zero community tax returns zero", func(t *testing.T) {
+		require.True(t, CommunityTaxAdjustment(zero, sdkmath.LegacyNewDecWithPrec(2, 1)).IsZero())
+	})
+
+	t.Run("zero oracle split yields zero adjustment (original semantics)", func(t *testing.T) {
+		communityTax := sdkmath.LegacyNewDecWithPrec(2, 2) // 0.02
+		// Original expression: ct*(osr/denominator) = ct*(0/(1-ct)) = 0.
+		require.True(t, CommunityTaxAdjustment(communityTax, zero).IsZero())
+	})
+
+	t.Run("well-known values match hand-computed result", func(t *testing.T) {
+		communityTax := sdkmath.LegacyNewDecWithPrec(2, 2) // 0.02
+		oracleSplit := sdkmath.LegacyNewDecWithPrec(5, 1)  // 0.5
+		// 0.02*0.5 / (0.02*0.5 + 1 - 0.02) = 0.01 / 0.99
+		want := sdkmath.LegacyNewDecWithPrec(1, 2).Quo(sdkmath.LegacyNewDecWithPrec(99, 2))
+		got := CommunityTaxAdjustment(communityTax, oracleSplit)
+		require.True(t, got.Equal(want), "got %s want %s", got, want)
+	})
+
+	t.Run("community tax of one with zero oracle split does not panic", func(t *testing.T) {
+		require.NotPanics(t, func() {
+			got := CommunityTaxAdjustment(one, zero)
+			require.True(t, got.Equal(one))
+		})
+	})
+
+	t.Run("community tax of one with positive oracle split does not panic", func(t *testing.T) {
+		require.NotPanics(t, func() {
+			// numerator = 1*0.5 = 0.5, denominator = 0.5 + 1 - 1 = 0.5 → 1.0
+			got := CommunityTaxAdjustment(one, sdkmath.LegacyNewDecWithPrec(5, 1))
+			require.True(t, got.Equal(one))
+		})
+	})
+}

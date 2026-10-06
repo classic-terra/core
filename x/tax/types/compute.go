@@ -56,3 +56,26 @@ func ComputeTaxes(ctx sdk.Context, principal sdk.Coins, taxRate sdkmath.LegacyDe
 
 	return taxes
 }
+
+// CommunityTaxAdjustment returns the adjusted community-tax rate applied to the
+// distribution delta of the tax splits, so the community pool share is computed
+// only on the portion not already earmarked for the oracle split.
+//
+//	applyCommunityTax = communityTax * oracleSplitRate / (communityTax*oracleSplitRate + 1 - communityTax)
+//
+// The divisor communityTax*(1-oracleSplitRate) is zero when communityTax == 1.0
+// and oracleSplitRate == 0 (both governance-settable parameters), which would
+// panic on decimal division inside every taxable transaction. In that
+// configuration, and whenever the divisor is non-positive, no adjustment is
+// applied and the original communityTax is returned.
+func CommunityTaxAdjustment(communityTax, oracleSplitRate sdkmath.LegacyDec) sdkmath.LegacyDec {
+	denominator := communityTax.Mul(oracleSplitRate).Add(sdkmath.LegacyOneDec()).Sub(communityTax)
+	if !denominator.IsPositive() {
+		return communityTax
+	}
+
+	// Preserve the original operation order: LegacyDec rounds on every
+	// operation, so (ct*osr)/denominator would round differently than
+	// ct*(osr/denominator) and change split amounts in the last decimals.
+	return communityTax.Mul(oracleSplitRate.Quo(denominator))
+}

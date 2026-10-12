@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/tx v1.1.0
 	cosmossdk.io/x/upgrade v0.2.0
 	github.com/CosmWasm/wasmd v0.61.15
-	github.com/CosmWasm/wasmvm/v3 v3.0.8
+	github.com/CosmWasm/wasmvm/v3 v3.0.9
 	github.com/cometbft/cometbft v0.38.21
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.53.6
@@ -266,5 +266,4 @@ replace (
 	github.com/syndtr/goleveldb => github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121
 	go.etcd.io/bbolt => go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
-
 )

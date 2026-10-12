@@ -77,7 +77,7 @@ jobs:
 
             # 8. Upload Docker image as artifact
             - name: Upload Docker image artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: terra-e2e-image
                   path: /tmp/terra-e2e-image.tar

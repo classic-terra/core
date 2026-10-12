@@ -43,7 +43,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	taxCap := k.UpdateTaxCap(ctx)
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypePolicyUpdate,
+		sdk.NewEvent(
+			types.EventTypePolicyUpdate,
 			sdk.NewAttribute(types.AttributeKeyTaxRate, taxRate.String()),
 			sdk.NewAttribute(types.AttributeKeyRewardWeight, rewardWeight.String()),
 			sdk.NewAttribute(types.AttributeKeyTaxCap, taxCap.String()),

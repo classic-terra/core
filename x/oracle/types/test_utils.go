@@ -132,12 +132,14 @@ func (v MockValidator) GetTokens() math.Int {
 func (v MockValidator) GetBondedTokens() math.Int {
 	return sdk.TokensFromConsensusPower(v.power, sdk.DefaultPowerReduction)
 }
-func (v MockValidator) GetConsensusPower(_ math.Int) int64             { return v.power }
-func (v *MockValidator) SetConsensusPower(power int64)                 { v.power = power }
-func (v MockValidator) GetCommission() math.LegacyDec                  { return math.LegacyZeroDec() }
-func (v MockValidator) GetMinSelfDelegation() math.Int                 { return math.OneInt() }
-func (v MockValidator) GetDelegatorShares() math.LegacyDec             { return math.LegacyNewDec(v.power) }
+func (v MockValidator) GetConsensusPower(_ math.Int) int64 { return v.power }
+func (v *MockValidator) SetConsensusPower(power int64)     { v.power = power }
+func (v MockValidator) GetCommission() math.LegacyDec      { return math.LegacyZeroDec() }
+func (v MockValidator) GetMinSelfDelegation() math.Int     { return math.OneInt() }
+func (v MockValidator) GetDelegatorShares() math.LegacyDec { return math.LegacyNewDec(v.power) }
+
 func (v MockValidator) TokensFromShares(math.LegacyDec) math.LegacyDec { return math.LegacyZeroDec() }
+
 func (v MockValidator) TokensFromSharesTruncated(math.LegacyDec) math.LegacyDec {
 	return math.LegacyZeroDec()
 }

@@ -136,7 +136,8 @@ func CreateTestInput(t *testing.T) TestInput {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	taxexemptionKeeper := NewKeeper(appCodec,
+	taxexemptionKeeper := NewKeeper(
+		appCodec,
 		keyTaxExemption, paramsKeeper.Subspace(types.ModuleName),
 		accountKeeper,
 		string(accountKeeper.GetModuleAddress(govtypes.ModuleName)),

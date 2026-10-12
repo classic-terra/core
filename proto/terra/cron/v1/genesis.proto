@@ -1,0 +1,13 @@
+syntax = "proto3";
+package terra.cron.v1;
+
+import "gogoproto/gogo.proto";
+import "terra/cron/v1/params.proto";
+import "terra/cron/v1/schedule.proto";
+
+option go_package = "github.com/classic-terra/core/v4/x/cron/types";
+
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated Schedule schedule_list = 2 [(gogoproto.nullable) = false];
+}

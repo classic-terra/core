@@ -251,43 +251,44 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 
 		// Execute test with retries
 		var taxResp TaxComputeResponse
-		s.Eventually(func() bool {
-			// Resolve REST API host:port from container mapping
-			hostPort, err := node.GetHostPort("1317/tcp")
-			if err != nil {
-				s.Suite.T().Logf("Failed to get REST port: %v", err)
-				return false
-			}
-			// Make API request
-			reqBody, err := json.Marshal(req)
-			if err != nil {
-				s.Suite.T().Logf("Failed to marshal request: %v", err)
-				return false
-			}
+		s.Eventually(
+			func() bool {
+				// Resolve REST API host:port from container mapping
+				hostPort, err := node.GetHostPort("1317/tcp")
+				if err != nil {
+					s.Suite.T().Logf("Failed to get REST port: %v", err)
+					return false
+				}
+				// Make API request
+				reqBody, err := json.Marshal(req)
+				if err != nil {
+					s.Suite.T().Logf("Failed to marshal request: %v", err)
+					return false
+				}
 
-			// Create API client
-			apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
+				// Create API client
+				apiClient := util.NewAPIClient(fmt.Sprintf("http://%s", hostPort))
 
-			resp, err := apiClient.PostJSON("/terra/tx/v1beta1/compute_tax", reqBody)
-			if err != nil {
-				s.Suite.T().Logf("API request failed: %v", err)
-				return false
-			}
+				resp, err := apiClient.PostJSON("/terra/tx/v1beta1/compute_tax", reqBody)
+				if err != nil {
+					s.Suite.T().Logf("API request failed: %v", err)
+					return false
+				}
 
-			// Parse response
-			err = util.UnmarshalResponse(resp, &taxResp)
-			if err != nil {
-				s.Suite.T().Logf("Failed to unmarshal response: %v", err)
-				return false
-			}
+				// Parse response
+				err = util.UnmarshalResponse(resp, &taxResp)
+				if err != nil {
+					s.Suite.T().Logf("Failed to unmarshal response: %v", err)
+					return false
+				}
 
-			// Verify endpoint responds without error (this tests against regression from PR #561)
-			// Tax amount might be zero if addresses are exempted or due to other factors
-			// The main goal is ensuring the endpoint doesn't panic or return errors
-			s.Suite.T().Logf("Tax computation endpoint responded successfully with %d tax entries", len(taxResp.TaxAmount))
+				// Verify endpoint responds without error (this tests against regression from PR #561)
+				// Tax amount might be zero if addresses are exempted or due to other factors
+				// The main goal is ensuring the endpoint doesn't panic or return errors
+				s.Suite.T().Logf("Tax computation endpoint responded successfully with %d tax entries", len(taxResp.TaxAmount))
 
-			return true
-		},
+				return true
+			},
 			30*time.Second, // timeout
 			1*time.Second,  // interval
 		)
@@ -376,25 +377,26 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		// First, query the list of all signing infos to get a valid terravalcons address
 		signingInfosPath := "/cosmos/slashing/v1beta1/signing_infos"
 		var signingInfosResp SigningInfosResponse
-		s.Eventually(func() bool {
-			resp, err := apiClient.GetWithHeaders(signingInfosPath, emptyHeaders)
-			if err != nil {
-				s.Suite.T().Logf("Failed to query signing infos: %v", err)
-				return false
-			}
-			if resp.StatusCode != 200 {
-				s.Suite.T().Logf("Unexpected status code for signing infos: %d", resp.StatusCode)
-				return false
-			}
+		s.Eventually(
+			func() bool {
+				resp, err := apiClient.GetWithHeaders(signingInfosPath, emptyHeaders)
+				if err != nil {
+					s.Suite.T().Logf("Failed to query signing infos: %v", err)
+					return false
+				}
+				if resp.StatusCode != 200 {
+					s.Suite.T().Logf("Unexpected status code for signing infos: %d", resp.StatusCode)
+					return false
+				}
 
-			err = util.UnmarshalResponse(resp, &signingInfosResp)
-			if err != nil {
-				s.Suite.T().Logf("Failed to unmarshal signing infos response: %v", err)
-				return false
-			}
+				err = util.UnmarshalResponse(resp, &signingInfosResp)
+				if err != nil {
+					s.Suite.T().Logf("Failed to unmarshal signing infos response: %v", err)
+					return false
+				}
 
-			return len(signingInfosResp.Info) > 0
-		},
+				return len(signingInfosResp.Info) > 0
+			},
 			30*time.Second,
 			1*time.Second,
 		)
@@ -462,28 +464,29 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 
 		// Query transactions by sender address using events filter
 		var txsResp TxsEventResponse
-		s.Eventually(func() bool {
-			// URL encode the query - the sender is txTestSender
-			txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?query=message.sender='%s'", txTestSender)
-			resp, err := apiClient.GetWithHeaders(txQueryPath, emptyHeaders)
-			if err != nil {
-				s.Suite.T().Logf("Failed to query txs: %v", err)
-				return false
-			}
-			if resp.StatusCode != 200 {
-				s.Suite.T().Logf("Unexpected status code for txs query: %d", resp.StatusCode)
-				return false
-			}
+		s.Eventually(
+			func() bool {
+				// URL encode the query - the sender is txTestSender
+				txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?query=message.sender='%s'", txTestSender)
+				resp, err := apiClient.GetWithHeaders(txQueryPath, emptyHeaders)
+				if err != nil {
+					s.Suite.T().Logf("Failed to query txs: %v", err)
+					return false
+				}
+				if resp.StatusCode != 200 {
+					s.Suite.T().Logf("Unexpected status code for txs query: %d", resp.StatusCode)
+					return false
+				}
 
-			err = util.UnmarshalResponse(resp, &txsResp)
-			if err != nil {
-				s.Suite.T().Logf("Failed to unmarshal txs response: %v", err)
-				return false
-			}
+				err = util.UnmarshalResponse(resp, &txsResp)
+				if err != nil {
+					s.Suite.T().Logf("Failed to unmarshal txs response: %v", err)
+					return false
+				}
 
-			// Should have at least one transaction from our BankSend
-			return len(txsResp.TxResponses) > 0
-		},
+				// Should have at least one transaction from our BankSend
+				return len(txsResp.TxResponses) > 0
+			},
 			30*time.Second,
 			1*time.Second,
 		)
@@ -539,26 +542,27 @@ func (s *IntegrationTestSuite) TestAPIRegression() {
 		// Query transactions by sender to get any wasm-related txs if available
 		// This validates the middleware handles various tx types including potential wasm txs
 		var txsResp TxsEventResponse
-		s.Eventually(func() bool {
-			txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?query=message.sender='%s'", wasmSender)
-			resp, err := apiClient.GetWithHeaders(txQueryPath, emptyHeaders)
-			if err != nil {
-				s.Suite.T().Logf("Failed to query txs: %v", err)
-				return false
-			}
-			if resp.StatusCode != 200 {
-				s.Suite.T().Logf("Unexpected status code: %d", resp.StatusCode)
-				return false
-			}
+		s.Eventually(
+			func() bool {
+				txQueryPath := fmt.Sprintf("/cosmos/tx/v1beta1/txs?query=message.sender='%s'", wasmSender)
+				resp, err := apiClient.GetWithHeaders(txQueryPath, emptyHeaders)
+				if err != nil {
+					s.Suite.T().Logf("Failed to query txs: %v", err)
+					return false
+				}
+				if resp.StatusCode != 200 {
+					s.Suite.T().Logf("Unexpected status code: %d", resp.StatusCode)
+					return false
+				}
 
-			err = util.UnmarshalResponse(resp, &txsResp)
-			if err != nil {
-				s.Suite.T().Logf("Failed to unmarshal response: %v", err)
-				return false
-			}
+				err = util.UnmarshalResponse(resp, &txsResp)
+				if err != nil {
+					s.Suite.T().Logf("Failed to unmarshal response: %v", err)
+					return false
+				}
 
-			return true
-		},
+				return true
+			},
 			30*time.Second,
 			1*time.Second,
 		)

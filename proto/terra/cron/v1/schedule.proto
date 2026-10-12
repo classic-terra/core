@@ -1,0 +1,30 @@
+syntax = "proto3";
+package terra.cron.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/classic-terra/core/v4/x/cron/types";
+
+enum ExecutionStage {
+  EXECUTION_STAGE_END_BLOCKER = 0;
+  EXECUTION_STAGE_BEGIN_BLOCKER = 1;
+}
+
+message Schedule {
+  string name = 1;
+  uint64 period = 2;
+  repeated MsgExecuteContract msgs = 3 [(gogoproto.nullable) = false];
+  uint64 last_execute_height = 4;
+  ExecutionStage execution_stage = 5;
+  uint64 last_run_height = 6;
+  string last_execution_error = 7;
+}
+
+message MsgExecuteContract {
+  string contract = 1;
+  string msg = 2;
+}
+
+message ScheduleCount {
+  int32 count = 1;
+}

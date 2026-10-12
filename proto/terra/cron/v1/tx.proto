@@ -1,0 +1,52 @@
+syntax = "proto3";
+package terra.cron.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "terra/cron/v1/params.proto";
+import "terra/cron/v1/schedule.proto";
+
+option go_package = "github.com/classic-terra/core/v4/x/cron/types";
+
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc AddSchedule(MsgAddSchedule) returns (MsgAddScheduleResponse);
+  rpc RemoveSchedule(MsgRemoveSchedule) returns (MsgRemoveScheduleResponse);
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+}
+
+message MsgAddSchedule {
+  option (amino.name) = "cron/MsgAddSchedule";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string name = 2;
+  uint64 period = 3;
+  repeated MsgExecuteContract msgs = 4 [(gogoproto.nullable) = false];
+  ExecutionStage execution_stage = 5;
+}
+
+message MsgAddScheduleResponse {}
+
+message MsgRemoveSchedule {
+  option (amino.name) = "cron/MsgRemoveSchedule";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string name = 2;
+}
+
+message MsgRemoveScheduleResponse {}
+
+message MsgUpdateParams {
+  option (amino.name) = "cron/MsgUpdateParams";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message MsgUpdateParamsResponse {}

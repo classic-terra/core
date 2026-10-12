@@ -50,19 +50,22 @@ func WeightedOperations(
 		weightMsgAggregateExchangeRateVote    int
 		weightMsgDelegateFeedConsent          int
 	)
-	appParams.GetOrGenerate(OpWeightMsgAggregateExchangeRatePrevote, &weightMsgAggregateExchangeRatePrevote, nil,
+	appParams.GetOrGenerate(
+		OpWeightMsgAggregateExchangeRatePrevote, &weightMsgAggregateExchangeRatePrevote, nil,
 		func(*rand.Rand) {
 			weightMsgAggregateExchangeRatePrevote = banksim.DefaultWeightMsgSend * 2
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgAggregateExchangeRateVote, &weightMsgAggregateExchangeRateVote, nil,
+	appParams.GetOrGenerate(
+		OpWeightMsgAggregateExchangeRateVote, &weightMsgAggregateExchangeRateVote, nil,
 		func(*rand.Rand) {
 			weightMsgAggregateExchangeRateVote = banksim.DefaultWeightMsgSend * 2
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgDelegateFeedConsent, &weightMsgDelegateFeedConsent, nil,
+	appParams.GetOrGenerate(
+		OpWeightMsgDelegateFeedConsent, &weightMsgDelegateFeedConsent, nil,
 		func(*rand.Rand) {
 			weightMsgDelegateFeedConsent = distrsim.DefaultWeightMsgSetWithdrawAddress
 		},

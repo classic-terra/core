@@ -63,7 +63,7 @@ jobs:
 
             # 7. Build E2E Docker image and push to registry
             - name: Build and push e2e image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v7
               with:
                   file: ./tests/e2e/e2e.Dockerfile
                   context: .

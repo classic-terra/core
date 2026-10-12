@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -26,8 +27,9 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&LazyGradedVestingAccount{},
 	)
 
+	// The account store decodes into sdk.AccountI, not the deprecated authtypes.AccountI.
 	registry.RegisterImplementations(
-		(*authtypes.AccountI)(nil),
+		(*sdk.AccountI)(nil),
 		&vestingtypes.BaseVestingAccount{},
 		&LazyGradedVestingAccount{},
 	)

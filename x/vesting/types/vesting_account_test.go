@@ -346,12 +346,11 @@ func TestBaseVestingAccountMarshal(t *testing.T) {
 	bz, err := cdc.MarshalInterface(acc)
 	require.Nil(t, err)
 
-	var acc2 authtypes.AccountI
-	err = cdc.UnmarshalInterface(bz, &acc2)
-
+	var stored sdk.AccountI
+	err = cdc.UnmarshalInterface(bz, &stored)
 	require.Nil(t, err)
-	require.IsType(t, &authvestingtypes.BaseVestingAccount{}, acc2)
-	require.Equal(t, acc.String(), acc2.String())
+	require.IsType(t, &authvestingtypes.BaseVestingAccount{}, stored)
+	require.Equal(t, acc.String(), stored.String())
 }
 
 func TestLazyGradedVestingAccountMarshal(t *testing.T) {
@@ -378,10 +377,9 @@ func TestLazyGradedVestingAccountMarshal(t *testing.T) {
 	bz, err := cdc.MarshalInterface(acc)
 	require.Nil(t, err)
 
-	var acc2 authtypes.AccountI
-	err = cdc.UnmarshalInterface(bz, &acc2)
-
+	var stored sdk.AccountI
+	err = cdc.UnmarshalInterface(bz, &stored)
 	require.Nil(t, err)
-	require.IsType(t, &types.LazyGradedVestingAccount{}, acc2)
-	require.Equal(t, acc.String(), acc2.String())
+	require.IsType(t, &types.LazyGradedVestingAccount{}, stored)
+	require.Equal(t, acc.String(), stored.String())
 }

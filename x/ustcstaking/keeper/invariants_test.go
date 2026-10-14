@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -21,6 +22,13 @@ func TestPrincipalInvariantMatchesPool(t *testing.T) {
 	message, broken := principalInvariant(keeper)(ctx)
 
 	require.False(t, broken, message)
+}
+
+func TestPrincipalInvariantAllowsSurplus(t *testing.T) {
+	ctx, k := newKeeperTest(t)
+	k.bankKeeper.(*recordingBankKeeper).principalPoolBalance = sdk.NewInt64Coin(types.BondDenom, 1)
+	msg, broken := principalInvariant(k)(ctx)
+	require.False(t, broken, msg)
 }
 
 func TestPrincipalInvariantReportsMismatch(t *testing.T) {
@@ -117,6 +125,22 @@ func TestRewardSolvencyInvariantRejectsActiveRewardDebtAboveEntitlement(t *testi
 
 type invariantRegistry struct {
 	routes map[string]sdk.Invariant
+}
+
+type noBalanceScanBank struct{ *recordingBankKeeper }
+
+func (noBalanceScanBank) GetAllBalances(_ context.Context, _ sdk.AccAddress) sdk.Coins {
+	panic("unexpected denomination scan")
+}
+
+func TestValidateStateDoesNotScanForeignDenominations(t *testing.T) {
+	ctx, k := newKeeperTest(t)
+	k.bankKeeper = noBalanceScanBank{k.bankKeeper.(*recordingBankKeeper)}
+	require.NotPanics(t, func() {
+		require.NoError(t, k.ValidateState(ctx))
+		_, err := NewQueryServerImpl(k).ValidateState(ctx, &types.QueryValidateStateRequest{})
+		require.NoError(t, err)
+	})
 }
 
 func (r *invariantRegistry) RegisterRoute(_ string, route string, invariant sdk.Invariant) {

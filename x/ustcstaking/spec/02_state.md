@@ -26,17 +26,18 @@ Storage prefixes:
 
 ```text
 0x10<position_id>           -> Position
-0x11<owner><position_id>    -> owner lookup namespace
+0x11<len(owner)><owner><position_id> -> owner lookup namespace
 0x12<unbonding...>           -> unbonding lookup namespace
 0x13                        -> next position ID
 ```
 
-The owner and unbonding namespaces are reserved for indexed access. Current owner queries scan position state and filter by owner; the position key is authoritative.
+The owner index is keyed by a one-byte address-length prefix, owner bytes, and an eight-byte big-endian position ID. Queries use this index; primary position records remain authoritative. Index entries and the reserved-claimable aggregate are rebuilt from primary positions during genesis import.
 
 ## Reward state
 
 ```text
 0x20 -> RewardState
+0x21 -> derived reserved integer claimable rewards
 ```
 
 `RewardState` contains:
@@ -53,3 +54,7 @@ The reward index is unchanged when there are no active shares; funding without a
 ```
 
 `Params` contains the fixed bond denomination, lock tiers, governance authority, and pause flag. Protobuf field 4 and the removed `funding_authority` name are reserved. Genesis validation requires non-negative accounting values, valid owners, valid coin denominations, unique position IDs, and equality between active position shares and `RewardState.total_shares`.
+
+Custody validation requires USTC balances to cover liabilities; unsolicited USTC surplus and unrelated denominations never create rewards. Active-share ledger equality remains exact. The reserved-rewards aggregate equals all integer claimables, including frozen claims on withdrawn positions. Governance may return only unreserved reward-pool surplus when total active shares are zero.
+
+The paginated validate-state query returns USTC collateral balances only. It does not enumerate inert foreign-denomination coins; use the bank module's paginated balance queries to inspect those separately.

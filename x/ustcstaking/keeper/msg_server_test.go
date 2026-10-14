@@ -200,7 +200,7 @@ func TestFundRewardsRequiresGovernanceAuthority(t *testing.T) {
 
 func TestFundRewardsEventIdentifiesCommunityPool(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
-	authority := testAddress()
+	authority := keeper.GetAuthority()
 	configureKeeper(t, ctx, keeper, authority)
 	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.NewInt(100)})
 	ctx = ctx.WithEventManager(sdk.NewEventManager())

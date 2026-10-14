@@ -60,13 +60,17 @@ type MsgFundRewards struct {
 }
 ```
 
-Requires the configured governance authority. Debits the distribution community pool, transfers the existing funds into the reward pool, and increases the reward index across active shares. Users stake directly through `MsgStake`; no contract handles principal.
+Requires the immutable governance module authority. Debits the distribution community pool, transfers the existing funds into the reward pool, and increases the reward index across active shares. Users stake directly through `MsgStake`; no contract handles principal.
+
+### `MsgReturnRewardDust`
+
+Requires the immutable governance module authority and a positive `uusd` amount. The amount must not exceed reward-pool balance minus reserved integer claims, and total active shares must be zero. Funds return to the distribution community pool. This operation is allowed while paused.
 
 ## Authority messages
 
 ### `MsgUpdateParams`
 
-Requires the configured governance authority and replaces the complete validated parameter set. This is the control used to configure tiers or pause/resume operations.
+Requires the immutable governance module authority and replaces the complete validated parameter set. This is the control used to configure tiers or pause/resume operations.
 
 ## Queries
 
@@ -78,3 +82,5 @@ The module exposes:
 * `Query/Params()`.
 
 REST paths are rooted at `/terra/ustcstaking/v1/` as defined in the protobuf query service.
+
+Fully settled withdrawn positions are pruned from the primary store and owner index. Withdrawn positions with unpaid rewards remain claimable; after their final claim they are pruned. IDs are never reused, and queries or repeat actions on pruned IDs return not-found.

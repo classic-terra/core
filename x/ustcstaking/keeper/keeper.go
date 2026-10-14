@@ -8,6 +8,8 @@ import (
 	"github.com/classic-terra/core/v4/x/ustcstaking/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type Keeper struct {
@@ -23,6 +25,11 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper t
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// GetAuthority is immutable; persisted params cannot delegate governance powers.
+func (k Keeper) GetAuthority() string {
+	return authtypes.NewModuleAddress(govtypes.ModuleName).String()
 }
 
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {

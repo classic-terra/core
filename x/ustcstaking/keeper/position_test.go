@@ -18,7 +18,7 @@ func TestSetPositionCreatesOwnerIndex(t *testing.T) {
 
 	require.NoError(t, err)
 	index := prefix.NewStore(ctx.KVStore(keeper.storeKey), types.OwnerPositionKeyPrefix)
-	ownerStore := prefix.NewStore(index, mustAccAddress(t, owner).Bytes())
+	ownerStore := prefix.NewStore(index, types.OwnerPositionPrefix(mustAccAddress(t, owner)))
 	require.NotNil(t, ownerStore.Get(sdk.Uint64ToBigEndian(1)))
 }
 
@@ -32,7 +32,7 @@ func TestSetPositionUpdateDoesNotDuplicateOwnerIndex(t *testing.T) {
 	require.NoError(t, keeper.SetPosition(ctx, position))
 
 	index := prefix.NewStore(ctx.KVStore(keeper.storeKey), types.OwnerPositionKeyPrefix)
-	ownerStore := prefix.NewStore(index, mustAccAddress(t, owner).Bytes())
+	ownerStore := prefix.NewStore(index, types.OwnerPositionPrefix(mustAccAddress(t, owner)))
 	iterator := ownerStore.Iterator(nil, nil)
 	defer iterator.Close()
 	count := 0
@@ -63,7 +63,7 @@ func TestDeletePositionRemovesOwnerIndex(t *testing.T) {
 
 	require.NoError(t, keeper.DeletePosition(ctx, 1))
 	index := prefix.NewStore(ctx.KVStore(keeper.storeKey), types.OwnerPositionKeyPrefix)
-	ownerStore := prefix.NewStore(index, mustAccAddress(t, owner).Bytes())
+	ownerStore := prefix.NewStore(index, types.OwnerPositionPrefix(mustAccAddress(t, owner)))
 	require.Nil(t, ownerStore.Get(sdk.Uint64ToBigEndian(1)))
 }
 

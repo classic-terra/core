@@ -28,9 +28,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 		}
 	}
 	k.SetNextPositionID(ctx, data.NextPositionId)
-	if err := k.ValidateState(ctx); err != nil {
-		panic(fmt.Sprintf("invalid %s state: %s", types.ModuleName, err))
+	if err := k.RebuildDerivedState(ctx); err != nil {
+		panic(fmt.Sprintf("invalid %s derived state: %s", types.ModuleName, err))
 	}
+	// Bank-backed validation runs after all genesis modules initialize, or after
+	// upgrade migrations, so incidental balances cannot panic during activation.
 }
 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {

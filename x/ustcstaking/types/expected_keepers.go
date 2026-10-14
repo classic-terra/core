@@ -15,4 +15,5 @@ type BankKeeper interface {
 
 type CommunityPoolKeeper interface {
 	DistributeFromCommunityPoolToModule(ctx context.Context, amount sdk.Coins, recipientModule string) error
+	ReturnRewardDustToCommunityPool(ctx context.Context, amount sdk.Coins) error
 }

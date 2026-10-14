@@ -39,7 +39,7 @@ func (q queryServer) PositionsByOwner(goCtx context.Context, req *types.QueryPos
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	index := prefix.NewStore(ctx.KVStore(q.storeKey), types.OwnerPositionKeyPrefix)
 	owner, _ := sdk.AccAddressFromBech32(req.Owner)
-	store := prefix.NewStore(index, owner.Bytes())
+	store := prefix.NewStore(index, types.OwnerPositionPrefix(owner))
 	positions := make([]types.Position, 0)
 	pageRes, err := query.Paginate(store, req.Pagination, func(key []byte, _ []byte) error {
 		if len(key) != 8 {
@@ -96,8 +96,8 @@ func (q queryServer) ValidateState(goCtx context.Context, req *types.QueryValida
 
 	response := &types.QueryValidateStateResponse{
 		Valid: true, PrincipalLiability: "0", ActiveShares: "0", RewardLiability: "0",
-		PrincipalPoolBalances: q.bankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(types.PrincipalPoolName)),
-		RewardPoolBalances:    q.bankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(types.RewardPoolName)),
+		PrincipalPoolBalances: sdk.NewCoins(q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.PrincipalPoolName), types.BondDenom)),
+		RewardPoolBalances:    sdk.NewCoins(q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.RewardPoolName), types.BondDenom)),
 		RewardState:           q.GetRewardState(ctx),
 	}
 	principalLiability, activeShares, rewardLiability := math.ZeroInt(), math.ZeroInt(), math.ZeroInt()

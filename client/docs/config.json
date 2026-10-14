@@ -198,6 +198,18 @@
           "Params": "IBCTransferParams"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/terra/ustcstaking/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "USTCStakingParams",
+          "Position": "USTCStakingPosition",
+          "PositionsByOwner": "USTCStakingPositionsByOwner",
+          "RewardState": "USTCStakingRewardState",
+          "ValidateState": "USTCStakingValidateState"
+        }
+      }
     }
   ]
 }

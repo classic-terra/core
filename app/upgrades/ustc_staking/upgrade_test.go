@@ -20,7 +20,7 @@ import (
 )
 
 func TestUpgradeAddsOnlyUSTCStakingStore(t *testing.T) {
-	require.Equal(t, "ustc_staking", ustcstakingupgrade.UpgradeName)
+	require.Equal(t, "v14_5", ustcstakingupgrade.UpgradeName)
 	require.Equal(t, []string{ustcstakingtypes.StoreKey}, ustcstakingupgrade.Upgrade.StoreUpgrades.Added)
 	require.Empty(t, ustcstakingupgrade.Upgrade.StoreUpgrades.Deleted)
 	require.Empty(t, ustcstakingupgrade.Upgrade.StoreUpgrades.Renamed)

@@ -407,7 +407,14 @@ func (app *TerraApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	ctx.Logger().Debug("init genesis", "genesisState", genesisState)
-	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+	res, err := app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+	if err != nil {
+		return nil, err
+	}
+	if err := app.UstcStakingKeeper.ValidateState(ctx); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // LoadHeight loads a particular height

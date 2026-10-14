@@ -152,7 +152,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdraw) (*typ
 	principal := position.Principal
 	position.Principal = sdk.NewCoin(types.BondDenom, math.ZeroInt())
 	position.Status = types.PositionStatus_POSITION_STATUS_WITHDRAWN
-	if err := k.SetPosition(ctx, position); err != nil {
+	if err := k.saveOrPruneSettledPosition(ctx, position); err != nil {
 		return nil, err
 	}
 	ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeWithdraw,
@@ -213,7 +213,7 @@ func (k msgServer) ClaimRewards(goCtx context.Context, msg *types.MsgClaimReward
 		position.RewardDebt = position.Shares.ToLegacyDec().Mul(index)
 	}
 	position.ClaimableRewards = sdk.NewCoin(types.BondDenom, math.ZeroInt())
-	if err := k.SetPosition(ctx, position); err != nil {
+	if err := k.saveOrPruneSettledPosition(ctx, position); err != nil {
 		return nil, err
 	}
 	ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeClaimRewards,
@@ -230,7 +230,7 @@ func (k msgServer) FundRewards(goCtx context.Context, msg *types.MsgFundRewards)
 	if params.Paused {
 		return nil, types.ErrModulePaused
 	}
-	if msg.Authority != params.Authority {
+	if msg.Authority != k.GetAuthority() {
 		return nil, types.ErrUnauthorized
 	}
 	before := k.GetRewardState(ctx).RewardIndex
@@ -254,8 +254,7 @@ func (k msgServer) FundRewards(goCtx context.Context, msg *types.MsgFundRewards)
 
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	params := k.GetParams(ctx)
-	if msg.Authority != params.Authority {
+	if msg.Authority != k.GetAuthority() {
 		return nil, types.ErrUnauthorized
 	}
 	if err := msg.Params.Validate(); err != nil {
@@ -268,6 +267,33 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 		sdk.NewAttribute("lock_tier_count", strconv.Itoa(len(msg.Params.LockTiers))),
 	))
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (k msgServer) ReturnRewardDust(goCtx context.Context, msg *types.MsgReturnRewardDust) (*types.MsgReturnRewardDustResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Authority != k.GetAuthority() {
+		return nil, types.ErrUnauthorized
+	}
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+	state := k.GetRewardState(ctx)
+	if state.TotalShares.IsNil() || !state.TotalShares.IsZero() {
+		return nil, types.ErrInvalidRewardState.Wrap("dust cannot return while positions are active")
+	}
+	pool := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.RewardPoolName), types.BondDenom)
+	if pool.Amount.IsNil() || pool.Amount.IsNegative() {
+		return nil, types.ErrRewardPoolInsolvent
+	}
+	available := pool.Amount.Sub(k.GetReservedRewards(ctx))
+	if available.IsNegative() || available.LT(msg.Amount.Amount) {
+		return nil, types.ErrRewardPoolInsolvent.Wrap("amount exceeds unreserved reward dust")
+	}
+	if err := k.communityPoolKeeper.ReturnRewardDustToCommunityPool(ctx, sdk.NewCoins(msg.Amount)); err != nil {
+		return nil, err
+	}
+	ctx.EventManager().EmitEvent(sdk.NewEvent("ustcstaking_return_reward_dust", sdk.NewAttribute("authority", msg.Authority), sdk.NewAttribute("amount", msg.Amount.String()), sdk.NewAttribute("destination", "community_pool")))
+	return &types.MsgReturnRewardDustResponse{}, nil
 }
 
 func findLockTier(params types.Params, id uint32) (types.LockTier, bool) {

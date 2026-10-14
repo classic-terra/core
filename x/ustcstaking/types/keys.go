@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -24,21 +25,23 @@ var (
 	UnbondingKeyPrefix     = []byte{0x12}
 	NextPositionIDKey      = []byte{0x13}
 	RewardStateKey         = []byte{0x20}
+	ReservedRewardsKey     = []byte{0x21}
 	ParamsKey              = []byte{0x30}
 )
 
-const accAddressLength = 20
+func OwnerPositionPrefix(owner sdk.AccAddress) []byte {
+	return address.MustLengthPrefix(owner.Bytes())
+}
 
 func OwnerPositionKey(owner sdk.AccAddress, id uint64) []byte {
-	key := make([]byte, 0, len(owner.Bytes())+8)
-	key = append(key, owner.Bytes()...)
+	key := OwnerPositionPrefix(owner)
 	key = append(key, sdk.Uint64ToBigEndian(id)...)
 	return key
 }
 
 func OwnerFromPositionKey(key []byte) (sdk.AccAddress, uint64, error) {
-	if len(key) != accAddressLength+8 {
+	if len(key) < 10 || int(key[0])+9 != len(key) || key[0] == 0 {
 		return nil, 0, fmt.Errorf("invalid owner position key length %d", len(key))
 	}
-	return sdk.AccAddress(key[:accAddressLength]), sdk.BigEndianToUint64(key[accAddressLength:]), nil
+	return sdk.AccAddress(key[1 : len(key)-8]), sdk.BigEndianToUint64(key[len(key)-8:]), nil
 }

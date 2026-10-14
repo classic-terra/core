@@ -15,35 +15,46 @@ var (
 	_ sdk.Msg = &MsgClaimRewards{}
 	_ sdk.Msg = &MsgFundRewards{}
 	_ sdk.Msg = &MsgUpdateParams{}
+	_ sdk.Msg = &MsgReturnRewardDust{}
 )
 
-func (MsgStake) Route() string          { return RouterKey }
-func (MsgBeginUnbonding) Route() string { return RouterKey }
-func (MsgWithdraw) Route() string       { return RouterKey }
-func (MsgClaimRewards) Route() string   { return RouterKey }
-func (MsgFundRewards) Route() string    { return RouterKey }
-func (MsgUpdateParams) Route() string   { return RouterKey }
+func (MsgStake) Route() string            { return RouterKey }
+func (MsgBeginUnbonding) Route() string   { return RouterKey }
+func (MsgWithdraw) Route() string         { return RouterKey }
+func (MsgClaimRewards) Route() string     { return RouterKey }
+func (MsgFundRewards) Route() string      { return RouterKey }
+func (MsgUpdateParams) Route() string     { return RouterKey }
+func (MsgReturnRewardDust) Route() string { return RouterKey }
 
-func (MsgStake) Type() string          { return "Stake" }
-func (MsgBeginUnbonding) Type() string { return "BeginUnbonding" }
-func (MsgWithdraw) Type() string       { return "Withdraw" }
-func (MsgClaimRewards) Type() string   { return "ClaimRewards" }
-func (MsgFundRewards) Type() string    { return "FundRewards" }
-func (MsgUpdateParams) Type() string   { return "UpdateParams" }
+func (MsgStake) Type() string            { return "Stake" }
+func (MsgBeginUnbonding) Type() string   { return "BeginUnbonding" }
+func (MsgWithdraw) Type() string         { return "Withdraw" }
+func (MsgClaimRewards) Type() string     { return "ClaimRewards" }
+func (MsgFundRewards) Type() string      { return "FundRewards" }
+func (MsgUpdateParams) Type() string     { return "UpdateParams" }
+func (MsgReturnRewardDust) Type() string { return "ReturnRewardDust" }
 
-func (msg MsgStake) GetSigners() []sdk.AccAddress          { return signer(msg.Owner) }
-func (msg MsgBeginUnbonding) GetSigners() []sdk.AccAddress { return signer(msg.Owner) }
-func (msg MsgWithdraw) GetSigners() []sdk.AccAddress       { return signer(msg.Owner) }
-func (msg MsgClaimRewards) GetSigners() []sdk.AccAddress   { return signer(msg.Owner) }
-func (msg MsgFundRewards) GetSigners() []sdk.AccAddress    { return signer(msg.Authority) }
-func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress   { return signer(msg.Authority) }
+func (msg MsgStake) GetSigners() []sdk.AccAddress            { return signer(msg.Owner) }
+func (msg MsgBeginUnbonding) GetSigners() []sdk.AccAddress   { return signer(msg.Owner) }
+func (msg MsgWithdraw) GetSigners() []sdk.AccAddress         { return signer(msg.Owner) }
+func (msg MsgClaimRewards) GetSigners() []sdk.AccAddress     { return signer(msg.Owner) }
+func (msg MsgFundRewards) GetSigners() []sdk.AccAddress      { return signer(msg.Authority) }
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress     { return signer(msg.Authority) }
+func (msg MsgReturnRewardDust) GetSigners() []sdk.AccAddress { return signer(msg.Authority) }
 
-func (msg MsgStake) GetSignBytes() []byte          { return signBytes(msg) }
-func (msg MsgBeginUnbonding) GetSignBytes() []byte { return signBytes(msg) }
-func (msg MsgWithdraw) GetSignBytes() []byte       { return signBytes(msg) }
-func (msg MsgClaimRewards) GetSignBytes() []byte   { return signBytes(msg) }
-func (msg MsgFundRewards) GetSignBytes() []byte    { return signBytes(msg) }
-func (msg MsgUpdateParams) GetSignBytes() []byte   { return signBytes(msg) }
+func (msg MsgStake) GetSignBytes() []byte            { return signBytes(msg) }
+func (msg MsgBeginUnbonding) GetSignBytes() []byte   { return signBytes(msg) }
+func (msg MsgWithdraw) GetSignBytes() []byte         { return signBytes(msg) }
+func (msg MsgClaimRewards) GetSignBytes() []byte     { return signBytes(msg) }
+func (msg MsgFundRewards) GetSignBytes() []byte      { return signBytes(msg) }
+func (msg MsgUpdateParams) GetSignBytes() []byte     { return signBytes(msg) }
+func (msg MsgReturnRewardDust) GetSignBytes() []byte { return signBytes(msg) }
+func (msg MsgReturnRewardDust) ValidateBasic() error {
+	if err := validateSigner(msg.Authority); err != nil {
+		return err
+	}
+	return validateAmount(msg.Amount)
+}
 
 func (msg MsgStake) ValidateBasic() error {
 	if err := validateSigner(msg.Owner); err != nil {
@@ -110,7 +121,7 @@ func validateAmount(amount sdk.Coin) error {
 	if amount.Denom != BondDenom {
 		return ErrInvalidDenom.Wrapf("expected %s, got %s", BondDenom, amount.Denom)
 	}
-	if !amount.IsPositive() {
+	if amount.Amount.IsNil() || !amount.IsPositive() {
 		return sdkerrors.ErrInvalidCoins.Wrap("amount must be positive")
 	}
 	return nil

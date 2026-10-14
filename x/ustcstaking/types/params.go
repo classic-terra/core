@@ -51,5 +51,11 @@ func validateAuthority(value string) error {
 		return fmt.Errorf("address is empty")
 	}
 	_, err := sdk.AccAddressFromBech32(value)
-	return err
+	if err != nil {
+		return err
+	}
+	if value != authtypes.NewModuleAddress(govtypes.ModuleName).String() {
+		return fmt.Errorf("authority must be the governance module account")
+	}
+	return nil
 }

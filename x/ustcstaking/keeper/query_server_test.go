@@ -68,7 +68,7 @@ func TestQueryPositionsByOwnerRejectsIndexToMissingPosition(t *testing.T) {
 	index := prefix.NewStore(ctx.KVStore(keeper.storeKey), types.OwnerPositionKeyPrefix)
 	ownerAddress, err := sdk.AccAddressFromBech32(owner)
 	require.NoError(t, err)
-	prefix.NewStore(index, ownerAddress.Bytes()).Set(sdk.Uint64ToBigEndian(99), []byte{})
+	prefix.NewStore(index, types.OwnerPositionPrefix(ownerAddress)).Set(sdk.Uint64ToBigEndian(99), []byte{})
 	server := NewQueryServerImpl(keeper)
 
 	_, err = server.PositionsByOwner(sdk.WrapSDKContext(ctx), &types.QueryPositionsByOwnerRequest{Owner: owner})
@@ -120,6 +120,8 @@ func TestQueryValidateStateReportsValidAndCorruptState(t *testing.T) {
 	require.Empty(t, response.Pagination.NextKey)
 
 	keeper.bankKeeper.(*recordingBankKeeper).principalPoolBalance = sdk.NewCoin(types.BondDenom, math.OneInt())
+	require.NoError(t, keeper.ValidateState(ctx))
+	require.NoError(t, keeper.SetPosition(ctx, types.Position{Id: 1, Owner: testAddress(), Principal: sdk.NewInt64Coin(types.BondDenom, 2)}))
 	require.Error(t, keeper.ValidateState(ctx))
 }
 

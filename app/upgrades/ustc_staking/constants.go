@@ -7,7 +7,7 @@ import (
 	ustcstakingtypes "github.com/classic-terra/core/v4/x/ustcstaking/types"
 )
 
-const UpgradeName = "ustc_staking"
+const UpgradeName = "v14_5"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,

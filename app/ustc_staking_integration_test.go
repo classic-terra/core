@@ -383,3 +383,65 @@ func TestUSTCStakingEightUserCompleteLifecyclePreservesSupplyAndValidators(t *te
 func durationPtr(value time.Duration) *time.Duration {
 	return &value
 }
+
+func TestUSTCStakingDustReturnsSurplusPreservingRealClaims(t *testing.T) {
+	var suite helperstest.KeeperTestHelper
+	suite.SetT(t)
+	suite.Setup(t, "ustc-dust-integration")
+	k := suite.App.UstcStakingKeeper
+	params := ustcstakingtypes.DefaultParams()
+	params.LockTiers = []ustcstakingtypes.LockTier{{Id: 1, Duration: durationPtr(time.Second), Multiplier: sdkmath.LegacyOneDec()}}
+	k.SetParams(suite.Ctx, params)
+	owners := suite.TestAccs[:2]
+	for _, owner := range owners {
+		suite.FundAcc(owner, types.NewCoins(types.NewInt64Coin(ustcstakingtypes.BondDenom, 3)))
+	}
+	require.NoError(t, banktestutil.FundModuleAccount(suite.Ctx, suite.App.BankKeeper, distrtypes.ModuleName, types.NewCoins(types.NewInt64Coin(ustcstakingtypes.BondDenom, 5))))
+	fee, err := suite.App.DistrKeeper.FeePool.Get(suite.Ctx)
+	require.NoError(t, err)
+	fee.CommunityPool = types.NewDecCoinsFromCoins(types.NewInt64Coin(ustcstakingtypes.BondDenom, 5))
+	require.NoError(t, suite.App.DistrKeeper.FeePool.Set(suite.Ctx, fee))
+	supply := suite.App.BankKeeper.GetSupply(suite.Ctx, ustcstakingtypes.BondDenom)
+	server := ustcstakingkeeper.NewMsgServerImpl(k)
+	ids := make([]uint64, len(owners))
+	for i, owner := range owners {
+		response, err := server.Stake(suite.Ctx, &ustcstakingtypes.MsgStake{Owner: owner.String(), Amount: types.NewInt64Coin(ustcstakingtypes.BondDenom, 3), LockTierId: 1})
+		require.NoError(t, err)
+		ids[i] = response.PositionId
+	}
+	_, err = server.FundRewards(suite.Ctx, &ustcstakingtypes.MsgFundRewards{Authority: k.GetAuthority(), Amount: types.NewInt64Coin(ustcstakingtypes.BondDenom, 5)})
+	require.NoError(t, err)
+	for i, owner := range owners {
+		_, err = server.BeginUnbonding(suite.Ctx, &ustcstakingtypes.MsgBeginUnbonding{Owner: owner.String(), PositionId: ids[i]})
+		require.NoError(t, err)
+	}
+	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(time.Second))
+	for i, owner := range owners {
+		_, err = server.Withdraw(suite.Ctx, &ustcstakingtypes.MsgWithdraw{Owner: owner.String(), PositionId: ids[i]})
+		require.NoError(t, err)
+	}
+	require.Equal(t, sdkmath.NewInt(4), k.GetReservedRewards(suite.Ctx))
+	state := k.GetRewardState(suite.Ctx)
+	params.Paused = true
+	k.SetParams(suite.Ctx, params)
+	_, err = server.ReturnRewardDust(suite.Ctx, &ustcstakingtypes.MsgReturnRewardDust{Authority: k.GetAuthority(), Amount: types.NewInt64Coin(ustcstakingtypes.BondDenom, 2)})
+	require.Error(t, err)
+	_, err = server.ReturnRewardDust(suite.Ctx, &ustcstakingtypes.MsgReturnRewardDust{Authority: k.GetAuthority(), Amount: types.NewInt64Coin(ustcstakingtypes.BondDenom, 1)})
+	require.NoError(t, err)
+	fee, err = suite.App.DistrKeeper.FeePool.Get(suite.Ctx)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.LegacyOneDec(), fee.CommunityPool.AmountOf(ustcstakingtypes.BondDenom))
+	require.Equal(t, state, k.GetRewardState(suite.Ctx))
+	require.True(t, suite.App.BankKeeper.GetBalance(suite.Ctx, authtypes.NewModuleAddress(ustcstakingtypes.PrincipalPoolName), ustcstakingtypes.BondDenom).IsZero())
+	require.NoError(t, k.ValidateState(suite.Ctx))
+	for i, owner := range owners {
+		response, err := server.ClaimRewards(suite.Ctx, &ustcstakingtypes.MsgClaimRewards{Owner: owner.String(), PositionId: ids[i]})
+		require.NoError(t, err)
+		require.Equal(t, sdkmath.NewInt(2), response.Amount.Amount)
+		_, found := k.GetPosition(suite.Ctx, ids[i])
+		require.False(t, found)
+	}
+	require.True(t, k.GetReservedRewards(suite.Ctx).IsZero())
+	require.Equal(t, supply, suite.App.BankKeeper.GetSupply(suite.Ctx, ustcstakingtypes.BondDenom))
+	require.NoError(t, k.ValidateState(suite.Ctx))
+}

@@ -28,11 +28,16 @@ type AppModuleBasic struct{ cdc codec.Codec }
 
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper            keeper.Keeper
+	simulationKeepers simulation.Keepers
 }
 
-func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
-	return AppModule{AppModuleBasic: AppModuleBasic{cdc: cdc}, keeper: k}
+func NewAppModule(cdc codec.Codec, k keeper.Keeper, dependencies ...simulation.Keepers) AppModule {
+	result := AppModule{AppModuleBasic: AppModuleBasic{cdc: cdc}, keeper: k}
+	if len(dependencies) > 0 {
+		result.simulationKeepers = dependencies[0]
+	}
+	return result
 }
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
@@ -87,15 +92,20 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(types.DefaultGenesisState())
+	simulation.RandomizedGenesis(simState)
 }
 
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-func (AppModule) WeightedOperations(module.SimulationState) []simtypes.WeightedOperation { return nil }
-func (AppModule) IsAppModule()                                                           {}
-func (AppModule) IsOnePerModuleType()                                                    {}
+func (am AppModule) WeightedOperations(state module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(state, am.keeper, am.simulationKeepers)
+}
+func (AppModule) ProposalMsgs(module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs()
+}
+func (AppModule) IsAppModule()        {}
+func (AppModule) IsOnePerModuleType() {}
 
 func (AppModule) EndBlock(context.Context) ([]abci.ValidatorUpdate, error) { return nil, nil }

@@ -34,6 +34,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### USTC staking
+
+* (ustcstaking) #693 Add native USTC positions and governance-authorized community-pool rewards without minting or validator-consensus changes.
+* (upgrade) #693 Normalize pre-existing USTC pool accounts and reconcile their USTC balances into community-pool accounting before activation.
+* (ustcstaking) #693 Fix governance authority, length-prefix owner indexes, tolerate surplus custody balances, and prune fully settled withdrawn positions.
+* (client) #693 Add a governance-only operation to return unreserved reward-pool dust to the community pool.
+* (simulation) #693 Exercise native USTC staking lifecycle operations and community-pool proposal messages in app simulations.
+* (upgrade) #693 Rehearse activation from the pinned v4.0.1-patch.3 predecessor under the v14_5 upgrade plan name.
+* (client) #693 Reserve error code 1; USTC module error codes now start at 2 before initial activation.
+
 ### State Machine Breaking
 * (app) [#319](https://github.com/classic-terra/core/pull/319) Upgrade SDKs
 * (treasury) [#272](https://github.com/classic-terra/core/pull/272) Split the burn tax to the distribution module

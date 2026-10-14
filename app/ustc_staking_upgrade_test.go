@@ -10,7 +10,7 @@ import (
 func TestUpgradesIncludeUSTCStakingStoreUpgrade(t *testing.T) {
 	found := false
 	for _, upgrade := range Upgrades {
-		if upgrade.UpgradeName == "ustc_staking" {
+		if upgrade.UpgradeName == "v14_5" {
 			found = true
 			require.Equal(t, []string{ustcstakingtypes.StoreKey}, upgrade.StoreUpgrades.Added)
 		}

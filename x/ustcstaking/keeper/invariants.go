@@ -47,7 +47,7 @@ func principalInvariant(keeper Keeper) sdk.Invariant {
 			return false
 		})
 		actual, valid := poolBalance(ctx, keeper, types.PrincipalPoolName)
-		if offending != 0 || !valid || !actual.Equal(expected) {
+		if offending != 0 || !valid || actual.LT(expected) {
 			return fmt.Sprintf("principal custody: expected=%s actual=%s offending_position=%d", expected, actual, offending), true
 		}
 		return "", false
@@ -87,6 +87,7 @@ func rewardSolvencyInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		state := keeper.GetRewardState(ctx)
 		liability := math.ZeroInt()
+		reserved := math.ZeroInt()
 		var offending uint64
 		keeper.IteratePositions(ctx, func(position types.Position) bool {
 			if position.ClaimableRewards.Denom != types.BondDenom || position.ClaimableRewards.Amount.IsNil() ||
@@ -95,6 +96,7 @@ func rewardSolvencyInvariant(keeper Keeper) sdk.Invariant {
 				return true
 			}
 			amount := keeper.AccruedRewards(position, state)
+			reserved = reserved.Add(position.ClaimableRewards.Amount)
 			if position.Status == types.PositionStatus_POSITION_STATUS_ACTIVE {
 				if position.Shares.IsNil() || position.RewardDebt.IsNil() || state.RewardIndex.IsNil() {
 					offending = position.Id
@@ -114,7 +116,7 @@ func rewardSolvencyInvariant(keeper Keeper) sdk.Invariant {
 			return false
 		})
 		actual, valid := poolBalance(ctx, keeper, types.RewardPoolName)
-		if offending != 0 || !valid || actual.LT(liability) {
+		if offending != 0 || !valid || actual.LT(liability) || !reserved.Equal(keeper.GetReservedRewards(ctx)) {
 			return fmt.Sprintf("reward solvency: expected=%s actual=%s offending_position=%d", liability, actual, offending), true
 		}
 		return "", false
@@ -122,15 +124,9 @@ func rewardSolvencyInvariant(keeper Keeper) sdk.Invariant {
 }
 
 func poolBalance(ctx sdk.Context, keeper Keeper, moduleName string) (math.Int, bool) {
-	balances := keeper.bankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(moduleName))
-	amount := math.ZeroInt()
-	valid := true
-	for _, coin := range balances {
-		if coin.Denom != types.BondDenom {
-			valid = false
-			continue
-		}
-		amount = amount.Add(coin.Amount)
+	coin := keeper.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(moduleName), types.BondDenom)
+	if coin.Amount.IsNil() || coin.Amount.IsNegative() {
+		return math.ZeroInt(), false
 	}
-	return amount, valid
+	return coin.Amount, true
 }

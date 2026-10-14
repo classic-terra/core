@@ -37,6 +37,14 @@ type recordingCommunityPoolKeeper struct {
 	bank            *recordingBankKeeper
 }
 
+func (d *recordingCommunityPoolKeeper) ReturnRewardDustToCommunityPool(_ context.Context, amount sdk.Coins) error {
+	if d.err != nil {
+		return d.err
+	}
+	d.bank.rewardPoolBalance = sdk.NewCoin(types.BondDenom, d.bank.rewardPoolBalance.Amount.Sub(amount.AmountOf(types.BondDenom)))
+	return nil
+}
+
 func (d *recordingCommunityPoolKeeper) DistributeFromCommunityPoolToModule(_ context.Context, amount sdk.Coins, recipientModule string) error {
 	d.calls++
 	d.amount = amount
@@ -66,7 +74,13 @@ func (b *recordingBankKeeper) SendCoinsFromModuleToAccount(context.Context, stri
 	return nil
 }
 
-func (b *recordingBankKeeper) GetBalance(context.Context, sdk.AccAddress, string) sdk.Coin {
+func (b *recordingBankKeeper) GetBalance(_ context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	if addr.Equals(authtypes.NewModuleAddress(types.PrincipalPoolName)) {
+		if b.principalPoolBalance.Amount.IsNil() {
+			return sdk.NewCoin(denom, math.ZeroInt())
+		}
+		return b.principalPoolBalance
+	}
 	return b.rewardPoolBalance
 }
 

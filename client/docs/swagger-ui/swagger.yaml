@@ -44622,6 +44622,188 @@ paths:
           type: string
       tags:
         - Query
+  /terra/ustcstaking/v1/owners/{owner}/positions:
+    get:
+      operationId: USTCStakingPositionsByOwner
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/terra.ustcstaking.v1.QueryPositionsByOwnerResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/grpc.gateway.runtime.Error'
+      parameters:
+      - name: owner
+        in: path
+        required: true
+        type: string
+      - name: pagination.key
+        description: 'key is a value returned in PageResponse.next_key to begin
+
+          querying the next page most efficiently. Only one of offset or key
+
+          should be set.'
+        in: query
+        required: false
+        type: string
+        format: byte
+      - name: pagination.offset
+        description: 'offset is a numeric offset that can be used when key is unavailable.
+
+          It is less efficient than using key. Only one of offset or key should
+
+          be set.'
+        in: query
+        required: false
+        type: string
+        format: uint64
+      - name: pagination.limit
+        description: 'limit is the total number of results to be returned in the result
+          page.
+
+          If left empty it will default to a value to be set by each app.'
+        in: query
+        required: false
+        type: string
+        format: uint64
+      - name: pagination.count_total
+        description: 'count_total is set to true  to indicate that the result set should
+          include
+
+          a count of the total number of items available for pagination in UIs.
+
+          count_total is only respected when offset is used. It is ignored when key
+
+          is set.'
+        in: query
+        required: false
+        type: boolean
+      - name: pagination.reverse
+        description: 'reverse is set to true if results are to be returned in the descending
+          order.
+
+
+          Since: cosmos-sdk 0.43'
+        in: query
+        required: false
+        type: boolean
+      tags:
+      - Query
+  /terra/ustcstaking/v1/params:
+    get:
+      operationId: USTCStakingParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/terra.ustcstaking.v1.QueryParamsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/grpc.gateway.runtime.Error'
+      tags:
+      - Query
+  /terra/ustcstaking/v1/positions/{position_id}:
+    get:
+      operationId: USTCStakingPosition
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/terra.ustcstaking.v1.QueryPositionResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/grpc.gateway.runtime.Error'
+      parameters:
+      - name: position_id
+        in: path
+        required: true
+        type: string
+        format: uint64
+      tags:
+      - Query
+  /terra/ustcstaking/v1/reward-state:
+    get:
+      operationId: USTCStakingRewardState
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/terra.ustcstaking.v1.QueryRewardStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/grpc.gateway.runtime.Error'
+      tags:
+      - Query
+  /terra/ustcstaking/v1/validate-state:
+    get:
+      operationId: USTCStakingValidateState
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/terra.ustcstaking.v1.QueryValidateStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/grpc.gateway.runtime.Error'
+      parameters:
+      - name: pagination.key
+        description: 'key is a value returned in PageResponse.next_key to begin
+
+          querying the next page most efficiently. Only one of offset or key
+
+          should be set.'
+        in: query
+        required: false
+        type: string
+        format: byte
+      - name: pagination.offset
+        description: 'offset is a numeric offset that can be used when key is unavailable.
+
+          It is less efficient than using key. Only one of offset or key should
+
+          be set.'
+        in: query
+        required: false
+        type: string
+        format: uint64
+      - name: pagination.limit
+        description: 'limit is the total number of results to be returned in the result
+          page.
+
+          If left empty it will default to a value to be set by each app.'
+        in: query
+        required: false
+        type: string
+        format: uint64
+      - name: pagination.count_total
+        description: 'count_total is set to true  to indicate that the result set should
+          include
+
+          a count of the total number of items available for pagination in UIs.
+
+          count_total is only respected when offset is used. It is ignored when key
+
+          is set.'
+        in: query
+        required: false
+        type: boolean
+      - name: pagination.reverse
+        description: 'reverse is set to true if results are to be returned in the descending
+          order.
+
+
+          Since: cosmos-sdk 0.43'
+        in: query
+        required: false
+        type: boolean
+      tags:
+      - Query
 definitions:
   cosmos.auth.v1beta1.AddressBytesToStringResponse:
     type: object
@@ -72802,3 +72984,123 @@ definitions:
     description: >-
       QueryTotalEscrowForDenomResponse is the response type for
       TotalEscrowForDenom RPC method.
+  terra.ustcstaking.v1.LockTier:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      duration:
+        type: string
+      multiplier:
+        type: string
+  terra.ustcstaking.v1.Params:
+    type: object
+    properties:
+      bond_denom:
+        type: string
+      lock_tiers:
+        type: array
+        items:
+          $ref: '#/definitions/terra.ustcstaking.v1.LockTier'
+      authority:
+        type: string
+      paused:
+        type: boolean
+  terra.ustcstaking.v1.Position:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      owner:
+        type: string
+      principal:
+        $ref: '#/definitions/cosmos.base.v1beta1.Coin'
+      shares:
+        type: string
+      lock_tier_id:
+        type: integer
+        format: int64
+      share_multiplier:
+        type: string
+      reward_debt:
+        type: string
+      unbonding_end_time:
+        type: string
+        format: date-time
+      status:
+        $ref: '#/definitions/terra.ustcstaking.v1.PositionStatus'
+      claimable_rewards:
+        $ref: '#/definitions/cosmos.base.v1beta1.Coin'
+      lock_duration:
+        type: string
+  terra.ustcstaking.v1.PositionStatus:
+    type: string
+    enum:
+    - POSITION_STATUS_UNSPECIFIED
+    - POSITION_STATUS_ACTIVE
+    - POSITION_STATUS_UNBONDING
+    - POSITION_STATUS_WITHDRAWN
+    default: POSITION_STATUS_UNSPECIFIED
+  terra.ustcstaking.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        $ref: '#/definitions/terra.ustcstaking.v1.Params'
+  terra.ustcstaking.v1.QueryPositionResponse:
+    type: object
+    properties:
+      position:
+        $ref: '#/definitions/terra.ustcstaking.v1.Position'
+  terra.ustcstaking.v1.QueryPositionsByOwnerResponse:
+    type: object
+    properties:
+      positions:
+        type: array
+        items:
+          $ref: '#/definitions/terra.ustcstaking.v1.Position'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  terra.ustcstaking.v1.QueryRewardStateResponse:
+    type: object
+    properties:
+      reward_state:
+        $ref: '#/definitions/terra.ustcstaking.v1.RewardState'
+  terra.ustcstaking.v1.QueryValidateStateResponse:
+    type: object
+    properties:
+      valid:
+        type: boolean
+        description: 'Valid covers structural/accounting validity of this page only.
+          The CLI
+
+          performs global balance and active-share comparisons after aggregating all
+          pages.'
+      detail:
+        type: string
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+      principal_liability:
+        type: string
+      active_shares:
+        type: string
+      reward_liability:
+        type: string
+      principal_pool_balances:
+        type: array
+        items:
+          $ref: '#/definitions/cosmos.base.v1beta1.Coin'
+      reward_pool_balances:
+        type: array
+        items:
+          $ref: '#/definitions/cosmos.base.v1beta1.Coin'
+      reward_state:
+        $ref: '#/definitions/terra.ustcstaking.v1.RewardState'
+  terra.ustcstaking.v1.RewardState:
+    type: object
+    properties:
+      reward_index:
+        type: string
+      total_shares:
+        type: string

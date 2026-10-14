@@ -25,6 +25,10 @@ type exportTestBankKeeper struct{}
 
 type exportTestCommunityPoolKeeper struct{}
 
+func (exportTestCommunityPoolKeeper) ReturnRewardDustToCommunityPool(context.Context, sdk.Coins) error {
+	return nil
+}
+
 func (exportTestCommunityPoolKeeper) DistributeFromCommunityPoolToModule(context.Context, sdk.Coins, string) error {
 	return nil
 }
@@ -73,7 +77,7 @@ func TestWithdrawnPositionExportsWithoutPanic(t *testing.T) {
 		LockDuration:     &duration,
 		UnbondingEndTime: &maturedAt,
 		Status:           types.PositionStatus_POSITION_STATUS_UNBONDING,
-		ClaimableRewards: sdk.NewCoin(types.BondDenom, math.ZeroInt()),
+		ClaimableRewards: sdk.NewCoin(types.BondDenom, math.NewInt(5)),
 	})
 
 	server := keeper.NewMsgServerImpl(k)

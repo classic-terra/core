@@ -30,7 +30,8 @@ RUN set -eux &&\
     linux-headers \
     build-base \
     cmake \
-    git
+    git \
+    xz
 
 # install mimalloc for musl
 WORKDIR ${GOPATH}/src/mimalloc
@@ -50,28 +51,41 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download -x
 
-# Cosmwasm - Download correct libwasmvm version and verify checksum
-RUN set -eux &&\
-    WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
-    WASMVM_DOWNLOADS="https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}"; \
-    wget ${WASMVM_DOWNLOADS}/checksums.txt -O /tmp/checksums.txt; \
+# Cosmwasm - provide the static libwasmvm for muslc.
+# The library goes into the directory of the module actually used (honours `replace`).
+# If the module ships it as .xz (covered by go.sum), unpack that; otherwise download
+# the matching upstream release asset and verify its checksum.
+RUN --mount=type=cache,target=/root/go/pkg/mod set -eux &&\
     if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
-        WASMVM_URL="${WASMVM_DOWNLOADS}/libwasmvm_muslc.x86_64.a"; \
+        LIB_NAME="libwasmvm_muslc.x86_64.a"; \
     elif [ ${BUILDPLATFORM} = "linux/arm64" ]; then \
-        WASMVM_URL="${WASMVM_DOWNLOADS}/libwasmvm_muslc.aarch64.a"; \      
+        LIB_NAME="libwasmvm_muslc.aarch64.a"; \
     else \
         echo "Unsupported Build Platfrom ${BUILDPLATFORM}"; \
         exit 1; \
     fi; \
-    wget ${WASMVM_URL} -O /lib/libwasmvm_muslc.a; \
-    CHECKSUM=`sha256sum /lib/libwasmvm_muslc.a | cut -d" " -f1`; \
-    grep ${CHECKSUM} /tmp/checksums.txt; \
-    rm /tmp/checksums.txt
+    WASMVM_DIR=$(go list -m -f '{{if .Replace}}{{.Replace.Dir}}{{else}}{{.Dir}}{{end}}' github.com/CosmWasm/wasmvm/v3); \
+    if [ -f ${WASMVM_DIR}/internal/api/${LIB_NAME}.xz ]; then \
+        xz -dc ${WASMVM_DIR}/internal/api/${LIB_NAME}.xz > ${WASMVM_DIR}/internal/api/${LIB_NAME}; \
+    else \
+        WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v3); \
+        WASMVM_DOWNLOADS="https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}"; \
+        wget ${WASMVM_DOWNLOADS}/checksums.txt -O /tmp/checksums.txt; \
+        wget ${WASMVM_DOWNLOADS}/${LIB_NAME} -O /tmp/${LIB_NAME}; \
+        CHECKSUM=`sha256sum /tmp/${LIB_NAME} | cut -d" " -f1`; \
+        grep ${CHECKSUM} /tmp/checksums.txt; \
+        rm /tmp/checksums.txt; \
+        cp /tmp/${LIB_NAME} ${WASMVM_DIR}/internal/api/; \
+        rm /tmp/${LIB_NAME}; \
+    fi; \
+    ls -la ${WASMVM_DIR}/internal/api/${LIB_NAME}
 
 ###############################################################################
 
 FROM builder-stage-1 as builder-stage-2
 
+ARG GIT_COMMIT
+ARG GIT_VERSION
 ARG source
 ARG GOOS=linux \
     GOARCH=amd64

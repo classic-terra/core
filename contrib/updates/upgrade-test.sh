@@ -1,111 +1,133 @@
-#!/bin/bash
-
-# should make this auto fetch upgrade name from app upgrades once many upgrades have been done
-# this command will retrieve the folder with the largest number in format v<number>
-SOFTWARE_UPGRADE_NAME=$(ls -d -- ./app/upgrades/v* | sort -Vr | head -n 1 | xargs basename)
-NODE1_HOME=node1/terrad
-BINARY_OLD="docker exec terradnode1 ./old/terrad"
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+source "$SCRIPT_DIR/upgrade_assertions.sh"
+: "${OLD_VERSION:?Set OLD_VERSION explicitly}"
+: "${OLD_REVISION:?Set OLD_REVISION explicitly}"
+: "${SOFTWARE_UPGRADE_NAME:?Set SOFTWARE_UPGRADE_NAME explicitly}"
+[[ "$OLD_REVISION" =~ ^[0-9a-f]{40}$ ]] || exit 1
 TESTNET_NVAL=${1:-7}
-
-# sleep to wait for localnet to come up
-sleep 10
-
-# 100 block from now
-STATUS_INFO=($($BINARY_OLD status --home $NODE1_HOME | jq -r '.NodeInfo.network,.SyncInfo.latest_block_height'))
-echo $STATUS_INFO
-CHAIN_ID=${STATUS_INFO[0]}
-UPGRADE_HEIGHT=$((STATUS_INFO[1] + 20))
-echo $UPGRADE_HEIGHT
-
-docker exec terradnode1 tar -cf ./terrad.tar -C . terrad
-SUM=$(docker exec terradnode1 sha256sum ./terrad.tar | cut -d ' ' -f1)
-DOCKER_BASE_PATH=$(docker exec terradnode1 pwd)
-echo $SUM
-UPGRADE_INFO=$(jq -n '
-{
-    "binaries": {
-        "linux/amd64": "file://'$DOCKER_BASE_PATH'/terrad.tar?checksum=sha256:'"$SUM"'",
-    }
-}')
-
-$BINARY_OLD tx gov submit-legacy-proposal software-upgrade "$SOFTWARE_UPGRADE_NAME" --upgrade-height $UPGRADE_HEIGHT --upgrade-info "$UPGRADE_INFO" --title "upgrade" --description "upgrade"  --from node1 --keyring-backend test --chain-id $CHAIN_ID --home $NODE1_HOME -y
-
-sleep 5
-
-$BINARY_OLD tx gov deposit 1 "20000000uluna" --from node1 --keyring-backend test --chain-id $CHAIN_ID --home $NODE1_HOME -y
-
-sleep 5
-
-# loop from 0 to TESTNET_NVAL
-for (( i=0; i<$TESTNET_NVAL; i++ )); do
-    # check if docker for node i is running
-    if [[ $(docker ps -a | grep terradnode$i | wc -l) -eq 1 ]]; then
-        $BINARY_OLD tx gov vote 1 yes --from node$i --keyring-backend test --chain-id $CHAIN_ID --home "node$i/terrad" -y
-        sleep 5
-    fi
-done
-
-# keep track of block_height
-NIL_BLOCK=0
-LAST_BLOCK=0
-SAME_BLOCK=0
-while true; do 
-    BLOCK_HEIGHT=$($BINARY_OLD status --home $NODE1_HOME | jq '.SyncInfo.latest_block_height' -r)
-    # if BLOCK_HEIGHT is empty
-    if [[ -z $BLOCK_HEIGHT ]]; then
-        # if 5 nil blocks in a row, exit
-        if [[ $NIL_BLOCK -ge 5 ]]; then
-            echo "ERROR: 5 nil blocks in a row"
-            break
-        fi
-        NIL_BLOCK=$((NIL_BLOCK + 1))
-    fi
-
-    # if block height is not nil
-    # if block height is same as last block height
-    if [[ $BLOCK_HEIGHT -eq $LAST_BLOCK ]]; then
-        # if 5 same blocks in a row, exit
-        if [[ $SAME_BLOCK -ge 5 ]]; then
-            echo "ERROR: 5 same blocks in a row"
-            break
-        fi
-        SAME_BLOCK=$((SAME_BLOCK + 1))
-    else
-        # update LAST_BLOCK and reset SAME_BLOCK
-        LAST_BLOCK=$BLOCK_HEIGHT
-        SAME_BLOCK=0
-    fi
-
-    if [[ $BLOCK_HEIGHT -ge $UPGRADE_HEIGHT ]]; then
-        # assuming running only 1 terrad
-        echo "UPGRADE REACHED, CONTINUING NEW CHAIN"
-        break
-    else
-        $BINARY_OLD q gov proposal 1 --output=json --home $NODE1_HOME | jq ".status"
-        echo "BLOCK_HEIGHT = $BLOCK_HEIGHT"
-        sleep 10
-    fi
-done
-
-if [[ $SAME_BLOCK -ge 5 ]]; then
-    docker logs terradnode0
-    exit 1
+[[ "$TESTNET_NVAL" == 7 ]] || { echo 'Rehearsal requires all seven validators' >&2; exit 1; }
+UPGRADE_FIXTURE=${UPGRADE_FIXTURE:-clean}
+[[ "$UPGRADE_FIXTURE" == clean || "$UPGRADE_FIXTURE" == prefunded ]] || exit 1
+EVIDENCE_DIR=${EVIDENCE_DIR:-build/upgrade-evidence}
+mkdir -p "$EVIDENCE_DIR"
+capture_logs() {
+    local code=$?
+    trap - EXIT
+    for ((i=0;i<TESTNET_NVAL;i++)); do docker logs "terradnode$i" > "$EVIDENCE_DIR/node$i.log" 2>&1 || true; done
+    exit "$code"
+}
+trap capture_logs EXIT
+old() { timeout 20 docker exec terradnode1 ./old/terrad "$@"; }
+new() { local i=$1; shift; timeout 20 docker exec "terradnode$i" ./terrad "$@" --home "node$i/terrad"; }
+rpc() { timeout 15 docker exec "terradnode$1" curl --fail --silent --max-time 10 "http://localhost:26657/$2"; }
+status_ready() { local status; status=$(old status --home node1/terrad 2>/dev/null) || return 1; assert_height "$status" 1; }
+wait_until 120 status_ready
+STATUS=$(old status --home node1/terrad)
+CHAIN_ID=$(jq -er '(.node_info // .NodeInfo).network' <<< "$STATUS")
+# Allow bounded voting and inclusion checks to finish well before the halt.
+UPGRADE_HEIGHT=$(( $(jq -er '(.sync_info // .SyncInfo).latest_block_height|tonumber' <<< "$STATUS") + 100 ))
+CANDIDATE_SHA=$(docker exec terradnode1 sha256sum ./terrad | awk '{print $1}')
+CANDIDATE_VERSION=$(docker exec terradnode1 ./terrad version)
+OLD_METADATA=$(old version --long --output json)
+jq -e --arg revision "$OLD_REVISION" --arg version "${OLD_VERSION#v}" '.commit==$revision and .version==$version' <<< "$OLD_METADATA" >/dev/null
+printf '%s\n' "$OLD_METADATA" > "$EVIDENCE_DIR/predecessor.json"
+TX_SEQ=0
+# Broadcast success is insufficient; wait for inclusion and inspect DeliverTx code.
+submit_tx() {
+    local response hash included
+    response=$(old tx "$@" --keyring-backend test --chain-id "$CHAIN_ID" --fees 100000uluna --gas auto --gas-adjustment 1.5 --broadcast-mode sync --output json -y)
+    jq -e 'has("code") and (.code|tonumber)==0' <<< "$response" >/dev/null
+    hash=$(jq -er '.txhash | select(length>0)' <<< "$response")
+    TX_SEQ=$((TX_SEQ+1))
+    tx_included() { included=$(old query tx "$hash" --home node1/terrad --output json 2>/dev/null) || return 1; }
+    wait_until 60 tx_included
+    printf '%s\n' "$included" > "$EVIDENCE_DIR/tx-$TX_SEQ.json"
+    assert_tx_success "$included"
+    LAST_TX=$included
+}
+# SHA256(module name)[:20], bech32 terra; SDK NewModuleAddress addresses.
+POOLS=(terra1e0a6f2ust9zhyq4rsldzx9he9q069fka77dszc terra14e3gu5c7rrquce8h0vn3ujk2v37jf80d626z0d)
+if [[ "$UPGRADE_FIXTURE" == prefunded ]]; then
+    SENDER=$(old keys show node1 -a --keyring-backend test --home node1/terrad)
+    for address in "${POOLS[@]}"; do
+        submit_tx bank send "$SENDER" "$address" 1uusd,1uluna --from node1 --home node1/terrad
+        balances=$(old query bank balances "$address" --home node1/terrad --output json)
+        jq -e 'any(.balances[]; .denom=="uusd" and .amount=="1") and any(.balances[]; .denom=="uluna" and .amount=="1")' <<< "$balances" >/dev/null
+    done
 fi
-
-sleep 40
-
-# check all nodes are online after upgrade
-for (( i=0; i<$TESTNET_NVAL; i++ )); do
-    if [[ $(docker ps -a | grep terradnode$i | wc -l) -eq 1 ]]; then
-        docker exec terradnode$i ./terrad status --home "node$i/terrad"
-        if [[ "${PIPESTATUS[0]}" != "0" ]]; then
-            echo "node$i is not online"
-            docker logs terradnode$i
-            exit 1
-        fi
-    else
-        echo "terradnode$i is not running"
-        docker logs terradnode$i
-        exit 1
-    fi
+AUTHORITY=$(old query auth module-account gov --home node1/terrad --output json | jq -er '.account.base_account.address')
+[[ "$(old query upgrade authority --home node1/terrad --output json | jq -er '.address')" == "$AUTHORITY" ]]
+jq -n --arg authority "$AUTHORITY" --arg name "$SOFTWARE_UPGRADE_NAME" --arg height "$UPGRADE_HEIGHT" '{messages:[{"@type":"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",authority:$authority,plan:{name:$name,height:$height,info:""}}],metadata:"",deposit:"20000000uluna",title:"USTC staking rehearsal",summary:"Activate native USTC staking",expedited:false}' > "$EVIDENCE_DIR/proposal.json"
+docker cp "$EVIDENCE_DIR/proposal.json" terradnode1:/terrad/upgrade-proposal.json
+submit_tx gov submit-proposal /terrad/upgrade-proposal.json --from node1 --home node1/terrad
+PROPOSAL_ID=$(proposal_id_from_tx "$LAST_TX")
+for ((i=0;i<TESTNET_NVAL;i++)); do
+    submit_tx gov vote "$PROPOSAL_ID" yes --from "node$i" --home "node$i/terrad"
 done
+proposal_passed() {
+    local proposal status
+    proposal=$(old query gov proposal "$PROPOSAL_ID" --home node1/terrad --output json) || return 1
+    printf '%s\n' "$proposal" > "$EVIDENCE_DIR/proposal-status.json"
+    status=$(jq -r '(.proposal // .).status' <<< "$proposal")
+    case "$status" in PROPOSAL_STATUS_REJECTED|PROPOSAL_STATUS_FAILED) echo "Governance failed: $status" >&2; exit 1;; esac
+    assert_passed "$proposal"
+}
+wait_until 90 proposal_passed
+assert_plan "$(old query upgrade plan --home node1/terrad --output json)" "$SOFTWARE_UPGRADE_NAME" "$UPGRADE_HEIGHT"
+# The passed plan must be observed while the old chain is still below H.
+[[ $(old status --home node1/terrad | jq -er '(.sync_info // .SyncInfo).latest_block_height|tonumber') -lt "$UPGRADE_HEIGHT" ]]
+all_nodes_advanced() {
+    local i status
+    for ((i=0;i<TESTNET_NVAL;i++)); do
+        status=$(new "$i" status 2>/dev/null) || return 1
+        assert_height "$status" "$((UPGRADE_HEIGHT+10))" || return 1
+    done
+}
+wait_until 900 all_nodes_advanced
+CONSENSUS_HASH=''
+verify_nodes() {
+    local i actual abci applied params versions hash common_hash=''
+    for ((i=0;i<TESTNET_NVAL;i++)); do
+        # Inspect the running daemon executable, independently of the query client.
+        actual=$(docker exec "terradnode$i" sh -c 'for p in /proc/[0-9]*; do if [ "$(cat "$p/comm" 2>/dev/null)" = terrad ]; then sha256sum "$p/exe"; fi; done' | awk '{print $1}')
+        abci=$(rpc "$i" abci_info)
+        assert_candidate "$actual" "$CANDIDATE_SHA" "$abci" "$CANDIDATE_VERSION"
+        applied=$(new "$i" query upgrade applied "$SOFTWARE_UPGRADE_NAME" --output json)
+        assert_applied "$applied" "$UPGRADE_HEIGHT"
+        params=$(new "$i" query ustcstaking params --output json)
+        versions=$(new "$i" query upgrade module-versions ustcstaking --output json)
+        assert_ustc_store "$params" "$versions"
+        hash=$(rpc "$i" "block?height=$((UPGRADE_HEIGHT+10))" | jq -er '.result.block.header.app_hash | select(length>0)')
+        if [[ -n "$common_hash" ]]; then assert_common_hash "$hash" "$common_hash"; else common_hash=$hash; fi
+        jq -n --arg sha "$actual" --argjson abci "$abci" --argjson applied "$applied" --argjson params "$params" --argjson versions "$versions" --arg app_hash "$hash" '{sha256:$sha,abci:$abci,applied:$applied,params:$params,module_versions:$versions,app_hash:$app_hash}' > "$EVIDENCE_DIR/node$i-proof.json"
+    done
+    if [[ -n "$CONSENSUS_HASH" ]]; then assert_common_hash "$common_hash" "$CONSENSUS_HASH"; else CONSENSUS_HASH=$common_hash; fi
+}
+verify_nodes
+for address in "${POOLS[@]}"; do
+    balances=$(new 1 query bank balances "$address" --height "$UPGRADE_HEIGHT" --output json)
+    expected_uluna=0; [[ "$UPGRADE_FIXTURE" == clean ]] || expected_uluna=1
+    jq -e --arg expected "$expected_uluna" '([.balances[] | select(.denom=="uusd") | .amount][0] // "0")=="0" and ([.balances[] | select(.denom=="uluna") | .amount][0] // "0")==$expected' <<< "$balances" >/dev/null
+    printf '%s\n' "$balances" > "$EVIDENCE_DIR/$address.json"
+done
+before=$(new 1 query distribution community-pool --height "$((UPGRADE_HEIGHT-1))" --output json)
+after=$(new 1 query distribution community-pool --height "$UPGRADE_HEIGHT" --output json)
+python3 - "$before" "$after" "$UPGRADE_FIXTURE" <<'PY'
+import json,sys
+from decimal import Decimal, getcontext
+getcontext().prec=200
+def uusd(raw): return sum((Decimal(c['amount']) for c in json.loads(raw)['pool'] if c['denom']=='uusd'), Decimal(0))
+expected=Decimal(2 if sys.argv[3]=='prefunded' else 0)
+assert uusd(sys.argv[2])-uusd(sys.argv[1])==expected, 'activation failed to credit FeePool with exact USTC sweep'
+PY
+printf '%s\n' "$before" > "$EVIDENCE_DIR/community-pool-before.json"
+printf '%s\n' "$after" > "$EVIDENCE_DIR/community-pool-after.json"
+# Restart one validator and require catchup plus unchanged fixed-height consensus proof.
+RESTART_HEIGHT=$(( $(new 0 status | jq -er '(.sync_info // .SyncInfo).latest_block_height|tonumber') + 5 ))
+docker restart terradnode6
+restarted_caught_up() { local status; status=$(new 6 status 2>/dev/null) || return 1; assert_height "$status" "$RESTART_HEIGHT"; }
+wait_until 180 restarted_caught_up
+verify_nodes
+echo "Upgrade $SOFTWARE_UPGRADE_NAME at $UPGRADE_HEIGHT verified on all seven nodes ($UPGRADE_FIXTURE); evidence: $EVIDENCE_DIR"

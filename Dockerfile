@@ -83,7 +83,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # The library goes into the directory of the module actually used (honours `replace`).
 # If the module ships it as .xz (covered by go.sum), unpack that; otherwise download
 # the matching upstream release asset and verify its checksum.
-RUN set -eux &&\
+RUN --mount=type=cache,target=/root/go/pkg/mod set -eux &&\
     if [ ${BUILDPLATFORM} = "linux/amd64" ]; then \
         LIB_NAME="libwasmvm_muslc.x86_64.a"; \
     elif [ ${BUILDPLATFORM} = "linux/arm64" ]; then \

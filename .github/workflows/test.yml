@@ -64,30 +64,48 @@ jobs:
         if: env.GIT_DIFF
   upgrade-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [clean, prefunded]
+    env:
+      # Live predecessor: v4.0.1-patch.3, pinned to its immutable source commit.
+      OLD_VERSION: v4.0.1-patch.3
+      OLD_REVISION: 8d9d136c61b77601ce257a97d26e116812c0e54a
+      SOFTWARE_UPGRADE_NAME: v14_5
+      UPGRADE_FIXTURE: ${{ matrix.fixture }}
+      EVIDENCE_DIR: build/upgrade-evidence
+      DOCKER_BUILDKIT: "1"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
           check-latest: true
-      - uses: technote-space/get-diff-action@v6
-        id: git_diff
+      - name: Upgrade harness fixture checks
+        run: |
+          bash -n contrib/updates/prepare_cosmovisor.sh contrib/updates/upgrade-test.sh contrib/updates/upgrade_assertions.sh contrib/updates/old_terrad_cache.sh
+          bash contrib/updates/old_terrad_cache_test.sh
+          bash contrib/updates/upgrade_assertions_test.sh
+      - name: Start fresh predecessor localnet
+        run: make localnet-start-upgrade
+      - name: Verify USTC staking upgrade
+        run: bash contrib/updates/upgrade-test.sh 7
+      - name: Capture daemon logs
+        if: always()
+        run: |
+          mkdir -p build/upgrade-evidence
+          for i in {0..6}; do
+            docker logs "terradnode$i" > "build/upgrade-evidence/node$i.log" 2>&1 || true
+          done
+      - name: Capture upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          PATTERNS: |
-            app/upgrades/**/*.go
-      - name: echo diff
-        run: echo '${{ env.GIT_DIFF }}'
-      # Enable BuildKit
-      - name: Set BuildKit environment variable
-        run: |
-          echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
-      - name: start localnet
-        run: |
-          make clean localnet-start-upgrade
-        if: env.GIT_DIFF
-      - name: test upgrade
-        run: |
-          chmod +x -R ./contrib/updates
-          ./contrib/updates/upgrade-test.sh
-        if: env.GIT_DIFF
+          name: ustc-upgrade-${{ matrix.fixture }}
+          path: build/upgrade-evidence
+          if-no-files-found: warn
+      - name: Stop localnet
+        if: always()
+        run: docker compose -f contrib/updates/docker-compose.yml down

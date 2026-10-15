@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -23,6 +24,14 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos.vesting.v1beta1.VestingAccount",
 		(*exported.VestingAccount)(nil),
+		&LazyGradedVestingAccount{},
+	)
+
+	// SDK v0.53 account collections decode the SDK interface; retain the
+	// legacy auth interface registration for existing genesis consumers.
+	registry.RegisterImplementations(
+		(*sdk.AccountI)(nil),
+		&vestingtypes.BaseVestingAccount{},
 		&LazyGradedVestingAccount{},
 	)
 

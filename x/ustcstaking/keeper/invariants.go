@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 
 	"cosmossdk.io/math"
 	"github.com/classic-terra/core/v4/x/ustcstaking/types"
@@ -56,27 +57,27 @@ func principalInvariant(keeper Keeper) sdk.Invariant {
 
 func activeSharesInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		expected := math.ZeroInt()
+		expected := new(big.Int)
 		var offending uint64
 		state := keeper.GetRewardState(ctx)
-		if state.RewardIndex.IsNil() || state.RewardIndex.IsNegative() || state.TotalShares.IsNil() || state.TotalShares.IsNegative() {
-			return fmt.Sprintf("active shares: uninitialized or negative reward state index=%s total_shares=%s", state.RewardIndex, state.TotalShares), true
+		if err := validateStreamingScalars(state, keeper.GetParams(ctx)); err != nil || state.LastRewardTime == nil {
+			return fmt.Sprintf("active shares: uninitialized or invalid reward state index=%s total_shares=%s", state.RewardIndex, state.TotalShares), true
 		}
 		keeper.IteratePositions(ctx, func(position types.Position) bool {
-			shares := position.Shares
-			if shares.IsNil() {
-				shares = math.ZeroInt()
-			}
 			if position.Status == types.PositionStatus_POSITION_STATUS_ACTIVE {
-				expected = expected.Add(shares)
-			} else if shares.IsPositive() {
+				if position.Shares.IsNil() || !position.Shares.IsPositive() {
+					offending = position.Id
+					return true
+				}
+				expected.Add(expected, position.Shares.BigInt())
+			} else if position.Shares.IsNil() || position.Shares.IsPositive() {
 				offending = position.Id
 				return true
 			}
 			return false
 		})
 		actual := state.TotalShares
-		if offending != 0 || actual.IsNegative() || !actual.Equal(expected) {
+		if expected.BitLen() > math.MaxBitLen || offending != 0 || actual.BigInt().Cmp(expected) != 0 {
 			return fmt.Sprintf("active shares: expected=%s actual=%s offending_position=%d", expected, actual, offending), true
 		}
 		return "", false
@@ -86,8 +87,12 @@ func activeSharesInvariant(keeper Keeper) sdk.Invariant {
 func rewardSolvencyInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		state := keeper.GetRewardState(ctx)
-		liability := math.ZeroInt()
-		reserved := math.ZeroInt()
+		if err := validateStreamingScalars(state, keeper.GetParams(ctx)); err != nil || state.LastRewardTime == nil {
+			return fmt.Sprintf("reward solvency: invalid streaming state: %v", err), true
+		}
+		liability := new(big.Int)
+		exactLiability := new(big.Int)
+		claimableTotal := new(big.Int)
 		var offending uint64
 		keeper.IteratePositions(ctx, func(position types.Position) bool {
 			if position.ClaimableRewards.Denom != types.BondDenom || position.ClaimableRewards.Amount.IsNil() ||
@@ -95,29 +100,50 @@ func rewardSolvencyInvariant(keeper Keeper) sdk.Invariant {
 				offending = position.Id
 				return true
 			}
-			amount := keeper.AccruedRewards(position, state)
-			reserved = reserved.Add(position.ClaimableRewards.Amount)
+			claimable := position.ClaimableRewards.Amount.BigInt()
+			claimableTotal.Add(claimableTotal, claimable)
+			liability.Add(liability, claimable)
+			exactLiability.Add(exactLiability, new(big.Int).Mul(claimable, rewardIndexScaleBig))
 			if position.Status == types.PositionStatus_POSITION_STATUS_ACTIVE {
 				if position.Shares.IsNil() || position.RewardDebt.IsNil() || state.RewardIndex.IsNil() {
 					offending = position.Id
 					return true
 				}
-				if position.Shares.ToLegacyDec().Mul(state.RewardIndex).Sub(position.RewardDebt).IsNegative() {
+				if !shareIndexProductInRange(position.Shares, state.RewardIndex) {
 					offending = position.Id
 					return true
 				}
-				amount = amount.Add(position.ClaimableRewards.Amount)
+				rawPending := new(big.Int).Mul(position.Shares.BigInt(), state.RewardIndex.BigInt())
+				rawPending.Sub(rawPending, position.RewardDebt.BigInt())
+				if rawPending.Sign() < 0 {
+					offending = position.Id
+					return true
+				}
+				exactLiability.Add(exactLiability, rawPending)
+				wholePending := new(big.Int).Quo(new(big.Int).Set(rawPending), rewardIndexScaleBig)
+				liability.Add(liability, wholePending)
 			}
-			if amount.IsNil() || amount.IsNegative() {
+			if position.Status != types.PositionStatus_POSITION_STATUS_ACTIVE &&
+				position.Status != types.PositionStatus_POSITION_STATUS_UNBONDING &&
+				position.Status != types.PositionStatus_POSITION_STATUS_WITHDRAWN {
 				offending = position.Id
 				return true
 			}
-			liability = liability.Add(amount)
 			return false
 		})
 		actual, valid := poolBalance(ctx, keeper, types.RewardPoolName)
-		if offending != 0 || !valid || actual.LT(liability) || !reserved.Equal(keeper.GetReservedRewards(ctx)) {
-			return fmt.Sprintf("reward solvency: expected=%s actual=%s offending_position=%d", liability, actual, offending), true
+		reserved, reserveErr := keeper.GetReservedRewardsChecked(ctx)
+		if reserveErr != nil {
+			return fmt.Sprintf("reward solvency: %v", reserveErr), true
+		}
+		protected := new(big.Int).Add(state.UnallocatedRewards.BigInt(), state.AllocatedRewards.BigInt())
+		allocatedWhole := state.AllocatedRewards.BigInt()
+		allocatedExact := new(big.Int).Mul(allocatedWhole, rewardIndexScaleBig)
+		if offending != 0 || !valid || reserveErr != nil || reserved.IsNil() || liability.BitLen() > math.MaxBitLen || claimableTotal.BitLen() > math.MaxBitLen ||
+			reserved.BigInt().Cmp(claimableTotal) != 0 || allocatedWhole.Cmp(liability) < 0 || allocatedExact.Cmp(exactLiability) < 0 ||
+			actual.BigInt().Cmp(protected) < 0 {
+			return fmt.Sprintf("reward solvency: liability=%s exact=%s claimable=%s allocated=%s protected=%s actual=%s offending_position=%d",
+				liability, exactLiability, claimableTotal, state.AllocatedRewards, protected, actual, offending), true
 		}
 		return "", false
 	}

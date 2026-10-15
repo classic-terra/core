@@ -4,9 +4,12 @@ import (
 	"math/rand"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -18,6 +21,7 @@ import (
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // Simulation operation weights constants
@@ -58,7 +62,16 @@ func WeightedOperations(
 // makeTxConfig constructs a minimal client.TxConfig for simulations without pulling simapp.
 func makeTxConfig() client.TxConfig {
 	amino := codec.NewLegacyAmino()
-	ir := codectypes.NewInterfaceRegistry()
+	ir, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+			ValidatorAddressCodec: addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
 	cdc := codec.NewProtoCodec(ir)
 	std.RegisterInterfaces(ir)
 	std.RegisterLegacyAminoCodec(amino)
@@ -154,73 +167,51 @@ func SimulateMsgMultiSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// random number of inputs/outputs between [1, 3]
-		inputs := make([]banktypes.Input, 1)
-		outputs := make([]banktypes.Output, r.Intn(3)+1)
-
-		// collect signer privKeys
-		privs := make([]cryptotypes.PrivKey, len(inputs))
-
-		// use map to check if address already exists as input
-		usedAddrs := make(map[string]bool)
+		// Use one input and split its first denomination into at most three
+		// positive outputs. The remaining denominations are assigned whole to
+		// random outputs so the transfer totals stay exactly balanced.
 		simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
-
 		if skip {
 			return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), "skip all transfers"), nil, nil
 		}
-
-		// set input address in used address map
-		usedAddrs[simAccount.Address.String()] = true
-
-		// set signer privkey
-		privs[0] = simAccount.PrivKey
-
-		// set next input and accumulate total sent coins
-		inputs[0] = banktypes.NewInput(simAccount.Address, coins)
-
-		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), err.Error()), nil, nil
 		}
-
-		for o := range outputs {
-			outAddr, _ := simtypes.RandomAcc(r, accs)
-
-			var outCoins sdk.Coins
-			// split total sent coins into random subsets for output
-			if o == len(outputs)-1 {
-				outCoins = coins
-			} else {
-				// take random subset of remaining coins for output
-				// and update remaining coins
-				outCoins = simtypes.RandSubsetCoins(r, coins)
-				coins = coins.Sub(outCoins...)
-			}
-
-			outputs[o] = banktypes.NewOutput(outAddr.Address, outCoins)
+		outputCount := 3
+		if !coins[0].Amount.GT(sdk.NewInt64Coin(coins[0].Denom, 3).Amount) {
+			outputCount = int(coins[0].Amount.Int64())
 		}
-
-		// remove any output that has no coins
-		i := 0
-		for i < len(outputs) {
-			if outputs[i].Coins.Empty() {
-				outputs[i] = outputs[len(outputs)-1]
-				outputs = outputs[:len(outputs)-1]
-			} else {
-				// continue onto next coin
-				i++
-			}
+		outputs := make([]banktypes.Output, outputCount)
+		for i := range outputs {
+			to, _ := simtypes.RandomAcc(r, accs)
+			outputs[i] = banktypes.NewOutput(to.Address, sdk.NewCoins())
 		}
+		remaining := coins[0].Amount
+		for i := 0; i < outputCount-1; i++ {
+			max := remaining.Sub(sdkmath.NewInt(int64(outputCount - i - 1)))
+			part, err := simtypes.RandPositiveInt(r, max)
+			if err != nil {
+				return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), err.Error()), nil, nil
+			}
+			outputs[i].Coins = outputs[i].Coins.Add(sdk.NewCoin(coins[0].Denom, part))
+			remaining = remaining.Sub(part)
+		}
+		outputs[outputCount-1].Coins = outputs[outputCount-1].Coins.Add(sdk.NewCoin(coins[0].Denom, remaining))
+		for _, coin := range coins[1:] {
+			index := r.Intn(outputCount)
+			outputs[index].Coins = outputs[index].Coins.Add(coin)
+		}
+		privs := []cryptotypes.PrivKey{simAccount.PrivKey}
 
 		msg := &banktypes.MsgMultiSend{
-			Inputs:  inputs,
+			Inputs:  []banktypes.Input{banktypes.NewInput(simAccount.Address, coins)},
 			Outputs: outputs,
 		}
 
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			if strings.Contains(err.Error(), "insufficient fee") {
-				return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), "skip low fee due to tax"), nil, nil
+			if strings.Contains(err.Error(), "insufficient fee") || strings.Contains(err.Error(), "sum inputs != sum outputs") {
+				return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), "skip transfer invalidated by tax"), nil, nil
 			}
 
 			return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err

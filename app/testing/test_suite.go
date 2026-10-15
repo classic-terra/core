@@ -18,6 +18,7 @@ import (
 	oracletypes "github.com/classic-terra/core/v4/x/oracle/types"
 	taxtypes "github.com/classic-terra/core/v4/x/tax/types"
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
+	ustcstakingtypes "github.com/classic-terra/core/v4/x/ustcstaking/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -189,13 +190,19 @@ func SetupWithGenesisValSet(
 	require.NoError(t, err)
 
 	// InitChain writes all module genesis
-	terraApp.InitChain(&abci.RequestInitChain{
+	_, initErr := terraApp.InitChain(&abci.RequestInitChain{
 		ChainId:         chainID,
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
 	})
 
+	require.NoError(t, initErr, "integration genesis must initialize successfully")
+
+	// SDK v0.53 Commit persists the root store; InitChain writes a separate
+	// finalize cache. Flush that cache explicitly when this fixture deliberately
+	// commits genesis without producing its first FinalizeBlock.
+	terraApp.SimWriteState()
 	// Commit genesis
 	_, terr := terraApp.Commit()
 	require.NoError(t, terr)
@@ -347,6 +354,10 @@ func genesisStateWithValSet(t *testing.T,
 	taxGenesis := taxtypes.DefaultGenesisState()
 	taxGenesis.Params.GasPrices = sdk.NewDecCoins(sdk.NewDecCoin(core.MicroSDRDenom, sdkmath.ZeroInt()))
 	genesisState[taxtypes.ModuleName] = app.AppCodec().MustMarshalJSON(taxGenesis)
+
+	// Include the native ledger explicitly: absent runtime state is corruption,
+	// and integration fixtures must initialize it through the real genesis path.
+	genesisState[ustcstakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(ustcstakingtypes.DefaultGenesisState())
 
 	// ensure wasm genesis state present with default params
 	wasmGenesis := &wasmtypes.GenesisState{Params: wasmtypes.DefaultParams()}

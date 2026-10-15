@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,7 +42,10 @@ func (exportTestBankKeeper) SendCoinsFromModuleToAccount(context.Context, string
 	return nil
 }
 
-func (exportTestBankKeeper) GetBalance(context.Context, sdk.AccAddress, string) sdk.Coin {
+func (exportTestBankKeeper) GetBalance(_ context.Context, address sdk.AccAddress, denom string) sdk.Coin {
+	if address.Equals(authtypes.NewModuleAddress(types.RewardPoolName)) {
+		return sdk.NewCoin(denom, math.NewInt(5))
+	}
 	return sdk.NewCoin(types.BondDenom, math.ZeroInt())
 }
 
@@ -64,7 +68,11 @@ func TestWithdrawnPositionExportsWithoutPanic(t *testing.T) {
 	maturedAt := now.Add(-time.Second)
 	duration := time.Hour
 	k.SetParams(ctx, types.DefaultParams())
-	k.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt()})
+	k.SetRewardState(ctx, types.RewardState{
+		RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt(),
+		UnallocatedRewards: math.ZeroInt(), AllocatedRewards: math.NewInt(5), LastRewardTime: &now,
+		EmissionRemainder: math.ZeroInt(), IndexRemainder: math.ZeroInt(),
+	})
 	k.SetNextPositionID(ctx, 2)
 	k.SetPosition(ctx, types.Position{
 		Id:               1,

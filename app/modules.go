@@ -41,6 +41,7 @@ import (
 	treasuryclient "github.com/classic-terra/core/v4/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	"github.com/classic-terra/core/v4/x/ustcstaking"
+	ustcstakingsim "github.com/classic-terra/core/v4/x/ustcstaking/simulation"
 	ustcstakingtypes "github.com/classic-terra/core/v4/x/ustcstaking/types"
 	"github.com/classic-terra/core/v4/x/vesting"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -51,7 +52,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -208,7 +208,7 @@ func simulationModules(
 		taxexemption.NewAppModule(appCodec, app.TaxExemptionKeeper),
 		customwasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName), app.GetKey(wasmtypes.StoreKey)),
 		dyncomm.NewAppModule(appCodec, app.DyncommKeeper, app.StakingKeeper),
-		ustcstaking.NewAppModule(appCodec, app.UstcStakingKeeper),
+		ustcstaking.NewAppModule(appCodec, app.UstcStakingKeeper, ustcstakingsim.Keepers{Accounts: app.AccountKeeper, Bank: app.BankKeeper}),
 		taxmodule.NewAppModule(appCodec, app.TaxKeeper),
 	}
 }
@@ -223,7 +223,6 @@ func orderBeginBlockers() []string {
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
-		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
@@ -249,7 +248,6 @@ func orderBeginBlockers() []string {
 
 func orderEndBlockers() []string {
 	return []string{
-		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		authtypes.ModuleName,
@@ -291,7 +289,6 @@ func orderInitGenesis() []string {
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
-		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,

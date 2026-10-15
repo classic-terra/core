@@ -11,6 +11,9 @@ import (
 
 func TestReturnRewardDustPreservesFrozenClaims(t *testing.T) {
 	ctx, k := newKeeperTest(t)
+	state := newTestRewardState(ctx, math.LegacyZeroDec(), math.ZeroInt())
+	state.AllocatedRewards = math.NewInt(5)
+	k.SetRewardState(ctx, state)
 	p := types.Position{Id: 1, Owner: testAddress(), Principal: sdk.NewInt64Coin(types.BondDenom, 0), Shares: math.ZeroInt(), RewardDebt: math.LegacyZeroDec(), ShareMultiplier: math.LegacyZeroDec(), Status: types.PositionStatus_POSITION_STATUS_WITHDRAWN, ClaimableRewards: sdk.NewInt64Coin(types.BondDenom, 5)}
 	require.NoError(t, k.SetPosition(ctx, p))
 	k.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewInt64Coin(types.BondDenom, 10)
@@ -31,9 +34,27 @@ func TestReturnRewardDustRejectsActiveSharesAndWallets(t *testing.T) {
 	k.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewInt64Coin(types.BondDenom, 10)
 	_, err := server.ReturnRewardDust(ctx, &types.MsgReturnRewardDust{Authority: testAddress(), Amount: sdk.NewInt64Coin(types.BondDenom, 1)})
 	require.ErrorIs(t, err, types.ErrUnauthorized)
-	k.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.OneInt()})
+	k.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.OneInt()))
 	_, err = server.ReturnRewardDust(ctx, &types.MsgReturnRewardDust{Authority: k.GetAuthority(), Amount: sdk.NewInt64Coin(types.BondDenom, 1)})
 	require.Error(t, err)
+}
+
+func TestReturnRewardDustRejectsAllocatedReserveBelowClaimReserve(t *testing.T) {
+	ctx, k := newKeeperTest(t)
+	state := newTestRewardState(ctx, math.LegacyZeroDec(), math.ZeroInt())
+	state.AllocatedRewards = math.NewInt(4)
+	k.SetRewardState(ctx, state)
+	p := types.Position{Id: 1, Owner: testAddress(), ClaimableRewards: sdk.NewInt64Coin(types.BondDenom, 5)}
+	require.NoError(t, k.SetPosition(ctx, p))
+	bank := k.bankKeeper.(*recordingBankKeeper)
+	bank.rewardPoolBalance = sdk.NewInt64Coin(types.BondDenom, 10)
+
+	_, err := NewMsgServerImpl(k).ReturnRewardDust(ctx, &types.MsgReturnRewardDust{
+		Authority: k.GetAuthority(), Amount: sdk.NewInt64Coin(types.BondDenom, 1),
+	})
+
+	require.ErrorIs(t, err, types.ErrRewardPoolInsolvent)
+	require.Equal(t, sdk.NewInt64Coin(types.BondDenom, 10), bank.rewardPoolBalance)
 }
 
 func TestReturnRewardDustValidationAndFailure(t *testing.T) {

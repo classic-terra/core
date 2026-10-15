@@ -106,7 +106,10 @@ func TestBeginUnbondingSettlesRewardsAndStopsFutureAccrual(t *testing.T) {
 	owner := testAddress()
 	configureKeeper(t, ctx, keeper, owner)
 	duration := 24 * time.Hour
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyNewDecWithPrec(5, 1), TotalShares: math.NewInt(100)})
+	state := newTestRewardState(ctx, math.LegacyNewDecWithPrec(5, 1), math.NewInt(100))
+	state.AllocatedRewards = math.NewInt(50)
+	keeper.SetRewardState(ctx, state)
+	keeper.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewCoin(types.BondDenom, math.NewInt(50))
 	keeper.SetPosition(ctx, types.Position{
 		Id: 1, Owner: owner, Principal: sdk.NewCoin(types.BondDenom, math.NewInt(100)),
 		Shares: math.NewInt(100), RewardDebt: math.LegacyZeroDec(), Status: types.PositionStatus_POSITION_STATUS_ACTIVE,
@@ -123,7 +126,7 @@ func TestBeginUnbondingSettlesRewardsAndStopsFutureAccrual(t *testing.T) {
 	require.Equal(t, types.PositionStatus_POSITION_STATUS_UNBONDING, position.Status)
 	require.Equal(t, math.ZeroInt(), keeper.GetRewardState(ctx).TotalShares)
 
-	state := keeper.GetRewardState(ctx)
+	state = keeper.GetRewardState(ctx)
 	state.RewardIndex = math.LegacyNewDec(10)
 	require.Equal(t, math.NewInt(50), keeper.AccruedRewards(position, state))
 }
@@ -148,7 +151,7 @@ func TestClaimFailsWhenRewardPoolCannotCoverLiability(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	owner := testAddress()
 	configureKeeper(t, ctx, keeper, owner)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(10)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(10)))
 	keeper.SetPosition(ctx, types.Position{
 		Id: 1, Owner: owner, Shares: math.NewInt(10), RewardDebt: math.LegacyZeroDec(),
 		Status: types.PositionStatus_POSITION_STATUS_ACTIVE,
@@ -165,7 +168,9 @@ func TestClaimPaysStoredAndNewlyAccruedRewardsForActivePosition(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	owner := testAddress()
 	configureKeeper(t, ctx, keeper, owner)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(10)})
+	state := newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(10))
+	state.AllocatedRewards = math.NewInt(12)
+	keeper.SetRewardState(ctx, state)
 	keeper.SetPosition(ctx, types.Position{
 		Id: 1, Owner: owner, Shares: math.NewInt(10), RewardDebt: math.NewInt(5).ToLegacyDec(),
 		ClaimableRewards: sdk.NewCoin(types.BondDenom, math.NewInt(7)),
@@ -188,7 +193,7 @@ func TestFundRewardsRequiresGovernanceAuthority(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	authority := testAddress()
 	configureKeeper(t, ctx, keeper, authority)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.NewInt(100)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.NewInt(100)))
 
 	_, err := NewMsgServerImpl(keeper).FundRewards(sdk.WrapSDKContext(ctx), &types.MsgFundRewards{
 		Authority: testAddress(), Amount: sdk.NewCoin(types.BondDenom, math.NewInt(40)),
@@ -202,7 +207,7 @@ func TestFundRewardsEventIdentifiesCommunityPool(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	authority := keeper.GetAuthority()
 	configureKeeper(t, ctx, keeper, authority)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.NewInt(100)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.NewInt(100)))
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	_, err := NewMsgServerImpl(keeper).FundRewards(sdk.WrapSDKContext(ctx), &types.MsgFundRewards{
@@ -215,7 +220,8 @@ func TestFundRewardsEventIdentifiesCommunityPool(t *testing.T) {
 	require.Equal(t, "community_pool", eventAttribute(event, "source"))
 	require.Equal(t, "40uusd", eventAttribute(event, "amount"))
 	require.Equal(t, "0.000000000000000000", eventAttribute(event, "reward_index_before"))
-	require.Equal(t, "0.400000000000000000", eventAttribute(event, "reward_index_after"))
+	require.Equal(t, "0.000000000000000000", eventAttribute(event, "reward_index_after"))
+	require.Equal(t, "40", eventAttribute(event, "unallocated_rewards"))
 	require.Equal(t, "0uusd", eventAttribute(event, "reward_pool_balance_before"))
 	require.Equal(t, "40uusd", eventAttribute(event, "reward_pool_balance_after"))
 }
@@ -223,12 +229,11 @@ func TestFundRewardsEventIdentifiesCommunityPool(t *testing.T) {
 func configureKeeper(t *testing.T, ctx sdk.Context, keeper Keeper, authority string) {
 	t.Helper()
 	duration := 24 * time.Hour
-	keeper.SetParams(ctx, types.Params{
-		BondDenom: types.BondDenom,
-		LockTiers: []types.LockTier{{Id: 1, Duration: &duration, Multiplier: math.LegacyNewDecWithPrec(15, 1)}},
-		Authority: authority,
-	})
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt()})
+	params := types.DefaultParams()
+	params.LockTiers = []types.LockTier{{Id: 1, Duration: &duration, Multiplier: math.LegacyNewDecWithPrec(15, 1)}}
+	params.Authority = authority
+	keeper.SetParams(ctx, params)
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.ZeroInt()))
 }
 
 func testAddress() string {

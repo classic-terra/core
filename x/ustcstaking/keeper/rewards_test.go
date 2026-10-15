@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/classic-terra/core/v4/x/ustcstaking/types"
@@ -10,12 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFundThenAccrueUsesFixedPointIndex(t *testing.T) {
+func TestFundRewardsWaitsInReserveUntilElapsedTime(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
-	keeper.SetRewardState(ctx, types.RewardState{
-		RewardIndex: math.LegacyZeroDec(),
-		TotalShares: math.NewInt(1000),
-	})
+	params := types.DefaultParams()
+	params.RewardRatePerDay = math.NewInt(1000)
+	keeper.SetParams(ctx, params)
+	state := newTestRewardState(ctx, math.LegacyZeroDec(), math.NewInt(1000))
+	keeper.SetRewardState(ctx, state)
 	position := types.Position{
 		Id:         1,
 		Shares:     math.OneInt(),
@@ -23,30 +25,31 @@ func TestFundThenAccrueUsesFixedPointIndex(t *testing.T) {
 		Status:     types.PositionStatus_POSITION_STATUS_ACTIVE,
 	}
 
-	for i := 0; i < 1000; i++ {
-		require.NoError(t, keeper.FundRewards(ctx, sdk.NewCoin(types.BondDenom, math.OneInt())))
-	}
+	require.NoError(t, keeper.FundRewards(ctx, sdk.NewCoin(types.BondDenom, math.NewInt(1000))))
+	require.True(t, keeper.GetRewardState(ctx).RewardIndex.IsZero())
+	require.Equal(t, math.NewInt(1000), keeper.GetRewardState(ctx).UnallocatedRewards)
+	next := ctx.WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
+	require.NoError(t, keeper.AccrueRewards(next))
 
-	require.Equal(t, math.OneInt(), keeper.AccruedRewards(position, keeper.GetRewardState(ctx)))
+	require.Equal(t, math.OneInt(), keeper.AccruedRewards(position, keeper.GetRewardState(next)))
 	distributor := keeper.communityPoolKeeper.(*recordingCommunityPoolKeeper)
-	require.Equal(t, 1000, distributor.calls)
+	require.Equal(t, 1, distributor.calls)
 	require.Equal(t, types.RewardPoolName, distributor.recipientModule)
-	require.Equal(t, sdk.NewCoins(sdk.NewCoin(types.BondDenom, math.OneInt())), distributor.amount)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(types.BondDenom, math.NewInt(1000))), distributor.amount)
 }
 
-func TestFundingWithNoActiveSharesFailsWithoutTransfer(t *testing.T) {
+func TestFundingWithNoActiveSharesPrefundsWithoutAllocation(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt()})
+	require.NoError(t, keeper.FundRewards(ctx, sdk.NewCoin(types.BondDenom, math.OneInt())))
 
-	err := keeper.FundRewards(ctx, sdk.NewCoin(types.BondDenom, math.OneInt()))
-
-	require.ErrorIs(t, err, types.ErrNoActiveShares)
-	require.Zero(t, keeper.communityPoolKeeper.(*recordingCommunityPoolKeeper).calls)
+	require.Equal(t, math.OneInt(), keeper.GetRewardState(ctx).UnallocatedRewards)
+	require.True(t, keeper.GetRewardState(ctx).RewardIndex.IsZero())
+	require.Equal(t, 1, keeper.communityPoolKeeper.(*recordingCommunityPoolKeeper).calls)
 }
 
 func TestFundRewardsLeavesIndexUnchangedWhenCommunityPoolFails(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
-	initial := types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(100)}
+	initial := newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(100))
 	keeper.SetRewardState(ctx, initial)
 	keeper.communityPoolKeeper.(*recordingCommunityPoolKeeper).err = errors.New("insufficient community pool")
 

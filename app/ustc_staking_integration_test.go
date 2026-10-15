@@ -42,6 +42,7 @@ func TestUSTCStakingUsesRealAppKeepers(t *testing.T) {
 
 	params := ustcstakingtypes.DefaultParams()
 	params.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	params.RewardRatePerDay = sdkmath.NewInt(40)
 	params.LockTiers = []ustcstakingtypes.LockTier{{
 		Id:         1,
 		Duration:   durationPtr(time.Hour),
@@ -77,6 +78,7 @@ func TestUSTCStakingUsesRealAppKeepers(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, feePool.CommunityPool.IsZero())
 	require.True(t, suite.App.BankKeeper.GetBalance(suite.Ctx, distributionModule.GetAddress(), ustcstakingtypes.BondDenom).IsZero())
+	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(24 * time.Hour))
 
 	claimResponse, err := msgServer.ClaimRewards(
 		suite.Ctx,
@@ -268,7 +270,9 @@ func TestUSTCStakingFailedMultiMessageTxDiscardsEarlierStake(t *testing.T) {
 	require.Equal(t, principalBefore, suite.App.BankKeeper.GetAllBalances(suite.Ctx, principalModule))
 	require.Equal(t, supplyBefore, suite.App.BankKeeper.GetSupply(suite.Ctx, ustcstakingtypes.BondDenom))
 	require.Equal(t, nextIDBefore, suite.App.UstcStakingKeeper.GetNextPositionID(suite.Ctx))
-	require.Equal(t, rewardStateBefore, suite.App.UstcStakingKeeper.GetRewardState(suite.Ctx))
+	rewardStateAfter := suite.App.UstcStakingKeeper.GetRewardState(suite.Ctx)
+	rewardStateBefore.LastRewardTime = &now
+	require.Equal(t, rewardStateBefore, rewardStateAfter)
 	_, found := suite.App.UstcStakingKeeper.GetPosition(suite.Ctx, nextIDBefore)
 	require.False(t, found)
 }
@@ -328,6 +332,7 @@ func TestUSTCStakingEightUserCompleteLifecyclePreservesSupplyAndValidators(t *te
 
 	params := ustcstakingtypes.DefaultParams()
 	params.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	params.RewardRatePerDay = sdkmath.NewInt(80)
 	params.LockTiers = []ustcstakingtypes.LockTier{{Id: 1, Duration: durationPtr(time.Hour), Multiplier: sdkmath.LegacyOneDec()}}
 	suite.App.UstcStakingKeeper.SetParams(suite.Ctx, params)
 	require.NoError(t, banktestutil.FundModuleAccount(suite.Ctx, suite.App.BankKeeper, distrtypes.ModuleName,
@@ -353,6 +358,7 @@ func TestUSTCStakingEightUserCompleteLifecyclePreservesSupplyAndValidators(t *te
 		Authority: params.Authority, Amount: types.NewCoin(ustcstakingtypes.BondDenom, sdkmath.NewInt(80)),
 	})
 	require.NoError(t, err)
+	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(24 * time.Hour))
 
 	for i, owner := range owners {
 		claim, claimErr := msgServer.ClaimRewards(suite.Ctx, &ustcstakingtypes.MsgClaimRewards{Owner: owner.String(), PositionId: positionIDs[i]})
@@ -390,6 +396,7 @@ func TestUSTCStakingDustReturnsSurplusPreservingRealClaims(t *testing.T) {
 	suite.Setup(t, "ustc-dust-integration")
 	k := suite.App.UstcStakingKeeper
 	params := ustcstakingtypes.DefaultParams()
+	params.RewardRatePerDay = sdkmath.NewInt(5)
 	params.LockTiers = []ustcstakingtypes.LockTier{{Id: 1, Duration: durationPtr(time.Second), Multiplier: sdkmath.LegacyOneDec()}}
 	k.SetParams(suite.Ctx, params)
 	owners := suite.TestAccs[:2]
@@ -411,6 +418,7 @@ func TestUSTCStakingDustReturnsSurplusPreservingRealClaims(t *testing.T) {
 	}
 	_, err = server.FundRewards(suite.Ctx, &ustcstakingtypes.MsgFundRewards{Authority: k.GetAuthority(), Amount: types.NewInt64Coin(ustcstakingtypes.BondDenom, 5)})
 	require.NoError(t, err)
+	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(24 * time.Hour))
 	for i, owner := range owners {
 		_, err = server.BeginUnbonding(suite.Ctx, &ustcstakingtypes.MsgBeginUnbonding{Owner: owner.String(), PositionId: ids[i]})
 		require.NoError(t, err)
@@ -428,6 +436,7 @@ func TestUSTCStakingDustReturnsSurplusPreservingRealClaims(t *testing.T) {
 	require.Error(t, err)
 	_, err = server.ReturnRewardDust(suite.Ctx, &ustcstakingtypes.MsgReturnRewardDust{Authority: k.GetAuthority(), Amount: types.NewInt64Coin(ustcstakingtypes.BondDenom, 1)})
 	require.NoError(t, err)
+	state.AllocatedRewards = sdkmath.NewInt(4) // reconcile A to the whole claim reserve C
 	fee, err = suite.App.DistrKeeper.FeePool.Get(suite.Ctx)
 	require.NoError(t, err)
 	require.Equal(t, sdkmath.LegacyOneDec(), fee.CommunityPool.AmountOf(ustcstakingtypes.BondDenom))

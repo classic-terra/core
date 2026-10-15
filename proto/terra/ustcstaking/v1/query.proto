@@ -29,7 +29,10 @@ service Query {
 }
 
 message QueryPositionRequest { uint64 position_id = 1 [(gogoproto.moretags) = "yaml:\"position_id\""]; }
-message QueryPositionResponse { Position position = 1 [(gogoproto.nullable) = false]; }
+message QueryPositionResponse {
+  Position position = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin pending_rewards = 2 [(gogoproto.nullable) = false];
+}
 message QueryPositionsByOwnerRequest {
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -39,7 +42,18 @@ message QueryPositionsByOwnerResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 message QueryRewardStateRequest {}
-message QueryRewardStateResponse { RewardState reward_state = 1 [(gogoproto.nullable) = false]; }
+message QueryRewardStateResponse {
+  RewardState reward_state = 1 [(gogoproto.nullable) = false];
+  string reward_rate_per_day = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin reward_pool_balance = 3 [(gogoproto.nullable) = false];
+  bool paused = 4;
+  string runway_seconds = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  bool runway_defined = 6;
+}
 message QueryParamsRequest {}
 message QueryParamsResponse { Params params = 1 [(gogoproto.nullable) = false]; }
 // ValidateState pages across position records. Each RPC is capped; callers
@@ -60,4 +74,11 @@ message QueryValidateStateResponse {
   repeated cosmos.base.v1beta1.Coin principal_pool_balances = 7 [(gogoproto.nullable) = false];
   repeated cosmos.base.v1beta1.Coin reward_pool_balances = 8 [(gogoproto.nullable) = false];
   RewardState reward_state = 9 [(gogoproto.nullable) = false];
+  string claimable_liability = 10 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string reserved_rewards = 11 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string reward_liability_exact = 12 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

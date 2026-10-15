@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/classic-terra/core/v4/app/keepers"
 	"github.com/classic-terra/core/v4/app/upgrades"
+	"github.com/classic-terra/core/v4/x/ustcstaking/keeper"
 	ustcstakingtypes "github.com/classic-terra/core/v4/x/ustcstaking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -23,13 +25,14 @@ func CreateUSTCStakingUpgradeHandler(
 	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		sdkCtx, write := sdk.UnwrapSDKContext(ctx).CacheContext()
 		if existingVersion, alreadyExists := fromVM[ustcstakingtypes.ModuleName]; alreadyExists {
-			if existingVersion != 1 {
+			if existingVersion != 1 && existingVersion != 2 {
 				return nil, fmt.Errorf("unsupported existing USTC staking version %d", existingVersion)
 			}
 		} else {
 			if err := normalizePoolAccounts(sdkCtx, appKeepers); err != nil {
 				return nil, err
 			}
+			initializeFirstActivation(sdkCtx, appKeepers.UstcStakingKeeper)
 		}
 		versionMap, err := mm.RunMigrations(sdkCtx, cfg, fromVM)
 		if err != nil {
@@ -51,4 +54,15 @@ func CreateUSTCStakingUpgradeHandler(
 		write()
 		return versionMap, nil
 	}
+}
+
+func initializeFirstActivation(ctx sdk.Context, k keeper.Keeper) {
+	now := ctx.BlockTime()
+	k.SetParams(ctx, ustcstakingtypes.DefaultParams())
+	k.SetRewardState(ctx, ustcstakingtypes.RewardState{
+		RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt(),
+		UnallocatedRewards: math.ZeroInt(), AllocatedRewards: math.ZeroInt(),
+		LastRewardTime: &now, EmissionRemainder: math.ZeroInt(), IndexRemainder: math.ZeroInt(),
+	})
+	k.SetNextPositionID(ctx, 1)
 }

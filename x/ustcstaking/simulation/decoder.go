@@ -32,6 +32,8 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			return fmt.Sprintf("Params: %v\nParams: %v", paramsA, paramsB)
 		case bytes.Equal(kvA.Key, types.NextPositionIDKey):
 			return fmt.Sprintf("next-position-id: %d\nnext-position-id: %d", decodeID(kvA.Value), decodeID(kvB.Value))
+		case bytes.Equal(kvA.Key, types.ReservedRewardsKey):
+			return fmt.Sprintf("reserved-rewards: %s\nreserved-rewards: %s", kvA.Value, kvB.Value)
 		default:
 			return fmt.Sprintf("unknown ustcstaking key prefix %s: %s", hex.EncodeToString(kvA.Key), hex.EncodeToString(kvA.Value))
 		}

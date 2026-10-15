@@ -20,7 +20,14 @@ func (app *TerraApp) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
-	ctx := app.NewContext(true)
+	// A fresh process has no committed header in CheckTx state. Recover both
+	// height and time from the committed store before withdrawing rewards or
+	// rebuilding validator queues for a zero-height export.
+	ctx, err := app.CreateQueryContext(app.LastBlockHeight(), false)
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 	// We export at last height + 1, because that's the height at which
 	// Tendermint will start InitChain.
@@ -71,7 +78,7 @@ func (app *TerraApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs 
 
 	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, sdk.ValAddress(val.GetOperator()))
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, mustValidatorAddress(val.GetOperator()))
 		return false
 	})
 
@@ -106,7 +113,7 @@ func (app *TerraApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs 
 	// reinitialize all validators
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, sdk.ValAddress(val.GetOperator()))
+		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, mustValidatorAddress(val.GetOperator()))
 		if err != nil {
 			panic(err)
 		}
@@ -117,7 +124,9 @@ func (app *TerraApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs 
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
 		app.DistrKeeper.FeePool.Set(ctx, feePool)
 
-		app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, sdk.ValAddress(val.GetOperator()))
+		if err := app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, mustValidatorAddress(val.GetOperator())); err != nil {
+			panic(err)
+		}
 		return false
 	})
 
@@ -131,8 +140,12 @@ func (app *TerraApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs 
 		if err != nil {
 			panic(err)
 		}
-		app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
-		app.DistrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		if err := app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr); err != nil {
+			panic(err)
+		}
+		if err := app.DistrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr); err != nil {
+			panic(err)
+		}
 	}
 
 	// reset context height
@@ -226,4 +239,14 @@ func (app *TerraApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs 
 
 	// clear all market pools
 	app.MarketKeeper.SetTerraPoolDelta(ctx, sdkmath.LegacyZeroDec())
+}
+
+// Operator addresses became bech32 strings in newer SDK validator interfaces.
+// Converting the string directly to bytes queries an unrelated distribution key.
+func mustValidatorAddress(operator string) sdk.ValAddress {
+	address, err := sdk.ValAddressFromBech32(operator)
+	if err != nil {
+		panic(err)
+	}
+	return address
 }

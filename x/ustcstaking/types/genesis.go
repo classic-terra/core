@@ -1,9 +1,23 @@
 package types
 
 import (
+	"math/big"
+	"time"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+const emissionRemainderDenominator int64 = int64(24 * time.Hour)
+
+var legacyDecimalScale = new(big.Int).Exp(big.NewInt(10), big.NewInt(math.LegacyPrecision), nil)
+
+func maxLegacyDecimalRaw() *big.Int {
+	max := new(big.Int).Lsh(big.NewInt(1), math.MaxBitLen)
+	max.Mul(max, legacyDecimalScale)
+	return max.Sub(max, big.NewInt(1))
+}
 
 func NewGenesisState(params Params, positions []Position, rewardState RewardState, nextPositionID uint64) *GenesisState {
 	return &GenesisState{
@@ -18,7 +32,11 @@ func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultParams(),
 		nil,
-		RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt()},
+		RewardState{
+			RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt(),
+			UnallocatedRewards: math.ZeroInt(), AllocatedRewards: math.ZeroInt(),
+			EmissionRemainder: math.ZeroInt(), IndexRemainder: math.ZeroInt(),
+		},
 		1,
 	)
 }
@@ -30,12 +48,27 @@ func ValidateGenesis(genesis *GenesisState) error {
 	if err := genesis.Params.Validate(); err != nil {
 		return ErrInvalidGenesis.Wrapf("params: %s", err)
 	}
-	if genesis.RewardState.RewardIndex.IsNil() || genesis.RewardState.RewardIndex.IsNegative() ||
-		genesis.RewardState.TotalShares.IsNil() || genesis.RewardState.TotalShares.IsNegative() {
-		return ErrInvalidRewardState.Wrap("reward index and total shares must be initialized and non-negative")
+	state := genesis.RewardState
+	if state.RewardIndex.IsNil() || !state.RewardIndex.IsInValidRange() || state.RewardIndex.IsNegative() ||
+		state.TotalShares.IsNil() || state.TotalShares.IsNegative() ||
+		state.UnallocatedRewards.IsNil() || state.UnallocatedRewards.IsNegative() ||
+		state.AllocatedRewards.IsNil() || state.AllocatedRewards.IsNegative() ||
+		state.EmissionRemainder.IsNil() || state.EmissionRemainder.IsNegative() ||
+		state.IndexRemainder.IsNil() || state.IndexRemainder.IsNegative() {
+		return ErrInvalidRewardState.Wrap("reward state fields must be initialized and non-negative")
+	}
+	if state.EmissionRemainder.GTE(math.NewInt(emissionRemainderDenominator)) {
+		return ErrInvalidRewardState.Wrap("emission remainder is outside its denominator")
+	}
+	if state.LastRewardTime != nil {
+		if err := timestamppb.New(*state.LastRewardTime).CheckValid(); err != nil {
+			return ErrInvalidRewardState.Wrapf("last reward time: %s", err)
+		}
 	}
 
-	activeShares := math.ZeroInt()
+	activeShares := new(big.Int)
+	claimableLiability := new(big.Int)
+	exactLiability := new(big.Int)
 	seen := make(map[uint64]struct{}, len(genesis.Positions))
 	maxID := uint64(0)
 	for _, position := range genesis.Positions {
@@ -58,8 +91,11 @@ func ValidateGenesis(genesis *GenesisState) error {
 		if err := validateClaimable(position.ClaimableRewards); err != nil {
 			return ErrInvalidPosition.Wrapf("position %d claimable rewards: %s", position.Id, err)
 		}
+		claimable := position.ClaimableRewards.Amount.BigInt()
+		claimableLiability.Add(claimableLiability, claimable)
+		exactLiability.Add(exactLiability, new(big.Int).Mul(claimable, legacyDecimalScale))
 		if position.LockTierId == 0 || position.LockDuration == nil || *position.LockDuration <= 0 ||
-			position.ShareMultiplier.IsNil() || !position.ShareMultiplier.IsPositive() {
+			position.ShareMultiplier.IsNil() || !position.ShareMultiplier.IsPositive() || !position.ShareMultiplier.IsInValidRange() {
 			return ErrInvalidLockSnapshot.Wrapf("position %d has invalid lock snapshot", position.Id)
 		}
 		if position.Shares.IsNil() || position.RewardDebt.IsNil() || position.Shares.IsNegative() || position.RewardDebt.IsNegative() {
@@ -73,10 +109,16 @@ func ValidateGenesis(genesis *GenesisState) error {
 			if position.Shares.IsNil() || !position.Shares.IsPositive() {
 				return ErrInvalidPosition.Wrapf("active position %d must have shares", position.Id)
 			}
-			if position.Shares.ToLegacyDec().Mul(genesis.RewardState.RewardIndex).Sub(position.RewardDebt).IsNegative() {
+			pendingRaw := new(big.Int).Mul(position.Shares.BigInt(), state.RewardIndex.BigInt())
+			if pendingRaw.Cmp(maxLegacyDecimalRaw()) > 0 {
+				return ErrInvalidPosition.Wrapf("active position %d reward entitlement exceeds SDK decimal range", position.Id)
+			}
+			pendingRaw.Sub(pendingRaw, position.RewardDebt.BigInt())
+			if pendingRaw.Sign() < 0 {
 				return ErrInvalidPosition.Wrapf("active position %d reward debt exceeds accrued rewards", position.Id)
 			}
-			activeShares = activeShares.Add(position.Shares)
+			exactLiability.Add(exactLiability, pendingRaw)
+			activeShares.Add(activeShares, position.Shares.BigInt())
 		case PositionStatus_POSITION_STATUS_UNBONDING:
 			if !position.Shares.IsZero() || position.UnbondingEndTime == nil || position.UnbondingEndTime.IsZero() ||
 				!position.RewardDebt.IsZero() {
@@ -90,8 +132,24 @@ func ValidateGenesis(genesis *GenesisState) error {
 			return ErrInvalidPosition.Wrapf("position %d has unknown status", position.Id)
 		}
 	}
-	if !activeShares.Equal(genesis.RewardState.TotalShares) {
+	if activeShares.BitLen() > math.MaxBitLen || activeShares.Cmp(state.TotalShares.BigInt()) != 0 {
 		return ErrInvalidRewardState.Wrapf("total shares %s does not equal active shares %s", genesis.RewardState.TotalShares, activeShares)
+	}
+	if state.TotalShares.IsZero() && !state.IndexRemainder.IsZero() ||
+		state.TotalShares.IsPositive() && state.IndexRemainder.GTE(state.TotalShares) {
+		return ErrInvalidRewardState.Wrap("index remainder is outside its share denominator")
+	}
+	allocatedExact := new(big.Int).Mul(state.AllocatedRewards.BigInt(), legacyDecimalScale)
+	if claimableLiability.BitLen() > math.MaxBitLen || state.AllocatedRewards.BigInt().Cmp(claimableLiability) < 0 || allocatedExact.Cmp(exactLiability) < 0 {
+		return ErrInvalidRewardState.Wrap("allocated rewards do not cover position liabilities")
+	}
+	if state.LastRewardTime == nil {
+		if len(genesis.Positions) != 0 || !state.RewardIndex.IsZero() || !state.TotalShares.IsZero() ||
+			!state.UnallocatedRewards.IsZero() || !state.AllocatedRewards.IsZero() || claimableLiability.Sign() != 0 ||
+			!state.EmissionRemainder.IsZero() || !state.IndexRemainder.IsZero() || genesis.NextPositionId != 1 ||
+			!genesis.Params.Equal(DefaultParams()) {
+			return ErrInvalidRewardState.Wrap("last reward time is required outside the empty default genesis")
+		}
 	}
 	if genesis.NextPositionId <= maxID {
 		return ErrInvalidGenesis.Wrapf("next position id %d must exceed max position id %d", genesis.NextPositionId, maxID)

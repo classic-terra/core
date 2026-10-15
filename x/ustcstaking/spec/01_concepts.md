@@ -44,9 +44,9 @@ For a position with shares `S`, reward index `I`, and position reward-debt snaps
 accrued = truncate(S * (I - D))
 ```
 
-Claimable rewards are added to accrued rewards when a position begins unbonding or claims. Funding increases the global index by the funded amount divided by active shares. Rewards are settled before shares are removed, so an unbonding position does not continue accruing.
+Governance funding moves existing `uusd` into an unallocated reserve `U`; it never changes the reward index immediately. A governance-configured rate `R` releases at most `R` `uusd` per 86,400 seconds across all active shares. BeginBlock uses consensus block time to move released value from `U` to allocated/protected rewards `A` and advances the index. Rewards are settled before a stake joins or shares leave, so new positions receive no rewards from before they joined and unbonding positions stop earning immediately.
 
-The module tracks accounting in fixed-point values but pays whole `uusd` coins. Fractional remainder is retained as accounting dust rather than overpaid.
+The module tracks accounting in fixed-point values but pays whole `uusd` coins. A claim pays its whole-unit entitlement and retains any active fractional entitlement in reward debt, so frequent claims do not erase fractions. On unbonding, the fractional part is terminal and is conservatively retained as rounding dust. `A` protects released rewards and legacy funds; it is not a user-facing exact claim total.
 
 ## No-minting model
 
@@ -62,4 +62,4 @@ This makes the reward liability externally funded and bounded by available USTC.
 
 ## Authority and pause controls
 
-The governance authority can replace the complete parameter set, including lock tiers and the pause flag, and is the only authority that can fund rewards from the community pool. When paused, new staking and reward-funding operations are rejected; existing positions can still begin unbonding, withdraw after maturity, or claim rewards. Governance parameter updates remain available so the module can be resumed.
+The governance authority can replace the complete parameter set, including lock tiers, the daily release rate, and the pause flag, and is the only authority that can fund rewards from the community pool. When paused, new staking and reward emission stop; governance can still fund the unallocated reserve, and existing positions can unbond, withdraw after maturity, or claim released rewards. Governance parameter updates remain available so the module can be resumed. The default tier is a 21-day lock with a 1× multiplier, and the default release rate is zero.

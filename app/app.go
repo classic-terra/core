@@ -113,6 +113,7 @@ var (
 		v14_3.Upgrade,
 		v14_4.Upgrade,
 		ustcstakingupgrade.Upgrade,
+		ustcstakingupgrade.ExistingStoreUpgrade,
 	}
 
 	// Forks defines forks to be applied to the network

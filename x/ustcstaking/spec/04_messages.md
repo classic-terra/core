@@ -60,17 +60,17 @@ type MsgFundRewards struct {
 }
 ```
 
-Requires the immutable governance module authority. Debits the distribution community pool, transfers the existing funds into the reward pool, and increases the reward index across active shares. Users stake directly through `MsgStake`; no contract handles principal.
+Requires the immutable governance module authority. Debits the distribution community pool and transfers the existing funds into the reward pool, increasing unallocated reserve `U`. It does not immediately increase the reward index and is allowed before staking, while paused, or after exhaustion. Users stake directly through `MsgStake`; no contract handles principal.
 
 ### `MsgReturnRewardDust`
 
-Requires the immutable governance module authority and a positive `uusd` amount. The amount must not exceed reward-pool balance minus reserved integer claims, and total active shares must be zero. Funds return to the distribution community pool. This operation is allowed while paused.
+Requires the immutable governance module authority and a positive `uusd` amount. The amount must not exceed `B - U - C`, where `B` is the reward-pool bank balance and `C` is the stored integer claim reserve; total active shares must be zero. Funds return to the distribution community pool and `A` is reconciled to `C` only if the transfer succeeds. This operation is allowed while paused, but never returns `U`.
 
 ## Authority messages
 
 ### `MsgUpdateParams`
 
-Requires the immutable governance module authority and replaces the complete validated parameter set. This is the control used to configure tiers or pause/resume operations.
+Requires the immutable governance module authority and replaces the complete validated parameter set. This is the control used to configure tiers, set the global `reward_rate_per_day` in `uusd` per 86,400 seconds, or pause/resume operations. The complete params object must preserve any other configured tiers and values.
 
 ## Queries
 
@@ -79,7 +79,10 @@ The module exposes:
 * `Query/Position(position_id)`;
 * `Query/PositionsByOwner(owner, pagination)`;
 * `Query/RewardState()`; and
-* `Query/Params()`.
+* `Query/Params()`; and
+* `Query/ValidateState(pagination)` for paged collateral and reward-liability diagnostics.
+
+`Query/Position` includes total whole-unit pending rewards without mutating stored reward debt. `Query/RewardState` reports `U`, `A`, configured rate, actual reward-pool balance, pause state, and potential runway; runway is undefined when the rate is zero and is not a calendar promise while paused or without active shares.
 
 REST paths are rooted at `/terra/ustcstaking/v1/` as defined in the protobuf query service.
 

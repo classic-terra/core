@@ -17,17 +17,32 @@ func ValidateGenesis(data *types.GenesisState) error {
 }
 
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
+	if data == nil {
+		panic(fmt.Sprintf("invalid %s genesis: %s", types.ModuleName, types.ErrInvalidGenesis.Wrap("genesis is nil")))
+	}
 	if err := ValidateGenesis(data); err != nil {
 		panic(fmt.Sprintf("invalid %s genesis: %s", types.ModuleName, err))
 	}
-	k.SetParams(ctx, data.Params)
-	k.SetRewardState(ctx, data.RewardState)
-	for _, position := range data.Positions {
+	normalized := *data
+	state := data.RewardState
+	if state.LastRewardTime == nil {
+		now := ctx.BlockTime()
+		state.LastRewardTime = &now
+	} else if state.LastRewardTime.After(ctx.BlockTime()) {
+		panic(fmt.Sprintf("invalid %s genesis: %s", types.ModuleName, types.ErrInvalidRewardState.Wrap("last reward time is in the future")))
+	}
+	normalized.RewardState = state
+	if err := ValidateGenesis(&normalized); err != nil {
+		panic(fmt.Sprintf("invalid %s genesis: %s", types.ModuleName, err))
+	}
+	k.SetParams(ctx, normalized.Params)
+	k.SetRewardState(ctx, normalized.RewardState)
+	for _, position := range normalized.Positions {
 		if err := k.SetPosition(ctx, position); err != nil {
 			panic(fmt.Sprintf("invalid %s position: %s", types.ModuleName, err))
 		}
 	}
-	k.SetNextPositionID(ctx, data.NextPositionId)
+	k.SetNextPositionID(ctx, normalized.NextPositionId)
 	if err := k.RebuildDerivedState(ctx); err != nil {
 		panic(fmt.Sprintf("invalid %s derived state: %s", types.ModuleName, err))
 	}

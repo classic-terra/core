@@ -17,6 +17,15 @@ func TestDefaultGenesisDoesNotExposeFundingAuthority(t *testing.T) {
 	require.Contains(t, string(encoded), "authority")
 }
 
+func TestDefaultGenesisInitializesStreamingState(t *testing.T) {
+	genesis := DefaultGenesisState()
+	require.True(t, genesis.RewardState.UnallocatedRewards.IsZero())
+	require.True(t, genesis.RewardState.AllocatedRewards.IsZero())
+	require.True(t, genesis.RewardState.EmissionRemainder.IsZero())
+	require.True(t, genesis.RewardState.IndexRemainder.IsZero())
+	require.Nil(t, genesis.RewardState.LastRewardTime)
+}
+
 func TestGenesisValidateRejectsNegativeRewardState(t *testing.T) {
 	genesis := DefaultGenesisState()
 	genesis.RewardState.RewardIndex = math.LegacyOneDec().Neg()
@@ -62,6 +71,8 @@ func TestGenesisValidateRejectsActiveSharesMismatch(t *testing.T) {
 func TestGenesisValidateAcceptsWithdrawnPositionWithZeroPrincipal(t *testing.T) {
 	genesis := DefaultGenesisState()
 	duration := time.Hour
+	lastRewardTime := time.Date(2026, 10, 13, 0, 0, 0, 0, time.UTC)
+	genesis.RewardState.LastRewardTime = &lastRewardTime
 	genesis.Positions = []Position{
 		{
 			Id:               1,

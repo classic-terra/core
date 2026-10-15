@@ -21,4 +21,5 @@ var (
 	ErrPositionIDExhausted  = errors.Register(ModuleName, 17, "position ID exhausted")
 	ErrInvalidLockSnapshot  = errors.Register(ModuleName, 18, "invalid lock snapshot")
 	ErrCorruptOwnerIndex    = errors.Register(ModuleName, 19, "corrupt owner index")
+	ErrInvalidRewardRate    = errors.Register(ModuleName, 20, "invalid reward rate")
 )

@@ -74,6 +74,34 @@ message RewardState {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"total_shares\""
   ];
+  string unallocated_rewards = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"unallocated_rewards\""
+  ];
+  string allocated_rewards = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"allocated_rewards\""
+  ];
+  google.protobuf.Timestamp last_reward_time = 5 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_reward_time\""
+  ];
+  string emission_remainder = 6 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"emission_remainder\""
+  ];
+  string index_remainder = 7 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"index_remainder\""
+  ];
 }
 
 message Params {
@@ -86,4 +114,10 @@ message Params {
   repeated LockTier lock_tiers = 2 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"lock_tiers\""];
   string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"authority\""];
   bool paused = 5 [(gogoproto.moretags) = "yaml:\"paused\""];
+  string reward_rate_per_day = 6 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"reward_rate_per_day\""
+  ];
 }

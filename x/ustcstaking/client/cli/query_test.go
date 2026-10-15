@@ -24,3 +24,8 @@ func TestPositionsQueryUsesDocumentedNameAndLegacyAlias(t *testing.T) {
 	require.Equal(t, "positions [owner]", cmd.Use)
 	require.Contains(t, cmd.Aliases, "positions-by-owner")
 }
+
+func TestValidationFailureProducesNonzeroCommandError(t *testing.T) {
+	err := validationFailure("reward pool is below protected reserves")
+	require.EqualError(t, err, "USTC staking validation failed: reward pool is below protected reserves")
+}

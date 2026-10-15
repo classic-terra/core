@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
@@ -29,7 +30,21 @@ func (q queryServer) Position(goCtx context.Context, req *types.QueryPositionReq
 	if !found {
 		return nil, sdkerrors.ErrNotFound.Wrapf("position %d", req.PositionId)
 	}
-	return &types.QueryPositionResponse{Position: position}, nil
+	pending := position.ClaimableRewards.Amount
+	if pending.IsNil() || pending.IsNegative() {
+		return nil, types.ErrInvalidPosition.Wrap("claimable reward amount is invalid")
+	}
+	if position.Status == types.PositionStatus_POSITION_STATUS_ACTIVE {
+		active, err := activePendingWhole(position, q.GetRewardState(ctx))
+		if err != nil {
+			return nil, err
+		}
+		pending, err = checkedRewardAdd(pending, active)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &types.QueryPositionResponse{Position: position, PendingRewards: sdk.NewCoin(types.BondDenom, pending)}, nil
 }
 
 func (q queryServer) PositionsByOwner(goCtx context.Context, req *types.QueryPositionsByOwnerRequest) (*types.QueryPositionsByOwnerResponse, error) {
@@ -64,7 +79,30 @@ func (q queryServer) PositionsByOwner(goCtx context.Context, req *types.QueryPos
 
 func (q queryServer) RewardState(goCtx context.Context, _ *types.QueryRewardStateRequest) (*types.QueryRewardStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.QueryRewardStateResponse{RewardState: q.GetRewardState(ctx)}, nil
+	state := q.GetRewardState(ctx)
+	params := q.GetParams(ctx)
+	if err := validateStreamingScalars(state, params); err != nil || state.LastRewardTime == nil {
+		return nil, types.ErrInvalidRewardState.Wrapf("cannot query invalid streaming state: %v", err)
+	}
+	pool := q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.RewardPoolName), types.BondDenom)
+	if pool.Amount.IsNil() || pool.Amount.IsNegative() {
+		return nil, types.ErrRewardPoolInsolvent
+	}
+	runway := "0"
+	defined := params.RewardRatePerDay.IsPositive()
+	if defined {
+		numerator := new(big.Int).Mul(state.UnallocatedRewards.BigInt(), big.NewInt(86_400))
+		seconds := new(big.Int).Quo(numerator, params.RewardRatePerDay.BigInt())
+		if seconds.BitLen() > math.MaxBitLen {
+			return nil, types.ErrInvalidRewardState.Wrap("reward runway exceeds SDK integer range")
+		}
+		runway = seconds.String()
+	}
+	return &types.QueryRewardStateResponse{
+		RewardState: state, RewardRatePerDay: params.RewardRatePerDay,
+		RewardPoolBalance: pool, Paused: params.Paused,
+		RunwaySeconds: runway, RunwayDefined: defined,
+	}, nil
 }
 
 func (q queryServer) Params(goCtx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
@@ -94,13 +132,24 @@ func (q queryServer) ValidateState(goCtx context.Context, req *types.QueryValida
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("validation page key must be empty or 8 bytes")
 	}
 
+	state := q.GetRewardState(ctx)
+	if err := validateStreamingScalars(state, q.GetParams(ctx)); err != nil || state.LastRewardTime == nil {
+		return nil, types.ErrInvalidRewardState.Wrapf("cannot validate invalid streaming state: %v", err)
+	}
+	principalPool := q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.PrincipalPoolName), types.BondDenom)
+	rewardPool := q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.RewardPoolName), types.BondDenom)
+	reservedRewards, err := q.GetReservedRewardsChecked(ctx)
+	if err != nil {
+		return nil, err
+	}
 	response := &types.QueryValidateStateResponse{
 		Valid: true, PrincipalLiability: "0", ActiveShares: "0", RewardLiability: "0",
-		PrincipalPoolBalances: sdk.NewCoins(q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.PrincipalPoolName), types.BondDenom)),
-		RewardPoolBalances:    sdk.NewCoins(q.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(types.RewardPoolName), types.BondDenom)),
-		RewardState:           q.GetRewardState(ctx),
+		ClaimableLiability: "0", RewardLiabilityExact: math.LegacyZeroDec().String(),
+		PrincipalPoolBalances: sdk.NewCoins(principalPool), RewardPoolBalances: sdk.NewCoins(rewardPool),
+		RewardState: state, ReservedRewards: reservedRewards,
 	}
-	principalLiability, activeShares, rewardLiability := math.ZeroInt(), math.ZeroInt(), math.ZeroInt()
+	principalLiability, activeShares := math.ZeroInt(), math.ZeroInt()
+	rewardLiability, claimableLiability, rewardLiabilityExact := new(big.Int), new(big.Int), new(big.Int)
 	positions := prefix.NewStore(ctx.KVStore(q.storeKey), types.PositionKeyPrefix)
 	pageRes, err := query.Paginate(positions, pageReq, func(key, value []byte) error {
 		if len(key) != 8 {
@@ -124,22 +173,32 @@ func (q queryServer) ValidateState(goCtx context.Context, req *types.QueryValida
 			if position.Principal.Denom != types.BondDenom || position.Principal.Amount.IsNil() || !position.Principal.Amount.IsPositive() {
 				return types.ErrInvalidPosition.Wrapf("position %d has invalid principal", position.Id)
 			}
-			principalLiability = principalLiability.Add(position.Principal.Amount)
+			principalLiability, err = checkedRewardAdd(principalLiability, position.Principal.Amount)
+			if err != nil {
+				return err
+			}
 		}
 
-		positionRewards := position.ClaimableRewards.Amount
+		claimable := position.ClaimableRewards.Amount.BigInt()
+		claimableLiability.Add(claimableLiability, claimable)
+		rewardLiability.Add(rewardLiability, claimable)
+		rewardLiabilityExact.Add(rewardLiabilityExact, new(big.Int).Mul(claimable, rewardIndexScaleBig))
 		switch position.Status {
 		case types.PositionStatus_POSITION_STATUS_ACTIVE:
-			state := response.RewardState
 			if position.Shares.IsNil() || !position.Shares.IsPositive() || position.RewardDebt.IsNil() || state.RewardIndex.IsNil() || state.RewardIndex.IsNegative() {
 				return types.ErrInvalidPosition.Wrapf("active position %d has invalid share accounting", position.Id)
 			}
-			activeShares = activeShares.Add(position.Shares)
-			raw := position.Shares.ToLegacyDec().Mul(state.RewardIndex).Sub(position.RewardDebt)
-			if raw.IsNegative() {
-				return types.ErrInvalidPosition.Wrapf("active position %d reward debt exceeds entitlement", position.Id)
+			activeShares, err = checkedRewardAdd(activeShares, position.Shares)
+			if err != nil {
+				return err
 			}
-			positionRewards = positionRewards.Add(raw.TruncateInt())
+			raw, err := activePendingRaw(position, state)
+			if err != nil {
+				return err
+			}
+			whole := new(big.Int).Quo(new(big.Int).Set(raw), rewardIndexScaleBig)
+			rewardLiability.Add(rewardLiability, whole)
+			rewardLiabilityExact.Add(rewardLiabilityExact, raw)
 		case types.PositionStatus_POSITION_STATUS_UNBONDING, types.PositionStatus_POSITION_STATUS_WITHDRAWN:
 			if position.Shares.IsNil() || !position.Shares.IsZero() || position.RewardDebt.IsNil() || !position.RewardDebt.IsZero() {
 				return types.ErrInvalidPosition.Wrapf("inactive position %d retains shares or reward debt", position.Id)
@@ -147,7 +206,6 @@ func (q queryServer) ValidateState(goCtx context.Context, req *types.QueryValida
 		default:
 			return types.ErrInvalidPosition.Wrapf("position %d has unknown status %s", position.Id, position.Status)
 		}
-		rewardLiability = rewardLiability.Add(positionRewards)
 		return nil
 	})
 	if err != nil {
@@ -157,6 +215,15 @@ func (q queryServer) ValidateState(goCtx context.Context, req *types.QueryValida
 	response.PrincipalLiability = principalLiability.String()
 	response.ActiveShares = activeShares.String()
 	response.RewardLiability = rewardLiability.String()
+	if rewardLiability.BitLen() > math.MaxBitLen || claimableLiability.BitLen() > math.MaxBitLen {
+		return nil, types.ErrInvalidRewardState.Wrap("page reward liability exceeds SDK integer range")
+	}
+	exact := math.LegacyNewDecFromBigIntWithPrec(rewardLiabilityExact, math.LegacyPrecision)
+	if !exact.IsInValidRange() {
+		return nil, types.ErrInvalidRewardState.Wrap("page exact reward liability exceeds SDK decimal range")
+	}
+	response.ClaimableLiability = claimableLiability.String()
+	response.RewardLiabilityExact = exact.String()
 	response.Detail = fmt.Sprintf("validated page of up to %d positions", pageReq.Limit)
 	return response, nil
 }

@@ -1,4 +1,6 @@
-# USTC Staking Phase 2 Community-Pool Validator Campaign
+# USTC Staking Phase 2 Community-Pool Validator Campaign (superseded)
+
+> **Do not execute the legacy expectations in this document for streaming rewards.** Its instructions assume funding immediately updates the reward index, funding while paused or without active shares fails, and fresh tiers are empty. Those behaviors are obsolete. Use the current [streaming-rewards localnet campaign](phase-2-streaming-rewards-localnet-testing.md), which preserves the seven-validator, restart, supply, and LUNC-isolation checks with current economics.
 
 This runbook is for independent validators testing governance-authorized
 community-pool reward funding for native USTC staking on a disposable,

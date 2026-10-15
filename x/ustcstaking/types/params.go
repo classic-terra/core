@@ -2,25 +2,30 @@ package types
 
 import (
 	"fmt"
+	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// DefaultParams intentionally contains no lock tiers. Governance must configure
-// at least one tier before users can create positions.
 func DefaultParams() Params {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	duration := 21 * 24 * time.Hour
 	return Params{
-		BondDenom: BondDenom,
-		LockTiers: []LockTier{},
-		Authority: authority,
-		Paused:    false,
+		BondDenom:        BondDenom,
+		LockTiers:        []LockTier{{Id: 1, Duration: &duration, Multiplier: math.LegacyOneDec()}},
+		Authority:        authority,
+		Paused:           false,
+		RewardRatePerDay: math.ZeroInt(),
 	}
 }
 
 func (p Params) Validate() error {
+	if p.RewardRatePerDay.IsNil() || p.RewardRatePerDay.IsNegative() || p.RewardRatePerDay.BigInt().BitLen() > math.MaxBitLen {
+		return ErrInvalidRewardRate.Wrap("rate must be an initialized, non-negative SDK integer")
+	}
 	if p.BondDenom != BondDenom {
 		return ErrInvalidDenom.Wrapf("expected %s, got %s", BondDenom, p.BondDenom)
 	}

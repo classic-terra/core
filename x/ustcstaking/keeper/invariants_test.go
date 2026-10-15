@@ -47,7 +47,7 @@ func TestActiveSharesInvariantMatchesRewardState(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	owner := testAddress()
 	require.NoError(t, keeper.SetPosition(ctx, types.Position{Id: 1, Owner: owner, Shares: math.NewInt(7), Status: types.PositionStatus_POSITION_STATUS_ACTIVE}))
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.NewInt(7)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.NewInt(7)))
 
 	message, broken := activeSharesInvariant(keeper)(ctx)
 
@@ -68,7 +68,9 @@ func TestRewardSolvencyInvariantIncludesActiveAndClaimable(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	owner := testAddress()
 	require.NoError(t, keeper.SetPosition(ctx, types.Position{Id: 1, Owner: owner, Shares: math.NewInt(10), RewardDebt: math.LegacyZeroDec(), ClaimableRewards: sdk.NewCoin(types.BondDenom, math.ZeroInt()), Status: types.PositionStatus_POSITION_STATUS_ACTIVE}))
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(10)})
+	state := newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(10))
+	state.AllocatedRewards = math.NewInt(10)
+	keeper.SetRewardState(ctx, state)
 	keeper.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewCoin(types.BondDenom, math.NewInt(13))
 
 	message, broken := rewardSolvencyInvariant(keeper)(ctx)
@@ -80,13 +82,15 @@ func TestRewardSolvencyInvariantReportsShortfall(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	owner := testAddress()
 	require.NoError(t, keeper.SetPosition(ctx, types.Position{Id: 1, Owner: owner, Shares: math.NewInt(10), RewardDebt: math.LegacyZeroDec(), ClaimableRewards: sdk.NewCoin(types.BondDenom, math.ZeroInt()), Status: types.PositionStatus_POSITION_STATUS_ACTIVE}))
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(10)})
+	state := newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(10))
+	state.AllocatedRewards = math.NewInt(10)
+	keeper.SetRewardState(ctx, state)
 	keeper.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewCoin(types.BondDenom, math.NewInt(9))
 
 	message, broken := rewardSolvencyInvariant(keeper)(ctx)
 
 	require.True(t, broken)
-	require.True(t, strings.Contains(message, "expected=10"))
+	require.True(t, strings.Contains(message, "liability=10"))
 }
 
 func TestRewardSolvencyInvariantIncludesActiveClaimableRewards(t *testing.T) {
@@ -98,13 +102,15 @@ func TestRewardSolvencyInvariantIncludesActiveClaimableRewards(t *testing.T) {
 		Status:           types.PositionStatus_POSITION_STATUS_ACTIVE,
 	}
 	require.NoError(t, keeper.SetPosition(ctx, position))
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(10)})
+	state := newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(10))
+	state.AllocatedRewards = math.NewInt(15)
+	keeper.SetRewardState(ctx, state)
 	keeper.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewCoin(types.BondDenom, math.NewInt(14))
 
 	message, broken := rewardSolvencyInvariant(keeper)(ctx)
 
 	require.True(t, broken)
-	require.Contains(t, message, "expected=15")
+	require.Contains(t, message, "liability=15")
 }
 
 func TestRewardSolvencyInvariantRejectsActiveRewardDebtAboveEntitlement(t *testing.T) {
@@ -114,13 +120,26 @@ func TestRewardSolvencyInvariantRejectsActiveRewardDebtAboveEntitlement(t *testi
 		Status: types.PositionStatus_POSITION_STATUS_ACTIVE,
 	}
 	require.NoError(t, keeper.SetPosition(ctx, position))
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.OneInt()})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.OneInt()))
 	keeper.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewCoin(types.BondDenom, math.ZeroInt())
 
 	message, broken := rewardSolvencyInvariant(keeper)(ctx)
 
 	require.True(t, broken)
 	require.Contains(t, message, "offending_position=1")
+}
+
+func TestRewardInvariantReportsCorruptDerivedReserveWithoutPanicking(t *testing.T) {
+	ctx, keeper := newKeeperTest(t)
+	ctx.KVStore(keeper.storeKey).Set(types.ReservedRewardsKey, []byte("not-an-integer"))
+
+	var message string
+	require.NotPanics(t, func() {
+		message, _ = rewardSolvencyInvariant(keeper)(ctx)
+	})
+	_, broken := rewardSolvencyInvariant(keeper)(ctx)
+	require.True(t, broken)
+	require.Contains(t, message, "invalid stored reserved reward total")
 }
 
 type invariantRegistry struct {

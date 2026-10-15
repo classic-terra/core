@@ -23,6 +23,31 @@ func TestDefaultParamsUseOnlyGovernanceAuthority(t *testing.T) {
 	require.NoError(t, params.Validate())
 }
 
+func TestDefaultParamsConfigureTwentyOneDayTierAndZeroRewardRate(t *testing.T) {
+	params := DefaultParams()
+	require.Len(t, params.LockTiers, 1)
+	require.Equal(t, uint32(1), params.LockTiers[0].Id)
+	require.Equal(t, 21*24*time.Hour, *params.LockTiers[0].Duration)
+	require.True(t, params.LockTiers[0].Multiplier.Equal(math.LegacyOneDec()))
+	require.True(t, params.RewardRatePerDay.IsZero())
+	require.NoError(t, params.Validate())
+}
+
+func TestParamsValidateRejectsMissingOrNegativeRewardRate(t *testing.T) {
+	params := DefaultParams()
+	params.RewardRatePerDay = math.Int{}
+	require.ErrorIs(t, params.Validate(), ErrInvalidRewardRate)
+
+	params.RewardRatePerDay = math.NewInt(-1)
+	require.ErrorIs(t, params.Validate(), ErrInvalidRewardRate)
+}
+
+func TestParamsValidateAcceptsPositiveRewardRate(t *testing.T) {
+	params := DefaultParams()
+	params.RewardRatePerDay = math.NewInt(1_000_000_000)
+	require.NoError(t, params.Validate())
+}
+
 func TestParamsValidateRejectsDuplicateTierIDs(t *testing.T) {
 	params := DefaultParams()
 	params.LockTiers = []LockTier{

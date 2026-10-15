@@ -41,8 +41,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (ustcstaking) #693 Fix governance authority, length-prefix owner indexes, tolerate surplus custody balances, and prune fully settled withdrawn positions.
 * (client) #693 Add a governance-only operation to return unreserved reward-pool dust to the community pool.
 * (simulation) #693 Exercise native USTC staking lifecycle operations and community-pool proposal messages in app simulations.
-* (upgrade) #693 Rehearse activation from the pinned v4.0.1-patch.3 predecessor under the v14_5 upgrade plan name.
+* (upgrade) #693 Add the versioned USTC staking activation path; the target chain upgrade name and height remain release inputs.
 * (client) #693 Reserve error code 1; USTC module error codes now start at 2 before initial activation.
+* (ustcstaking) #693 Stream governance-funded USTC from an unallocated reserve at a configurable `uusd`-per-day rate; funding no longer allocates immediately, and staking remains eligible without a minimum age or minimum amount beyond positive shares.
+* (ustcstaking) #693 Default to a 21-day, 1× lock tier and a zero reward-release rate; governance may fund before staking, top up while paused, change the rate, or fund after exhaustion.
+* (upgrade) #693 Add the USTC staking v1-to-v2 streaming-state migration; the full pre-existing reward-pool balance is protected as allocated legacy funds and does not stream automatically.
+* (simulation) #693 Resume import/export simulations from exported consensus settlement time and avoid treating tax-adjusted unbalanced multisends as valid generated operations.
 
 ### State Machine Breaking
 * (app) [#319](https://github.com/classic-terra/core/pull/319) Upgrade SDKs

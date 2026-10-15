@@ -27,7 +27,10 @@ func (k Keeper) SetPosition(ctx sdk.Context, position types.Position) error {
 		return types.ErrInvalidPosition.Wrapf("position %d owner: %s", position.Id, err)
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.PositionKeyPrefix)
-	reserved := k.GetReservedRewards(ctx)
+	reserved, err := k.GetReservedRewardsChecked(ctx)
+	if err != nil {
+		return err
+	}
 	if existing, found := k.GetPosition(ctx, position.Id); found {
 		if existing.Owner != position.Owner {
 			return types.ErrPositionOwner
@@ -55,7 +58,11 @@ func (k Keeper) DeletePosition(ctx sdk.Context, id uint64) error {
 	if err != nil {
 		return types.ErrInvalidPosition.Wrapf("position %d owner: %s", id, err)
 	}
-	reserved := k.GetReservedRewards(ctx).Sub(claimableAmount(position))
+	reserved, err := k.GetReservedRewardsChecked(ctx)
+	if err != nil {
+		return err
+	}
+	reserved = reserved.Sub(claimableAmount(position))
 	if reserved.IsNegative() {
 		return types.ErrInvalidRewardState.Wrap("negative reserved rewards")
 	}
@@ -76,15 +83,23 @@ func claimableAmount(p types.Position) math.Int {
 // GetReservedRewards is a derived aggregate of integer claimable obligations.
 // Position writes maintain it; genesis imports rebuild it from position records.
 func (k Keeper) GetReservedRewards(ctx sdk.Context) math.Int {
+	amount, err := k.GetReservedRewardsChecked(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return amount
+}
+
+func (k Keeper) GetReservedRewardsChecked(ctx sdk.Context) (math.Int, error) {
 	bz := ctx.KVStore(k.storeKey).Get(types.ReservedRewardsKey)
 	if bz == nil {
-		return math.ZeroInt()
+		return math.ZeroInt(), nil
 	}
 	amount, ok := math.NewIntFromString(string(bz))
 	if !ok || amount.IsNegative() {
-		panic("invalid USTC reserved rewards")
+		return math.Int{}, types.ErrInvalidRewardState.Wrap("invalid stored reserved reward total")
 	}
-	return amount
+	return amount, nil
 }
 
 func (k Keeper) setReservedRewards(ctx sdk.Context, amount math.Int) {

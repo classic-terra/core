@@ -84,7 +84,7 @@ func TestQueriesDoNotMutateRewardDebt(t *testing.T) {
 		RewardDebt: math.LegacyZeroDec(), Status: types.PositionStatus_POSITION_STATUS_ACTIVE,
 	}
 	keeper.SetPosition(ctx, position)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(10)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(10)))
 	server := NewQueryServerImpl(keeper)
 
 	_, err := server.Position(sdk.WrapSDKContext(ctx), &types.QueryPositionRequest{PositionId: ownerPositionID})
@@ -96,7 +96,7 @@ func TestQueriesDoNotMutateRewardDebt(t *testing.T) {
 func TestQueryRewardStateAndParams(t *testing.T) {
 	ctx, keeper := newKeeperTest(t)
 	server := NewQueryServerImpl(keeper)
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyOneDec(), TotalShares: math.NewInt(7)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyOneDec(), math.NewInt(7)))
 
 	rewardState, err := server.RewardState(sdk.WrapSDKContext(ctx), &types.QueryRewardStateRequest{})
 	require.NoError(t, err)
@@ -105,6 +105,51 @@ func TestQueryRewardStateAndParams(t *testing.T) {
 	params, err := server.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, types.DefaultParams(), params.Params)
+}
+
+func TestRewardStateQueryReturnsReserveBalanceAndPotentialRunway(t *testing.T) {
+	ctx, keeper := newKeeperTest(t)
+	params := types.DefaultParams()
+	params.RewardRatePerDay = math.NewInt(100)
+	params.Paused = true
+	keeper.SetParams(ctx, params)
+	state := newTestRewardState(ctx, math.LegacyZeroDec(), math.ZeroInt())
+	state.UnallocatedRewards = math.NewInt(200)
+	keeper.SetRewardState(ctx, state)
+	keeper.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewInt64Coin(types.BondDenom, 250)
+	server := NewQueryServerImpl(keeper)
+
+	response, err := server.RewardState(sdk.WrapSDKContext(ctx), &types.QueryRewardStateRequest{})
+
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(100), response.RewardRatePerDay)
+	require.Equal(t, sdk.NewInt64Coin(types.BondDenom, 250), response.RewardPoolBalance)
+	require.True(t, response.Paused)
+	require.True(t, response.RunwayDefined)
+	require.Equal(t, "172800", response.RunwaySeconds)
+	require.Equal(t, math.NewInt(200), keeper.GetRewardState(ctx).UnallocatedRewards)
+}
+
+func TestPositionQueryIncludesWholePendingWithoutMutatingPosition(t *testing.T) {
+	ctx, keeper := newKeeperTest(t)
+	owner := testAddress()
+	position := types.Position{
+		Id: 1, Owner: owner, Shares: math.OneInt(), RewardDebt: math.LegacyZeroDec(),
+		ClaimableRewards: sdk.NewInt64Coin(types.BondDenom, 2), Status: types.PositionStatus_POSITION_STATUS_ACTIVE,
+	}
+	require.NoError(t, keeper.SetPosition(ctx, position))
+	state := newTestRewardState(ctx, math.LegacyNewDecWithPrec(15, 1), math.OneInt())
+	state.AllocatedRewards = math.NewInt(3)
+	keeper.SetRewardState(ctx, state)
+	server := NewQueryServerImpl(keeper)
+
+	response, err := server.Position(sdk.WrapSDKContext(ctx), &types.QueryPositionRequest{PositionId: 1})
+
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(3), response.PendingRewards.Amount)
+	require.True(t, response.Position.RewardDebt.IsZero())
+	stored, _ := keeper.GetPosition(ctx, 1)
+	require.True(t, stored.RewardDebt.IsZero())
 }
 
 func TestQueryValidateStateReportsValidAndCorruptState(t *testing.T) {
@@ -136,7 +181,7 @@ func TestQueryValidateStateBoundsEachPageAndReturnsPartialLiabilities(t *testing
 			Status:           types.PositionStatus_POSITION_STATUS_ACTIVE,
 		}))
 	}
-	keeper.SetRewardState(ctx, types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.NewInt(20)})
+	keeper.SetRewardState(ctx, newTestRewardState(ctx, math.LegacyZeroDec(), math.NewInt(20)))
 	server := NewQueryServerImpl(keeper)
 
 	first, err := server.ValidateState(sdk.WrapSDKContext(ctx), &types.QueryValidateStateRequest{Pagination: &query.PageRequest{Limit: 1}})
@@ -158,6 +203,27 @@ func TestQueryValidateStateBoundsEachPageAndReturnsPartialLiabilities(t *testing
 	require.Error(t, err)
 	_, err = server.ValidateState(sdk.WrapSDKContext(ctx), &types.QueryValidateStateRequest{Pagination: &query.PageRequest{CountTotal: true, Limit: 1}})
 	require.Error(t, err)
+}
+
+func TestValidateStatePageReturnsWholeAndExactRewardLiabilities(t *testing.T) {
+	ctx, keeper := newKeeperTest(t)
+	owner := testAddress()
+	position := types.Position{
+		Id: 1, Owner: owner, Principal: sdk.NewInt64Coin(types.BondDenom, 10),
+		Shares: math.NewInt(3), RewardDebt: math.LegacyZeroDec(),
+		ClaimableRewards: sdk.NewInt64Coin(types.BondDenom, 2), Status: types.PositionStatus_POSITION_STATUS_ACTIVE,
+	}
+	require.NoError(t, keeper.SetPosition(ctx, position))
+	state := newTestRewardState(ctx, math.LegacyNewDecWithPrec(5, 1), math.NewInt(3))
+	state.AllocatedRewards = math.NewInt(4)
+	keeper.SetRewardState(ctx, state)
+	response, err := NewQueryServerImpl(keeper).ValidateState(sdk.WrapSDKContext(ctx), &types.QueryValidateStateRequest{})
+
+	require.NoError(t, err)
+	require.Equal(t, "2", response.ClaimableLiability)
+	require.Equal(t, "3", response.RewardLiability)
+	require.Equal(t, "3.500000000000000000", response.RewardLiabilityExact)
+	require.Equal(t, math.NewInt(2), response.ReservedRewards)
 }
 
 func BenchmarkPositionsByOwner100000(b *testing.B) {

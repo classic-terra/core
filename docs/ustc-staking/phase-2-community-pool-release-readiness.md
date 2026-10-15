@@ -3,7 +3,7 @@
 This checklist defines evidence required before public-testnet or production
 activation. Implementation completion alone is not release approval.
 
-## Technical review — pending
+## Streaming-rewards technical review — pending
 
 - [ ] Governance authority validation for funding and parameter updates.
 - [ ] FeePool `SafeSub` accounting and distribution-to-reward-pool
@@ -12,7 +12,10 @@ activation. Implementation completion alone is not release approval.
 - [ ] Community-pool decimal accounting and integer rounding reviewed.
 - [ ] Transaction-cache rollback verified for every failure path.
 - [ ] Principal and reward module accounts remain separate.
-- [ ] Reward-index arithmetic and dust behavior reviewed.
+- [ ] Daily-rate emission, block-time settlement, fractional claims, and terminal rounding reviewed.
+- [ ] Prefunding before stake, paused top-ups, exhaustion, and rate-change settlement verified.
+- [ ] Reserve solvency verified: exact position liability `<= A`, reward bank `B >= U + A`, and stored claim reserve `C` agrees with positions.
+- [ ] Version 1 to 2 migration preserves positions and protects the full legacy reward-pool balance in `A`; no legacy funds become streamable automatically.
 - [ ] Direct staking, claim, unbonding, and withdrawal behavior unchanged.
 - [ ] No mint, validator power, LUNC staking, slashing, or distribution-reward
       changes introduced.
@@ -26,14 +29,14 @@ pending
 ## Controlled localnet campaign — pending
 
 - [ ] Multi-validator successful governance funding and reconciliation.
-- [ ] Wrong-denom, zero, no-active-shares, underfunded, unauthorized, and
-      paused negative cases.
-- [ ] Direct stake, claim, pause/resume, unbond, and withdrawal.
+- [ ] Wrong-denom, zero, underfunded, and unauthorized negative funding cases; confirm funding while paused or without active shares succeeds without immediate release.
+- [ ] Fund before stake, configure a test-only rate, observe block-time releases, claim, pause/resume, unbond, and withdraw.
 - [ ] Node restart and full-network restart.
 - [ ] `terrad query ustcstaking validate-state` returns `.valid == true` before
       and after each campaign; real-BankKeeper integration checks cover every
       lifecycle path.
 - [ ] Total USTC supply unchanged throughout the campaign.
+- [ ] All four restored CI simulation jobs pass with USTC staking registered and non-nil operations.
 
 Network, revision, evidence location, and date:
 
@@ -49,6 +52,7 @@ pending
 - [ ] Live-chain upgrade rehearsal and rollback/recovery procedure completed.
 - [ ] Governance proposal template, authority derivation, and reconciliation
       operator reviewed.
+- [ ] Proposal changes the full Params object and preserves configured tiers; `reward_rate_per_day` is `uusd` per 86,400 seconds, not an APR.
 - [ ] Independent technical review completed and findings resolved.
 - [ ] Release decision explicitly recorded by authorized stakeholders.
 

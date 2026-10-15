@@ -43,9 +43,14 @@ The owner index is keyed by a one-byte address-length prefix, owner bytes, and a
 `RewardState` contains:
 
 * `reward_index`: cumulative fixed-point rewards per active share;
-* `total_shares`: sum of shares for active positions.
+* `total_shares`: sum of shares for active positions;
+* `unallocated_rewards` (`U`): governance-funded `uusd` not yet released;
+* `allocated_rewards` (`A`): released or legacy-protected rewards, including conservative rounding reserve;
+* `last_reward_time`: last consensus timestamp included in settlement;
+* `emission_remainder`: sub-`uusd` elapsed-rate carry; and
+* `index_remainder`: division carry for the current share cohort.
 
-The reward index is unchanged when there are no active shares; funding without active shares is rejected rather than creating unallocated rewards.
+Funding increases `U`, never the index. BeginBlock releases `min(U, floor((R × elapsed_nanoseconds + emission_remainder) / 86400000000000))` when unpaused and shares are active. It moves the released amount from `U` to `A` and advances the index. Empty-share and paused intervals do not accumulate emission backlog. Index remainder resets when the active share cohort changes; emission remainder survives positive-share changes and clears when shares reach zero, paused, rate zero, or exhausted.
 
 ## Parameters
 
@@ -53,8 +58,8 @@ The reward index is unchanged when there are no active shares; funding without a
 0x30 -> Params
 ```
 
-`Params` contains the fixed bond denomination, lock tiers, governance authority, and pause flag. Protobuf field 4 and the removed `funding_authority` name are reserved. Genesis validation requires non-negative accounting values, valid owners, valid coin denominations, unique position IDs, and equality between active position shares and `RewardState.total_shares`.
+`Params` contains the fixed bond denomination, lock tiers, immutable governance authority, pause flag, and `reward_rate_per_day` (`R`) in `uusd` per 86,400 seconds. The production default rate is zero; the default tier is 21 days and 1×. Protobuf field 4 and the removed `funding_authority` name are reserved. Genesis validation requires non-negative accounting values, valid owners, valid coin denominations, unique position IDs, and equality between active position shares and `RewardState.total_shares`.
 
-Custody validation requires USTC balances to cover liabilities; unsolicited USTC surplus and unrelated denominations never create rewards. Active-share ledger equality remains exact. The reserved-rewards aggregate equals all integer claimables, including frozen claims on withdrawn positions. Governance may return only unreserved reward-pool surplus when total active shares are zero.
+Custody validation requires principal balance `>=` principal liability, exact reward liability `<= A`, and reward-pool balance `B >= U + A`; unsolicited USTC surplus and unrelated denominations never create rewards. Active-share ledger equality remains exact. The derived reserve `C` equals all integer claimables, including frozen claims on withdrawn positions. Governance may return only `B - U - C` when total active shares are zero, and dust return reconciles `A` to `C`.
 
 The paginated validate-state query returns USTC collateral balances only. It does not enumerate inert foreign-denomination coins; use the bank module's paginated balance queries to inspect those separately.

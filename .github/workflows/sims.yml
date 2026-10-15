@@ -68,6 +68,8 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            sims.mk
+            .github/workflows/sims.yml
       - uses: actions/cache@v4
         with:
           path: ~/go/bin
@@ -77,6 +79,16 @@ jobs:
         run: |
           make test-sim-nondeterminism
         if: env.GIT_DIFF
+      - name: Upload simulation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-nondeterminism
+          path: |
+            simulation-logs/
+            sims/
+            ~/.simapp/simulations/
+          if-no-files-found: warn
 
   test-sim-import-export:
     runs-on: ubuntu-latest
@@ -95,6 +107,8 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            sims.mk
+            .github/workflows/sims.yml
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v4
@@ -106,6 +120,16 @@ jobs:
         run: |
           make test-sim-import-export
         if: env.GIT_DIFF
+      - name: Upload simulation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-import-export
+          path: |
+            simulation-logs/
+            sims/
+            ~/.simapp/simulations/
+          if-no-files-found: warn
 
   test-sim-after-import:
     runs-on: ubuntu-latest
@@ -124,6 +148,8 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            sims.mk
+            .github/workflows/sims.yml
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v4
@@ -135,6 +161,16 @@ jobs:
         run: |
           make test-sim-after-import
         if: env.GIT_DIFF
+      - name: Upload simulation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-after-import
+          path: |
+            simulation-logs/
+            sims/
+            ~/.simapp/simulations/
+          if-no-files-found: warn
 
   test-sim-multi-seed-short:
     runs-on: ubuntu-latest
@@ -153,6 +189,8 @@ jobs:
             **/**.go
             go.mod
             go.sum
+            sims.mk
+            .github/workflows/sims.yml
           SET_ENV_NAME_INSERTIONS: 1
           SET_ENV_NAME_LINES: 1
       - uses: actions/cache@v4
@@ -164,3 +202,13 @@ jobs:
         run: |
           make test-sim-multi-seed-short
         if: env.GIT_DIFF
+      - name: Upload simulation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-multi-seed-short
+          path: |
+            simulation-logs/
+            sims/
+            ~/.simapp/simulations/
+          if-no-files-found: warn

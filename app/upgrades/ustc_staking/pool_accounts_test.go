@@ -34,7 +34,8 @@ func TestUSTCStakingUpgradeRollsBackNormalizationOnMigrationFailure(t *testing.T
 	suite.App.AccountKeeper.GetModuleAccount(ctx, name)
 	coins := sdk.NewCoins(sdk.NewInt64Coin(types.BondDenom, 1))
 	require.NoError(t, banktest.FundModuleAccount(ctx, suite.App.BankKeeper, name, coins))
-	suite.App.AccountKeeper.SetAccount(ctx, auth.NewBaseAccountWithAddress(addr))
+	existing := suite.App.AccountKeeper.GetAccount(ctx, addr)
+	suite.App.AccountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, nil, existing.GetAccountNumber(), existing.GetSequence()))
 	before, err := suite.App.DistrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
 	am := staking.NewAppModule(suite.App.AppCodec(), suite.App.UstcStakingKeeper)
@@ -73,7 +74,7 @@ func TestUSTCStakingRepeatHandlerPreservesLiveCustody(t *testing.T) {
 	manager := module.NewManager(staking.NewAppModule(suite.App.AppCodec(), suite.App.UstcStakingKeeper))
 	cfg := module.NewConfigurator(suite.App.AppCodec(), suite.App.MsgServiceRouter(), suite.App.GRPCQueryRouter())
 	handler := upgrade.CreateUSTCStakingUpgradeHandler(manager, cfg, nil, suite.App.AppKeepers)
-	_, err = handler(ctx, upgradetypes.Plan{Name: upgrade.UpgradeName}, module.VersionMap{types.ModuleName: 1})
+	_, err = handler(ctx, upgradetypes.Plan{Name: upgrade.UpgradeName}, module.VersionMap{types.ModuleName: 2})
 	require.NoError(t, err)
 	require.Equal(t, before, staking.ExportGenesis(ctx, suite.App.UstcStakingKeeper))
 	require.Equal(t, sdkmath.NewInt(100), suite.App.BankKeeper.GetBalance(ctx, auth.NewModuleAddress(types.PrincipalPoolName), types.BondDenom).Amount)
@@ -84,13 +85,15 @@ func TestUSTCStakingRepeatHandlerPreservesLiveCustody(t *testing.T) {
 }
 
 func TestUSTCStakingUpgradeRejectsMalformedExistingVersion(t *testing.T) {
-	for _, version := range []uint64{0, 1, 2} {
+	for _, version := range []uint64{0, 1, 3} {
 		t.Run(sdkmath.NewIntFromUint64(version).String(), func(t *testing.T) {
 			var suite apphelpers.KeeperTestHelper
 			suite.SetT(t)
 			suite.Setup(t, "bad-upgrade-state")
 			ctx := suite.Ctx
-			suite.App.AccountKeeper.SetAccount(ctx, auth.NewBaseAccountWithAddress(auth.NewModuleAddress(types.PrincipalPoolName)))
+			addr := auth.NewModuleAddress(types.PrincipalPoolName)
+			existing := suite.App.AccountKeeper.GetModuleAccount(ctx, types.PrincipalPoolName)
+			suite.App.AccountKeeper.SetAccount(ctx, auth.NewBaseAccount(addr, nil, existing.GetAccountNumber(), existing.GetSequence()))
 			manager := module.NewManager(staking.NewAppModule(suite.App.AppCodec(), suite.App.UstcStakingKeeper))
 			cfg := module.NewConfigurator(suite.App.AppCodec(), suite.App.MsgServiceRouter(), suite.App.GRPCQueryRouter())
 			handler := upgrade.CreateUSTCStakingUpgradeHandler(manager, cfg, nil, suite.App.AppKeepers)
@@ -143,7 +146,7 @@ func TestUSTCStakingUpgradePrefundedPools(t *testing.T) {
 				require.NotPanics(t, func() {
 					vm, err := handler(ctx, upgradetypes.Plan{Name: upgrade.UpgradeName}, module.VersionMap{})
 					require.NoError(t, err)
-					require.Equal(t, uint64(1), vm[types.ModuleName])
+					require.Equal(t, uint64(2), vm[types.ModuleName])
 				})
 				account := suite.App.AccountKeeper.GetAccount(ctx, addr).(sdk.ModuleAccountI)
 				require.Equal(t, name, account.GetName())

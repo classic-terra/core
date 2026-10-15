@@ -20,10 +20,18 @@ import (
 )
 
 func TestUpgradeAddsOnlyUSTCStakingStore(t *testing.T) {
-	require.Equal(t, "v14_5", ustcstakingupgrade.UpgradeName)
+	require.NotEmpty(t, ustcstakingupgrade.UpgradeName)
+	require.Equal(t, ustcstakingupgrade.UpgradeName, ustcstakingupgrade.Upgrade.UpgradeName)
 	require.Equal(t, []string{ustcstakingtypes.StoreKey}, ustcstakingupgrade.Upgrade.StoreUpgrades.Added)
 	require.Empty(t, ustcstakingupgrade.Upgrade.StoreUpgrades.Deleted)
 	require.Empty(t, ustcstakingupgrade.Upgrade.StoreUpgrades.Renamed)
+}
+
+func TestExistingStoreUpgradeDoesNotAddUSTCStakingStore(t *testing.T) {
+	require.Equal(t, ustcstakingupgrade.ExistingStoreUpgradeName, ustcstakingupgrade.ExistingStoreUpgrade.UpgradeName)
+	require.Empty(t, ustcstakingupgrade.ExistingStoreUpgrade.StoreUpgrades.Added)
+	require.Empty(t, ustcstakingupgrade.ExistingStoreUpgrade.StoreUpgrades.Deleted)
+	require.Empty(t, ustcstakingupgrade.ExistingStoreUpgrade.StoreUpgrades.Renamed)
 }
 
 func TestUpgradeStoreLoaderPreservesOldStoreAndPersistsNewStoreAcrossRestart(t *testing.T) {
@@ -84,7 +92,7 @@ func TestUpgradeHandlerRunsWithRealAppKeepers(t *testing.T) {
 
 	versionMap, err := handler(suite.Ctx, upgradetypes.Plan{Name: ustcstakingupgrade.UpgradeName}, module.VersionMap{})
 	require.NoError(t, err)
-	require.Equal(t, uint64(1), versionMap[ustcstakingtypes.ModuleName])
+	require.Equal(t, uint64(2), versionMap[ustcstakingtypes.ModuleName])
 
 	for _, moduleName := range []string{ustcstakingtypes.PrincipalPoolName, ustcstakingtypes.RewardPoolName} {
 		address, _ := suite.App.AccountKeeper.GetModuleAddressAndPermissions(moduleName)

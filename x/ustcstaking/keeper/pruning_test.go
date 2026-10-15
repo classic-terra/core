@@ -17,7 +17,14 @@ func TestPruneOnlyAfterWithdrawalAndFinalClaim(t *testing.T) {
 			end := ctx.BlockTime().Add(-time.Second)
 			p := types.Position{Id: 1, Owner: owner, Principal: sdk.NewInt64Coin(types.BondDenom, 10), Shares: math.ZeroInt(), RewardDebt: math.LegacyZeroDec(), Status: types.PositionStatus_POSITION_STATUS_UNBONDING, UnbondingEndTime: &end, ClaimableRewards: sdk.NewInt64Coin(types.BondDenom, reward)}
 			require.NoError(t, k.SetPosition(ctx, p))
-			k.bankKeeper.(*recordingBankKeeper).rewardPoolBalance = sdk.NewInt64Coin(types.BondDenom, 5)
+			bank := k.bankKeeper.(*recordingBankKeeper)
+			bank.principalPoolBalance = sdk.NewInt64Coin(types.BondDenom, 10)
+			bank.rewardPoolBalance = sdk.NewInt64Coin(types.BondDenom, 5)
+			if reward > 0 {
+				state := k.GetRewardState(ctx)
+				state.AllocatedRewards = math.NewInt(reward)
+				k.SetRewardState(ctx, state)
+			}
 			server := NewMsgServerImpl(k)
 			_, err := server.Withdraw(ctx, &types.MsgWithdraw{Owner: owner, PositionId: 1})
 			require.NoError(t, err)

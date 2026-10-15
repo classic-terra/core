@@ -10,7 +10,9 @@ func (k Keeper) GetRewardState(ctx sdk.Context) types.RewardState {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.RewardStateKey)
 	if bz == nil {
-		return types.RewardState{RewardIndex: math.LegacyZeroDec(), TotalShares: math.ZeroInt()}
+		// Genesis and migrations initialize state explicitly. Missing runtime
+		// state is corruption and must fail scalar validation, not erase liabilities.
+		return types.RewardState{}
 	}
 	var state types.RewardState
 	k.cdc.MustUnmarshal(bz, &state)
@@ -53,20 +55,27 @@ func (k Keeper) FundRewards(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.Denom != types.BondDenom || amount.Amount.IsNil() || !amount.Amount.IsPositive() {
 		return types.ErrInvalidDenom.Wrapf("expected positive %s funding amount", types.BondDenom)
 	}
-
-	state := k.GetRewardState(ctx)
-	if state.TotalShares.IsNil() || !state.TotalShares.IsPositive() {
-		return types.ErrNoActiveShares
-	}
-	if err := k.communityPoolKeeper.DistributeFromCommunityPoolToModule(ctx, sdk.NewCoins(amount), types.RewardPoolName); err != nil {
+	cacheCtx, write := ctx.CacheContext()
+	state := k.GetRewardState(cacheCtx)
+	if err := validateStreamingScalars(state, k.GetParams(cacheCtx)); err != nil {
 		return err
 	}
-
-	index := state.RewardIndex
-	if index.IsNil() {
-		index = math.LegacyZeroDec()
+	if err := validateProjectedRewardIndex(state, amount.Amount); err != nil {
+		return err
 	}
-	state.RewardIndex = index.Add(amount.Amount.ToLegacyDec().QuoInt(state.TotalShares))
-	k.SetRewardState(ctx, state)
+	if err := k.AccrueRewards(cacheCtx); err != nil {
+		return err
+	}
+	state = k.GetRewardState(cacheCtx)
+	unallocated, err := checkedRewardAdd(state.UnallocatedRewards, amount.Amount)
+	if err != nil {
+		return err
+	}
+	state.UnallocatedRewards = unallocated
+	if err := k.communityPoolKeeper.DistributeFromCommunityPoolToModule(cacheCtx, sdk.NewCoins(amount), types.RewardPoolName); err != nil {
+		return err
+	}
+	k.SetRewardState(cacheCtx, state)
+	write()
 	return nil
 }

@@ -1,10 +1,10 @@
 # USTC Staking: Executive Summary
 
-**Status as of October 13, 2026**
+**Status as of October 15, 2026**
 
 ## At a glance
 
-USTC staking is being developed as a native Terra Classic feature: users stake
+USTC staking is implemented as a native Terra Classic testnet candidate: users stake
 USTC directly from their own accounts, while rewards are paid only from USTC
 that has already been funded. It does not change LUNC validator power or
 standard validator staking.
@@ -29,8 +29,8 @@ share-weighted claims, governance changes, expected rejection cases,
 unbonding and withdrawals, supply conservation, validator-state isolation, and
 single-node and full-network restarts. Subsequent Phase 1 hardening expanded
 state validation, owner queries, events, and application-level accounting
-coverage. The Phase 2 validator campaign will retest the user lifecycle on the
-current candidate while exercising the community-pool funding path.
+coverage. The completed streaming campaign exercised the current candidate through a
+seven-validator upgrade, governance funding, lifecycle checks, and restarts.
 
 ### Phase 2 — Governance community-pool funding
 
@@ -46,20 +46,27 @@ transfers existing USTC from the distribution community pool into an
 unallocated reserve; BeginBlock releases that reserve at the governance-set
 rate using consensus time. Stakers remain immediately eligible, can claim at
 any time, stop earning when unbonding begins, and withdraw principal after
-their selected tier's lock. Principal and rewards remain in separate pools;
+their selected tier's unbonding wait. There is no separate lock before
+requesting unbonding. Principal and rewards remain in separate pools;
 nothing is minted.
 
 ## What is happening now
 
-The current implementation work must pass module, app, upgrade-migration,
-simulation, and seven-validator localnet checks. The runbook evidence should
-identify the exact candidate revision, governance proposals, reward rate,
-block-time observations, resulting balances and events, restart outcomes, and
-any unexpected behavior.
+Module, app, adapter, upgrade, simulation, and seven-validator rehearsal
+checks have passing evidence. The final source review found no new blocking
+USTC logic defect in the paths reviewed. Two terminal simulation cases and
+normalization of imported LUNC test fixtures qualify the coverage; Swagger
+remains an accepted testnet documentation deferral.
 
-After validation, the team can prepare the operator-led testnet upgrade
-rehearsal and governance operating procedures. Local functional testing is
-evidence for that rehearsal, not activation approval by itself.
+The candidate is ready for an operator-led, governed testnet rehearsal. Public
+activation still requires the agreed plan/height, validator coordination, and
+governance approval. No public deployment or mainnet certification is claimed.
+
+The intended reward budget is 30 million USTC for approximately two years.
+For 730 active days, the global rate is about 41,095.89 USTC/day. The rate is
+configurable and does not guarantee an individual interest rate. See the
+[budget analysis](30m-ustc-two-year-rewards-analysis.md) for exact values,
+calendar-year treatment, and participation assumptions.
 
 ## Scope boundary
 
@@ -76,8 +83,11 @@ funded reserve, daily release rate, and pause state. No Phase 3 work is planned.
 
 ## Related documents
 
-- [Phase 2 community-pool validator campaign](phase-2-community-pool-localnet-testing.md)
-- [Phase 2 community-pool release readiness](phase-2-community-pool-release-readiness.md)
+- [Final implementation review](final-streaming-review-2026-10-15.md)
+- [Validation evidence](phase-2-streaming-rewards-validation.md)
+- [Streaming localnet campaign](phase-2-streaming-rewards-localnet-testing.md)
+- [Testnet operator handoff](streaming-testnet-deployment.md)
+- [30M USTC analysis](30m-ustc-two-year-rewards-analysis.md)
 - [C-suite decision briefing](briefings/c-suite-briefing.md)
 - [Streaming rewards design](../superpowers/specs/2026-10-13-ustc-staking-streaming-rewards-design.md)
 - [Streaming rewards implementation plan](../superpowers/plans/2026-10-13-ustc-staking-streaming-rewards.md)

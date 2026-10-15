@@ -1,6 +1,21 @@
 # USTC Streaming Rewards Validation Evidence
 
-Validation was run against the uncommitted implementation worktree on 2026-10-13 and 2026-10-14. This is engineering evidence, not a release approval.
+Validation was run against the implementation worktree on 2026-10-13 through 2026-10-15. This is engineering evidence, not a public-network deployment record.
+
+## Testnet candidate readiness (2026-10-15)
+
+The candidate is ready for a governed rebel-2 testnet rehearsal. It has not been deployed to the public testnet. Public deployment still requires a governance-approved upgrade plan/height and validator coordination; no proposal or transaction has been submitted by this validation work.
+
+- Candidate source commit: `34d0703758cdf1a094318fadbee34ea18a7d6f55` (`feature/ustc-streaming-rewards`).
+- Linux/amd64 `terrad` SHA-256: `e35a9c0d9db03c1e8e18f4f0e14fa25a3bd10fd5a0f44048c6578a45299714d0`.
+- Release archive: `/mnt/d/ustc-streaming-release-campaign/ustc-streaming-34d0703758cd-linux-amd64.tar.gz`; SHA-256 `9d27968255394acbfce6e3655ccfe92d2a5ca33a29b11e80d477b31533073948`.
+- All 35 configured seeds passed import/export. All 33 nonterminal seeds passed 50-block after-import simulation; seeds 124 and 37827 passed dedicated terminal-state checks (each reaches an empty validator set at height 19 and is excluded from full-block coverage). The 33 individual Go logs end in `PASS`; there are no nonempty stderr logs. Evidence is under `/mnt/d/ustc-streaming-release-campaign/sim-final/verified-import-export/` and `/mnt/d/ustc-streaming-release-campaign/sim-final/verified-after-import-normalized/`.
+- The 35-seed short continuous simulation, determinism, app/module tests, vet, build, and seven-validator disposable migration/funding/lifecycle/API/restart campaign passed. The seven-node rehearsal exercised the migration from the testnet predecessor and verified common app hashes after upgrade.
+- The only source-tree changes after the candidate build are simulation-test and `sims.mk` corrections. Production Go sources and the binary's source commit are unchanged. `git diff --check` is clean.
+- Swagger regeneration remains deferred. It is not a binary/runtime blocker; Swagger UI should stay disabled, and operators can use the generated Go/gRPC-gateway APIs. The campaign smoke-tested CLI, gRPC, and REST.
+- The last read-only check of rebel-2 found no active upgrade plan and no `ustcstaking` module in the target store, so the chain is awaiting its first activation. LCD upgrade history/version routes return HTTP 501; use RPC/CLI status and coordinate with testnet validators when choosing the governance plan.
+
+This means the candidate binary can enter the testnet upgrade rehearsal process now; it does not mean it is already running on testnet or that governance/validator coordination is complete.
 
 ## Review follow-up (2026-10-14)
 
@@ -46,11 +61,11 @@ Swagger regeneration is an accepted documentation deferral for the testnet candi
 - `make test-sim-multi-seed-short SIM_LOG_DIR=/mnt/d/ustc-streaming-rewards-sim/full-app-short-terminal-skip-ok` — passed (runner exit 0; 35 seeds passed, and 3 seeds—582, 7601778, and 89182391—stopped with the Cosmos SDK's expected skip after randomized operations exhausted the validator set; no seed failed). Logs are under `/mnt/d/ustc-streaming-rewards-sim/full-app-short-terminal-skip-ok/sim-logs-1530260851/`.
 - `make build` — passed. The stripped x86-64 Linux binary is `build/terrad`; SHA-256 is `f7756f2ac1d81dcb3670c3e50061c4a2544c452829825c4cc02dcbd236fbc84d`. With a clean temporary home, `terrad version --long` reports version `4.1.0-34-g3d8f65ec` and embedded commit `3d8f65eccec3fe713b04e604a148319b7049d4e8`. The worktree has uncommitted source changes, so this metadata is not a unique candidate SHA.
 
-## Incomplete checks and blockers
+## Historical issues and remaining scope
 
 - An initial `make test-sim-after-import` run failed reproducibly at seed 1. The imported full-app simulation had pending randomized equivocation evidence; its continuation triggered a Cosmos SDK distribution panic while slashing (`calculated final stake ... greater than current stake`). The after-import test now exercises USTC operations before and after import, fixes its simulation-only account count at 100, suppresses unrelated randomized duplicate-vote evidence, promotes SDK skips to failures, and asserts that every requested block ran. Full-app and import/export simulations still cover their own operations and consensus randomness.
 - Long and custom-genesis multi-seed simulations were not run; the implementation plan's four required Task 10 simulation checks (nondeterminism, import/export, after-import, and short multi-seed) now have passing evidence. Run the longer targets if they are required by the release owner.
 - Swagger generation remains blocked. Neither `BUF_TOKEN` nor `BUF_API_TOKEN` is present in the environment; a Buf generation attempt reports an invalid/missing API token. A local, module-pinned Swagger plugin was built and generated the USTC query document with direct `protoc`, but full local generation stops at the missing `cosmos/ics23/v1/proofs.proto` include. Swagger YAML and embedded statik were not regenerated. This documentation issue is deferred for testnet as described above. Public Buf dependencies may be readable anonymously; inspect stale credentials before assuming a token is required.
-- Seven-validator localnet campaign — not run. This worktree remains dirty and uncommitted, so there is no final candidate SHA. The campaign skill also requires explicit authorization before Docker stops, fresh genesis generation, governance proposals, or transactions.
+- Longer/custom-genesis simulation variants were not run; the release plan's required determinism, import/export, after-import, and short multi-seed targets have passed. The candidate has extensive disposable seven-validator coverage, but a public-network proposal and rollout remain separate operational steps.
 
-The initial blocker assessment is superseded by the follow-up above. Testnet acceptance requires the clean candidate manifest, successful corrected validation, and completed seven-validator upgrade/lifecycle evidence; Swagger may remain deferred. The original `/home/sofoli/core` main worktree was left untouched; this evidence and implementation remain in the isolated feature worktree.
+The original `/home/sofoli/core` main worktree was left untouched; this evidence and implementation remain in the isolated feature worktree.

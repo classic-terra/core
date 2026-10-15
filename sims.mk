@@ -6,18 +6,22 @@
 BINDIR ?= $(shell go env GOPATH)/bin
 SIMAPP = ./app
 SIM_LOG_DIR ?= simulation-logs
-SIM_TESTS = TestAppStateDeterminism TestAppImportExport TestAppSimulationAfterImport TestFullAppSimulation TestAppSimulationValidatorExhaustion
+SIM_TESTS = TestAppStateDeterminism TestAppImportExport TestAppSimulationAfterImport TestAppSimulationAfterImportValidatorExhaustion TestFullAppSimulation TestAppSimulationValidatorExhaustion
 
 # The SDK default corpus also contains three fixtures whose randomized evidence
 # deliberately removes every validator before block 50. Verify those separately;
 # never count their SDK skips as import/export or continuous-block coverage.
 SIM_SEEDS ?= 1,2,4,7,32,123,124,1893,2989,3012,4728,37827,981928,87821,891823782,989182,11,22,44,77,99,2020,3232,123123,124124,582582,18931893,29892989,30123012,47284728,8090485,977367484,491163361,424254581,673398983
+comma := ,
+empty :=
+space := $(empty) $(empty)
+SIM_AFTER_IMPORT_SEEDS ?= $(subst $(space),$(comma),$(filter-out 124 37827,$(subst $(comma),$(space),$(SIM_SEEDS))))
 SIM_JOBS ?= 4
 
 # Go exits successfully when -run matches no tests. Fail before invoking CI runners.
 sim-preflight:
 	@mkdir -p $(SIM_LOG_DIR)
-	@set -eu; tests="$$(go test -mod=readonly $(SIMAPP) -list '^(Test(AppStateDeterminism|AppImportExport|AppSimulationAfterImport|AppSimulationValidatorExhaustion|FullAppSimulation)|Benchmark(FullAppSimulation|Invariants))$$')"; \
+	@set -eu; tests="$$(go test -mod=readonly $(SIMAPP) -list '^(Test(AppStateDeterminism|AppImportExport|AppSimulationAfterImport|AppSimulationAfterImportValidatorExhaustion|AppSimulationValidatorExhaustion|FullAppSimulation)|Benchmark(FullAppSimulation|Invariants))$$')"; \
 	for name in $(SIM_TESTS); do printf '%s\n' "$$tests" | grep -qx "$$name" || { echo "Missing simulation test: $$name"; exit 1; }; done
 
 simulation-runsim:
@@ -46,9 +50,9 @@ test-sim-import-export: simulation-runsim sim-preflight
 	@echo "Running application import/export simulation. This may take several minutes..."
 	$(call run-simulation,-Jobs=$(SIM_JOBS) -Seeds=$(SIM_SEEDS) -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport)
 
-test-sim-after-import: simulation-runsim sim-preflight
+test-sim-after-import: simulation-runsim sim-preflight test-sim-after-import-exhaustion
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	$(call run-simulation,-Jobs=$(SIM_JOBS) -Seeds=$(SIM_SEEDS) -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppSimulationAfterImport)
+	$(call run-simulation,-Jobs=$(SIM_JOBS) -Seeds=$(SIM_AFTER_IMPORT_SEEDS) -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppSimulationAfterImport)
 
 test-sim-custom-genesis-multi-seed: simulation-runsim sim-preflight
 	@echo "Running multi-seed custom genesis simulation..."
@@ -107,3 +111,9 @@ test-sim-validator-exhaustion: sim-preflight
 	@tail -n 15 $(SIM_LOG_DIR)/validator-exhaustion.log
 
 .PHONY: test-sim-validator-exhaustion
+
+test-sim-after-import-exhaustion: sim-preflight
+	@go test -mod=readonly $(SIMAPP) -run '^TestAppSimulationAfterImportValidatorExhaustion$$' -Enabled=true -NumBlocks=50 -BlockSize=200 -Commit=true -Period=5 -v -timeout 24h > $(SIM_LOG_DIR)/after-import-validator-exhaustion.log 2>&1 || { cat $(SIM_LOG_DIR)/after-import-validator-exhaustion.log; exit 1; }
+	@tail -n 15 $(SIM_LOG_DIR)/after-import-validator-exhaustion.log
+
+.PHONY: test-sim-after-import-exhaustion

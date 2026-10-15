@@ -160,6 +160,51 @@ func TestAppSimulationValidatorExhaustion(t *testing.T) {
 	}
 }
 
+// These seeds reach an empty validator set during the imported half of the
+// after-import simulation. Keep that SDK skip in a dedicated test so it cannot
+// be mistaken for 50-block import coverage.
+func TestAppSimulationAfterImportValidatorExhaustion(t *testing.T) {
+	config := simulationConfig(t)
+	require.True(t, config.Commit, "terminal-state checks require -Commit=true")
+	require.Empty(t, config.GenesisFile, "terminal fixture uses randomized genesis")
+	require.Empty(t, config.ParamsFile, "terminal fixture uses default parameters")
+	config.InitialBlockHeight = 1
+	config.NumBlocks = 50
+	for _, seed := range []int64{124, 37827} {
+		t.Run(fmt.Sprint(seed), func(t *testing.T) {
+			config := config
+			config.Seed = seed
+			app, _, _, _ := newSimulationApp(t, config)
+			accounts := runSimulation(t, app, config, simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()))
+			exported, err := app.ExportAppStateAndValidators(true, nil, nil)
+			require.NoError(t, err)
+			require.Zero(t, exported.Height)
+			exported.AppState = normalizeSimulationUnbondingHeights(t, app, exported.AppState)
+			imported, _, _, _ := newSimulationApp(t, config)
+			resumeTime := exportedUSTCGenesisTime(t, app, exported.AppState)
+			state := func(_ *rand.Rand, _ []simtypes.Account, _ simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+				return exported.AppState, accounts, config.ChainID, resumeTime
+			}
+			var skipped bool
+			ok := t.Run("sdk-terminal", func(t *testing.T) {
+				defer func() { skipped = t.Skipped() }()
+				_, _, err := simulation.SimulateFromSeedX(t, log.NewTestLogger(t), os.Stdout,
+					imported.BaseApp, state, simtypes.RandomAccounts,
+					simtestutil.BuildSimulationOperations(imported, imported.AppCodec(), config, imported.GetTxConfig()),
+					imported.ModuleAccountAddrs(), config, imported.AppCodec(), &simulation.StandardLogWriter{Seed: config.Seed})
+				require.NoError(t, err)
+			})
+			require.True(t, ok, "terminal simulation must not fail or panic")
+			require.True(t, skipped, "SDK must report the expected terminal validator state")
+			require.Equal(t, int64(19), imported.LastBlockHeight())
+			validators, err := imported.StakingKeeper.GetLastValidators(imported.NewContext(true))
+			require.NoError(t, err)
+			require.Empty(t, validators, "terminal state must contain no active validators")
+			t.Logf("after-import seed %d exhausts validators after %d/%d committed blocks; excluded from full-block coverage", config.Seed, imported.LastBlockHeight(), config.NumBlocks)
+		})
+	}
+}
+
 func BenchmarkFullAppSimulation(b *testing.B) {
 	config := simulationConfig(b)
 	app, _, _, _ := newSimulationApp(b, config)
@@ -267,6 +312,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	for _, starting := range distribution.DelegatorStartingInfos {
 		require.Zero(t, starting.StartingInfo.Height, "zero-height export must reset distribution history")
 	}
+	exported.AppState = normalizeSimulationUnbondingHeights(t, app, exported.AppState)
 
 	imported, db, dir, closeVM := newSimulationApp(t, config)
 	config.InitialBlockHeight = 1
@@ -284,6 +330,37 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, hash, restarted.LastCommitID().Hash)
 	_, err = restarted.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err)
+}
+
+// Zero-height exports reset staking unbonding creation heights to zero, but
+// the SDK's randomized cancel-unbonding operation rejects height zero. Give
+// imported simulator entries the first valid post-genesis height so the
+// after-import run can exercise cancellation behavior without changing the
+// production exporter.
+func normalizeSimulationUnbondingHeights(tb testing.TB, app *terraapp.TerraApp, appState json.RawMessage) json.RawMessage {
+	tb.Helper()
+	var modules map[string]json.RawMessage
+	require.NoError(tb, json.Unmarshal(appState, &modules))
+	var stakingGenesis stakingtypes.GenesisState
+	require.NoError(tb, app.AppCodec().UnmarshalJSON(modules[stakingtypes.ModuleName], &stakingGenesis))
+	changed := false
+	for i := range stakingGenesis.UnbondingDelegations {
+		for j := range stakingGenesis.UnbondingDelegations[i].Entries {
+			if stakingGenesis.UnbondingDelegations[i].Entries[j].CreationHeight == 0 {
+				stakingGenesis.UnbondingDelegations[i].Entries[j].CreationHeight = 1
+				changed = true
+			}
+		}
+	}
+	if !changed {
+		return appState
+	}
+	encoded, err := app.AppCodec().MarshalJSON(&stakingGenesis)
+	require.NoError(tb, err)
+	modules[stakingtypes.ModuleName] = encoded
+	appState, err = json.Marshal(modules)
+	require.NoError(tb, err)
+	return appState
 }
 
 func exportedUSTCGenesisTime(tb testing.TB, app *terraapp.TerraApp, appState json.RawMessage) time.Time {

@@ -27,14 +27,14 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&LazyGradedVestingAccount{},
 	)
 
-	// SDK v0.53 account collections decode the SDK interface; retain the
-	// legacy auth interface registration for existing genesis consumers.
+	// SDK v0.53 account collections decode the SDK interface.
 	registry.RegisterImplementations(
 		(*sdk.AccountI)(nil),
 		&vestingtypes.BaseVestingAccount{},
 		&LazyGradedVestingAccount{},
 	)
 
+	// Retain the legacy auth interface registration for existing genesis consumers.
 	registry.RegisterImplementations(
 		(*authtypes.AccountI)(nil),
 		&vestingtypes.BaseVestingAccount{},

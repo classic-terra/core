@@ -34,6 +34,7 @@ type vestingAccountYAML struct {
 // LazyGradedVestingAccount implements the LazyGradedVestingAccount interface. It vests all
 // coins according to a predefined schedule.
 var (
+	_ sdk.AccountI                = (*LazyGradedVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*LazyGradedVestingAccount)(nil)
 	_ authtypes.GenesisAccount    = (*LazyGradedVestingAccount)(nil)
 )

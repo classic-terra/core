@@ -88,7 +88,7 @@ require (
 	github.com/ethereum/go-ethereum v1.17.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/getsentry/sentry-go v0.42.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
@@ -266,5 +266,4 @@ replace (
 	github.com/syndtr/goleveldb => github.com/classic-terra/goleveldb v0.0.0-20230914223247-2b28f6655121
 	go.etcd.io/bbolt => go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
-
 )

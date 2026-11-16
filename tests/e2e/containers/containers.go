@@ -311,8 +311,11 @@ func (m *Manager) RunHermesResource(chainAID, terraARelayerNodeName, terraAValMn
 			ExposedPorts: []string{
 				"3031",
 			},
+			// Bind the REST port to a random host port: two relayers run side by
+			// side, and a fixed host port makes the second one fail with "port is
+			// already allocated". Callers resolve it via GetHostPort("3031/tcp").
 			PortBindings: map[docker.Port][]docker.PortBinding{
-				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
+				"3031/tcp": {{HostIP: "", HostPort: ""}},
 			},
 			Env: []string{
 				fmt.Sprintf("TERRA_A_E2E_CHAIN_ID=%s", chainAID),

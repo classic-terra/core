@@ -93,7 +93,7 @@ jobs:
             matrix:
                 test:
                     - TestIBCWasmHooks
-                    - TestAddBurnTaxExemptionAddress
+                    - TestAddTaxExemptionZone
                     - TestFeeTax
                     - TestAuthz
                     - TestFeeTaxWasm

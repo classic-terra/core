@@ -351,6 +351,20 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 	}
 }
 
+// AddBurnTaxExemptionAddress writes to the legacy burn tax exemption list.
+//
+// Deprecated: the list is no longer consulted for taxation (migrated to
+// x/taxexemption in v12, deleted in v14_5). Kept only for the historical
+// Migrate1to2 store migration, which must stay unchanged.
+func (k Keeper) AddBurnTaxExemptionAddress(ctx sdk.Context, address string) {
+	if _, err := sdk.AccAddressFromBech32(address); err != nil {
+		panic(err)
+	}
+
+	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
+	sub.Set([]byte(address), []byte{0x01})
+}
+
 func (k Keeper) GetStoreKey() storetypes.StoreKey {
 	return k.storeKey
 }

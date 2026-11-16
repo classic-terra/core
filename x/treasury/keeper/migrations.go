@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/store/prefix"
 	"github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -68,8 +69,14 @@ func NewMigrator(keeper Keeper) Migrator {
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	m.keeper.SetBurnSplitRate(ctx, types.DefaultBurnTaxSplit)
 
+	// historical: populated the legacy burn tax exemption list, which was
+	// migrated to x/taxexemption in v12 and deleted in v14_5.
+	sub := prefix.NewStore(ctx.KVStore(m.keeper.storeKey), types.BurnTaxExemptionListPrefix)
 	for _, address := range burnTaxExcemptionAddressList {
-		m.keeper.AddBurnTaxExemptionAddress(ctx, address)
+		if _, err := sdk.AccAddressFromBech32(address); err != nil {
+			return err
+		}
+		sub.Set([]byte(address), []byte{0x01})
 	}
 
 	return nil

@@ -4,11 +4,14 @@ package v14_5_test
 import (
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	apptesting "github.com/classic-terra/core/v4/app/testing"
 	v14_5 "github.com/classic-terra/core/v4/app/upgrades/v14_5"
 	core "github.com/classic-terra/core/v4/types"
 	taxexemptiontypes "github.com/classic-terra/core/v4/x/taxexemption/types"
+	treasurykeeper "github.com/classic-terra/core/v4/x/treasury/keeper"
+	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/suite"
@@ -128,4 +131,44 @@ func (s *UpgradeTestSuite) TestAddressesAreValid() {
 		s.Require().False(seen[addr], "duplicate %s", addr)
 		seen[addr] = true
 	}
+}
+
+// TestDeletesLegacyBurnTaxExemptionList checks that all entries under the
+// treasury BurnTaxExemptionListPrefix are removed and that neighbouring keys
+// in the treasury store are left untouched.
+func (s *UpgradeTestSuite) TestDeletesLegacyBurnTaxExemptionList() {
+	store := s.Ctx.KVStore(s.App.TreasuryKeeper.GetStoreKey())
+	prefixByte := treasurytypes.BurnTaxExemptionListPrefix[0]
+
+	legacy := []string{s.TestAccs[0].String(), s.TestAccs[1].String(), s.TestAccs[2].String()}
+	for _, addr := range legacy {
+		store.Set(append([]byte{prefixByte}, []byte(addr)...), []byte{0x01})
+	}
+	before := []byte{prefixByte - 1, 'a'}
+	after := []byte{prefixByte + 1, 'b'}
+	store.Set(before, []byte("keep-before"))
+	store.Set(after, []byte("keep-after"))
+	burnSplit := s.App.TreasuryKeeper.GetBurnSplitRate(s.Ctx)
+
+	// the zone is needed for the Binance part of the handler
+	s.Require().NoError(s.App.TaxExemptionKeeper.AddTaxExemptionZone(s.Ctx, taxexemptiontypes.Zone{Name: v14_5.BinanceZone}))
+
+	s.applyUpgrade()
+
+	iter := storetypes.KVStorePrefixIterator(store, treasurytypes.BurnTaxExemptionListPrefix)
+	defer iter.Close()
+	s.Require().False(iter.Valid(), "legacy burn tax exemption list must be empty")
+
+	res, err := treasurykeeper.NewQuerier(s.App.TreasuryKeeper).BurnTaxExemptionList(s.Ctx, &treasurytypes.QueryBurnTaxExemptionListRequest{})
+	s.Require().NoError(err)
+	s.Require().Empty(res.Addresses)
+
+	s.Require().Equal([]byte("keep-before"), store.Get(before))
+	s.Require().Equal([]byte("keep-after"), store.Get(after))
+	s.Require().Equal(burnSplit, s.App.TreasuryKeeper.GetBurnSplitRate(s.Ctx))
+}
+
+// TestDeleteLegacyListOnEmptyStore: the deletion is a no-op on an empty list.
+func (s *UpgradeTestSuite) TestDeleteLegacyListOnEmptyStore() {
+	s.Require().NotPanics(func() { v14_5.DeleteLegacyBurnTaxExemptionList(s.Ctx, s.App.AppKeepers) })
 }

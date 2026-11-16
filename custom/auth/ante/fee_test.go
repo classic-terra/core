@@ -862,7 +862,6 @@ func (s *AnteTestSuite) TestTaxExemption() {
 				// instantiate contract then set the contract address to tax exemption
 				addr, _, err := per.Instantiate(s.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
 				s.Require().NoError(err)
-				// s.app.TreasuryKeeper.AddBurnTaxExemptionAddress(s.ctx, addr.String())
 				s.app.TaxExemptionKeeper.AddTaxExemptionAddress(s.ctx, "Internal", addr.String())
 				// instantiate contract then not set to tax exemption
 				addr1, _, err := per.Instantiate(s.ctx, CodeID, addrs[0], nil, bz, "my label", nil)
@@ -975,9 +974,6 @@ func (s *AnteTestSuite) TestTaxExemption() {
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
-
-			// tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
-			// tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
 			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
 			antehandler := sdk.ChainAnteDecorators(mfd)
@@ -1174,9 +1170,6 @@ func (s *AnteTestSuite) TestTaxExemptionWithMultipleDenoms() {
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
-			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
-
 			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
 			antehandler := sdk.ChainAnteDecorators(mfd)
 			pd := post.NewTaxDecorator(s.app.TaxKeeper, bk, ak, tk)
@@ -1349,9 +1342,6 @@ func (s *AnteTestSuite) TestTaxExemptionWithGasPriceEnabled() {
 			tk.SetOracleSplitRate(s.ctx, oracleSplitRate)
 
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
-
-			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[0].String())
-			tk.AddBurnTaxExemptionAddress(s.ctx, addrs[1].String())
 
 			mfd := ante.NewFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper, s.app.TaxExemptionKeeper, s.app.TreasuryKeeper, s.app.DistrKeeper, s.app.TaxKeeper)
 			antehandler := sdk.ChainAnteDecorators(mfd)

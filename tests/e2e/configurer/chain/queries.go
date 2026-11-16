@@ -133,22 +133,6 @@ func (n *NodeConfig) QueryBurnTaxRate() (sdkmath.LegacyDec, error) {
 	return taxRateResp.TaxRate, nil
 }
 
-func (n *NodeConfig) QueryBurnTaxExemptionList() ([]string, error) {
-	path := "terra/treasury/v1beta1/burn_tax_exemption_list"
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
-	var taxRateResp treasurytypes.QueryBurnTaxExemptionListResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &taxRateResp); err != nil {
-		return nil, err
-	}
-
-	return taxRateResp.Addresses, nil
-}
-
-// QuerySigningInfo returns the jailed_until timestamp string for the given
-// consensus address (terravalcons... format). When the validator is not jailed
-// the REST API returns the protobuf zero Timestamp as "1970-01-01T00:00:00Z".
 func (n *NodeConfig) QuerySigningInfo(consAddress string) (string, error) {
 	path := fmt.Sprintf("cosmos/slashing/v1beta1/signing_infos/%s", consAddress)
 	bz, err := n.QueryGRPCGateway(path)

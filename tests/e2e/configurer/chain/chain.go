@@ -222,20 +222,3 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	}
 	return c.NodeConfigs[nodeIndex], nil
 }
-
-func (c *Config) AddBurnTaxExemptionAddressProposal(chainANode *NodeConfig, addresses ...string) {
-	c.t.Logf("Submitting burn tax exemption address proposal for: %s", strings.Join(addresses, ","))
-	propNumber := chainANode.SubmitAddBurnTaxExemptionAddressProposalV1(addresses, initialization.ValidatorWalletName)
-
-	chainANode.DepositProposal(propNumber)
-	AllValsVoteOnProposal(c, propNumber)
-
-	time.Sleep(initialization.TwoMin)
-	require.Eventually(c.t, func() bool {
-		status, err := chainANode.QueryPropStatus(propNumber)
-		if err != nil {
-			return false
-		}
-		return status == StatusPassed
-	}, initialization.OneMin, 10*time.Millisecond)
-}

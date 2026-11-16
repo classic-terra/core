@@ -3,8 +3,6 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/classic-terra/core/v4/x/treasury"
-	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -23,10 +21,11 @@ func (appKeepers *AppKeepers) newGovRouter() govv1beta1.Router {
 	govRouter := govv1beta1.NewRouter()
 	govRouter.
 		AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper))
 		// TODO: check this // AddRoute(upgradetypes.RouterKey, upgradekeeper.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		// TODO: check this // AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
-		AddRoute(treasurytypes.RouterKey, treasury.NewProposalHandler(appKeepers.TreasuryKeeper))
+	// treasury burn tax exemption proposals were removed in v14_5; tax
+	// exemptions are managed via x/taxexemption gov messages.
 
 	return govRouter
 }

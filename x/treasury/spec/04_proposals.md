@@ -50,48 +50,15 @@ type RewardWeightUpdateProposal struct {
 }
 ```
 
-### AddBurnTaxExemptionAddressProposal
+### AddBurnTaxExemptionAddressProposal / RemoveBurnTaxExemptionAddressProposal (removed)
 
-```go
-type AddBurnTaxExemptionAddressProposal struct {
-	Title            string     // Title of the Proposal
-	Description      string     // Description of the Proposal
-	ExemptionAddress []string   // List of addresses to be added to tax exemption
-}
-```
+These proposals were removed in upgrade `v14_5` (core v4.2.0). They are no
+longer routed by `x/gov`; submitting them fails with `no handler exists`. The
+legacy burn tax exemption list they modified had already been migrated into the
+`Binance` zone of `x/taxexemption` in `v12` and is deleted in `v14_5`.
 
-::: details JSON Example
-
-```json
-{
-  "type": "treasury/AddBurnTaxExemptionAddressProposal",
-  "value": {
-    "title": "proposal title",
-    "description": "proposal description",
-    "exemption_address": ["terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t","terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye"]
-  }
-}
-```
-
-### RemoveBurnTaxExemptionAddressProposal
-
-```go
-type RemoveBurnTaxExemptionAddressProposal struct {
-	Title            string     // Title of the Proposal
-	Description      string     // Description of the Proposal
-	ExemptionAddress []string   // List of addresses to be removed from tax exemption
-}
-```
-
-::: details JSON Example
-
-```json
-{
-  "type": "treasury/RemoveBurnTaxExemptionAddressProposal",
-  "value": {
-    "title": "proposal title",
-    "description": "proposal description",
-    "exemption_address": ["terra1dczz24r33fwlj0q5ra7rcdryjpk9hxm8rwy39t","terra1qt8mrv72gtvmnca9z6ftzd7slqhaf8m60aa7ye"]
-  }
-}
-```
+The proto types remain registered so that historical proposals stored in
+`x/gov` can still be decoded. Tax exemptions are managed through the
+`x/taxexemption` governance messages (`MsgAddTaxExemptionZone`,
+`MsgModifyTaxExemptionZone`, `MsgRemoveTaxExemptionZone`,
+`MsgAddTaxExemptionAddress`, `MsgRemoveTaxExemptionAddress`).

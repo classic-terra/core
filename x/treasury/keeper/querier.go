@@ -129,6 +129,8 @@ func (q querier) Indicators(c context.Context, _ *types.QueryIndicatorsRequest) 
 	return &res, nil
 }
 
+// BurnTaxExemptionList is deprecated: the legacy list was deleted in v14_5,
+// so it returns an empty result. Kept for API compatibility.
 func (q querier) BurnTaxExemptionList(c context.Context, req *types.QueryBurnTaxExemptionListRequest) (*types.QueryBurnTaxExemptionListResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	sub := prefix.NewStore(ctx.KVStore(q.storeKey), types.BurnTaxExemptionListPrefix)

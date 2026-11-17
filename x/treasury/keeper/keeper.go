@@ -351,7 +351,11 @@ func (k Keeper) ClearTSLs(ctx sdk.Context) {
 	}
 }
 
-// Burn tax exemption list
+// AddBurnTaxExemptionAddress writes to the legacy burn tax exemption list.
+//
+// Deprecated: the list is no longer consulted for taxation (migrated to
+// x/taxexemption in v12, deleted in v14_5). Kept only for the historical
+// Migrate1to2 store migration, which must stay unchanged.
 func (k Keeper) AddBurnTaxExemptionAddress(ctx sdk.Context, address string) {
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
 		panic(err)
@@ -361,53 +365,6 @@ func (k Keeper) AddBurnTaxExemptionAddress(ctx sdk.Context, address string) {
 	sub.Set([]byte(address), []byte{0x01})
 }
 
-func (k Keeper) RemoveBurnTaxExemptionAddress(ctx sdk.Context, address string) error {
-	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		panic(err)
-	}
-
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
-
-	if !sub.Has([]byte(address)) {
-		return types.ErrNoSuchBurnTaxExemptionAddress.Wrapf("address = %s", address)
-	}
-
-	sub.Delete([]byte(address))
-	return nil
-}
-
 func (k Keeper) GetStoreKey() storetypes.StoreKey {
 	return k.storeKey
 }
-
-/*
-// HasBurnTaxExemptionAddress returns true if all provided addresses are in the
-// tax exemption whitelist
-func (k Keeper) HasBurnTaxExemptionAddress(ctx sdk.Context, addresses ...string) bool {
-	sub := prefix.NewStore(ctx.KVStore(k.storeKey), types.BurnTaxExemptionListPrefix)
-
-	for _, address := range addresses {
-		if !sub.Has([]byte(address)) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// HasBurnTaxExemptionContract returns true if a provided address is a
-// smart contract AND is in the tax exemption list
-func (k Keeper) HasBurnTaxExemptionContract(ctx sdk.Context, address string) bool {
-	contractAddr, err := sdk.AccAddressFromBech32(address)
-	if err != nil {
-		return false
-	}
-
-	info := k.wasmKeeper.GetContractInfo(ctx, contractAddr)
-	if info == nil {
-		return false
-	}
-
-	return k.HasBurnTaxExemptionAddress(ctx, address)
-}
-*/

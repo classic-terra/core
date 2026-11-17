@@ -24,20 +24,18 @@ func init() {
 	amino.RegisterConcrete(&RemoveBurnTaxExemptionAddressProposal{}, "treasury/RemoveBurnTaxExemptionAddressProposal", nil)
 }
 
+// AddBurnTaxExemptionAddressProposal and RemoveBurnTaxExemptionAddressProposal
+// are deprecated and no longer routed by x/gov (removed in v14_5): submitting
+// them fails with "no handler exists". The types stay registered only so that
+// historical proposals stored in x/gov (e.g. mainnet #12175) can still be
+// decoded by queries and genesis export. Tax exemptions are managed via the
+// x/taxexemption gov messages.
 var (
 	_ govv1beta1.Content = &AddBurnTaxExemptionAddressProposal{}
 	_ govv1beta1.Content = &RemoveBurnTaxExemptionAddressProposal{}
 )
 
 // ======AddBurnTaxExemptionAddressProposal======
-
-func NewAddBurnTaxExemptionAddressProposal(title, description string, addresses []string) govv1beta1.Content {
-	return &AddBurnTaxExemptionAddressProposal{
-		Title:       title,
-		Description: description,
-		Addresses:   addresses,
-	}
-}
 
 func (p *AddBurnTaxExemptionAddressProposal) GetTitle() string { return p.Title }
 
@@ -74,14 +72,6 @@ func (p *AddBurnTaxExemptionAddressProposal) ValidateBasic() error {
 }
 
 // ======RemoveBurnTaxExemptionAddressProposal======
-
-func NewRemoveBurnTaxExemptionAddressProposal(title, description string, addresses []string) govv1beta1.Content {
-	return &RemoveBurnTaxExemptionAddressProposal{
-		Title:       title,
-		Description: description,
-		Addresses:   addresses,
-	}
-}
 
 func (p *RemoveBurnTaxExemptionAddressProposal) GetTitle() string { return p.Title }
 

@@ -117,49 +117,6 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJSON, from string) {
 	n.LogActionF("successfully submitted param change proposal")
 }
 
-func (n *NodeConfig) SubmitAddBurnTaxExemptionAddressProposalV1(addresses []string, walletName string) int {
-	n.LogActionF("submitting add burn tax exemption address proposal (v1 JSON) %s", addresses)
-	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	proposal := map[string]any{
-		"messages": []any{
-			map[string]any{
-				"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
-				"content": map[string]any{
-					"@type":       "/terra.treasury.v1beta1.AddBurnTaxExemptionAddressProposal",
-					"title":       "burn tax exemption address",
-					"description": "burn tax exemption address",
-					"addresses":   addresses,
-				},
-				"authority": authority,
-			},
-		},
-		"metadata": "",
-		"deposit":  deposit,
-		"title":    "burn tax exemption address",
-		"summary":  "burn tax exemption address",
-	}
-	bz, err := json.Marshal(proposal)
-	require.NoError(n.t, err)
-	wd, err := os.Getwd()
-	require.NoError(n.t, err)
-	localProposalFile := wd + "/scripts/taxexemption_proposal.json"
-	f, err := os.Create(localProposalFile)
-	require.NoError(n.t, err)
-	_, err = f.Write(bz)
-	require.NoError(n.t, err)
-	require.NoError(n.t, f.Close())
-
-	cmd := []string{"terrad", "tx", "gov", "submit-proposal", "/terra/taxexemption_proposal.json", fmt.Sprintf("--from=%s", walletName)}
-	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	proposalID, err := extractProposalIDFromResponse(resp.String())
-	require.NoError(n.t, err)
-	_ = os.Remove(localProposalFile)
-	n.LogActionF("successfully submitted add burn tax exemption address proposal (v1 JSON)")
-	return proposalID
-}
-
 func (n *NodeConfig) SubmitAddTaxExemptionZoneProposal(zone string, addresses []string, exemptIncoming bool, exemptOutgoing bool, exemptCrossZone bool, walletName string) int {
 	n.LogActionF("submitting add tax exemption zone proposal: zone=%s addresses=%s incoming=%t outgoing=%t cross=%t", zone, strings.Join(addresses, ","), exemptIncoming, exemptOutgoing, exemptCrossZone)
 	deposit := sdk.NewCoin(initialization.TerraDenom, sdkmath.NewInt(20*assets.MicroUnit)).String()

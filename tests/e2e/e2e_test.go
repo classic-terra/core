@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	)
 }
 
-func (s *IntegrationTestSuite) TestAddBurnTaxExemptionAddress() {
+func (s *IntegrationTestSuite) TestAddTaxExemptionZone() {
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
 	s.Require().NoError(err)
@@ -94,13 +94,27 @@ func (s *IntegrationTestSuite) TestAddBurnTaxExemptionAddress() {
 	whitelistAddr1 := node.CreateWallet("whitelist1")
 	whitelistAddr2 := node.CreateWallet("whitelist2")
 
-	chain.AddBurnTaxExemptionAddressProposal(node, whitelistAddr1, whitelistAddr2)
+	const zone = "e2e-zone"
+	chain.AddTaxExemptionZoneProposal(node, zone, []string{whitelistAddr1, whitelistAddr2}, true, true, false)
 
-	whitelistedAddresses, err := node.QueryBurnTaxExemptionList()
+	zones, err := node.QueryTaxExemptionZones()
 	s.Require().NoError(err)
-	s.Require().Len(whitelistedAddresses, 2)
-	s.Require().Contains(whitelistedAddresses, whitelistAddr1)
-	s.Require().Contains(whitelistedAddresses, whitelistAddr2)
+	found := false
+	for _, z := range zones {
+		if z.Name == zone {
+			found = true
+			s.Require().True(z.Incoming)
+			s.Require().True(z.Outgoing)
+			s.Require().False(z.CrossZone)
+		}
+	}
+	s.Require().True(found, "zone %s not found", zone)
+
+	addresses, err := node.QueryTaxExemptionAddresses(zone)
+	s.Require().NoError(err)
+	s.Require().Len(addresses, 2)
+	s.Require().Contains(addresses, whitelistAddr1)
+	s.Require().Contains(addresses, whitelistAddr2)
 }
 
 func (s *IntegrationTestSuite) TestFeeTax() {

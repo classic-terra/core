@@ -38,7 +38,6 @@ import (
 	"github.com/classic-terra/core/v4/x/taxexemption"
 	taxexemptiontypes "github.com/classic-terra/core/v4/x/taxexemption/types"
 	"github.com/classic-terra/core/v4/x/treasury"
-	treasuryclient "github.com/classic-terra/core/v4/x/treasury/client"
 	treasurytypes "github.com/classic-terra/core/v4/x/treasury/types"
 	"github.com/classic-terra/core/v4/x/vesting"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -92,8 +91,6 @@ var (
 		customgov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
 				paramsclient.ProposalHandler,
-				treasuryclient.ProposalAddBurnTaxExemptionAddressHandler,
-				treasuryclient.ProposalRemoveBurnTaxExemptionAddressHandler,
 			},
 		),
 		customparams.AppModuleBasic{},

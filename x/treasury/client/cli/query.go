@@ -279,7 +279,10 @@ func GetCmdQueryExemptlist() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "burn-tax-exemption-list",
 		Args:  cobra.NoArgs,
-		Short: "Query all burn tax exemption addresses",
+		Short: "Deprecated: query the legacy burn tax exemption list (empty since v14_5)",
+		Long: `Deprecated: the legacy treasury burn tax exemption list was migrated to
+x/taxexemption in v12 and deleted in v14_5, so this query returns an empty list.
+Use "terrad query taxexemption" instead.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

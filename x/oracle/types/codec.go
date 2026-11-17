@@ -19,7 +19,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the x/oracle interfaces types with the interface registry
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
 		&MsgDelegateFeedConsent{},
 		&MsgAggregateExchangeRatePrevote{},
 		&MsgAggregateExchangeRateVote{},

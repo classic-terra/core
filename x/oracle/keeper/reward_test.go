@@ -65,10 +65,10 @@ func TestRewardBallotWinners(t *testing.T) {
 		return false
 	})
 
-	votePeriodsPerWindow := sdkmath.LegacyNewDec((int64)(input.OracleKeeper.RewardDistributionWindow(input.Ctx))).
-		QuoInt64((int64)(input.OracleKeeper.VotePeriod(input.Ctx))).
+	votePeriodsPerWindow := sdkmath.LegacyNewDec(int64(input.OracleKeeper.RewardDistributionWindow(input.Ctx))).
+		QuoInt64(int64(input.OracleKeeper.VotePeriod(input.Ctx))).
 		TruncateInt64()
-	input.OracleKeeper.RewardBallotWinners(ctx, (int64)(input.OracleKeeper.VotePeriod(input.Ctx)), (int64)(input.OracleKeeper.RewardDistributionWindow(input.Ctx)), voteTargets, claims)
+	input.OracleKeeper.RewardBallotWinners(ctx, int64(input.OracleKeeper.VotePeriod(input.Ctx)), int64(input.OracleKeeper.RewardDistributionWindow(input.Ctx)), voteTargets, claims)
 	outstandingRewardsDec, err := input.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, addr)
 	require.NoError(t, err)
 	outstandingRewards, _ := outstandingRewardsDec.TruncateDecimal()

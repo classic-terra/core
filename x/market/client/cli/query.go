@@ -57,7 +57,8 @@ $ terrad query swap 5000000uluna usdr
 
 			askDenom := args[1]
 
-			res, err := queryClient.Swap(context.Background(),
+			res, err := queryClient.Swap(
+				context.Background(),
 				&types.QuerySwapRequest{OfferCoin: offerCoinStr, AskDenom: askDenom},
 			)
 			if err != nil {
@@ -90,7 +91,8 @@ $ terrad query market terra-pool-delta
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.TerraPoolDelta(context.Background(),
+			res, err := queryClient.TerraPoolDelta(
+				context.Background(),
 				&types.QueryTerraPoolDeltaRequest{},
 			)
 			if err != nil {

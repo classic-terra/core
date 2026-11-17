@@ -121,7 +121,8 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		relayerNodeB.Name,
 		filepath.Join("/root/hermes", "mnemonicB.json"),
 		hermesContainerName,
-		hermesCfgPath)
+		hermesCfgPath,
+	)
 	/* keep commented for debugging in case of failure
 	ctx, cancel := context.WithCancel(context.Background())
 	bc.t.Cleanup(cancel) // stop streaming when test finishes

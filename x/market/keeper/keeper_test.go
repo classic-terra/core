@@ -32,13 +32,13 @@ func TestReplenishPools(t *testing.T) {
 	require.True(t, terraPoolDelta.IsZero())
 
 	// Positive delta
-	diff := basePool.QuoInt64((int64)(core.BlocksPerDay))
+	diff := basePool.QuoInt64(int64(core.BlocksPerDay))
 	input.MarketKeeper.SetTerraPoolDelta(input.Ctx, diff)
 
 	input.MarketKeeper.ReplenishPools(input.Ctx)
 
 	terraPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
-	replenishAmt := diff.QuoInt64((int64)(input.MarketKeeper.PoolRecoveryPeriod(input.Ctx)))
+	replenishAmt := diff.QuoInt64(int64(input.MarketKeeper.PoolRecoveryPeriod(input.Ctx)))
 	expectedDelta := diff.Sub(replenishAmt)
 	require.Equal(t, expectedDelta, terraPoolDelta)
 
@@ -49,7 +49,7 @@ func TestReplenishPools(t *testing.T) {
 	input.MarketKeeper.ReplenishPools(input.Ctx)
 
 	terraPoolDelta = input.MarketKeeper.GetTerraPoolDelta(input.Ctx)
-	replenishAmt = diff.QuoInt64((int64)(input.MarketKeeper.PoolRecoveryPeriod(input.Ctx)))
+	replenishAmt = diff.QuoInt64(int64(input.MarketKeeper.PoolRecoveryPeriod(input.Ctx)))
 	expectedDelta = diff.Sub(replenishAmt)
 	require.Equal(t, expectedDelta, terraPoolDelta)
 }

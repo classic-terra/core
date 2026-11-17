@@ -64,6 +64,42 @@ OLD_VERSION=v3.6.0-rc.0 SOFTWARE_UPGRADE_NAME=v14 bash scripts/upgrade-test.sh
 
 ---
 
+### `cron-test.sh`
+
+Starts the same single-validator local testnet flow as `run-node.sh`, but seeds a cron schedule in genesis so the cron query CLI can be exercised against a live node.
+
+**Usage:** `bash scripts/cron-test.sh [binary] [denom]`
+
+**Example:**
+```bash
+bash scripts/cron-test.sh _build/new/terrad uluna
+```
+
+**Notes:**
+- This is a query-focused smoke test.
+- Cron write messages stay authority-gated, so the script validates `terrad q cron ...` against seeded chain state instead of trying to broadcast a direct write tx.
+- The script seeds two schedules so `cron schedule` and `cron schedules` return different payloads.
+- It skips `validate-genesis`; the SDK gentx validation path can panic in this local smoke setup without affecting the query flow.
+
+---
+
+### `cron-auth-gate-test.sh`
+
+Starts the same single-validator local testnet flow as `run-node.sh`, then proves that a non-authority sender cannot broadcast `tx cron add-schedule`.
+
+**Usage:** `bash scripts/cron-auth-gate-test.sh [binary] [denom]`
+
+**Example:**
+```bash
+bash scripts/cron-auth-gate-test.sh _build/new/terrad uluna
+```
+
+**Notes:**
+- This is a negative smoke test for the cron auth gate.
+- It expects the tx to fail with an `invalid authority` error.
+
+---
+
 ### `upgrade-test-multi.sh`
 
 Tests a **chain of sequential upgrades**, simulating the full upgrade history from an old version to the current codebase through intermediate releases.

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package terra.cron.v1;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/classic-terra/core/v4/x/cron/types";
+
+message Params {
+  uint64 limit = 1;
+  uint64 max_execution_gas = 2;
+}

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -250,6 +251,7 @@ const (
 	flagTestnetExpeditedVotingPeriod = "testnet-expedited-voting-period"
 	flagTestnetFundAccounts          = "testnet-fund-accounts"
 	flagTestnetFundCoins             = "testnet-fund-coins"
+	flagTestnetWasmAdmin             = "testnet-wasm-admin"
 )
 
 func addTestnetFlags(cmd *cobra.Command) {
@@ -258,6 +260,34 @@ func addTestnetFlags(cmd *cobra.Command) {
 	cmd.Flags().Duration(flagTestnetExpeditedVotingPeriod, 2*time.Minute, "Governance expedited voting period of the testnet")
 	cmd.Flags().StringSlice(flagTestnetFundAccounts, []string{}, "Additional accounts to fund (the operator account is always funded)")
 	cmd.Flags().String(flagTestnetFundCoins, "10000000000000000uluna,1000000000000uusd", "Coins minted to each funded account")
+	cmd.Flags().StringSlice(flagTestnetWasmAdmin, []string{}, "Replace a wasm contract's admin, as <contract>=<new-admin> (repeatable or comma-separated)")
+}
+
+// parseWasmAdminOverrides parses --testnet-wasm-admin entries of the form
+// <contract>=<new-admin>. A contract may only be listed once.
+func parseWasmAdminOverrides(entries []string) ([]terraapp.WasmAdminOverride, error) {
+	seen := make(map[string]bool, len(entries))
+	overrides := make([]terraapp.WasmAdminOverride, 0, len(entries))
+	for _, entry := range entries {
+		contract, admin, ok := strings.Cut(entry, "=")
+		if !ok {
+			return nil, fmt.Errorf("invalid --%s entry %q: want <contract>=<new-admin>", flagTestnetWasmAdmin, entry)
+		}
+		contractAcc, err := sdk.AccAddressFromBech32(strings.TrimSpace(contract))
+		if err != nil {
+			return nil, fmt.Errorf("invalid --%s contract %q: %w", flagTestnetWasmAdmin, contract, err)
+		}
+		adminAcc, err := sdk.AccAddressFromBech32(strings.TrimSpace(admin))
+		if err != nil {
+			return nil, fmt.Errorf("invalid --%s admin %q: %w", flagTestnetWasmAdmin, admin, err)
+		}
+		if seen[contractAcc.String()] {
+			return nil, fmt.Errorf("invalid --%s: contract %s listed more than once", flagTestnetWasmAdmin, contractAcc)
+		}
+		seen[contractAcc.String()] = true
+		overrides = append(overrides, terraapp.WasmAdminOverride{Contract: contractAcc, NewAdmin: adminAcc})
+	}
+	return overrides, nil
 }
 
 func queryCommand(basicMgr module.BasicManager) *cobra.Command {
@@ -439,6 +469,10 @@ func (a appCreator) newTestnetApp(logger log.Logger, db dbm.DB, traceStore io.Wr
 		}
 		fundAccounts = append(fundAccounts, acc)
 	}
+	wasmAdminOverrides, err := parseWasmAdminOverrides(cast.ToStringSlice(appOpts.Get(flagTestnetWasmAdmin)))
+	if err != nil {
+		panic(err)
+	}
 
 	terraApp, err = terraapp.InitTerraAppForTestnet(terraApp, terraapp.TestnetOptions{
 		NewChainID:            newChainID,
@@ -450,6 +484,7 @@ func (a appCreator) newTestnetApp(logger log.Logger, db dbm.DB, traceStore io.Wr
 		ExpeditedVotingPeriod: cast.ToDuration(appOpts.Get(flagTestnetExpeditedVotingPeriod)),
 		FundAccounts:          fundAccounts,
 		FundCoins:             fundCoins,
+		WasmAdminOverrides:    wasmAdminOverrides,
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize in-place testnet: %w", err))

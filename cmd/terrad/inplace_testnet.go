@@ -102,6 +102,14 @@ func validateInPlaceTestnet(cmd *cobra.Command, serverCtx *server.Context, chain
 	if _, _, err := bech32.DecodeAndConvert(operatorAddress); err != nil {
 		return fmt.Errorf("decode operator address: %w", err)
 	}
+
+	wasmAdmins, err := cmd.Flags().GetStringSlice(flagTestnetWasmAdmin)
+	if err != nil {
+		return err
+	}
+	if _, err := parseWasmAdminOverrides(wasmAdmins); err != nil {
+		return err
+	}
 	return nil
 }
 

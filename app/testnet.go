@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -31,6 +32,33 @@ type TestnetOptions struct {
 	ExpeditedVotingPeriod time.Duration
 	FundAccounts          []sdk.AccAddress
 	FundCoins             sdk.Coins
+	WasmAdminOverrides    []WasmAdminOverride
+}
+
+// WasmAdminOverride replaces the admin of a wasm contract, so a tester can
+// migrate contracts whose real admin is a key or contract they don't control.
+type WasmAdminOverride struct {
+	Contract sdk.AccAddress
+	NewAdmin sdk.AccAddress
+}
+
+// ApplyWasmAdminOverrides sets the admin of each listed contract. It uses the
+// gov authorization policy, which lets the admin change without the current
+// admin's signature. Every contract must exist.
+func ApplyWasmAdminOverrides(ctx sdk.Context, k wasmkeeper.Keeper, overrides []WasmAdminOverride) error {
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(k)
+	for _, o := range overrides {
+		if k.GetContractInfo(ctx, o.Contract) == nil {
+			return fmt.Errorf("wasm admin override: contract %s not found", o.Contract)
+		}
+		// The caller is ignored under the gov authorization policy.
+		if err := govKeeper.UpdateContractAdmin(ctx, o.Contract, o.NewAdmin, o.NewAdmin); err != nil {
+			return fmt.Errorf("wasm admin override for %s: %w", o.Contract, err)
+		}
+		ctx.Logger().Info("in-place testnet: replaced wasm contract admin",
+			"contract", o.Contract.String(), "new_admin", o.NewAdmin.String())
+	}
+	return nil
 }
 
 // InitTerraAppForTestnet rewrites the state of a node's data directory so that a
@@ -58,6 +86,15 @@ func InitTerraAppForTestnet(app *TerraApp, opts TestnetOptions) (*TerraApp, erro
 	}
 	valAddr := sdk.ValAddress(operatorBz)
 	operatorAcc := sdk.AccAddress(operatorBz)
+
+	//
+	// WASM
+	//
+
+	// Runs first so an unknown contract fails before any other state changes.
+	if err := ApplyWasmAdminOverrides(ctx, app.WasmKeeper, opts.WasmAdminOverrides); err != nil {
+		return nil, err
+	}
 
 	//
 	// STAKING

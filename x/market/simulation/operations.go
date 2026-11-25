@@ -10,13 +10,10 @@ import (
 	core "github.com/classic-terra/core/v4/types"
 	"github.com/classic-terra/core/v4/x/market/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/client"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -29,7 +26,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ok types.OracleKeeper,
@@ -44,13 +41,14 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSwap,
-			SimulateMsgSwap(ak, bk, ok),
+			SimulateMsgSwap(txGen, ak, bk, ok),
 		),
 	}
 }
 
 // SimulateMsgSwap generates a MsgSwap with random values.
 func SimulateMsgSwap(
+	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ok types.OracleKeeper,
@@ -95,9 +93,6 @@ func SimulateMsgSwap(
 
 		msg := types.NewMsgSwap(simAccount.Address, sdk.NewCoin(offerDenom, amount), askDenom)
 
-		ir := codectypes.NewInterfaceRegistry()
-		std.RegisterInterfaces(ir)
-		txGen := tx.NewTxConfig(codec.NewProtoCodec(ir), tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
@@ -124,6 +119,7 @@ func SimulateMsgSwap(
 
 // SimulateMsgSwapSend generates a MsgSwapSend with random values.
 func SimulateMsgSwapSend(
+	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ok types.OracleKeeper,
@@ -174,9 +170,6 @@ func SimulateMsgSwapSend(
 
 		msg := types.NewMsgSwapSend(simAccount.Address, receiverAccount.Address, sdk.NewCoin(offerDenom, amount), askDenom)
 
-		ir := codectypes.NewInterfaceRegistry()
-		std.RegisterInterfaces(ir)
-		txGen := tx.NewTxConfig(codec.NewProtoCodec(ir), tx.DefaultSignModes)
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,

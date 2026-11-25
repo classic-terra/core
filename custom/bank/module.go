@@ -60,6 +60,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	// We implement our own bank operations to prevent insufficient fee due to tax
 	return customsim.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.keeper,
+		simState.AppParams, simState.TxConfig, am.accountKeeper, am.keeper,
 	)
 }

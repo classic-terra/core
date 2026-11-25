@@ -6,14 +6,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -28,7 +24,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak banktypes.AccountKeeper, bk keeper.Keeper,
+	appParams simtypes.AppParams, txGen client.TxConfig, ak banktypes.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(OpWeightMsgSend, &weightMsgSend, nil,
@@ -46,28 +42,18 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSend,
-			SimulateMsgSend(ak, bk),
+			SimulateMsgSend(txGen, ak, bk),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgMultiSend,
-			SimulateMsgMultiSend(ak, bk),
+			SimulateMsgMultiSend(txGen, ak, bk),
 		),
 	}
 }
 
-// makeTxConfig constructs a minimal client.TxConfig for simulations without pulling simapp.
-func makeTxConfig() client.TxConfig {
-	amino := codec.NewLegacyAmino()
-	ir := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(ir)
-	std.RegisterInterfaces(ir)
-	std.RegisterLegacyAminoCodec(amino)
-	return tx.NewTxConfig(cdc, tx.DefaultSignModes)
-}
-
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+func SimulateMsgSend(txGen client.TxConfig, ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -85,7 +71,7 @@ func SimulateMsgSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Oper
 
 		msg := banktypes.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
 
-		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{simAccount.PrivKey})
+		err := sendMsgSend(r, app, txGen, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{simAccount.PrivKey})
 		if err != nil {
 			if strings.Contains(err.Error(), "insufficient fee") {
 				return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgSend{}), "skip low fee due to tax"), nil, nil
@@ -100,7 +86,7 @@ func SimulateMsgSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Oper
 
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(
-	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak banktypes.AccountKeeper,
+	r *rand.Rand, app *baseapp.BaseApp, txGen client.TxConfig, bk keeper.Keeper, ak banktypes.AccountKeeper,
 	msg *banktypes.MsgSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
 	var (
@@ -123,7 +109,6 @@ func sendMsgSend(
 			return err
 		}
 	}
-	txGen := makeTxConfig()
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
@@ -149,7 +134,7 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
-func SimulateMsgMultiSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+func SimulateMsgMultiSend(txGen client.TxConfig, ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -217,7 +202,7 @@ func SimulateMsgMultiSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes
 			Outputs: outputs,
 		}
 
-		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
+		err := sendMsgMultiSend(r, app, txGen, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			if strings.Contains(err.Error(), "insufficient fee") {
 				return simtypes.NoOpMsg(banktypes.ModuleName, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}), "skip low fee due to tax"), nil, nil
@@ -233,7 +218,7 @@ func SimulateMsgMultiSend(ak banktypes.AccountKeeper, bk keeper.Keeper) simtypes
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
 func sendMsgMultiSend(
-	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak banktypes.AccountKeeper,
+	r *rand.Rand, app *baseapp.BaseApp, txGen client.TxConfig, bk keeper.Keeper, ak banktypes.AccountKeeper,
 	msg *banktypes.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []cryptotypes.PrivKey,
 ) error {
 	accountNumbers := make([]uint64, len(msg.Inputs))
@@ -271,7 +256,6 @@ func sendMsgMultiSend(
 		}
 	}
 
-	txGen := makeTxConfig()
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,

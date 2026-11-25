@@ -186,7 +186,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	// TODO: Fix simulation API for SDK 0.50
 	// return simulation.WeightedOperations(
-	// 	simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	// 	simState.AppParams, simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper,
 	// )
 	return []simtypes.WeightedOperation{}
 }

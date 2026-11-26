@@ -267,3 +267,5 @@ replace (
 	go.etcd.io/bbolt => go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
 )
+
+replace github.com/CosmWasm/wasmvm/v3 => github.com/classic-terra/wasmvm-sec/v3 v3.0.9-tcsec.2
